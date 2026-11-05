@@ -94,6 +94,44 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return p;
         }
 
+        public static SimPart ShockConeIntake(SimVessel v, uint persistentId, int inverseStage = -1)
+        {
+            SimPart p = NewPart(v, "shockConeIntake", persistentId, inverseStage, 0.12f);
+            AddIntakeAir(p, 2, 2);
+            return p;
+        }
+
+        // the J-X4 Whiplash, written by hand from jetEngineTurbo.cfg since no capture has a jet
+        public static SimPart TurboFanEngine(SimVessel v, uint persistentId, int inverseStage, V3 thrustDirection)
+        {
+            SimPart p = NewPart(v, "turboFanEngine", persistentId, inverseStage, 1.8f);
+            p.IsEngine = true;
+
+            SimModuleEngines e = NewModuleEngines(p);
+            e.IsEnabled = true;
+            e.Index = 1;
+            e.MaxFuelFlow = 130f / (4000f * 9.80665f);
+            e.MaxThrust = 130;
+            e.AtmChangeFlow = true;
+            e.UseAtmCurve = true;
+            e.UseVelCurve = true;
+            e.FlowMultCap = 2;
+            e.Propellants.Add(new SimPropellant(INTAKE_AIR, true, 8, SimFlowMode.ALL_VESSEL, INTAKE_AIR_DENSITY));
+            e.Propellants.Add(new SimPropellant(LIQUID_FUEL, false, 1, SimFlowMode.STAGE_STACK_FLOW_BALANCE, LIQUID_FUEL_DENSITY));
+            e.ThrustTransformMultipliers.Add(1);
+            e.ThrustDirectionVectors.Add(thrustDirection);
+            AppendConstant(e.AtmosphereCurve, 0, 0, 4000f);
+            AppendConstant(e.ATMCurve, 0, 0, 0);
+            AppendCubicHermite(e.ATMCurve, 0, 0.045, 0, 0.045, 0, 0, 0.166f, 4.304647f);
+            AppendCubicHermite(e.ATMCurve, 0.045, 0.16, 0.045, 0.115, 0.166f, 4.304647f, 0.5f, 0.5779132f);
+            AppendCubicHermite(e.ATMCurve, 0.16, 0.5, 0.16, 0.34, 0.5f, 0.5779132f, 0.6f, 0.4809403f);
+            AppendCubicHermite(e.ATMCurve, 0.5, 1, 0.5, 0.5, 0.6f, 0.4809403f, 1, 1.013946f);
+            AppendConstant(e.ATMCurve, 1, 1, 1);
+            // the tests stand still, so only the velCurve's first key matters
+            AppendConstant(e.VelCurve, 0, 0, 1);
+            return p;
+        }
+
         /// <summary>
         ///     Borrows a SimPart and sets every field that the KSP SimVesselBuilder and SimVesselUpdater would set, using
         ///     the declared defaults (which are the fields the SimVessel dump omits).  This matters since pooled SimParts are

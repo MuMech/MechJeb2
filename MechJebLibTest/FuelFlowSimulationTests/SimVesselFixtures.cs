@@ -80,6 +80,35 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         }
 
         /// <summary>
+        ///     A Rockomax64 with a shock cone intake and a Whiplash, and with withMainsail a Mainsail beside the Whiplash, the
+        ///     engines in stage 0.  This has not been captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel JetTinCan(bool withMainsail = false)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart tank = Rockomax64BW(v, 1);
+            SimPart intake = ShockConeIntake(v, 2);
+            SimPart jet = TurboFanEngine(v, 3, 0, new V3(1, 0, 0));
+
+            MakeRoot(tank);
+
+            Link(tank, intake);
+            Link(tank, jet);
+
+            if (withMainsail)
+            {
+                SimPart rocket = LiquidEngineMainsailV2(v, 4, 0, new V3(1, 0, 0));
+                Link(tank, rocket);
+                CrossFeed(rocket, jet, intake, tank);
+            }
+            else
+                CrossFeed(jet, intake, tank);
+
+            return Finish(v);
+        }
+
+        /// <summary>
         ///     The MainsailTinCan with a full Rockomax64 drop tank on a radial decoupler on the side of the upper tank, with
         ///     crossFeed selecting whether crossfeed is enabled on the decoupler.  The Mainsail and the launch clamps are in
         ///     stage 1 and the decoupler in stage 0.  This mutation of the MainsailTinCan has not been captured in KSP, so the

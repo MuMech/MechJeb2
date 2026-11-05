@@ -17,9 +17,17 @@ namespace MechJebLibTest.FuelFlowSimulationTests
     {
         private const double MAINSAIL_MAX_FUEL_FLOW = 1500f / (310f * 9.80665f);
         private const double MAINSAIL_VACUUM_ISP = 310;
+        private const double MAINSAIL_MASS = 6;
+        private const double JET_MAX_FUEL_FLOW = 130f / (4000f * 9.80665f);
+        private const double JET_ISP = 4000;
+        private const double SEA_LEVEL_DENSITY = 1.225;
 
         // the mass of the liquid fuel and oxidizer in a full Rockomax64
         private const double ROCKOMAX64_PROPELLANT = 32;
+        private const double ROCKOMAX64_LIQUID_FUEL = 14.4;
+
+        // a full Rockomax64 (36), the Whiplash (1.8), and the shock cone intake (0.12) with its 2 units of air
+        private const double JET_TIN_CAN_MASS = 37.93;
 
         [Fact]
         public void MainsailTinCanMatchesCapture() => AssertMatchesCapture("MainsailTinCan.out", SimVesselFixtures.MainsailTinCan);
@@ -51,6 +59,48 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertNoBurn(segments[1], 1, 79.7, 0);
             AssertMainsailBurn(segments[0], 0, 79.7, 2 * ROCKOMAX64_PROPELLANT, isp, dirMagnitude);
             AssertMassesMatchCapture(v, "MainsailTinCan.out", kscPad);
+        }
+
+        // at sea level the Whiplash runs at full flow, and burns the liquid fuel but no oxidizer and no intake air
+        [Fact]
+        public void JetBurnsInTheAtmosphere()
+        {
+            SimVessel v = SimVesselFixtures.JetTinCan();
+            v.SetConditions(SEA_LEVEL_DENSITY, 1, 0);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertBurn(segments[0], 0, JET_TIN_CAN_MASS, ROCKOMAX64_LIQUID_FUEL, JET_MAX_FUEL_FLOW, JET_ISP, 1);
+        }
+
+        // with no air the engine has no flow at all, not the tiny flow of KSP's CLAMP, which would make up a long burn with
+        // all of the delta-v and almost no thrust
+        [Fact]
+        public void JetDoesNotBurnInVacuum()
+        {
+            SimVessel v = SimVesselFixtures.JetTinCan();
+            v.SetConditions(0, 0, 0);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertNoBurn(segments[0], 0, JET_TIN_CAN_MASS, 0);
+        }
+
+        // in vacuum the rocket beside the jet has the fuel to itself
+        [Fact]
+        public void RocketBesideAJetBurnsAloneInVacuum()
+        {
+            SimVessel v = SimVesselFixtures.JetTinCan(true);
+            v.SetConditions(0, 0, 0);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertMainsailBurn(segments[0], 0, JET_TIN_CAN_MASS + MAINSAIL_MASS, ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, 1);
+            // the jet's CLAMP flow adds less thrust than the tolerance of a burn
+            segments[0].Thrust.ShouldEqual(MAINSAIL_MAX_FUEL_FLOW * MAINSAIL_VACUUM_ISP * 9.80665f, 1e-7);
         }
 
         // sample [0,1] atm in 0.1 atm steps, then [2,10] in 1 atm steps
