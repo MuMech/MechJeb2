@@ -117,30 +117,29 @@ namespace MechJebLibTest.ODETests
                 }
             }
 
-            long start = GC.GetAllocatedBytesForCurrentThread();
-
-            using (var interpolant = VecInterpolant.Rent())
+            AssertionExtensions.ShouldNotAllocate(() =>
             {
-                solver.Solve(f, y0, yf, t0, tf, interpolant);
-
-                for (int i = 0; i <= count1; i++)
+                using (var interpolant = VecInterpolant.Rent())
                 {
-                    double t = t0 + dt * i;
-                    using Vec y = interpolant.Evaluate(t);
+                    solver.Solve(f, y0, yf, t0, tf, interpolant);
 
-                    y[0].ShouldEqual(expected[i], 4e-6);
+                    for (int i = 0; i <= count1; i++)
+                    {
+                        double t = t0 + dt * i;
+                        using Vec y = interpolant.Evaluate(t);
+
+                        y[0].ShouldEqual(expected[i], 4e-6);
+                    }
+
+                    for (int i = 0; i <= count2; i++)
+                    {
+                        double t = t0 + dt2 * i;
+                        using Vec y = interpolant.Evaluate(t);
+
+                        y[0].ShouldEqual(expected2[i], 4e-6);
+                    }
                 }
-
-                for (int i = 0; i <= count2; i++)
-                {
-                    double t = t0 + dt2 * i;
-                    using Vec y = interpolant.Evaluate(t);
-
-                    y[0].ShouldEqual(expected2[i], 4e-6);
-                }
-            }
-
-            Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
+            });
         }
 
         private static void Kepler(Vec yin, double x, Vec dyout)
@@ -202,9 +201,11 @@ namespace MechJebLibTest.ODETests
 
             using var interpolant2 = VecInterpolant.Rent();
 
-            long start = GC.GetAllocatedBytesForCurrentThread();
-            solver.Solve(_keplerRHS, y0, yf, 0, e[0].Time, interpolant2);
-            Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
+            AssertionExtensions.ShouldNotAllocate(() =>
+            {
+                interpolant2.Clear();
+                solver.Solve(_keplerRHS, y0, yf, 0, e[0].Time, interpolant2);
+            });
         }
 
         private static void Asymptotic(IList<double> yin, double x, IList<double> dyout)

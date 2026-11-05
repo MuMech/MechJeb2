@@ -63,22 +63,21 @@ namespace MechJebLibTest
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
             hoverslam.Dv.ShouldEqual(487.37958512603763, 1e-5);
 
-            long start = GC.GetAllocatedBytesForCurrentThread();
+            AssertionExtensions.ShouldNotAllocate(() =>
+            {
+                manager.Reset()
+                   .Initial(r0, v0, t0, mu, w)
+                   .TargetConditions(height, 0)
+                   .AddStage(2223.31037385158, 870.000015944242, 78784.6518490292, 246.202054544791, 0, 0)
+                   .Reconfigure(hoverslam);
 
-            manager.Reset()
-               .Initial(r0, v0, t0, mu, w)
-               .TargetConditions(height, 0)
-               .AddStage(2223.31037385158, 870.000015944242, 78784.6518490292, 246.202054544791, 0, 0)
-               .Reconfigure(hoverslam);
+                hoverslam.Run();
 
-            hoverslam.Run();
-
-            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
-            (hoverslam.IgnitionUT - t0).ShouldEqual(430.07250464949175, 1e-5);
-            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
-            hoverslam.Dv.ShouldEqual(487.37958512603763, 1e-5);
-
-            Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
+                hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
+                (hoverslam.IgnitionUT - t0).ShouldEqual(430.07250464949175, 1e-5);
+                hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
+                hoverslam.Dv.ShouldEqual(487.37958512603763, 1e-5);
+            });
         }
 
         [Fact]

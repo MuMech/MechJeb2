@@ -17,6 +17,25 @@ namespace MechJebLibTest
     /// </summary>
     public static class AssertionExtensions
     {
+        // GC.GetAllocatedBytesForCurrentThread() sometimes counts a few kB that the thread never allocated, when a background GC
+        // runs during the block (seen on .NET Framework while other tests allocate: about one block in 2,000, never with
+        // <gcConcurrent enabled="false"/>). A block that does allocate does so on every pass, so this only fails when three
+        // passes in a row allocate. The block must leave things as it found them, so that it can run again.
+        public static void ShouldNotAllocate(Action block)
+        {
+            long bytes = 0;
+            for (int pass = 0; pass < 3; pass++)
+            {
+                long start = GC.GetAllocatedBytesForCurrentThread();
+                block();
+                bytes = GC.GetAllocatedBytesForCurrentThread() - start;
+                if (bytes == 0)
+                    return;
+            }
+
+            throw new XunitException($"Expected no allocation, but each of 3 passes allocated (the last {bytes} bytes)");
+        }
+
         public static void ShouldEqual(this int actual, int expected)
         {
             if (actual != expected)
