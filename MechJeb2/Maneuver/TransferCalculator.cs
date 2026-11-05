@@ -139,42 +139,60 @@ namespace MuMech
 
         private void ComputeDeltaV(object args)
         {
-            for (int dateIndex = TakeDateIndex();
-                 dateIndex >= 0;
-                 dateIndex = TakeDateIndex())
+            // an exception leaving a pool thread would skip JobFinished, and the plot would stay "Computing" forever
+            try
             {
-                double t0 = DateFromIndex(dateIndex);
-
-                if (double.IsInfinity(t0)) continue;
-
-                int durationSamples = DurationSamplesForDate(dateIndex);
-                for (int durationIndex = 0; durationIndex < durationSamples; durationIndex++)
+                for (int dateIndex = TakeDateIndex();
+                     dateIndex >= 0;
+                     dateIndex = TakeDateIndex())
                 {
-                    if (Stop)
-                        break;
+                    double t0 = DateFromIndex(dateIndex);
 
-                    double dt = DurationFromIndex(durationIndex);
+                    if (double.IsInfinity(t0)) continue;
 
-                    double dV = double.PositiveInfinity;
-                    if (CalcLambertDVs(t0, dt, out Vector3d exitDV, out Vector3d captureDV))
+                    int durationSamples = DurationSamplesForDate(dateIndex);
+                    for (int durationIndex = 0; durationIndex < durationSamples; durationIndex++)
                     {
-                        ManeuverParameters maneuver = ComputeEjectionManeuver(exitDV, _origin, t0);
+                        if (Stop)
+                            break;
 
-                        dV = maneuver.dV.magnitude;
-                        if (_includeCaptureBurn)
-                            dV += captureDV.magnitude;
-                    }
+                        double dt = DurationFromIndex(durationIndex);
 
-                    // a cell that has no solution must never be the best one, and a NaN in the first cell would pin the best
-                    // point there because it never compares as worse
-                    Computed[dateIndex, durationIndex] = double.IsNaN(dV) ? double.PositiveInfinity : dV;
+                        double dV = double.PositiveInfinity;
+                        if (CalcLambertDVs(t0, dt, out Vector3d exitDV, out Vector3d captureDV))
+                        {
+                            try
+                            {
+                                ManeuverParameters maneuver = ComputeEjectionManeuver(exitDV, _origin, t0);
+
+                                dV = maneuver.dV.magnitude;
+                                if (_includeCaptureBurn)
+                                    dV += captureDV.magnitude;
+                            }
+                            catch
+                            {
+                                // e.g. SingleImpulseHyperbolicBurn's BrentMin doesn't converge, or a degenerate cell gives a NaN:
+                                // that cell has no solution, the others still do
+                            }
+                        }
+
+                        // a cell that has no solution must never be the best one, and a NaN in the first cell would pin the best
+                        // point there because it never compares as worse
+                        Computed[dateIndex, durationIndex] = double.IsNaN(dV) ? double.PositiveInfinity : dV;
 #if DEBUG
-                    _log[dateIndex, durationIndex] += "," + Computed[dateIndex, durationIndex];
+                        _log[dateIndex, durationIndex] += "," + Computed[dateIndex, durationIndex];
 #endif
+                    }
                 }
             }
-
-            JobFinished();
+            catch (Exception e)
+            {
+                Dispatcher.InvokeAsync(() => Debug.LogException(e));
+            }
+            finally
+            {
+                JobFinished();
+            }
         }
 
         private void JobFinished()
@@ -193,7 +211,9 @@ namespace MuMech
                         }
                 }
 
-                ArrivalDate = DateFromIndex(BestDate) + DurationFromIndex(BestDuration);
+                // with no cell solved, the best one is still (0, 0): leave ArrivalDate at -1 so the plan reports a failed computation
+                if (BestDuration < DurationSamplesForDate(BestDate) && Computed[BestDate, BestDuration].IsFinite())
+                    ArrivalDate = DateFromIndex(BestDate) + DurationFromIndex(BestDuration);
 
                 _pendingJobs = -1;
 
@@ -219,7 +239,9 @@ namespace MuMech
         protected virtual int DurationSamplesForDate(int dateIndex) =>
             (int)(MaxDurationSamples * (MaxDepartureTime - DateFromIndex(dateIndex)) / MaxTransferTime);
 
-        public double DurationFromIndex(int index) => MinTransferTime + index * (MaxTransferTime - MinTransferTime) / MaxDurationSamples;
+        public double DurationStep => (MaxTransferTime - MinTransferTime) / MaxDurationSamples;
+
+        public double DurationFromIndex(int index) => MinTransferTime + index * DurationStep;
 
         public double DateFromIndex(int index) => MinDepartureTime + index * (MaxDepartureTime - MinDepartureTime) / DateSamples;
 

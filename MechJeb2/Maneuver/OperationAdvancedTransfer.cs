@@ -44,7 +44,7 @@ namespace MuMech
         private const double MIN_SAMPLING_STEP = 12 * 3600;
 
         private Mode _selectionMode = Mode.PORKCHOP;
-        private int _windowWidth;
+        private int _windowWidth = PLOT_WIDTH; // not 0 when MakeNodes starts the computation before the window is shown
 
         private CelestialBody? _lastTargetCelestial;
         private TransferCalculator? _worker;
@@ -333,8 +333,8 @@ namespace MuMech
             double epoch = w.DateFromIndex(dateIndex);
             double arrivalDt = w.DurationFromIndex(durationIndex);
 
-            // If the user picks a point, bound the arrival DT to the point
-            double arrivalBracket = (w.MaxDepartureTime - w.MinDepartureTime) / w.DateSamples;
+            // If the user picks a point, bound the arrival DT to the point: half a duration step either side of it
+            double arrivalBracket = w.DurationStep;
             double arrivalDtLower = arrivalDt - 0.5 * arrivalBracket;
             double arrivalDtUpper = arrivalDt + 0.5 * arrivalBracket;
 
@@ -345,8 +345,9 @@ namespace MuMech
                 arrivalDtUpper = double.PositiveInfinity;
             }
 
+            // the maximum arrival time counts from the start of the plot, and the duration from the departure
             if (_selectionMode == Mode.LIMITED_TIME && MaxArrivalTime > 0)
-                arrivalDtUpper = MaxArrivalTime;
+                arrivalDtUpper = Math.Max(MaxArrivalTime - (epoch - w.MinDepartureTime), arrivalDt);
 
             return (epoch, arrivalDt, arrivalDtLower, arrivalDtUpper);
         }
