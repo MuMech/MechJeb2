@@ -61,7 +61,8 @@ namespace MechJebLib.Maneuvers
             }
 
             Dual fi0 = 0.5 * dv1.sqrMagnitude;
-            if (IsFinite(_peR) && _soi2 > 0 && _captureBurn)
+            // a periapsis of 0 has no circular velocity, and the cost would be inf - inf
+            if (IsFinite(_peR) && _peR > 0 && _soi2 > 0 && _captureBurn)
             {
                 Dual sma = Astro.SmaFromStateVectors(1.0, rsoi2, vsoi2);
                 Dual dv = Astro.VelocityFromRadiusSMA(1.0, _peR, sma) - Astro.CircularVelocity(1.0, _peR);

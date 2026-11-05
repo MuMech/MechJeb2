@@ -564,7 +564,8 @@ namespace MuMech
             };
             UT = 0;
             try { UT = BrentRoot.Solve(f, UT1, UT2, null); }
-            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
+            // BrentRoot throws InvalidOperationException when it runs out of iterations, not TimeoutException
+            catch (InvalidOperationException) { Debug.Log("[MechJeb] Brents method ran out of iterations (supressed)"); }
         }
     }
 }
