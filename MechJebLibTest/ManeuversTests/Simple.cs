@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 using Xunit;
 using static System.Math;
 using static MechJebLib.Utils.Statics;
@@ -151,6 +152,25 @@ namespace MechJebLibTest.ManeuversTests
             Assert.Equal(-v185 / Sqrt(2), dv.x, 9);
             Assert.Equal(0, dv.y, 9);
             Assert.Equal(v185 - v185 / Sqrt(2), dv.z, 9);
+        }
+
+        // after the coast the orbit is circular at the burn point, which is where the vessel is then, not where it started
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        public void DeltaVToCircularizeAfterTimeTest(int seed)
+        {
+            var random = new Random(seed);
+
+            double ecc = 0.8 * random.NextDouble();
+            (V3 r, V3 v) = Astro.StateVectorsFromKeplerian(1.0, 1.0, ecc, PI * random.NextDouble(), TAU * random.NextDouble(),
+                TAU * random.NextDouble(), TAU * random.NextDouble());
+            double dt = 10 * random.NextDouble();
+
+            V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToCircularizeAfterTime(1.0, r, v, dt);
+
+            (V3 r1, V3 v1) = Shepperd.Solve(1.0, dt, r, v);
+            Astro.EccFromStateVectors(1.0, r1, v1 + dv).ShouldEqual(0, 1e-9);
+            (v1 + dv).magnitude.ShouldEqual(Sqrt(1.0 / r1.magnitude), 1e-9);
         }
     }
 }
