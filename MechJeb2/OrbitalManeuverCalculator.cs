@@ -454,7 +454,10 @@ namespace MuMech
             double degreeRotationToNode = (UT - Planetarium.GetUniversalTime()) * 360 / o.referenceBody.rotationPeriod;
             double NodeLongitude = o.referenceBody.GetLongitude(pos) - degreeRotationToNode;
 
-            double LongitudeOffset = NodeLongitude - newNodeLong; // Amount we need to shift the Ap's longitude
+            // Amount we need to shift the Ap's longitude, in the direction the body turns it: west under a body that rotates
+            // prograde, east under one that rotates retrograde (a negative rotationPeriod). It is 0 to 360, so the period is positive.
+            double rotationPeriod  = Abs(o.referenceBody.rotationPeriod);
+            double LongitudeOffset = Clamp360((NodeLongitude - newNodeLong) * Sign(o.referenceBody.rotationPeriod));
 
             // Calculate a semi-major axis that gives us an orbital period that will rotate the body to place
             // the burn location directly over the newNodeLong longitude, over the course of one full orbit.
@@ -471,7 +474,7 @@ namespace MuMech
             while (oppositeRadius - o.referenceBody.Radius < o.referenceBody.timeWarpAltitudeLimits[4] && N < 20)
             {
                 N++;
-                double target_period = o.referenceBody.rotationPeriod * (LongitudeOffset / 360 + N);
+                double target_period = rotationPeriod * (LongitudeOffset / 360 + N);
                 target_sma = Pow(o.referenceBody.gravParameter * target_period * target_period / (4 * PI * PI), 1.0 / 3.0); // cube roo
                 oppositeRadius = 2 * target_sma - burnRadius;
             }
