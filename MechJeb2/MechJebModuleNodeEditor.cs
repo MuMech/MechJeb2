@@ -76,34 +76,52 @@ namespace MuMech
         /// <summary>Write the three edited components to the node.</summary>
         internal void UpdateNodeFromFields() => node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
 
-        /// <summary>Move the node to the selected snap point.</summary>
+        /// <summary>Move the node by `dt` seconds. A move to a non-finite time or into the past is refused: the stock game misbehaves with either.</summary>
+        internal void ShiftNode(double dt) => MoveNode(node.UT + dt);
+
+        /// <summary>Move the node by `orbits` periods of its orbit. A hyperbolic orbit has no period, so the node stays.</summary>
+        internal void ShiftNodeOrbits(int orbits)
+        {
+            if (node.patch.eccentricity < 1)
+                ShiftNode(orbits * node.patch.period);
+        }
+
+        private void MoveNode(double UT)
+        {
+            if (UT.IsFinite() && UT >= Planetarium.GetUniversalTime())
+                node.UpdateNode(node.DeltaV, UT);
+        }
+
+        /// <summary>Move the node to the selected snap point: the one nearest the node on an ellipse, and never one in the past.</summary>
         internal void SnapNode()
         {
             Orbit o = node.patch;
             double UT = node.UT;
+            // a hyperbolic orbit has no period, so it has only one of each point to search for
+            double searchFrom = o.eccentricity < 1 ? Math.Max(UT - o.period / 2, Planetarium.GetUniversalTime()) : Planetarium.GetUniversalTime();
             switch (snap)
             {
                 case Snap.PERIAPSIS:
-                    UT = o.NextPeriapsisTime(o.eccentricity < 1 ? UT - o.period / 2 : UT);
+                    UT = o.NextPeriapsisTime(searchFrom);
                     break;
 
                 case Snap.APOAPSIS:
-                    if (o.eccentricity < 1) UT = o.NextApoapsisTime(UT - o.period / 2);
+                    if (o.eccentricity < 1) UT = o.NextApoapsisTime(searchFrom);
                     break;
 
                 case Snap.EQ_ASCENDING:
-                    if (o.AscendingNodeEquatorialExists()) UT = o.TimeOfAscendingNodeEquatorial(UT - o.period / 2);
+                    if (o.AscendingNodeEquatorialExists()) UT = o.TimeOfAscendingNodeEquatorial(searchFrom);
                     break;
 
                 case Snap.EQ_DESCENDING:
-                    if (o.DescendingNodeEquatorialExists()) UT = o.TimeOfDescendingNodeEquatorial(UT - o.period / 2);
+                    if (o.DescendingNodeEquatorialExists()) UT = o.TimeOfDescendingNodeEquatorial(searchFrom);
                     break;
 
                 case Snap.REL_ASCENDING:
                     if (Core.Target.NormalTargetExists && Core.Target.TargetOrbit.referenceBody == o.referenceBody)
                     {
                         if (o.AscendingNodeExists(Core.Target.TargetOrbit))
-                            UT = o.TimeOfAscendingNode(Core.Target.TargetOrbit, UT - o.period / 2);
+                            UT = o.TimeOfAscendingNode(Core.Target.TargetOrbit, searchFrom);
                     }
 
                     break;
@@ -112,13 +130,13 @@ namespace MuMech
                     if (Core.Target.NormalTargetExists && Core.Target.TargetOrbit.referenceBody == o.referenceBody)
                     {
                         if (o.DescendingNodeExists(Core.Target.TargetOrbit))
-                            UT = o.TimeOfDescendingNode(Core.Target.TargetOrbit, UT - o.period / 2);
+                            UT = o.TimeOfDescendingNode(Core.Target.TargetOrbit, searchFrom);
                     }
 
                     break;
             }
 
-            node.UpdateNode(node.DeltaV, UT);
+            MoveNode(UT);
         }
 
         private static readonly string[] relativityModeStrings = { "0", "1", "2", "3", "4" };
