@@ -21,6 +21,10 @@ namespace MuMech
 
         public double TMinus => _launchTime - VesselState.Time;
 
+        // Starting a countdown flushes the PSG solution and the optimizer restarts cold late in the countdown, which can take longer
+        // than the countdown does. Staging with no solution would release the rocket at zero throttle, so T-0 waits for one.
+        private bool WaitingForGuidance => AscentSettings.AscentType == AscentType.PSG && Core.Guidance.Solution == null;
+
         // the inclination the selected ascent type flies
         public EditableDouble InclinationSetting =>
             AscentSettings.AscentType == AscentType.PSG ? Core.PSGSimulation.Inc : AscentSettings.DesiredInclination;
@@ -93,7 +97,9 @@ namespace MuMech
             if (!Active)
                 return false;
 
-            status.Set(Localizer.Format("#MechJeb_Ascent_status6")); //"Awaiting liftoff"
+            status.Set(TMinus <= 0 && WaitingForGuidance
+                ? "Holding launch for guidance"
+                : Localizer.Format("#MechJeb_Ascent_status6")); //"Awaiting liftoff"
             Core.Attitude.SetAxisControl(false, false, false);
             return true;
         }
@@ -105,9 +111,12 @@ namespace MuMech
 
             if (TMinus < 3 * VesselState.DeltaT || (TMinus > 10.0 && _lastTMinus < 1.0))
             {
-                if (VesselState.ThrustAvailable < 10E-4) // only stage if we have no engines active
-                    StageManager.ActivateNextStage();
-                Active = false;
+                if (!WaitingForGuidance)
+                {
+                    if (VesselState.ThrustAvailable < 10E-4) // only stage if we have no engines active
+                        StageManager.ActivateNextStage();
+                    Active = false;
+                }
             }
             else
             {
@@ -121,8 +130,12 @@ namespace MuMech
         private double TimeToPlane(double lan) =>
             Astro.TimeToPlane(MainBody.rotationPeriod, VesselState.Latitude, VesselState.CelestialLongitude, lan, InclinationSetting);
 
+        // every launch tag comes through here, so they all drop the old PSG solution the same way
         private double Start(double timeToLaunch)
         {
+            if (AscentSettings.AscentType == AscentType.PSG)
+                Core.PSGSimulation.FlushSolution();
+
             double launchTime = VesselState.Time + timeToLaunch;
 
             if (AscentSettings.OverrideWarpToPlane)

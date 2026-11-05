@@ -95,10 +95,11 @@ namespace MuMech.MechJebKos
 
             // --- guidance solution (read-only) ---
             // PSG can take ~20s to converge an initial solution from a cold start. Staging before there
-            // is a solution drops the rocket on the pad, so a launch script should wait on HASSOLUTION
-            // (e.g. "WAIT UNTIL ADDONS:MECHJEB:ASCENT:PSG:HASSOLUTION") before releasing the clamps.
+            // is a solution drops the rocket on the pad, so a launch script that stages itself should wait on HASSOLUTION
+            // (e.g. "WAIT UNTIL ADDONS:MECHJEB:ASCENT:PSG:HASSOLUTION") before releasing the clamps. Starting a timed launch
+            // clears the solution until the optimizer solves again, and MechJeb holds its own T-0 staging until then.
             AddSuffix("HASSOLUTION", new Suffix<BooleanValue>(() => Core.Guidance.Solution != null,
-                "True once the optimizer has produced a guidance solution. Wait on this before staging to launch."));
+                "True once the optimizer has produced a guidance solution; starting a timed launch clears it until the optimizer solves again. Wait on this before staging to launch manually (a timed launch holds its own staging until there is one)."));
             AddSuffix("GUIDANCESTATUS", new Suffix<StringValue>(() => Core.Guidance.Status.ToString(),
                 "PSG guidance controller status (ENABLED, INITIALIZED, BURNING, COASTING, TERMINAL, ...)."));
             AddSuffix("VGO", new Suffix<ScalarValue>(() => Core.Guidance.Vgo,
