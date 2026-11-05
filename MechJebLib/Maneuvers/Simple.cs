@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using MechJebLib.FunctionImpls;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
@@ -172,7 +171,7 @@ namespace MechJebLib.Maneuvers
 
         /// <summary>
         ///     Returns the vector delta V required to be applied in the prograde (or retrograde) direction
-        ///     to change the orbit Apoapsis to the desired value.
+        ///     to change the orbit Apoapsis to the desired value. Zero if the apoapsis would be at or below the current radius.
         /// </summary>
         /// <param name="mu">Gravitational parameter</param>
         /// <param name="r">Current radius</param>
@@ -186,7 +185,17 @@ namespace MechJebLib.Maneuvers
             CheckDebug.NonZeroFinite(r);
             CheckDebug.PositiveFinite(newApR);
 
-            return RealDeltaVToChangeApoapsisPrograde.Run(mu, r, v, newApR);
+            double rm = r.magnitude;
+            if (newApR <= rm)
+                return V3.zero;
+
+            // Along v, the speed s gives h = s d, with d = |r x v^|. An apsis R has R^2 (s^2/2 - mu/r) + mu R - h^2/2 = 0 (energy
+            // and angular momentum at r and at R), so s^2 = 2 mu R (R - r) / (r (R^2 - d^2)); with d <= r < R that is an apoapsis.
+            V3 vHat = v.normalized;
+            double d = V3.Cross(r, vHat).magnitude;
+            double s = Sqrt(2 * mu * newApR * (newApR - rm) / (rm * (newApR * newApR - d * d)));
+
+            return s * vHat - v;
         }
     }
 }

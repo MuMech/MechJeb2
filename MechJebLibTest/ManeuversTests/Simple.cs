@@ -44,6 +44,33 @@ namespace MechJebLibTest.ManeuversTests
             Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
         }
 
+        // the burn is along the velocity and puts the apoapsis where asked, from 1 to 1e4 radii out, and does nothing below r
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        public void DeltaVToChangeApoapsisProgradeTest(int seed)
+        {
+            var random = new Random(seed);
+
+            var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            double newApR = r.magnitude * Pow(10, 4 * random.NextDouble());
+
+            double rscale = random.NextDouble() * 1.5e8 + 1;
+            double vscale = random.NextDouble() * 3e4 + 1;
+            r *= rscale;
+            v *= vscale;
+            newApR *= rscale;
+            double mu = rscale * vscale * vscale;
+
+            V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToChangeApoapsisPrograde(mu, r, v, newApR);
+
+            Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-9);
+            Assert.True(V3.Cross(dv, v).magnitude <= 1e-12 * dv.magnitude * v.magnitude);
+            Assert.True(V3.Dot(v + dv, v) > 0);
+
+            MechJebLib.Maneuvers.Simple.DeltaVToChangeApoapsisPrograde(mu, r, v, 0.5 * r.magnitude).ShouldEqual(V3.zero, 0);
+        }
+
         [Theory]
         [MemberData(nameof(Seeds))]
         public void DeltaVToEllipticizeTest(int seed)
