@@ -13,6 +13,9 @@ namespace MechJebLib.Functions
 {
     public static class SingleImpulseHyperbolicBurn
     {
+        // burn positions Solve tries around the parking orbit before refining them
+        private const int SCAN_SAMPLES = 36;
+
         /// <summary>
         ///     Single impulse transfer from an elliptical, non-coplanar parking orbit to an arbitrary hyperbolic v-infinity target.
         ///     Ocampo, C., & Saudemont, R. R. (2010). Initial Trajectory Model for a Multi-Maneuver Moon-to-Earth Abort Sequence.
@@ -30,20 +33,46 @@ namespace MechJebLib.Functions
         /// <returns name="dt">Coasting time on the parking orbit from the reference to the burn.</returns>
         public static ( V3 vNeg, V3 vPos, V3 r, double dt) Solve(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false, double rtol = 1e-6)
         {
-            // FIXME: the paper calls for adjusting nearly-circular orbits but never defines what that means, ecc < 0.1 is a guess.
-            return Astro.EccFromStateVectors(mu, r0, v0) < 0.1 ? SolveOptimized(mu, r0, v0, vInf, debug, rtol) : SolveAnalytic(mu, r0, v0, vInf, 0, debug);
-        }
+            // The paper scans its rotation in 1 degree increments when the eccentricity is "relatively small", and stops there.
+            // No eccentricity makes the search safe to skip: the burn at rot = 0 only minimizes the plane change, and when there is
+            // little plane change to make it costs far more than the best burn, at any eccentricity.  And the search has to cover
+            // the whole orbit: the best burn can be on the half where the hyperbola runs retrograde to the parking orbit, which
+            // gets more likely as the eccentricity rises.  So scan around the orbit and refine every minimum of the scan.
+            double step = 2 * PI / SCAN_SAMPLES;
+            double bestRot = 0;
+            double bestCost = double.PositiveInfinity;
 
-        /// <summary>
-        ///     called by Solve when the parking orbit is nearly circular; runs a 1D Brent search over the rotation parameter.
-        /// </summary>
-        private static ( V3 vNeg, V3 vPos, V3 r, double dt) SolveOptimized(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false, double rtol = 1e-6)
-        {
-            // FIXME: it isn't entirely clear what this bracket should be
-            (double rot, _) = BrentMin.Solve(Func, -PI / 2, PI / 2, null, rtol);
-            return SolveAnalytic(mu, r0, v0, vInf, rot, debug);
+            double last = Cost(Sample(SCAN_SAMPLES - 1), null);
+            double first = Cost(Sample(0), null);
 
-            double Func(double testrot, object? o)
+            double prev = last;
+            double curr = first;
+
+            for (int i = 0; i < SCAN_SAMPLES; i++)
+            {
+                double next = i == SCAN_SAMPLES - 1 ? first : i == SCAN_SAMPLES - 2 ? last : Cost(Sample(i + 1), null);
+
+                if (curr <= prev && curr < next)
+                {
+                    (double rot, double cost) = BrentMin.Solve(Cost, Sample(i) - step, Sample(i) + step, null, rtol);
+
+                    if (cost < bestCost)
+                    {
+                        bestRot = rot;
+                        bestCost = cost;
+                    }
+                }
+
+                prev = curr;
+                curr = next;
+            }
+
+            return SolveAnalytic(mu, r0, v0, vInf, bestRot, debug);
+
+            // half a step off so that no sample lands exactly on a burn along vInf, where the escape plane is undefined
+            double Sample(int index) => (index + 0.5) * step - PI;
+
+            double Cost(double testrot, object? o)
             {
                 (V3 vneg, V3 vpos, _, _) = SolveAnalytic(mu, r0, v0, vInf, testrot, debug);
                 return (vpos - vneg).magnitude;
@@ -52,14 +81,14 @@ namespace MechJebLib.Functions
 
         /// <summary>
         ///     This is the implementation function of the single impulse transfer from an elliptical, non-coplanar parking orbit.
-        ///     It could be called directly with e.g. rotation of zero to bypass the line search for the rotation which will be
-        ///     nearly optimal in many cases, but fails in the kinds of nearly coplanar conditions which are common in KSP.
+        ///     A rotation of zero gives the paper's burn with the smallest plane change.  That can cost far more than the best burn
+        ///     when there is little plane change to make, so Solve searches over the rotation.
         /// </summary>
         /// <param name="mu">Gravitational parameter of central body.</param>
         /// <param name="r0">Reference position on the parking orbit (right-handed).</param>
         /// <param name="v0">Reference velocity on the parking orbit (right-handed).</param>
         /// <param name="vInf">Target hyperbolic v-infinity vector (right-handed).</param>
-        /// <param name="rot">Rotation of hf_hat around v_inf_hat. or r1_hat around h0_hat (radians).</param>
+        /// <param name="rot">Rotation of the burn r1_hat around h0_hat from the burn with the smallest plane change (radians).</param>
         /// <param name="debug">Log debug information</param>
         /// <returns name="vNeg">Velocity on the parking orbit before the burn (right-handed).</returns>
         /// <returns name="vPos">Velocity on the hyperbolic ejection orbit after the burn (right-handed).</returns>
@@ -110,32 +139,19 @@ namespace MechJebLib.Functions
             // direction of hyperbolic v-infinity vector
             V3 vInfHat = vInf.normalized;
 
-            // 2 cases for finding hf_hat (90 degree plane change vs general case)
+            // the burn at rot = 0: the paper's closest escape plane (eqs 5 and 20), or for a 90 degree plane change the periapsis (eqs 3 and 20)
             double dot = V3.Dot(h0Hat, vInfHat);
-            V3 hfHat = 1 - Abs(dot) < 1e-10 ? V3.Cross(rp0Hat, vInfHat) : V3.Cross(vInfHat, V3.Cross(h0Hat, vInfHat));
-            hfHat = hfHat.normalized;
+            V3 r1Hat = 1 - Abs(dot) < 1e-10 ? rp0Hat : V3.Cross(vInfHat, h0Hat).normalized;
 
-            V3 r1Hat;
+            // move the burn around the parking orbit.  This searches the same family of hyperbolas as the paper's eq 38, with
+            // tan(rot) = tan(theta) / |sin(declination)|, but it stays well conditioned at any declination
+            r1Hat = Q3.AngleAxis(-rot, h0Hat) * r1Hat;
 
-            // NOTE: the "rot" parameter should be used only for nearly circular, low eccentricity parking orbits
-            if (Abs(V3.Dot(h0Hat, vInfHat)) > 1e-10)
-            {
-                // if the planes are not coincident, rotate hf_hat around v_inf_hat
-                hfHat = Q3.AngleAxis(-rot, vInfHat) * hfHat; // (eq 38)
-                // unit vector pointing at the position of the burn on the parking orbit
-                r1Hat = Sign(V3.Dot(h0Hat, vInfHat)) * V3.Cross(h0Hat, hfHat).normalized; // (eq 40)
-            }
-            else
-            {
-                // unit vector pointing at the position of the burn on the parking orbit
-                r1Hat = V3.Cross(vInfHat, hfHat).normalized; // (eq 20)
-                // if the planes are coincident, rotate r1_hat around h0_hat
-                // (this is an extension to what is in the paper to help with the nearly-circular, nearly-coplanar case)
-                r1Hat = Q3.AngleAxis(-rot, h0Hat) * r1Hat;
-            }
+            // the escape plane through the burn and vInf (eq 20 solved for hf_hat)
+            V3 hfHat = V3.Cross(r1Hat, vInfHat).normalized;
 
-            // true anomaly of r1 on the parking orbit
-            double nu10 = Sign(V3.Dot(h0Hat, V3.Cross(rp0Hat, r1Hat))) * SafeAcos(V3.Dot(rp0Hat, r1Hat));
+            // true anomaly of r1 on the parking orbit (eq 21, atan2 so sign(0) can't turn pi into 0)
+            double nu10 = Atan2(V3.Dot(h0Hat, V3.Cross(rp0Hat, r1Hat)), V3.Dot(rp0Hat, r1Hat));
 
             // length of the position vector of the burn on the parking orbit
             double r1 = p0 / (1 + ecc0 * Cos(nu10));
@@ -163,11 +179,12 @@ namespace MechJebLib.Functions
             // semi-latus rectum of hyperbolic ejection orbit
             double pf = af * (1 - ef * ef);
 
-            // true anomaly of the vInf on the hyperbolic ejection orbit
-            /*double nuInf = SafeAcos(-1 / ef);*/
+            // true anomaly of the vInf on the hyperbolic ejection orbit (eq 28b)
+            double nuInf = SafeAcos(-1 / ef);
 
-            // true anomaly of the burn on the hyperbolic ejection orbit
-            double nu1F = SafeAcos(-1 / ef * cosdnu + Sqrt(ef * ef - 1) / ef * sindnu);
+            // true anomaly of the burn on the hyperbolic ejection orbit (eq 41)
+            // NOTE: not eq 44b, whose acos and stated 0 < nu1f < pi range drop the sign for a burn before periapsis (deltaNu > nuInf)
+            double nu1F = nuInf - deltaNu;
 
             // turning angle of the hyperbolic orbit
             double delta = 2 * SafeAsin(1 / ef);
@@ -187,7 +204,7 @@ namespace MechJebLib.Functions
 
             // compute nu of the reference position on the parking orbit
             V3 r0Hat = r0 / r0.magnitude;
-            double nu0 = Sign(V3.Dot(h0Hat, V3.Cross(rp0Hat, r0Hat))) * SafeAcos(V3.Dot(rp0Hat, r0Hat));
+            double nu0 = Atan2(V3.Dot(h0Hat, V3.Cross(rp0Hat, r0Hat)), V3.Dot(rp0Hat, r0Hat));
 
             // mean angular motion of the parking orbit (rad/time)
             double n = 1 / Sqrt(a0 * a0 * a0 / mu);
