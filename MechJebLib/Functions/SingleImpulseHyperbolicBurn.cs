@@ -6,6 +6,7 @@
 using System;
 using MechJebLib.Minimization;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -33,6 +34,9 @@ namespace MechJebLib.Functions
         /// <returns name="dt">Coasting time on the parking orbit from the reference to the burn.</returns>
         public static ( V3 vNeg, V3 vPos, V3 r, double dt) Solve(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false, double rtol = 1e-6)
         {
+            // a zero v-infinity has no direction, and every burn would come out NaN
+            Check.NonZeroFinite(vInf, nameof(vInf));
+
             // The paper scans its rotation in 1 degree increments when the eccentricity is "relatively small", and stops there.
             // No eccentricity makes the search safe to skip: the burn at rot = 0 only minimizes the plane change, and when there is
             // little plane change to make it costs far more than the best burn, at any eccentricity.  And the search has to cover
@@ -225,10 +229,12 @@ namespace MechJebLib.Functions
                 Print("mean anomaly of ref position: " + m0 + " mean anomaly of burn: " + m1);
             }
 
-            // coast time on the parking orbit
+            // coast time on the parking orbit.  A burn at the reference itself, found again from there, can come out a hair behind
+            // it (up to 1e-10 of a period in the tests): that burn is now, not a period later
+            double period = 2 * PI / n;
             double dt = (m1 - m0) / n;
             if (dt < 0)
-                dt += 2 * PI / n;
+                dt = dt > -1e-9 * period ? 0 : dt + period;
 
             if (debug)
                 Print("[MechJeb] singleImpulseHyperbolicBurn vNeg = " + vNeg + " vPos = " + vPos + " r = " + r + " dt = " + dt);
