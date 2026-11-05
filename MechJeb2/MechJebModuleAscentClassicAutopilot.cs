@@ -48,6 +48,7 @@ namespace MuMech
             Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
 
             if (_placedCircularizeNode) Core.Node.Abort();
+            if (_mode == AscentMode.COAST_TO_APOAPSIS) Core.Warp.MinimumWarp();
         }
 
         public double VerticalAscentEnd() => AscentSettings.AutoPath ? AscentSettings.AutoTurnStartAltitude : AscentSettings.TurnStartAltitude;
@@ -123,7 +124,7 @@ namespace MuMech
 
         private void DriveVerticalAscent()
         {
-            if (!IsVerticalAscent(VesselState.AltitudeTrue, VesselState.SpeedSurface)) _mode = AscentMode.GRAVITY_TURN;
+            if (!IsVerticalAscent(VesselState.AltitudeASL, VesselState.SpeedSurface)) _mode = AscentMode.GRAVITY_TURN;
             if (Orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode = AscentMode.COAST_TO_APOAPSIS;
 
             Core.Attitude.AttitudeToVerticalLaunch(
@@ -149,7 +150,7 @@ namespace MuMech
             }
 
             //if we've fallen below the turn start altitude, go back to vertical ascent
-            if (IsVerticalAscent(VesselState.AltitudeTrue, VesselState.SpeedSurface))
+            if (IsVerticalAscent(VesselState.AltitudeASL, VesselState.SpeedSurface))
             {
                 _mode = AscentMode.VERTICAL_ASCENT;
                 return;

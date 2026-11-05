@@ -96,7 +96,7 @@ namespace MuMech
                 bool changed = value != _autostage;
                 _autostage = value;
                 if (!changed) return;
-                if (_autostage && Enabled)
+                if (_autostage && AscentAutopilot.Enabled)
                 {
                     Core.Staging.Users.Add(AscentAutopilot);
                 }
@@ -246,8 +246,6 @@ namespace MuMech
                 if (type != AscentType)
                     GetAscentModule(type).Enabled = false;
         }
-
-        public override void OnFixedUpdate() => DisableAscentModules();
 
         public override void OnStart(PartModule.StartState state)
         {
