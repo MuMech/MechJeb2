@@ -2,7 +2,6 @@ extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
-using MechJebLib.Functions;
 using MechJebLib.PSG;
 using MechJebLibBindings.PSG;
 using UnityEngine;
@@ -40,13 +39,13 @@ namespace MuMech
 
         internal bool _launchingWithAnyPlaneControl => _launchingToPlane || _launchingToMatchLan || _launchingToLan;
 
-        internal MechJebModuleAscentBaseAutopilot   _autopilot       => Core.Ascent;
+        internal IAscentAutopilot                   _autopilot       => Core.Ascent;
         internal MechJebModuleAscentSettings        _ascentSettings  => Core.AscentSettings;
         internal MechJebModuleAscentClassicPathMenu _classicPathMenu => Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
         internal MechJebModuleAscentPSGSettingsMenu _psgSettingsMenu => Core.GetComputerModule<MechJebModuleAscentPSGSettingsMenu>();
         internal MechJebModuleAscentSettingsMenu    _settingsMenu    => Core.GetComputerModule<MechJebModuleAscentSettingsMenu>();
 
-        internal EditableDouble InclinationSetting => _ascentSettings.AscentType == AscentType.PSG ? Core.PSGSimulation.Inc : _ascentSettings.DesiredInclination;
+        internal EditableDouble InclinationSetting => Core.LaunchCountdown.InclinationSetting;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -113,56 +112,24 @@ namespace MuMech
                 _launchingToPlane = _launchingToMatchLan = false;
         }
 
-        internal void LaunchToPlaneOfTarget()
-        {
-            _launchingToPlane = true;
-            (double timeToPlane, double inclination) = Astro.MinimumTimeToPlane(
-                MainBody.rotationPeriod,
-                VesselState.Latitude,
-                VesselState.CelestialLongitude,
-                Core.Target.TargetOrbit.LAN - _ascentSettings.LaunchLANDifference,
-                Core.Target.TargetOrbit.inclination
-            );
-            _autopilot.StartCountdown(VesselState.Time + timeToPlane);
-            InclinationSetting.Val = inclination;
-        }
+        internal void LaunchToPlaneOfTarget() => Core.LaunchCountdown.StartToPlaneOfTarget();
 
-        internal void LaunchToTargetLan()
-        {
-            _launchingToMatchLan = true;
-            _autopilot.StartCountdown(VesselState.Time +
-                Astro.TimeToPlane(
-                    MainBody.rotationPeriod,
-                    VesselState.Latitude,
-                    VesselState.CelestialLongitude,
-                    Core.Target.TargetOrbit.LAN - _ascentSettings.LaunchLANDifference,
-                    InclinationSetting
-                )
-            );
-        }
+        internal void LaunchToTargetLan() => Core.LaunchCountdown.StartToTargetLan();
 
-        internal void LaunchToLan()
-        {
-            _launchingToLan = true;
-            _autopilot.StartCountdown(VesselState.Time +
-                Astro.TimeToPlane(
-                    MainBody.rotationPeriod,
-                    VesselState.Latitude,
-                    VesselState.CelestialLongitude,
-                    Core.PSGSimulation.LAN,
-                    InclinationSetting
-                )
-            );
-        }
+        internal void LaunchToLan() => Core.LaunchCountdown.StartToLan();
 
-        internal void AbortTimedLaunch() => _launchingToPlane = _launchingToMatchLan = _launchingToLan = _autopilot.TimedLaunch = false;
+        internal void AbortTimedLaunch()
+        {
+            _launchingToPlane = _launchingToMatchLan = _launchingToLan = false;
+            Core.LaunchCountdown.Abort();
+        }
 
         private DateTime _lastRefresh = DateTime.MinValue;
         internal string vgo, heading, tgo, pitch, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
 
         // the severity that goes with autopilotStatus; WindowGUI turns it into a style (GUI.skin only exists inside OnGUI,
         // and MechJeb2.UI calls UpdateStrings outside it)
-        internal MechJebModuleAscentBaseAutopilot.StatusLevel autopilotStatusLevel;
+        internal AscentStatusLevel autopilotStatusLevel;
         private TimeSpan _refreshInterval = TimeSpan.FromSeconds(0.1);
 
         [UsedImplicitly]
@@ -193,11 +160,11 @@ namespace MuMech
             else if (_launchingToMatchLan) launchTimer = CachedLocalizer.Instance.MechJebAscentLaunchingToTargetLAN; //Launching to target LAN
             else if (_launchingToLan) launchTimer = CachedLocalizer.Instance.MechJebAscentLaunchingToManualLAN; //Launching to manual LAN
             else launchTimer = string.Empty;
-            if (_autopilot.TMinus > 3 * VesselState.DeltaT)
-                launchTimer += $": T-{GuiUtils.TimeToDHMS(_autopilot.TMinus, 1)}";
+            if (Core.LaunchCountdown.TMinus > 3 * VesselState.DeltaT)
+                launchTimer += $": T-{GuiUtils.TimeToDHMS(Core.LaunchCountdown.TMinus, 1)}";
 
-            autopilotStatus      = CachedLocalizer.Instance.MechJebAscentLabel35 + _autopilot.Status;
-            autopilotStatusLevel = _autopilot.StatusSeverity;
+            autopilotStatus      = CachedLocalizer.Instance.MechJebAscentLabel35 + _autopilot.Status.Text;
+            autopilotStatusLevel = _autopilot.Status.Severity;
             UpdatePhaseLines();
             Profiler.EndSample();
         }

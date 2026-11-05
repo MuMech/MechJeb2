@@ -8,7 +8,6 @@ using kOS.Safe.Encapsulation;
 using kOS.Safe.Encapsulation.Suffixes;
 using kOS.Safe.Exceptions;
 using kOS.Safe.Utilities;
-using MechJebLib.Functions;
 
 namespace MuMech.MechJebKos
 {
@@ -29,8 +28,6 @@ namespace MuMech.MechJebKos
         public AscentPSGBinding(Func<MechJebCore?> core) : base(core) { }
 
         protected override AscentType TargetType => AscentType.PSG;
-
-        protected override EditableDouble InclinationSetting => Core.PSGSimulation.Inc;
 
         protected override void InitializeTypeSuffixes()
         {
@@ -126,20 +123,8 @@ namespace MuMech.MechJebKos
                 throw new KOSException("Launch to LAN requires the vessel to be landed.");
 
             Engage();
-            AscentSettings.LaunchingToLan = true;
             Core.PSGSimulation.LAN.Val = degrees;
-
-            VesselState vs = Core.VesselState;
-            double time = Astro.TimeToPlane(
-                Core.vessel.mainBody.rotationPeriod,
-                vs.Latitude,
-                vs.CelestialLongitude,
-                Core.PSGSimulation.LAN,
-                InclinationSetting);
-
-            double launchUT = vs.Time + time;
-            Module.StartCountdown(launchUT);
-            return launchUT;
+            return Core.LaunchCountdown.StartToLan();
         }
 
         private ScalarValue LaunchToTargetLan()
@@ -151,19 +136,7 @@ namespace MuMech.MechJebKos
                 throw new KOSException("Launch to target LAN requires the vessel to be landed.");
 
             Engage();
-            AscentSettings.LaunchingToMatchLan = true;
-
-            VesselState vs = Core.VesselState;
-            double time = Astro.TimeToPlane(
-                Core.vessel.mainBody.rotationPeriod,
-                vs.Latitude,
-                vs.CelestialLongitude,
-                targetOrbit.LAN - AscentSettings.LaunchLANDifference,
-                InclinationSetting);
-
-            double launchUT = vs.Time + time;
-            Module.StartCountdown(launchUT);
-            return launchUT;
+            return Core.LaunchCountdown.StartToTargetLan();
         }
     }
 }

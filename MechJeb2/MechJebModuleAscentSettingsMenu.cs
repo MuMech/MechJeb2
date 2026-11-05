@@ -10,8 +10,7 @@ namespace MuMech
 
         public override bool ShowInMenu => false;
 
-        private  MechJebModuleAscentSettings      _ascentSettings => Core.AscentSettings;
-        internal MechJebModuleAscentBaseAutopilot _autopilot      => Core.Ascent;
+        private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
 
         internal readonly string _climbString = $"{CachedLocalizer.Instance.MechJebAscentLabel22}: ";
         internal readonly string _turnString = $"{CachedLocalizer.Instance.MechJebAscentLabel23}: ";

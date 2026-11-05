@@ -36,7 +36,7 @@ namespace MuMech.UI
 
         string CurrentMaxAoA()
         {
-            double v = menu._autopilot != null ? menu._autopilot.CurrentMaxAoA : 0;
+            double v = Settings.CurrentMaxAoA;
             long key = (long)Math.Round(v * 10);
             if (key != aoaKey || aoaText == null)
             {

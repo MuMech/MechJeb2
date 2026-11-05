@@ -7,25 +7,46 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    public class MechJebModuleAscentClassicAutopilot : MechJebModuleAscentBaseAutopilot
+    public class MechJebModuleAscentClassicAutopilot : ComputerModule, IAscentAutopilot
     {
         public MechJebModuleAscentClassicAutopilot(MechJebCore core) : base(core) { }
+
+        public AscentStatus Status { get; } = new AscentStatus();
+
+        UserPool IAscentAutopilot.Users => Users;
+
+        private MechJebModuleAscentSettings AscentSettings => Core.AscentSettings;
+
+        private MechJebModuleLaunchCountdown Countdown => Core.LaunchCountdown;
 
         private double _actualTurnStart;
 
         protected override void OnModuleEnabled()
         {
-            base.OnModuleEnabled();
             _placedCircularizeNode = false;
-            _mode = AscentMode.VERTICAL_ASCENT;
+            _mode = AscentMode.PRELAUNCH;
             _actualTurnStart = 0;
+
+            Core.Attitude.Users.Add(this);
+            Core.Thrust.Users.Add(this);
+            if (AscentSettings.Autostage) Core.Staging.Users.Add(this);
+            Countdown.Users.Add(this);
+
+            Status.Set(Localizer.Format("#MechJeb_Ascent_status1")); //"Pre Launch"
         }
 
         protected override void OnModuleDisabled()
         {
-            base.OnModuleDisabled();
+            Core.Attitude.AttitudeDeactivate();
+            if (!Core.RssMode)
+                Core.Thrust.ThrustOff();
+            Core.Thrust.Users.Remove(this);
+            Core.Staging.Users.Remove(this);
+            Countdown.Users.Remove(this);
+
+            Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
+
             if (_placedCircularizeNode) Core.Node.Abort();
-            AscentSettings.Enabled = false;
         }
 
         public double VerticalAscentEnd() => AscentSettings.AutoPath ? AscentSettings.AutoTurnStartAltitude : AscentSettings.TurnStartAltitude;
@@ -59,12 +80,26 @@ namespace MuMech
                 0.01F, 89.99F);
         }
 
-        private enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE }
+        private enum AscentMode { PRELAUNCH, VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE }
 
         private AscentMode _mode;
 
-        protected override bool DriveAscent2()
+        public override void Drive(FlightCtrlState s)
         {
+            AscentSettings.LimitingAoA = false;
+
+            if (_mode == AscentMode.PRELAUNCH)
+            {
+                if (Countdown.DrivePrelaunch(Status)) _mode = AscentMode.VERTICAL_ASCENT;
+                return;
+            }
+
+            if (Countdown.HoldForLiftoff(Status)) return;
+
+            // null when a part's blacklist removed the controller
+            Core.Solarpanel?.DriveForAscent();
+            Core.AntennaControl?.DriveForAscent();
+
             switch (_mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -80,10 +115,9 @@ namespace MuMech
                     break;
 
                 case AscentMode.CIRCULARIZE:
-                    return DriveCircularizationBurn();
+                    if (!DriveCircularizationBurn()) Users.Clear();
+                    break;
             }
-
-            return true;
         }
 
         private void DriveVerticalAscent()
@@ -97,8 +131,8 @@ namespace MuMech
 
             Core.Thrust.TargetThrottle = 1.0F;
 
-            if (!Vessel.LiftedOff() || Vessel.Landed) SetStatus(Localizer.Format("#MechJeb_Ascent_status6")); //"Awaiting liftoff"
-            else SetStatus(Localizer.Format("#MechJeb_Ascent_status18")); //"Vertical ascent"
+            if (!Vessel.LiftedOff() || Vessel.Landed) Status.Set(Localizer.Format("#MechJeb_Ascent_status6")); //"Awaiting liftoff"
+            else Status.Set(Localizer.Format("#MechJeb_Ascent_status18")); //"Vertical ascent"
         }
 
         private double _desiredHeading;
@@ -125,7 +159,7 @@ namespace MuMech
             {
                 Core.Attitude.LimitedAttitudeTo(_desiredHeading, _desiredPitch * UtilMath.Rad2Deg, AscentSettings.ForceRoll, AscentSettings.TurnRoll,
                     ApplyAoALimiter, this);
-                SetStatus(Localizer.Format("#MechJeb_Ascent_status21")); //"Fine tuning apoapsis"
+                Status.Set(Localizer.Format("#MechJeb_Ascent_status21")); //"Fine tuning apoapsis"
                 return;
             }
 
@@ -151,7 +185,7 @@ namespace MuMech
             Core.Attitude.LimitedAttitudeTo(_desiredHeading, _desiredPitch * UtilMath.Rad2Deg, AscentSettings.ForceRoll, AscentSettings.TurnRoll,
                 ApplyAoALimiter, this);
 
-            SetStatus(Localizer.Format("#MechJeb_Ascent_status22")); //"Gravity turn"
+            Status.Set(Localizer.Format("#MechJeb_Ascent_status22")); //"Gravity turn"
         }
 
         private void DriveCoastToApoapsis()
@@ -175,7 +209,7 @@ namespace MuMech
             if (Core.Node.Autowarp)
                 Core.Warp.WarpPhysicsAtRate(2); // 2x physics warp
 
-            SetStatus(Localizer.Format("#MechJeb_Ascent_status23")); //"Coasting to edge of atmosphere"
+            Status.Set(Localizer.Format("#MechJeb_Ascent_status23")); //"Coasting to edge of atmosphere"
         }
 
         private bool _placedCircularizeNode;
@@ -216,7 +250,7 @@ namespace MuMech
                 Core.Node.ExecuteOneNode(this);
             }
 
-            SetStatus(Localizer.Format(
+            Status.Set(Localizer.Format(
                 Core.Node.State == MechJebModuleNodeExecutor.States.BURN ? "#MechJeb_Ascent_status7" : "#MechJeb_Ascent_status8"));
 
             return true;
@@ -267,11 +301,11 @@ namespace MuMech
                 return desiredThrustVector;
 
             double fade = VesselState.DynamicPressure < AscentSettings.AOALimitFadeoutPressure ? AscentSettings.AOALimitFadeoutPressure / VesselState.DynamicPressure : 1;
-            CurrentMaxAoA = IsFinite(fade) ? Math.Min(fade * AscentSettings.MaxAoA, 180d) : 180d;
-            AscentSettings.LimitingAoA = Vessel.altitude < MainBody.atmosphereDepth && Vector3d.Angle(VesselState.SurfaceVelocity, desiredThrustVector) > CurrentMaxAoA;
+            AscentSettings.CurrentMaxAoA = IsFinite(fade) ? Math.Min(fade * AscentSettings.MaxAoA, 180d) : 180d;
+            AscentSettings.LimitingAoA = Vessel.altitude < MainBody.atmosphereDepth && Vector3d.Angle(VesselState.SurfaceVelocity, desiredThrustVector) > AscentSettings.CurrentMaxAoA;
 
             if (AscentSettings.LimitingAoA)
-                desiredThrustVector = MathExtensions.RotateTowards(VesselState.SurfaceVelocity, desiredThrustVector, (float)(CurrentMaxAoA * Mathf.Deg2Rad), 1).normalized;
+                desiredThrustVector = MathExtensions.RotateTowards(VesselState.SurfaceVelocity, desiredThrustVector, (float)(AscentSettings.CurrentMaxAoA * Mathf.Deg2Rad), 1).normalized;
 
             return desiredThrustVector;
         }

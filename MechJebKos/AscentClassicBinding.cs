@@ -21,8 +21,6 @@ namespace MuMech.MechJebKos
 
         protected override AscentType TargetType => AscentType.CLASSIC;
 
-        protected override EditableDouble InclinationSetting => AscentSettings.DesiredInclination;
-
         protected override void InitializeTypeSuffixes()
         {
             AddSuffix("DESIREDALTITUDE", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredOrbitAltitude.Val,

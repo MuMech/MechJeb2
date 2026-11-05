@@ -48,11 +48,11 @@ namespace MuMech.MechJebKos
                 "Whether an ascent autopilot is currently engaged."));
             AddSuffix("DISENGAGE", new NoArgsVoidSuffix(Disengage,
                 "Disengage whichever ascent autopilot is active."));
-            AddSuffix("STATUS", new Suffix<StringValue>(() => Core.Ascent.Status,
+            AddSuffix("STATUS", new Suffix<StringValue>(() => Core.Ascent.Status.Text,
                 "Status text of the active ascent autopilot."));
-            AddSuffix("TMINUS", new Suffix<ScalarValue>(() => Core.Ascent.TMinus,
+            AddSuffix("TMINUS", new Suffix<ScalarValue>(() => Core.LaunchCountdown.TMinus,
                 "Seconds until a timed launch (meaningful only when TIMEDLAUNCH is true)."));
-            AddSuffix("TIMEDLAUNCH", new Suffix<BooleanValue>(() => Core.Ascent.TimedLaunch,
+            AddSuffix("TIMEDLAUNCH", new Suffix<BooleanValue>(() => Core.LaunchCountdown.Active,
                 "Whether a timed launch countdown is active."));
         }
 

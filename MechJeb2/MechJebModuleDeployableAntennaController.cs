@@ -15,6 +15,8 @@ namespace MuMech
 
         protected override bool IsModules(ModuleDeployablePart p) => p is ModuleDeployableAntenna;
 
+        protected override bool AutoDeployDuringAscent => Core.AscentSettings.AutoDeployAntennas;
+
         protected override string GetButtonText(DeployablePartState deployablePartState)
         {
             return deployablePartState switch
