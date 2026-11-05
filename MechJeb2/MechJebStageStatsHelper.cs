@@ -312,13 +312,16 @@ namespace MuMech
                 MinRcsDeltaV = MaxRcsDeltaV = RcsISP = RcsThrust = RcsMass = RcsDeltaTime = RcsStartTMR = RcsEndTMR = RcsUllageTime = 0;
             }
 
-            // segments come in the order they burn
+            // Segments come in the order they burn. The simulation takes some RCS figures once, when a stage starts (an RCS
+            // burn at the stage's full mass: min Δv, ISP, thrust, mass, time, the TMR at the end of that burn, and ullage), so
+            // only the stage's first segment has them. It takes the others at the end of each segment (an RCS burn at the mass
+            // left: max Δv, the TMR at the start of that burn), so the stage's are its last segment's.
             public void Add(FuelStats s)
             {
                 if (!Present)
                 {
                     Present = true;
-                    // the start of the stage: its masses, and the RCS figures the simulation takes at a segment's start
+                    // the start of the stage: its masses, and the RCS figures the simulation takes when a stage starts
                     StartMass = s.StartMass;
                     ControllableMass = s.ControllableMass;
                     Thrust = s.Thrust;
@@ -328,7 +331,7 @@ namespace MuMech
                     RcsThrust = s.RcsThrust;
                     RcsMass = s.RcsMass;
                     RcsDeltaTime = s.RcsDeltaTime;
-                    RcsStartTMR = s.RcsStartTMR;
+                    RcsEndTMR = s.RcsEndTMR;
                     RcsUllageTime = s.RcsUllageTime;
                 }
 
@@ -347,7 +350,7 @@ namespace MuMech
                 // the end of the stage, and the RCS figures the simulation takes at a segment's end
                 EndMass = s.EndMass;
                 MaxRcsDeltaV = s.MaxRcsDeltaV;
-                RcsEndTMR = s.RcsEndTMR;
+                RcsStartTMR = s.RcsStartTMR;
             }
         }
 
@@ -371,10 +374,12 @@ namespace MuMech
             _rowPool.AddRange(_rows);
             _rows.Clear();
 
-            foreach (FuelStats s in stats.AtmoStats)
-                Row(s.KSPStage).Atmo.Add(s);
-            foreach (FuelStats s in stats.VacStats)
-                Row(s.KSPStage).Vac.Add(s);
+            // the simulation reverses its segments at the end, so the lists hold them in the reverse of the order they burn:
+            // read them from the end, so that each stage's sums see its segments in the order they burn
+            for (int i = stats.AtmoStats.Count - 1; i >= 0; i--)
+                Row(stats.AtmoStats[i].KSPStage).Atmo.Add(stats.AtmoStats[i]);
+            for (int i = stats.VacStats.Count - 1; i >= 0; i--)
+                Row(stats.VacStats[i].KSPStage).Vac.Add(stats.VacStats[i]);
 
             // the lists are in KSP stage order, the last stage first; keep that
             _rows.Sort(_byStage);
