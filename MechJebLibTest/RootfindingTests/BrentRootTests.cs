@@ -83,5 +83,10 @@ namespace MechJebLibTest.RootfindingTests
             ans = BrentRoot.Solve((t, o) => Tan(t), 2, null);
             ans.ShouldEqual(PI / 2, 21 * EPS);
         }
+
+        // two values of the same sign whose product underflows to 0 don't bracket a root
+        [Fact]
+        public void TinyValuesOfOneSignDontBracket() =>
+            Assert.Throws<ArgumentException>(() => BrentRoot.Solve((t, o) => 1e-200, -1.0, 1.0, null));
     }
 }

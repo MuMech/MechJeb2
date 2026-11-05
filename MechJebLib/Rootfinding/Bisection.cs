@@ -49,7 +49,8 @@ namespace MechJebLib.Rootfinding
             if (fb == 0)
                 return (b, fb);
 
-            if (fa * fb > 0)
+            // signs, not products: the product of two tiny values underflows to 0
+            if ((fa > 0) == (fb > 0))
                 throw new ArgumentException("Bisection rootfinding method: guess does not bracket the root");
 
             while (true)
@@ -61,7 +62,11 @@ namespace MechJebLib.Rootfinding
 
                 double fc = f(c, o);
 
-                if (fc * fa < 0)
+                // an exact root: going on would move a onto it with fa = 0, which never brackets again, and walk a to b
+                if (fc == 0)
+                    return (c, fc);
+
+                if ((fc > 0) != (fa > 0))
                 {
                     b = c;
                     fb = fc;

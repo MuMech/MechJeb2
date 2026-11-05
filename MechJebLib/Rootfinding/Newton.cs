@@ -42,7 +42,8 @@ namespace MechJebLib.Rootfinding
             if (fb == 0)
                 return b;
 
-            if (fa * fb > 0)
+            // signs, not a product: the product of two tiny values underflows to 0
+            if ((fa > 0) == (fb > 0))
                 throw new ArgumentException("Newton's rootfinding method: guess does not bracket the root");
 
             if (fa > 0)
