@@ -61,13 +61,25 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             Debug.Log("MechJebModuleGuidanceController: Enabled");
-            Status = PSGStatus.ENABLED;
+            ResetToAwaitingSolution();
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
             Core.Spinup.Users.Add(this);
+        }
+
+        // The state of an enabled controller with nothing to fly yet. UpdatePitchAndHeading doesn't run without a Solution,
+        // so the values it publishes have to be cleared here or the UI and kOS would keep showing the old ones.
+        private void ResetToAwaitingSolution()
+        {
+            Status = PSGStatus.ENABLED;
             Solution = null;
             _allowExecution = false;
             hasCoasted = false;
+            Tgo = Vgo = CurrentPhaseTgo = 0;
+            Pitch = Heading = 0;
+            _inertial = V3.zero;
+            Inertial = Vector3d.zero;
+            _throttle = 0;
         }
 
         protected override void OnModuleDisabled()
@@ -493,6 +505,23 @@ namespace MuMech
             Solution = solution;
             if (Status == PSGStatus.ENABLED)
                 Status = PSGStatus.INITIALIZED;
+        }
+
+        /// <summary>
+        ///     Drops a Solution that no longer applies and goes back to waiting for one. Only for use on the ground, the timed launch
+        ///     buttons and kOS suffixes require a landed vessel. Does nothing while disabled, so a countdown started before engaging
+        ///     keeps the FINISHED status and leaves the throttle alone.
+        /// </summary>
+        public void FlushSolution()
+        {
+            if (!Enabled)
+                return;
+
+            ResetToAwaitingSolution();
+
+            // engaging without a countdown leaves us BURNING with the throttle up on the pad, and once the autopilot has left
+            // prelaunch nothing else lowers it before T-0
+            ThrustOff();
         }
     }
 }

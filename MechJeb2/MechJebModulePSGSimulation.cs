@@ -110,10 +110,7 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             Debug.Log("Enabling PSG Simulation");
-            SuccessfulConverges = LastLmStatus = MaxLmIterations = 0;
-            LastLmStatus = LastLmIterations = 0;
-            Staleness = LastInfeasibility = _lastTime = 0;
-            LastFailureMessage = null;
+            ResetCounters();
             _ascent = null;
             _solution = null;
             // FIXME: should throw and disable on no logicalplan or flightplan
@@ -141,6 +138,27 @@ namespace MuMech
         {
             _ascent?.Cancel();
             _ascent = null;
+        }
+
+        private void ResetCounters()
+        {
+            SuccessfulConverges = LastLmStatus = MaxLmIterations = 0;
+            LastLmStatus = LastLmIterations = 0;
+            Staleness = LastInfeasibility = _lastTime = 0;
+            LastFailureMessage = null;
+        }
+
+        /// <summary>
+        ///     Forgets everything solved so far, including the solve in progress and what guidance is flying. A timed launch calls
+        ///     this because the launch site will have rotated away and the target has changed, so none of it applies any more.
+        /// </summary>
+        public void FlushSolution()
+        {
+            CancelJob();
+            // a cancelled job can still be reading _solution until it stops, so the next job must not be handed it
+            _solution = null;
+            ResetCounters();
+            Core.Guidance.FlushSolution();
         }
 
         private void HandleStageEvent(int data) => _blockOptimizerUntilTime = VesselState.Time + OptimizerPauseTime;
