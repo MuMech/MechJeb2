@@ -16,9 +16,13 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public const int OXIDIZER = -1154601244;
         public const int ELECTRIC_CHARGE = 1566956177;
 
+        // made up, since no capture has a jet
+        public const int INTAKE_AIR = 1;
+
         public const float LIQUID_FUEL_DENSITY = 0.005f;
         public const float OXIDIZER_DENSITY = 0.005f;
         public const float ELECTRIC_CHARGE_DENSITY = 0;
+        public const float INTAKE_AIR_DENSITY = 0.005f;
 
         // RP-1 (RealismOverhaul and RealFuels) resources
         public const int COOLED_RP1 = 1704334082;
@@ -44,6 +48,19 @@ namespace MechJebLibTest.FuelFlowSimulationTests
                 Id = id,
                 Free = density == 0,
                 Density = density,
+                Residual = 0
+            };
+
+        // as SimVesselUpdater.UpdateResources sets a resource that an intake on the vessel gathers: free, though it has a density
+        public static void AddIntakeAir(SimPart part, double amount, double maxAmount) =>
+            part.Resources[INTAKE_AIR] = new SimResource
+            {
+                Amount = amount,
+                MaxAmount = maxAmount,
+                Id = INTAKE_AIR,
+                Free = true,
+                FromIntake = true,
+                Density = INTAKE_AIR_DENSITY,
                 Residual = 0
             };
 

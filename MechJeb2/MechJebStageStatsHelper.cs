@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KSP.Localization;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLibBindings;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -277,22 +278,27 @@ namespace MuMech
                     stages.Add(i);
                 else if (infoItems.showRcs && stats.AtmoStats[i].MinRcsDeltaV > 0)
                     stages.Add(i);
-                else if (!infoItems.showRcs && stats.AtmoStats[i].DeltaV > 0)
+                else if (!infoItems.showRcs && (stats.AtmoStats[i].DeltaV > 0 || Vac(i).DeltaV > 0))
                     stages.Add(i);
         }
 
-        private double _isp(int index)        => showRcs ? stats.VacStats[index].RcsISP : stats.VacStats[index].Isp;
-        private double _thrust(int index)     => showRcs ? stats.VacStats[index].RcsThrust : stats.VacStats[index].Thrust;
-        private double _burnedMass(int index) => showRcs ? stats.VacStats[index].RcsMass : stats.VacStats[index].ResourceMass;
-        private double _deltaTime(int index)  => showRcs ? stats.VacStats[index].RcsDeltaTime : stats.VacStats[index].DeltaTime;
-        private double _atmoDv(int index)     => showRcs ? stats.VacStats[index].MinRcsDeltaV : stats.AtmoStats[index].DeltaV;
-        private double _vacDv(int index)      => showRcs ? stats.VacStats[index].MaxRcsDeltaV : stats.VacStats[index].DeltaV;
+        private static readonly FuelStats _noStats = new FuelStats();
+
+        // the two lists can differ in length: jets stop in the vacuum simulation, so a stage can split in two in the atmosphere alone
+        private FuelStats Vac(int index) => index < stats.VacStats.Count ? stats.VacStats[index] : _noStats;
+
+        private double _isp(int index)        => showRcs ? Vac(index).RcsISP : Vac(index).Isp;
+        private double _thrust(int index)     => showRcs ? Vac(index).RcsThrust : Vac(index).Thrust;
+        private double _burnedMass(int index) => showRcs ? Vac(index).RcsMass : Vac(index).ResourceMass;
+        private double _deltaTime(int index)  => showRcs ? Vac(index).RcsDeltaTime : Vac(index).DeltaTime;
+        private double _atmoDv(int index)     => showRcs ? Vac(index).MinRcsDeltaV : stats.AtmoStats[index].DeltaV;
+        private double _vacDv(int index)      => showRcs ? Vac(index).MaxRcsDeltaV : Vac(index).DeltaV;
 
         private double _vacStartTWR(int index, double geeASL) =>
-            showRcs ? stats.VacStats[index].RcsStartTWR(geeASL) : stats.VacStats[index].StartTWR(geeASL);
+            showRcs ? Vac(index).RcsStartTWR(geeASL) : Vac(index).StartTWR(geeASL);
 
         private double _vacEndTWR(int index, double geeASL) =>
-            showRcs ? stats.VacStats[index].RcsMaxTWR(geeASL) : stats.VacStats[index].MaxTWR(geeASL);
+            showRcs ? Vac(index).RcsMaxTWR(geeASL) : Vac(index).MaxTWR(geeASL);
 
         private double _atmoStartTWR(int index, double geeASL) =>
             showRcs ? stats.AtmoStats[index].RcsStartTWR(geeASL) : stats.AtmoStats[index].StartTWR(geeASL);

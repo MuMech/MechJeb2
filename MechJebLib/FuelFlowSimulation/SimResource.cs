@@ -10,6 +10,10 @@ namespace MechJebLib.FuelFlowSimulation
     public struct SimResource
     {
         public bool Free;
+
+        // gathered from the air by an intake (IntakeAir): free where there is air, missing where there is none
+        public bool FromIntake;
+
         public double MaxAmount;
         private double _amount;
 

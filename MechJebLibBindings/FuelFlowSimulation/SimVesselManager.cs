@@ -27,6 +27,9 @@ namespace MechJebLibBindings.FuelFlowSimulation
         private readonly Dictionary<SimPart, Part> _inversePartMapping = new Dictionary<SimPart, Part>();
         private readonly Dictionary<SimPartModule, PartModule> _inversePartModuleMapping = new Dictionary<SimPartModule, PartModule>();
 
+        // the resources an intake on the vessel gathers from the air (IntakeAir, or a mod's)
+        private readonly HashSet<int> _intakeResources = new HashSet<int>();
+
         public double T => _vessel.T;
         public V3     R => _vessel.R;
         public V3     V => _vessel.V;
@@ -77,6 +80,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             _partMapping.Clear();
             _inversePartMapping.Clear();
             _inversePartModuleMapping.Clear();
+            _intakeResources.Clear();
         }
 
         public void Release()
