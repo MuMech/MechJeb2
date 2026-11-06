@@ -60,6 +60,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    container:
+      image: ghcr.io/sarbian/ksp-ci:26.04
+      options: --user 1001:1001 # the image's unprivileged runner user, as on GitHub's hosted runners
     permissions:
       contents: read
       pull-requests: write # comment the build on the PR
@@ -84,38 +87,9 @@ jobs:
           dotnet-version: 8.x
 
       # The tests are a net48 assembly: Mono runs them (it is also the runtime KSP uses), the .NET SDK only drives the build.
-      # Its packages are cached for each runner image: apt's mirror usually answers in 4 s, but held some builds for 5 to 16
-      # minutes. A build only saves the cache if it succeeds.
-      - name: Runner image
-        id: image
-        run: echo "version=${ImageOS:-none}-${ImageVersion:-none}" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Mono packages
-        id: mono-cache
-        uses: actions/cache@v6
-        with:
-          path: /tmp/mono-debs/*.deb
-          key: mono-debs-${{ steps.image.outputs.version }}
-
-      - name: Install Mono
-        env:
-          CACHE_HIT: ${{ steps.mono-cache.outputs.cache-hit }}
-        run: |
-          debs=/tmp/mono-debs
-          if [ "$CACHE_HIT" != true ]; then
-            mkdir -p "$debs/partial"
-            # 3 minutes for each command, twice, then no limit but the job's own
-            for limit in 180 180 0; do
-              timeout "$limit" sudo apt-get update -qq &&
-                timeout "$limit" sudo apt-get install -y -qq --download-only -o Dir::Cache::archives="$debs" mono-complete &&
-                break
-              echo "::warning::apt-get failed or ran out of time (limit $limit s, 0 is none)"
-            done
-          fi
-          # apt rather than dpkg -i, which unpacks in name order and trips on pre-dependencies (python3). It needs no package
-          # list for local files. Not --no-download: apt then rejects them ("Pathname to install is not absolute").
-          sudo apt-get install -y -qq "$debs"/*.deb
-          mono --version | head -1
+      # Mono comes with the job container (ghcr.io/sarbian/ksp-ci), so no packages are installed here.
+      - name: Mono version
+        run: mono --version | head -1
 
       - name: Download KSP Libs
         run: |
