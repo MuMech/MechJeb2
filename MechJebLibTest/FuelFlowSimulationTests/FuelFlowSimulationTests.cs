@@ -88,6 +88,19 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertNoBurn(segments[0], 0, JET_TIN_CAN_MASS, 0);
         }
 
+        // a stock intake gathers nothing in an atmosphere without oxygen (Eve, Duna), so the jet doesn't burn there either
+        [Fact]
+        public void JetDoesNotBurnWithoutOxygen()
+        {
+            SimVessel v = SimVesselFixtures.JetTinCan();
+            v.SetConditions(SEA_LEVEL_DENSITY, 1, 0, false);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertNoBurn(segments[0], 0, JET_TIN_CAN_MASS, 0);
+        }
+
         // in vacuum the rocket beside the jet has the fuel to itself
         [Fact]
         public void RocketBesideAJetBurnsAloneInVacuum()

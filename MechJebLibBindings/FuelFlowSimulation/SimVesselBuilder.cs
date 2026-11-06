@@ -22,6 +22,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             private Dictionary<SimPart, Part>             _inversePartMapping       => _manager._inversePartMapping;
             private Dictionary<SimPartModule, PartModule> _inversePartModuleMapping => _manager._inversePartModuleMapping;
             private HashSet<int>                          _intakeResources          => _manager._intakeResources;
+            private HashSet<int>                          _intakeResourcesWithoutOxygen => _manager._intakeResourcesWithoutOxygen;
 
             private static readonly ClassContext _rfModuleEnginesRf = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF");
             private static readonly FieldContext _rfSpoolUpTime = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("effectiveSpoolUpTime");
@@ -163,7 +164,11 @@ namespace MechJebLibBindings.FuelFlowSimulation
                     {
                         PartResourceDefinition? gathered = PartResourceLibrary.Instance.GetDefinition(intake.resourceName);
                         if (gathered != null)
+                        {
                             _intakeResources.Add(gathered.id);
+                            if (!intake.checkForOxygen)
+                                _intakeResourcesWithoutOxygen.Add(gathered.id);
+                        }
                     }
 
                     if (!TryBuildModule(part, kspModule, out SimPartModule? m))

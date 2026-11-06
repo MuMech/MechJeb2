@@ -45,6 +45,9 @@ namespace MechJebLib.FuelFlowSimulation
         public double ATMPressure;
         public double ATMDensity;
         public double MachNumber;
+
+        // whether the atmosphere has oxygen: the intakes that need it gather nothing without it (none on Eve or Duna)
+        public bool ATMOxygen = true;
         public double T;
         public V3 R, V, U;
 
@@ -66,11 +69,12 @@ namespace MechJebLib.FuelFlowSimulation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetConditions(double atmDensity, double atmPressure, double machNumber)
+        public void SetConditions(double atmDensity, double atmPressure, double machNumber, bool atmOxygen = true)
         {
             ATMDensity = atmDensity;
             ATMPressure = atmPressure;
             MachNumber = machNumber;
+            ATMOxygen = atmOxygen;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -154,8 +154,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 return false;
 
             // no air to gather in vacuum, so an air-breathing engine stops there (KSP's flow Clamp would otherwise keep it
-            // running on free air with next to no thrust, for millions of seconds)
-            if (resource.FromIntake && _atmDensity <= 0)
+            // running on free air with next to no thrust, for millions of seconds); nor in an atmosphere with no oxygen
+            if (resource.FromIntake && (_atmDensity <= 0 || (resource.NeedsOxygen && !Part.Vessel.ATMOxygen)))
                 return false;
 
             return resource.Amount > resource.MaxAmount * ModuleResiduals + part.ResourceRequestRemainingThreshold;

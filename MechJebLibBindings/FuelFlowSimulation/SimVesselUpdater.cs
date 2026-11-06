@@ -25,6 +25,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             private Dictionary<SimPartModule, PartModule> _inversePartModuleMapping => _manager._inversePartModuleMapping;
             private SimVessel                             _vessel                   => _manager._vessel;
             private HashSet<int>                          _intakeResources          => _manager._intakeResources;
+            private HashSet<int>                          _intakeResourcesWithoutOxygen => _manager._intakeResourcesWithoutOxygen;
 
             private static readonly FieldContext _pfDecoupled = Assembly("ProceduralFairings").Class("Keramzit.ProceduralFairingDecoupler").Field("decoupled");
             private static readonly FieldContext _rfPredictedMaximumResiduals = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("predictedMaximumResiduals");
@@ -98,6 +99,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
                         Id = kspResource.info.id,
                         Free = kspResource.info.density == 0 || fromIntake,
                         FromIntake = fromIntake,
+                        NeedsOxygen = fromIntake && !_intakeResourcesWithoutOxygen.Contains(kspResource.info.id),
                         Density = kspResource.info.density,
                         Residual = 0
                     };
