@@ -114,7 +114,18 @@ jobs:
           fi
           # apt rather than dpkg -i, which unpacks in name order and trips on pre-dependencies (python3). It needs no package
           # list for local files. Not --no-download: apt then rejects them ("Pathname to install is not absolute").
-          sudo apt-get install -y -qq "$debs"/*.deb
+          # The install from the cache stalled for 21 minutes on a hit (run 42163100708), before any unpacking, so the
+          # download is not the only slow part. Bound each attempt, and when one runs out of time show what apt and dpkg
+          # are doing, so the next stall tells where it waits.
+          for attempt in 1 2; do
+            if timeout 240 sudo apt-get install -y -qq -o Debug::pkgProblemResolver=true -o Debug::pkgDepCache::AutoInstall=true "$debs"/*.deb; then
+              break
+            fi
+            echo "::warning::local install failed or ran out of time (attempt $attempt)"
+            ps -eo pid,etime,args | grep -E '[a]pt|[d]pkg' || true
+            ls -l /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/lib/apt/lists/lock 2>&1 || true
+            if [ "$attempt" = 2 ]; then exit 1; fi
+          done
           mono --version | head -1
 
       - name: Download KSP Libs
