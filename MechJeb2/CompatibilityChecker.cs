@@ -78,7 +78,7 @@ namespace MuMech
                 }
             }
 
-            return Versioning.version_major == 1 && Versioning.version_minor == 12;
+            return Versioning.version_major == 1 && (Versioning.version_minor == 12 || Versioning.version_minor == 13);
 
             /*-----------------------------------------------*\
             | IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |
