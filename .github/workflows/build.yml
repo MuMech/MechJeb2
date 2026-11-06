@@ -60,12 +60,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # The job container runs as root, but the checkout belongs to another user: git refuses to read the repository
-    # (dubious ownership) unless it is marked safe, in every step.
-    env:
-      GIT_CONFIG_COUNT: 1
-      GIT_CONFIG_KEY_0: safe.directory
-      GIT_CONFIG_VALUE_0: '*'
     container:
       image: ghcr.io/sarbian/ksp-ci:26.04
       options: --user 1001:1001 # the image's unprivileged runner user, as on GitHub's hosted runners
