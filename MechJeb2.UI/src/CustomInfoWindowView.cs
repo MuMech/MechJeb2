@@ -127,6 +127,8 @@ namespace MuMech.UI
             rootSize = w.Root.GetComponent<LayoutElement>();
             shownWidth = -1;
             grip = AddGrip(w);
+            // a Locked window keeps its size as well as its place: no grip, as no title bar drag
+            w.Visible(grip.gameObject, () => !window.WindowLocked);
 
             widgets.Refresh();
         }
@@ -247,6 +249,9 @@ namespace MuMech.UI
                 Dragging = false;
                 Done();
             }
+
+            // hidden mid-drag (the window locked, or closed): the drag gets no end, so end it here
+            void OnDisable() => OnEndDrag(null);
         }
     }
 }
