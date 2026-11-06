@@ -1694,6 +1694,7 @@ namespace MuMech
                     capacity = capacity * density / dT; // convert to kg/s
                     mass = Math.Min(mass, capacity);
 
+                    IntakeAvailable += mass;
                     Intakes.Add(new IntakeData(intake, mass));
                 }
             }
