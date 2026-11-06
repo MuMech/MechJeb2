@@ -68,6 +68,7 @@ jobs:
       GIT_CONFIG_VALUE_0: '*'
     container:
       image: ghcr.io/sarbian/ksp-ci:26.04
+      options: --user 1001:1001 # the image's unprivileged runner user, as on GitHub's hosted runners
     permissions:
       contents: read
       pull-requests: write # comment the build on the PR
