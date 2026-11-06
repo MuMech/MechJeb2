@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
@@ -75,6 +76,40 @@ namespace MechJebLibTest.FunctionsTests
             (V3 rBurn, V3 vBurn) = Shepperd.Solve(1.0, dt, r0, v0);
             rBurn.ShouldEqual(r, 1e-8);
             vBurn.ShouldEqual(vNeg, 1e-8);
+        }
+
+        // Solved again from its own burn point, the burn is that point: the coast is zero, not a full period.  The burn and the
+        // reference are then the same point computed two ways, so the coast between them can come out a round-off below zero.
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        public void SolvedFromItsBurnPointTheBurnIsNow(int seed)
+        {
+            var rng = new Random(seed);
+
+            double ecc = 0.3 * rng.NextDouble();
+            (V3 r0, V3 v0) = Astro.StateVectorsFromKeplerian(1.0, 1.0, ecc, PI * rng.NextDouble(), 2 * PI * rng.NextDouble(),
+                2 * PI * rng.NextDouble(), 2 * PI * rng.NextDouble());
+            var vInf = new V3(2 * rng.NextDouble() - 1, 2 * rng.NextDouble() - 1, 2 * rng.NextDouble() - 1);
+
+            (V3 vNeg, V3 vPos, V3 r, double _) = Astro.SingleImpulseHyperbolicBurn(1.0, r0, v0, vInf);
+            (V3 vNeg2, V3 vPos2, V3 r2, double dt2) = Astro.SingleImpulseHyperbolicBurn(1.0, r, vNeg, vInf);
+
+            double period = 2 * PI * Sqrt(Pow(Astro.SmaFromStateVectors(1.0, r0, v0), 3));
+            Assert.True(dt2 < 1e-9 * period, $"coast {dt2} of a period of {period}");
+
+            r2.ShouldEqual(r, 1e-8);
+            vNeg2.ShouldEqual(vNeg, 1e-8);
+            vPos2.ShouldEqual(vPos, 1e-8);
+        }
+
+        [Fact]
+        public void ZeroOrNonFiniteVInfinityThrows()
+        {
+            (V3 r0, V3 v0) = Astro.StateVectorsFromKeplerian(1.0, 1.0, 0.01, 0.1, 0.2, 0.3, 0.4);
+
+            Assert.Throws<ArgumentException>(() => Astro.SingleImpulseHyperbolicBurn(1.0, r0, v0, V3.zero));
+            Assert.Throws<ArgumentException>(() => Astro.SingleImpulseHyperbolicBurn(1.0, r0, v0, new V3(double.NaN, 0, 0)));
+            Assert.Throws<ArgumentException>(() => Astro.SingleImpulseHyperbolicBurn(1.0, r0, v0, new V3(0, double.PositiveInfinity, 0)));
         }
 
         public static IEnumerable<object[]> EccentricitiesAndDeclinations()
