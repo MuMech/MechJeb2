@@ -12,6 +12,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.PSGTests.AscentTests
 {
+    [ParallelTestMethods]
     public class Titan2Tests
     {
         // this is a forced periapsis attachment problem, which chooses an ApR such that it winds up burning the whole rocket.

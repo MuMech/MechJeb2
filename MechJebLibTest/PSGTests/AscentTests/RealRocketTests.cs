@@ -14,6 +14,7 @@ using static System.Math;
 
 namespace MechJebLibTest.PSGTests.AscentTests
 {
+    [ParallelTestMethods]
     public class RealRocketTests
     {
         // This is the classic test from Betts.

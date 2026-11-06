@@ -13,6 +13,7 @@ using static MechJebLib.Utils.Statics;
 namespace MechJebLibTest.PSGTests.AscentTests
 {
     // test from buggy rockets that people have given me
+    [ParallelTestMethods]
     public class BuggyTests
     {
         // Very short burn time suborbital rocket that had trouble with a high altitude convergence
