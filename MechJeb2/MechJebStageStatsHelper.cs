@@ -151,19 +151,19 @@ namespace MuMech
             {
                 case StageData.KSPStage:
                     decimals = 0;
-                    return stats.AtmoStats[index].KSPStage;
+                    return _rows[index].KSPStage;
                 case StageData.ControllableMass:
                     decimals = 3; unit = " t   ";
-                    return stats.AtmoStats[index].ControllableMass;
+                    return _rows[index].Masses.ControllableMass;
                 case StageData.InitialMass:
                     decimals = 3; unit = " t   ";
-                    return stats.AtmoStats[index].StartMass;
+                    return _rows[index].Masses.StartMass;
                 case StageData.FinalMass:
                     decimals = 3; unit = " t   ";
-                    return stats.AtmoStats[index].EndMass;
+                    return _rows[index].Masses.EndMass;
                 case StageData.StagedMass:
                     decimals = 3; unit = " t   ";
-                    return stats.AtmoStats[index].StagedMass;
+                    return _rows[index].Masses.StagedMass;
                 case StageData.BurnedMass:
                     decimals = 3; unit = " t   ";
                     return _burnedMass(index);
@@ -177,7 +177,7 @@ namespace MuMech
                 case StageData.Isp: return _isp(index);
                 case StageData.RcsUllageTime:
                     decimals = -1;
-                    return stats.AtmoStats[index].RcsUllageTime;
+                    return _rows[index].Masses.RcsUllageTime;
                 case StageData.AtmoDeltaV:
                     decimals = 0; unit = " m/s   ";
                     return _atmoDv(index);
@@ -270,41 +270,45 @@ namespace MuMech
             stageHeaderData.Add(StageData.Time, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn12 + SPACING);
         }
 
+        // one row per KSP stage, from the stats module's sums of each stage's segments in both lists (KSPStageSums). The rows
+        // are rebuilt only when the module publishes new stats, which it does in RequestUpdate: GatherStages runs right after
+        // it, and the table reads the rows in the same call
+        private List<KSPStageSums> _rows => stats.Stages;
+
         private void GatherStages(List<int> stages)
         {
             stages.Clear();
-            for (int i = 0; i < stats.AtmoStats.Count; i++)
+            for (int i = 0; i < _rows.Count; i++)
+            {
+                KSPStageSums row = _rows[i];
+                // a stage is hidden only when it has nothing in either list
                 if (infoItems.showEmpty)
                     stages.Add(i);
-                else if (infoItems.showRcs && stats.AtmoStats[i].MinRcsDeltaV > 0)
+                else if (infoItems.showRcs && (row.Atmo.MinRcsDeltaV > 0 || row.Vac.MinRcsDeltaV > 0 || row.Vac.MaxRcsDeltaV > 0))
                     stages.Add(i);
-                else if (!infoItems.showRcs && (stats.AtmoStats[i].DeltaV > 0 || Vac(i).DeltaV > 0))
+                else if (!infoItems.showRcs && (row.Atmo.DeltaV > 0 || row.Vac.DeltaV > 0))
                     stages.Add(i);
+            }
         }
 
-        private static readonly FuelStats _noStats = new FuelStats();
-
-        // the two lists can differ in length: jets stop in the vacuum simulation, so a stage can split in two in the atmosphere alone
-        private FuelStats Vac(int index) => index < stats.VacStats.Count ? stats.VacStats[index] : _noStats;
-
-        private double _isp(int index)        => showRcs ? Vac(index).RcsISP : Vac(index).Isp;
-        private double _thrust(int index)     => showRcs ? Vac(index).RcsThrust : Vac(index).Thrust;
-        private double _burnedMass(int index) => showRcs ? Vac(index).RcsMass : Vac(index).ResourceMass;
-        private double _deltaTime(int index)  => showRcs ? Vac(index).RcsDeltaTime : Vac(index).DeltaTime;
-        private double _atmoDv(int index)     => showRcs ? Vac(index).MinRcsDeltaV : stats.AtmoStats[index].DeltaV;
-        private double _vacDv(int index)      => showRcs ? Vac(index).MaxRcsDeltaV : Vac(index).DeltaV;
+        private double _isp(int index)        => showRcs ? _rows[index].Vac.RcsISP : _rows[index].Vac.Isp;
+        private double _thrust(int index)     => showRcs ? _rows[index].Vac.RcsThrust : _rows[index].Vac.Thrust;
+        private double _burnedMass(int index) => showRcs ? _rows[index].Vac.RcsMass : _rows[index].Vac.ResourceMass;
+        private double _deltaTime(int index)  => showRcs ? _rows[index].Vac.RcsDeltaTime : _rows[index].Vac.DeltaTime;
+        private double _atmoDv(int index)     => showRcs ? _rows[index].Vac.MinRcsDeltaV : _rows[index].Atmo.DeltaV;
+        private double _vacDv(int index)      => showRcs ? _rows[index].Vac.MaxRcsDeltaV : _rows[index].Vac.DeltaV;
 
         private double _vacStartTWR(int index, double geeASL) =>
-            showRcs ? Vac(index).RcsStartTWR(geeASL) : Vac(index).StartTWR(geeASL);
+            showRcs ? _rows[index].Vac.RcsStartTWR(geeASL) : _rows[index].Vac.StartTWR(geeASL);
 
         private double _vacEndTWR(int index, double geeASL) =>
-            showRcs ? Vac(index).RcsMaxTWR(geeASL) : Vac(index).MaxTWR(geeASL);
+            showRcs ? _rows[index].Vac.RcsMaxTWR(geeASL) : _rows[index].Vac.MaxTWR(geeASL);
 
         private double _atmoStartTWR(int index, double geeASL) =>
-            showRcs ? stats.AtmoStats[index].RcsStartTWR(geeASL) : stats.AtmoStats[index].StartTWR(geeASL);
+            showRcs ? _rows[index].Atmo.RcsStartTWR(geeASL) : _rows[index].Atmo.StartTWR(geeASL);
 
         private double _atmoEndTWR(int index, double geeASL) =>
-            showRcs ? stats.AtmoStats[index].RcsMaxTWR(geeASL) : stats.AtmoStats[index].MaxTWR(geeASL);
+            showRcs ? _rows[index].Atmo.RcsMaxTWR(geeASL) : _rows[index].Atmo.MaxTWR(geeASL);
 
         private double CalculateCumulativeVacDeltaV(List<int> stages, int currentStageIndex)
         {
@@ -334,12 +338,12 @@ namespace MuMech
             {
                 int currentStageIndex = stages.IndexOf(index);
 
-                stageDisplayInfo[StageData.KSPStage].Add($"{stats.AtmoStats[index].KSPStage}   ");
-                if (stageVisibility[StageData.ControllableMass]) stageDisplayInfo[StageData.ControllableMass].Add($"{stats.AtmoStats[index].ControllableMass:F3} t   ");
+                stageDisplayInfo[StageData.KSPStage].Add($"{_rows[index].KSPStage}   ");
+                if (stageVisibility[StageData.ControllableMass]) stageDisplayInfo[StageData.ControllableMass].Add($"{_rows[index].Masses.ControllableMass:F3} t   ");
                 if (stageVisibility[StageData.InitialMass])
-                    stageDisplayInfo[StageData.InitialMass].Add($"{stats.AtmoStats[index].StartMass:F3} t   ");
-                if (stageVisibility[StageData.FinalMass]) stageDisplayInfo[StageData.FinalMass].Add($"{stats.AtmoStats[index].EndMass:F3} t   ");
-                if (stageVisibility[StageData.StagedMass]) stageDisplayInfo[StageData.StagedMass].Add($"{stats.AtmoStats[index].StagedMass:F3} t   ");
+                    stageDisplayInfo[StageData.InitialMass].Add($"{_rows[index].Masses.StartMass:F3} t   ");
+                if (stageVisibility[StageData.FinalMass]) stageDisplayInfo[StageData.FinalMass].Add($"{_rows[index].Masses.EndMass:F3} t   ");
+                if (stageVisibility[StageData.StagedMass]) stageDisplayInfo[StageData.StagedMass].Add($"{_rows[index].Masses.StagedMass:F3} t   ");
                 if (stageVisibility[StageData.BurnedMass])
                     stageDisplayInfo[StageData.BurnedMass].Add($"{_burnedMass(index):F3} t   ");
                 if (stageVisibility[StageData.Thrust]) stageDisplayInfo[StageData.Thrust].Add($"{(1000 * _thrust(index)).ToSI()}N   ");
@@ -353,8 +357,8 @@ namespace MuMech
                 if (stageVisibility[StageData.Isp]) stageDisplayInfo[StageData.Isp].Add($"{_isp(index):F2}   ");
                 if (stageVisibility[StageData.RcsUllageTime])
                     stageDisplayInfo[StageData.RcsUllageTime].Add(timeSeconds
-                        ? $"{stats.AtmoStats[index].RcsUllageTime:F2}s   "
-                        : $"{GuiUtils.TimeToDHMS(stats.AtmoStats[index].RcsUllageTime, 1)}   ");
+                        ? $"{_rows[index].Masses.RcsUllageTime:F2}s   "
+                        : $"{GuiUtils.TimeToDHMS(_rows[index].Masses.RcsUllageTime, 1)}   ");
                 if (stageVisibility[StageData.AtmoDeltaV]) stageDisplayInfo[StageData.AtmoDeltaV].Add($"{_atmoDv(index):F0} m/s   ");
                 if (stageVisibility[StageData.VacDeltaV]) stageDisplayInfo[StageData.VacDeltaV].Add($"{_vacDv(index):F0} m/s   ");
                 if (stageVisibility[StageData.AtmoCumulativeDeltaV])
