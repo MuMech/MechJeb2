@@ -5,14 +5,17 @@ namespace KodeKit
 {
     /// <summary>
     /// Formats numbers into a reusable char buffer so live readouts can be pushed to TMP with
-    /// SetCharArray, without allocating strings. Only writes to TMP when the characters changed.
+    /// SetCharArray, without allocating strings. Only writes to TMP when the characters changed, or when TMP shows them cut
+    /// with an ellipsis and their box has changed width since (see Commit).
     /// </summary>
     public class CharText
     {
+        const char Ellipsis = '…';
         readonly TMP_Text target;
         char[] buf = new char[32];
         char[] shown = new char[32];
         int len, shownLen = -1;
+        float pushWidth = -1; // the box's width at the last push
 
         public CharText(TMP_Text target) => this.target = target;
 
@@ -187,20 +190,38 @@ namespace KodeKit
             return AppendInt(v);
         }
 
-        /// <summary>Push to TMP if the characters differ from what is shown. Returns true if the text changed.</summary>
+        /// <summary>
+        /// Push to TMP if the characters differ from what is shown, or if TMP shows them cut and their box is not the width
+        /// they were pushed at. Returns true if the text was pushed.
+        /// </summary>
         public bool Commit()
         {
-            if (len == shownLen)
-            {
-                bool same = true;
-                for (int i = 0; i < len; i++)
-                    if (buf[i] != shown[i]) { same = false; break; }
-                if (same) return false;
-            }
+            // KSP's TMP cuts a text with an ellipsis by writing the ellipsis and an end into its own char buffer, and
+            // ParseInputText restores that buffer only for string texts, not SetCharArray ones: once cut, the value stays cut
+            // at every later width, and the cut text ends in the ellipsis even where it fits. TMP can cut it again at each
+            // layout between two commits, and its isTextTruncated only tells about the last one, so look at what it shows:
+            // cut, in a box of another width than at the push, push it again (TMP then cuts it afresh, or shows all of it).
+            // A box that keeps its width costs nothing more, cut or not.
+            if (len == shownLen && SameAsShown() && (!ShowsEllipsis() || target.rectTransform.rect.width == pushWidth)) return false;
             if (shown.Length < len) shown = new char[buf.Length];
             Array.Copy(buf, shown, len);
             shownLen = len;
+            pushWidth = target.rectTransform.rect.width;
             target.SetCharArray(buf, 0, len);
+            return true;
+        }
+
+        bool ShowsEllipsis()
+        {
+            TMP_TextInfo info = target.textInfo;
+            int n = info?.characterCount ?? 0;
+            return n > 0 && info.characterInfo[n - 1].character == Ellipsis;
+        }
+
+        bool SameAsShown()
+        {
+            for (int i = 0; i < len; i++)
+                if (buf[i] != shown[i]) return false;
             return true;
         }
     }
