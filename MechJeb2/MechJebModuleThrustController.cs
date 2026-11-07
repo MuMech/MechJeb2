@@ -201,6 +201,8 @@ namespace MuMech
             // R&D tech is missing (unlockTechs in the part cfgs) the module is TechLocked and stays disabled.
             Users.Add(this);
 
+            GameEvents.onProtoVesselSave.Add(OnProtoVesselSave);
+
             base.OnStart(state);
         }
 
@@ -534,6 +536,8 @@ namespace MuMech
         public override void OnDestroy()
         {
             DisableDifferentialThrottle();
+            GameEvents.onProtoVesselSave.Remove(OnProtoVesselSave);
+            RestoreRcsRotation();
             base.OnDestroy();
         }
 
@@ -817,23 +821,66 @@ namespace MuMech
                 FlightInputHandler.SetNeutralControls();
             }
 
-            bool disableThrusters = _userCommandingRotation && !Core.RCS.rcsForRotation;
-            if (disableThrusters != _lastDisableThrusters)
+            // "Use RCS for rotation" off: the thrusters don't rotate the vessel, whether the pilot or the attitude controller (SmartASS and
+            // every autopilot) does the turning. The attitude controller wasn't counted, so SmartASS turned with RCS anyway (#979)
+            bool disableThrusters = (_userCommandingRotation || Core.Attitude.Enabled) && !Core.RCS.rcsForRotation;
+            if (disableThrusters != _lastDisableThrusters || (disableThrusters && Vessel.parts.Count != _rcsPartCount))
             {
                 _lastDisableThrusters = disableThrusters;
-                List<ModuleRCS> rcsModules = Vessel.FindPartModulesImplementing<ModuleRCS>();
-                foreach (ModuleRCS pm in rcsModules)
-                {
-                    if (disableThrusters)
-                    {
-                        pm.enablePitch = pm.enableRoll = pm.enableYaw = false;
-                    }
-                    else
-                    {
-                        // TODO : Check the protopart for the original values (slow) ? Or use a dict to save them (hard with save) ?
-                        pm.enablePitch = pm.enableRoll = pm.enableYaw = true;
-                    }
-                }
+                if (disableThrusters)
+                    DisableRcsRotation();
+                else
+                    RestoreRcsRotation();
+            }
+        }
+
+        // The rotation flags of the thrusters MechJeb turned off, with their own values (an editor setting) to give back.
+        private readonly Dictionary<ModuleRCS, (bool pitch, bool yaw, bool roll)> _rcsRotationSaved =
+            new Dictionary<ModuleRCS, (bool pitch, bool yaw, bool roll)>();
+
+        // the part count when the flags were last turned off: thrusters that come with a docking or go with staging are caught again
+        private int _rcsPartCount = -1;
+
+        private void DisableRcsRotation()
+        {
+            _rcsPartCount = Vessel.parts.Count;
+            foreach (ModuleRCS pm in Vessel.FindPartModulesImplementing<ModuleRCS>())
+            {
+                if (!_rcsRotationSaved.ContainsKey(pm))
+                    _rcsRotationSaved[pm] = (pm.enablePitch, pm.enableYaw, pm.enableRoll);
+                pm.enablePitch = pm.enableRoll = pm.enableYaw = false;
+            }
+        }
+
+        private void RestoreRcsRotation()
+        {
+            foreach (KeyValuePair<ModuleRCS, (bool pitch, bool yaw, bool roll)> kv in _rcsRotationSaved)
+            {
+                if (kv.Key == null) continue;
+                kv.Key.enablePitch = kv.Value.pitch;
+                kv.Key.enableYaw   = kv.Value.yaw;
+                kv.Key.enableRoll  = kv.Value.roll;
+            }
+
+            _rcsRotationSaved.Clear();
+            _rcsPartCount = -1;
+        }
+
+        // The flags are persistent: a save while they are off writes the thrusters' own values instead, or the vessel would keep them off.
+        // KSP snapshots the parts when it builds the ProtoVessel from the live vessel, then fires this with no node.
+        private void OnProtoVesselSave(GameEvents.FromToAction<ProtoVessel, ConfigNode> data)
+        {
+            if (_rcsRotationSaved.Count == 0 || data.from == null || data.to != null || data.from.vesselRef != Vessel)
+                return;
+
+            foreach (ProtoPartSnapshot part in data.from.protoPartSnapshots)
+            foreach (ProtoPartModuleSnapshot module in part.modules)
+            {
+                if (!(module.moduleRef is ModuleRCS rcs) || module.moduleValues == null || !_rcsRotationSaved.TryGetValue(rcs, out (bool pitch, bool yaw, bool roll) v))
+                    continue;
+                module.moduleValues.SetValue("enablePitch", v.pitch.ToString());
+                module.moduleValues.SetValue("enableYaw", v.yaw.ToString());
+                module.moduleValues.SetValue("enableRoll", v.roll.ToString());
             }
         }
 
