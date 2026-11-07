@@ -60,7 +60,25 @@ namespace MuMech
             return Start(TimeToPlane(Core.PSGSimulation.LAN));
         }
 
-        public void Abort() => Active = false;
+        // whether the countdown asked the warp controller for a warp, so Abort, Disengage and unticking Auto-warp end it (#2231)
+        private bool _warping;
+
+        public void Abort()
+        {
+            Active = false;
+            StopWarping();
+        }
+
+        // the autopilot disengaged: the countdown stops running, and so does its warp
+        protected override void OnModuleDisabled() => StopWarping();
+
+        private void StopWarping()
+        {
+            if (!_warping)
+                return;
+            _warping = false;
+            Core.Warp.MinimumWarp();
+        }
 
         /// <summary>
         ///     One tick of an autopilot's prelaunch: hold the vessel until T-10 (when there is a countdown), then get the solar panels
@@ -116,12 +134,21 @@ namespace MuMech
                     if (VesselState.ThrustAvailable < 10E-4) // only stage if we have no engines active
                         StageManager.ActivateNextStage();
                     Active = false;
+                    // the warp ended with the countdown: a later disengage must not touch the player's own warp
+                    _warping = false;
                 }
             }
             else
             {
                 if (Core.Node.Autowarp)
+                {
                     Core.Warp.WarpToUT(_launchTime - AscentSettings.WarpCountDown);
+                    _warping = true;
+                }
+                else
+                {
+                    StopWarping();
+                }
             }
 
             _lastTMinus = TMinus;
@@ -137,6 +164,7 @@ namespace MuMech
                 Core.PSGSimulation.FlushSolution();
 
             double launchTime = VesselState.Time + timeToLaunch;
+            _warping = false;
 
             if (AscentSettings.OverrideWarpToPlane)
             {

@@ -25,6 +25,9 @@ namespace MuMech
         [ToggleInfoItem("#MechJeb_HoverslamAutoWarp", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamAutoWarp_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Hoverslam auto-warp
         public bool AutoWarp = true;
 
+        // whether the coast asked the warp controller for a warp
+        private bool _warping;
+
         [ToggleInfoItem("#MechJeb_HoverslamHoldUpright", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamHoldUpright_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Hold upright after touchdown
         public bool HoldUpright;
 
@@ -163,9 +166,16 @@ namespace MuMech
         {
             Core.Attitude.AttitudeTo(Core.Hoverslam.IgnitionAttitude, AttitudeReference.INERTIAL_COT, this);
             if (AutoWarp)
+            {
                 Core.Warp.WarpToUT(Core.Hoverslam.IgnitionUT);
-            else if (!MuUtils.PhysicsRunning() && VesselState.Time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT)
+                _warping = true;
+            }
+            else if (_warping || (!MuUtils.PhysicsRunning() && VesselState.Time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT))
+            {
+                // Auto-warp unticked while warping ends the warp MechJeb started, as at ignition
+                _warping = false;
                 Core.Warp.MinimumWarp(true);
+            }
         }
 
         private void OnEnterBurn() => Core.Thrust.TargetThrottle = 1.0f;

@@ -308,7 +308,14 @@ namespace MuMech
 
         private void TickInitialWarp() => Core.Warp.WarpToUT(_ignitionUT - InitialWarpLeadTime);
 
-        private void OnEnterAligning() => Core.Thrust.ThrustOff();
+        private void OnEnterAligning()
+        {
+            Core.Thrust.ThrustOff();
+            // Auto-warp unticked while warping: stop the warp MechJeb started, once, which leaves the player free to warp by hand.
+            // The warp controller kept warping to the stored UT (#697)
+            if (!_autowarp && Core.Warp.warpToUT > 0)
+                Core.Warp.MinimumWarp();
+        }
 
         private void TickAligning()
         {

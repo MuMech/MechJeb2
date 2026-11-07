@@ -129,7 +129,11 @@ namespace MuMech
             }
 
             if (valid)
+            {
                 warping = true;
+                // a warp the player starts anew, even after they stopped the last one
+                Core.Warp.ClearStop();
+            }
         }
 
         // Stop warping and drop back to minimum (1x) warp.
@@ -142,6 +146,13 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             if (!warping) return;
+
+            // the player or another mod stopped the warp: that ends this one
+            if (Core.Warp.StoppedByOther)
+            {
+                warping = false;
+                return;
+            }
 
             if (warpTarget == WarpTarget.HoverslamBurn)
             {

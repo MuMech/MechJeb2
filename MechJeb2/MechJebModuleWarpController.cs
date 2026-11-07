@@ -34,6 +34,53 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_MJWarpControl", InfoItem.Category.Misc)] //MJ Warp Control
         public void ControlWarpButton() { }
 
+        // set while MechJeb itself changes the rate, so the rate change event can tell its changes from anyone else's
+        private bool _settingRate;
+
+        // The warp someone else stopped: the player's stop key, or a mod such as Kerbal Alarm Clock, set the rate to 1x while MechJeb
+        // was warping to this UT. The autopilots ask again every tick, so MechJeb kept warping (#697, #1019, #2231). Now it raises no
+        // warp until that time has passed, the player warps by hand, or a new warp is started with ClearStop.
+        private double _stoppedUT = double.NaN;
+
+        /// <summary>True while MechJeb holds off warping because someone else stopped its warp.</summary>
+        public bool StoppedByOther => !double.IsNaN(_stoppedUT);
+
+        /// <summary>Lets MechJeb warp again after someone else stopped it, for a warp the player starts anew.</summary>
+        public void ClearStop() => _stoppedUT = double.NaN;
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            GameEvents.onTimeWarpRateChanged.Add(OnTimeWarpRateChanged);
+            base.OnStart(state);
+        }
+
+        public override void OnDestroy()
+        {
+            GameEvents.onTimeWarpRateChanged.Remove(OnTimeWarpRateChanged);
+            base.OnDestroy();
+        }
+
+        // KSP fires this from inside TimeWarp.SetRate, so MechJeb's own changes are the ones made while _settingRate is set
+        private void OnTimeWarpRateChanged()
+        {
+            if (_settingRate)
+                return;
+
+            if (TimeWarp.CurrentRateIndex == 0)
+            {
+                if (warpToUT > 0)
+                {
+                    _stoppedUT = warpToUT;
+                    warpToUT   = 0.0;
+                }
+            }
+            else
+            {
+                // the player warps again: MechJeb manages the warp again
+                _stoppedUT = double.NaN;
+            }
+        }
+
         public override void OnFixedUpdate()
         {
             if (warpToUT > 0)
@@ -80,7 +127,9 @@ namespace MuMech
                 }
                 else
                 {
-                    TimeWarp.SetRate(rateIndex, instant);
+                    _settingRate = true;
+                    try { TimeWarp.SetRate(rateIndex, instant); }
+                    finally { _settingRate = false; }
                 }
 
                 if (activateSASOnWarp && rateIndex == 0)
@@ -94,6 +143,13 @@ namespace MuMech
             {
                 warpToUT = 0.0;
                 return;
+            }
+
+            if (StoppedByOther)
+            {
+                if (VesselState.Time < _stoppedUT)
+                    return;
+                _stoppedUT = double.NaN;
             }
 
             if (maxRate < 0)
