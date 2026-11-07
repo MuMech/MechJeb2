@@ -252,13 +252,17 @@ namespace MechJebLib.PSG
             return TgoBar(tbar, n) * _timeScale;
         }
 
+        // The burn time left in a KSP stage, summed over all of its burn phases.  This does not start from the phase the clock
+        // is in: a vessel can stage ahead of the clock (a fixed booster burning out before its predicted end), and starting
+        // from the booster phase would find no phases for the new stage and return zero.  TgoBar gives zero for phases in the
+        // past, so a stage burned past its predicted end (residuals) still returns zero.
         public double TgoForKSPStage(double t, int kspStage)
         {
             double tbar = (t - T0) / _timeScale;
             double sum = 0;
-            for (int i = IndexForTbar(tbar); i < Phases.Count && Phases[i].KSPStage == kspStage; i++)
+            for (int i = 0; i < Phases.Count; i++)
             {
-                if (Phases[i].Coast)
+                if (Phases[i].Coast || Phases[i].KSPStage != kspStage)
                     continue;
                 sum += TgoBar(tbar, i) * _timeScale;
             }
@@ -458,8 +462,9 @@ namespace MechJebLib.PSG
         /// <param name="pos">Current BCI position</param>
         /// <param name="vel">Current BCI velocity</param>
         /// <param name="t">Current World time</param>
+        /// <param name="kspStage">The vessel's current KSP stage, which the checked phase must not come before</param>
         /// <returns></returns>
-        public bool TerminalGuidanceSatisfied(V3 pos, V3 vel, double t)
+        public bool TerminalGuidanceSatisfied(V3 pos, V3 vel, double t, int kspStage)
         {
             /*
              NOTE: This algorithm suggests that there's a higher level abstraction above a phase/physical rocket stage which fuses
@@ -475,11 +480,14 @@ namespace MechJebLib.PSG
 
             if (tbar < Tmax)
             {
-                int idx = IndexForTbar(tbar);
+                // the vessel may have staged ahead of the clock (a fixed booster burning out before its predicted end), so
+                // never check against a phase before the current KSP stage, such as the end of that booster
+                int first = Max(IndexForKSPStage(kspStage, false), 0);
+                int idx = Max(IndexForTbar(tbar), first);
                 // back up to find an AllowShutdown stage if we've gone past the terminal time and
                 // hit a coast or a fixed burn time stage (the first phase may be a coast in a solution
                 // computed during the coast, so don't walk off the front)
-                while (idx > 0 && (!Phases[idx].AllowShutdown || Phases[idx].Coast))
+                while (idx > first && (!Phases[idx].AllowShutdown || Phases[idx].Coast))
                     idx--;
                 // go forward to the end of this multi-stage burn segment until we hit a coast or fixed stages
                 while (idx < Segments - 1 && Phases[idx].AllowShutdown && Phases[idx + 1].AllowShutdown && !Phases[idx + 1].Coast)

@@ -247,7 +247,7 @@ namespace MuMech
                 shouldEndTerminal = true;
             }
 
-            if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), VesselState.Time))
+            if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), VesselState.Time, Vessel.currentStage))
                 shouldEndTerminal = true;
 
             if (shouldEndTerminal)

@@ -7,6 +7,7 @@ using System;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using Xunit;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.PSGTests
 {
@@ -97,6 +98,59 @@ namespace MechJebLibTest.PSGTests
             }
 
             copy.Dispose();
+        }
+
+        // A fixed booster can burn out a little before the frozen solution predicts, so the vessel is in the upper stage while
+        // the clock is still in the booster phase.  Guidance must then see the whole upper stage burn ahead of it, and must not
+        // compare against the end of the booster (hotstaging puts the vessel ahead of that state, which used to end the ascent
+        // and kill the throttle at separation).
+        [Fact]
+        public void StagingAheadOfTheClock()
+        {
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double rbody = 6.371e+6;
+            double peR = rbody + 185e+3;
+            double mu = 3.986004418e+14;
+
+            // Titan2Tests.FlightPathAngle4Elliptical with a fixed booster and an optimized upper stage
+            Ascent ascent = Ascent.Builder()
+               .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4, allowShutdown: false)
+               .AddStage(31980, 6125.823788668185, 443700, 315, 2, 2)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(peR, peR, peR, Deg2Rad(28.608), Deg2Rad(270), 0, 0, false, false, false)
+               .Build();
+
+            ascent.Run();
+
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+
+            solution.OptimizeKSPStage().ShouldEqual(2);
+            solution.TerminalKSPStage().ShouldEqual(2);
+
+            double boosterEnd = solution.EndTime(0);
+            double upperBurn  = solution.EndTime(1) - solution.StartTime(1);
+
+            // the clock is still in the booster phase, but the upper stage burn is all ahead of us
+            solution.TgoForKSPStage(boosterEnd - 0.1, 2).ShouldEqual(upperBurn, 1e-9);
+            solution.TgoForKSPStage(boosterEnd + 0.1, 2).ShouldEqual(upperBurn - 0.1, 1e-9);
+            solution.TgoForKSPStage(boosterEnd - 0.1, 4).ShouldEqual(0.1, 1e-9);
+            // burned past the end of the booster
+            solution.TgoForKSPStage(boosterEnd + 0.1, 4).ShouldBeZero();
+
+            // ahead of the booster end state after hotstaging, but nowhere near the end of the upper stage
+            double t = boosterEnd - 0.3;
+            (V3 r, V3 v) = solution.StateVectors(t);
+            solution.TerminalGuidanceSatisfied(r, v + 20 * v.normalized, t, 2).ShouldBeFalse();
+
+            // a genuine cutoff at the end of the upper stage still fires
+            double tf = solution.Tf;
+            (V3 rf, V3 vf) = solution.StateVectors(tf);
+            solution.TerminalGuidanceSatisfied(rf, vf + vf.normalized, tf - 0.1, 2).ShouldBeTrue();
+            (V3 rEarly, V3 vEarly) = solution.StateVectors(tf - 5);
+            solution.TerminalGuidanceSatisfied(rEarly, vEarly, tf - 5, 2).ShouldBeFalse();
         }
     }
 }
