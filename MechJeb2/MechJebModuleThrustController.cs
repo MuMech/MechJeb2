@@ -331,13 +331,24 @@ namespace MuMech
                                 rot = dir.normalized;
                             }
 
+                            // aim the engines' thrust along rot, not the control forward: on a control point turned away from the engines
+                            // (a lander can's "forward" or "reverse" point) the thrust pushed sideways or down (#2368). Unchanged when they agree
+                            Vector3d thrustDir = VesselState.ThrustVectorMaxThrottle;
+                            if (thrustDir.sqrMagnitude > 0)
+                                rot = MathExtensions.FromToRotation(thrustDir, VesselState.Forward) * rot;
+
                             Core.Attitude.AttitudeTo(rot, AttitudeReference.INERTIAL, null);
                         }
 
                         break;
                 }
 
-                double tErr = (TransSpdAct - spd) / VesselState.MaxThrustAcceleration;
+                // Kill H/S aims the thrust itself (above), so its full magnitude counts: MaxThrustAcceleration is the part along the control
+                // forward, which is 0 or negative on a control point turned away from the engines
+                double maxAccel = Tmode == TMode.KEEP_VERTICAL && TransKillH
+                    ? VesselState.ThrustVectorMaxThrottle.magnitude / VesselState.Mass
+                    : VesselState.MaxThrustAcceleration;
+                double tErr = (TransSpdAct - spd) / maxAccel;
                 if ((Tmode == TMode.KEEP_ORBITAL && Vector3d.Dot(VesselState.Forward, VesselState.OrbitalVelocity) < 0) ||
                     (Tmode == TMode.KEEP_SURFACE && Vector3d.Dot(VesselState.Forward, VesselState.SurfaceVelocity) < 0))
                 {
