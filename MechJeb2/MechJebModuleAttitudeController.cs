@@ -30,7 +30,9 @@ namespace MuMech
     public class MechJebModuleAttitudeController : ComputerModule
     {
         private float _timeCount;
-        private Part _lastReferencePart;
+        // the control transform KILL ROT last aimed from: a new control point on the same part (ModuleCommand.SetControlPoint) changes it
+        // without changing the part (#360)
+        private Transform _lastReferenceTransform;
 
         public bool RCSAuto = false;
         private readonly bool _attitudeRCSControl = true;
@@ -404,10 +406,10 @@ namespace MuMech
                 Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
 
             if (AttitudeKillRot)
-                if (_lastReferencePart != Vessel.GetReferenceTransformPart() || userCommandingPitch || userCommandingYaw || userCommandingRoll)
+                if (_lastReferenceTransform != Vessel.ReferenceTransform || userCommandingPitch || userCommandingYaw || userCommandingRoll)
                 {
                     AttitudeTo(QuaternionD.LookRotation(Vessel.GetTransform().up, -Vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
-                    _lastReferencePart = Vessel.GetReferenceTransformPart();
+                    _lastReferenceTransform = Vessel.ReferenceTransform;
                 }
 
             if (userCommandingPitch)
