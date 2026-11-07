@@ -370,7 +370,9 @@ namespace MuMech
             }
         }
 
-        private void SetAttitude() => Core.Attitude.AttitudeTo(_worldDirection, AttitudeReference.INERTIAL_COT, this, KillRollRotation);
+        // an "RCS only" burn pushes along the control forward (DoRCS), not along the engines' thrust axis
+        private void SetAttitude() => Core.Attitude.AttitudeTo(_worldDirection, RCSOnly ? AttitudeReference.INERTIAL : AttitudeReference.INERTIAL_COT, this,
+            KillRollRotation);
 
         private bool ShouldTerminatePrincipia()
         {
@@ -427,7 +429,7 @@ namespace MuMech
         // on (the attitude controller ignores the thrust axis then) or no engine gives one. Measuring the angle from forward
         // instead never reached the alignment tolerance when the thrust is off the forward axis.
         private Vector3d BurnAxis() =>
-            Core.Thrust.DifferentialThrottle || VesselState.ThrustForward.sqrMagnitude < 0.5 ? VesselState.Forward : VesselState.ThrustForward;
+            RCSOnly || Core.Thrust.DifferentialThrottle || VesselState.ThrustForward.sqrMagnitude < 0.5 ? VesselState.Forward : VesselState.ThrustForward;
 
         // This handles safely getting the current burning node in Principia without grabbing any subsequent node after
         // principia cleans it up for us.
@@ -458,8 +460,8 @@ namespace MuMech
             if (ReflectionUtils.IsLoadedPrincipia && SafeCurrentPrincipiaNode() == null)
                 return _direction;
 
-            // FIXME: need to deal with RCS forward thrust accel here if we're RCSOnly
-            if (!ReflectionUtils.IsLoadedPrincipia && _dvLeft < VesselState.MaxThrustAcceleration)
+            double accel = RCSOnly ? RcsForwardThrust() / VesselState.Mass : VesselState.MaxThrustAcceleration;
+            if (!ReflectionUtils.IsLoadedPrincipia && _dvLeft < accel)
                 return _direction;
 
             return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
@@ -500,9 +502,59 @@ namespace MuMech
             _dvLeft -= Vector3d.Dot(dV, _worldDirection);
         }
 
-        // FIXME: this needs to work with RCSOnly
+        /// <summary>
+        ///     The forward thrust of the RCS thrusters in kN, whether or not the RCS group is on: VesselState counts RCS only while it is, and
+        ///     "RCS only" turns it on at ignition. With the group off it sums the thrusters as VesselState does, without the balancer.
+        /// </summary>
+        private double RcsForwardThrust()
+        {
+            if (Vessel.ActionGroups[KSPActionGroup.RCS])
+                return VesselState.RCSThrustAvailable.Down;
+
+            double thrust = 0;
+            Transform vesselTransform = Vessel.GetTransform();
+            foreach (Part p in Vessel.parts)
+            {
+                for (int i = 0; i < p.Modules.Count; i++)
+                {
+                    if (!(p.Modules[i] is ModuleRCS rcs) || p.ShieldedFromAirstream || !rcs.rcsEnabled || !rcs.isEnabled || rcs.isJustForShow ||
+                        rcs.flameout || !rcs.enableZ)
+                        continue;
+
+                    foreach (Transform t in rcs.thrusterTransforms)
+                    {
+                        if (!t.gameObject.activeInHierarchy)
+                            continue;
+
+                        // the exhaust direction: a nozzle pointing back (down in the vessel's frame) pushes forward
+                        Vector3d exhaust = rcs.useZaxis ? -t.forward : -t.up;
+                        double back = -vesselTransform.InverseTransformDirection(exhaust).y;
+                        if (back > 0)
+                            thrust += back * rcs.thrusterPower * rcs.thrustPercentage * 0.01 * rcs.flowMult;
+                    }
+                }
+            }
+
+            return thrust;
+        }
+
         private double BurnTime(double dv, out double halfBurnTime, out double spoolupTime)
         {
+            // RCS burns: the "RCS only" toggle, or a vessel whose only thrust is its RCS on the main throttle (VesselState.RCSThrust). The
+            // stage stats hold no RCS, so the burn time was 0 and the burn started at its node: an RCS-only tug's 27 s braking burn started
+            // 3 s early and ended far past it (#651). Constant mass: monopropellant is about 2 % of the mass for 50 m/s
+            if (RCSOnly || VesselState.RCSThrust)
+            {
+                double rcsThrust = RcsForwardThrust();
+                if (rcsThrust > 0)
+                {
+                    double rcsBurnTime = dv / (rcsThrust / VesselState.Mass);
+                    halfBurnTime = rcsBurnTime / 2;
+                    spoolupTime  = 0;
+                    return rcsBurnTime;
+                }
+            }
+
             double dvLeft = dv;
             double halfDvLeft = dv / 2;
 
