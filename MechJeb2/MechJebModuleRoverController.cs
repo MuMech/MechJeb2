@@ -367,7 +367,12 @@ namespace MuMech
             }
             else if (ControlSpeed)
             {
-                speedErr = (WaypointIndex == -1 ? speed.Val : tgtSpeed) - Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Forward);
+                double target = WaypointIndex == -1 ? speed.Val : tgtSpeed;
+                // Heading control slows for a turn as waypoints do: above the turn speed the steering is cut back, and on low gravity the
+                // wheels bounce and stop steering, so a rover on the Mun kept its speed and hardly turned (#1824)
+                if (WaypointIndex == -1 && ControlHeading && target > turnSpeed)
+                    target = TurningSpeed(target, headingErr);
+                speedErr = target - Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Forward);
                 if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != Vessel)
                 {
                     float act = (float)speedPID.Compute(speedErr);
