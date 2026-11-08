@@ -388,7 +388,11 @@ namespace MuMech
 
         private bool ShouldTerminateStock()
         {
-            if (AngleFromNode() < 0.5 * PI) return false;
+            // An RCS burn on the main throttle tapers like an engine's, but thrusters don't fire for a very small input: the last few
+            // cm/s were never burnt off nor overshot, so the burn never ended and the rendezvous autopilot never planned its braking
+            // burn: an RCS-only tug flew into the station at 50 m/s (#651). It ends once under 0.1 m/s is left.
+            bool rcsBurn = RCSOnly || VesselState.RCSThrust;
+            if (AngleFromNode() < 0.5 * PI && !(rcsBurn && _dvLeft < 0.1)) return false;
 
             ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
 
