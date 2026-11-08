@@ -38,11 +38,12 @@ namespace MuMech
         private bool _settingRate;
 
         // The warp someone else stopped: the player's stop key, or a mod such as Kerbal Alarm Clock, set the rate to 1x while MechJeb
-        // was warping to this UT. The autopilots ask again every tick, so MechJeb kept warping (#697, #1019, #2231). Now it raises no
-        // warp until that time has passed, the player warps by hand, or a new warp is started with ClearStop.
+        // was warping to this UT. The autopilots ask again every tick, so MechJeb kept warping (#697, #1019, #2231). Now
+        // AutopilotWarpToUT raises no warp until that time has passed, the player warps by hand, or a new warp is started with
+        // ClearStop. WarpToUT, what other mods call, is such a new warp.
         private double _stoppedUT = double.NaN;
 
-        /// <summary>True while MechJeb holds off warping because someone else stopped its warp.</summary>
+        /// <summary>True while MechJeb's autopilots hold off warping because someone else stopped its warp.</summary>
         public bool StoppedByOther => !double.IsNaN(_stoppedUT);
 
         /// <summary>Lets MechJeb warp again after someone else stopped it, for a warp the player starts anew.</summary>
@@ -84,7 +85,7 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             if (warpToUT > 0)
-                WarpToUT(warpToUT);
+                AutopilotWarpToUT(warpToUT);
         }
 
         internal void PauseWarp()
@@ -137,7 +138,24 @@ namespace MuMech
             }
         }
 
+        /// <summary>
+        ///     Warps to that UT, as a new request: it warps even after someone else stopped MechJeb's last warp. For other mods (kOS's
+        ///     WARPTOUT, RasterPropMonitor's warp buttons), which call it once for each warp the player asks for. The warp then goes on
+        ///     by itself until that UT, or until someone else stops it. MechJeb's autopilots, which ask every tick, call
+        ///     <see cref="AutopilotWarpToUT" /> instead.
+        /// </summary>
         public void WarpToUT(double UT, double maxRate = -1)
+        {
+            ClearStop();
+            AutopilotWarpToUT(UT, maxRate);
+        }
+
+        /// <summary>
+        ///     Warps to that UT for an autopilot that asks every tick. After someone else stopped the warp (the player, or a mod such as
+        ///     Kerbal Alarm Clock), it raises no warp until the stopped warp's UT has passed, the player warps by hand, or
+        ///     <see cref="ClearStop" /> is called for a new warp.
+        /// </summary>
+        public void AutopilotWarpToUT(double UT, double maxRate = -1)
         {
             if (UT <= VesselState.Time)
             {

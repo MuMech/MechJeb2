@@ -308,7 +308,7 @@ namespace MuMech
 
         private void OnEnterInitialWarp() => Core.Thrust.ThrustOff();
 
-        private void TickInitialWarp() => Core.Warp.WarpToUT(_ignitionUT - InitialWarpLeadTime);
+        private void TickInitialWarp() => Core.Warp.AutopilotWarpToUT(_ignitionUT - InitialWarpLeadTime);
 
         private void OnEnterAligning()
         {
@@ -335,7 +335,7 @@ namespace MuMech
         private void TickWarping()
         {
             SetAttitude();
-            Core.Warp.WarpToUT(_ignitionUT - LeadTime);
+            Core.Warp.AutopilotWarpToUT(_ignitionUT - LeadTime);
         }
 
         private void OnEnterLead() => Core.Thrust.ThrustOff();

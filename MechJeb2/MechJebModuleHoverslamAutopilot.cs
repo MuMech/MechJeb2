@@ -169,7 +169,7 @@ namespace MuMech
             Core.Attitude.AttitudeTo(Core.Hoverslam.IgnitionAttitude, AttitudeReference.INERTIAL_COT, this);
             if (AutoWarp)
             {
-                Core.Warp.WarpToUT(Core.Hoverslam.IgnitionUT);
+                Core.Warp.AutopilotWarpToUT(Core.Hoverslam.IgnitionUT);
                 _warping = true;
             }
             else if (_warping || (!MuUtils.PhysicsRunning() && VesselState.Time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT))

@@ -142,7 +142,7 @@ namespace MuMech
             {
                 if (Core.Node.Autowarp)
                 {
-                    Core.Warp.WarpToUT(_launchTime - AscentSettings.WarpCountDown);
+                    Core.Warp.AutopilotWarpToUT(_launchTime - AscentSettings.WarpCountDown);
                     _warping = true;
                 }
                 else

@@ -175,7 +175,7 @@ namespace MuMech
             }
             else
             {
-                Core.Warp.WarpToUT(target);
+                Core.Warp.AutopilotWarpToUT(target);
             }
         }
 
