@@ -412,10 +412,9 @@ namespace MuMech
 
         private bool ShouldTerminateStock()
         {
-            // An RCS burn on the main throttle tapers like an engine's, but thrusters don't fire for a very small input: the last few
-            // cm/s were never burnt off nor overshot, so the burn never ended and the rendezvous autopilot never planned its braking
-            // burn: an RCS-only tug flew into the station at 50 m/s (#651). It ends once under 0.1 m/s is left, or once what's left
-            // hasn't dropped by 0.01 m/s for a second (the tug stalled at 0.18 m/s, at an input of 0.05).
+            // An RCS burn on the main throttle tapers like an engine's, but thrusters don't fire for a very small input, so the last
+            // few cm/s may never be burnt off nor overshot. It ends once under 0.1 m/s is left, or once what's left hasn't dropped by
+            // 0.01 m/s for a second.
             bool rcsBurn = RCSOnly || VesselState.RCSThrust;
             // progress is 0.01 m/s within a second, well under 1 % of any RCS acceleration a burn would rely on
             if (_dvLeft < _lowestDvLeft - 0.01)
@@ -555,8 +554,8 @@ namespace MuMech
         private double BurnTime(double dv, out double halfBurnTime, out double spoolupTime)
         {
             // RCS burns: the "RCS only" toggle, or a vessel whose only thrust is its RCS on the main throttle (VesselState.RCSThrust). The
-            // stage stats hold no RCS, so the burn time was 0 and the burn started at its node: an RCS-only tug's 27 s braking burn started
-            // 3 s early and ended far past it (#651). Constant mass: monopropellant is about 2 % of the mass for 50 m/s
+            // stage stats hold no RCS, so their burn time comes from the forward RCS thrust. Constant mass: monopropellant is about 2 %
+            // of the mass for 50 m/s
             if (RCSOnly || VesselState.RCSThrust)
             {
                 double rcsThrust = RcsForwardThrust();
