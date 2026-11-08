@@ -331,16 +331,22 @@ namespace MuMech
                                 rot = dir.normalized;
                             }
 
-                            // aim the engines' thrust along rot, not the control forward: on a control point turned away from the engines
-                            // (a lander can's "forward" or "reverse" point) the thrust pushed sideways or down (#2368). Unchanged when they agree
-                            // The forward that puts the thrust on rot: turn the vessel by what takes its thrust to rot. Turning rot by
-                            // what takes the thrust to the forward instead is only right for small offsets: with the thrust behind the
-                            // forward that is a half turn about an arbitrary axis, which aimed the engines up
+                            // Aim the engines' thrust along rot, not the control forward: on a control point turned away from the engines
+                            // (a lander can's "forward" or "reverse" point) the thrust pushed sideways or down (#2368). The target is the
+                            // whole attitude: the vessel's own, turned by what takes its thrust to rot. A forward direction alone leaves roll
+                            // to the controller, and with the thrust off the forward axis any roll moves the thrust. When the thrust is on
+                            // rot this is the current attitude, so it holds; with the engines on the forward axis it's the same aim as before
                             Vector3d thrustDir = VesselState.ThrustVectorMaxThrottle;
                             if (thrustDir.sqrMagnitude > 0)
-                                rot = MathExtensions.FromToRotation(thrustDir, rot) * VesselState.Forward;
-
-                            Core.Attitude.AttitudeTo(rot, AttitudeReference.INERTIAL, null);
+                            {
+                                Transform t = Vessel.GetTransform();
+                                QuaternionD current = QuaternionD.LookRotation(t.up, -t.forward);
+                                Core.Attitude.AttitudeTo(MathExtensions.FromToRotation(thrustDir, rot) * current, AttitudeReference.INERTIAL, null);
+                            }
+                            else
+                            {
+                                Core.Attitude.AttitudeTo(rot, AttitudeReference.INERTIAL, null);
+                            }
                         }
 
                         break;
