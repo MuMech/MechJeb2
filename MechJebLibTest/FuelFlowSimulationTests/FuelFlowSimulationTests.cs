@@ -25,6 +25,9 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         private const double RD108_MAX_FUEL_FLOW = 941.44f / (314.68f * 9.80665f);
         private const double RD108_VACUUM_ISP = 314.68f;
         private const double RD108_SEA_LEVEL_ISP = 247.71f;
+        private const double RS68_MAX_FUEL_FLOW = 3380.1f / (410f * 9.80665f);
+        private const double RS68_VACUUM_ISP = 410f;
+        private const double RS68_MASS = 6.6 * 0.8333;
 
         // the mass of the liquid fuel and oxidizer in a full Rockomax64
         private const double ROCKOMAX64_PROPELLANT = 32;
@@ -457,24 +460,71 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             double keroloxDensity = RD108_KEROSENE_RATIO * KEROSENE_DENSITY + RD108_LQD_OXYGEN_RATIO * LQD_OXYGEN_DENSITY;
             double htpMass = RD108_HTP_RATIO * HTP_DENSITY;
             double htpPerKerolox = htpMass / keroloxDensity;
-            double isp = ratedIsp / (1 + htpPerKerolox);
             double propellant = SimVesselFixtures.RD108_TIN_CAN_KEROLOX * (keroloxDensity + htpMass);
             // the RD-108 with its TEATEB, and the tank
             double dryMass = 1.278 + TEATEB_DENSITY + 5;
 
             List<FuelStats> segments = Run(v);
 
+            // the HTP burns out along with the kerolox, leaving the dry mass
             Assert.Single(segments);
-            FuelStats s = segments[0];
-            s.KSPStage.ShouldEqual(0);
-            s.StagedMass.ShouldBeZero();
-            s.StartMass.ShouldEqual(dryMass + propellant, 1e-6);
-            // the HTP burns out along with the kerolox
-            s.EndMass.ShouldEqual(dryMass, 1e-6);
-            s.Thrust.ShouldEqual(RD108_MAX_FUEL_FLOW * ratedIsp * G0, 1e-6);
-            s.DeltaTime.ShouldEqual(propellant / (RD108_MAX_FUEL_FLOW * (1 + htpPerKerolox)), 1e-6);
-            s.Isp.ShouldEqual(isp, 1e-6);
-            s.DeltaV.ShouldEqual(isp * G0 * Math.Log(s.StartMass / s.EndMass), 1e-6);
+            AssertBurn(segments[0], 0, dryMass + propellant, propellant, RD108_MAX_FUEL_FLOW, ratedIsp, 1, ignoredForIsp: htpPerKerolox);
+        }
+
+        // MechJeb2 PR #1612: each RS-68 burns the Ablator in its own nozzle, which is NO_FLOW.  all three RS-68s drain the
+        // boosters' tanks first, and when those are dry the boosters' RS-68s flame out still holding ~706 units of Ablator,
+        // which the core's crossfeed set reaches through the fuel lines.  the core RS-68 can only burn its own Ablator, so
+        // that must not keep the boosters on: they are dropped at ~100 s and the core burns its own tank alone to ~251 s.
+        // the old simulation counted the boosters' Ablator as reachable and carried the empty boosters until the core burned
+        // out.  the Ablator is ignoreForIsp, which takes the isp from the rated 410 s to ~408.09 s.
+        [Fact]
+        public void RS68TinCanAsparagus()
+        {
+            SimVessel v = SimVesselFixtures.RS68TinCanAsparagus();
+            double hydroloxDensity = RS68_LQD_HYDROGEN_RATIO * LQD_HYDROGEN_DENSITY + RS68_LQD_OXYGEN_RATIO * LQD_OXYGEN_DENSITY;
+            double ablatorPerHydrolox = RS68_ABLATOR_RATIO * ABLATOR_DENSITY / hydroloxDensity;
+            // the litres of hydrolox, and the units of Ablator, each RS-68 burns per second
+            double volumeFlow = RS68_MAX_FUEL_FLOW / hydroloxDensity;
+            double ablatorFlow = RS68_ABLATOR_RATIO * volumeFlow;
+            // each booster's tank feeds its own RS-68 and half of the core's
+            double boosterTime = SimVesselFixtures.RS68_TIN_CAN_HYDROLOX / (1.5 * volumeFlow);
+            double hydrolox = SimVesselFixtures.RS68_TIN_CAN_HYDROLOX * hydroloxDensity;
+            const double TANK_MASS = 10;
+            const double RADIAL_DECOUPLER2_MASS = 0.05f;
+            const double FUEL_LINE_MASS = 0.05f;
+            double padMass = 3 * (TANK_MASS + hydrolox + RS68_MASS + RS68_ABLATOR * ABLATOR_DENSITY) +
+                2 * (RADIAL_DECOUPLER2_MASS + FUEL_LINE_MASS);
+            double boosterBurn = 2 * hydrolox * (1 + ablatorPerHydrolox);
+            double coreBurn = hydrolox * (1 + ablatorPerHydrolox);
+            // each booster drops its decoupler, empty tank, fuel line, and RS-68 with the Ablator it did not burn
+            double boosterAblator = RS68_ABLATOR - ablatorFlow * boosterTime;
+            double stagedMass = 2 * (RADIAL_DECOUPLER2_MASS + TANK_MASS + FUEL_LINE_MASS + RS68_MASS + boosterAblator * ABLATOR_DENSITY);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(3, segments.Count);
+            AssertNoBurn(segments[2], 2, padMass, 0);
+            AssertBurn(segments[1], 1, padMass, boosterBurn, RS68_MAX_FUEL_FLOW, RS68_VACUUM_ISP, 1, engines: 3,
+                ignoredForIsp: ablatorPerHydrolox);
+            // the core's burn runs one 1 ms step, the simulation's minimum, past its tank running dry, which adds ~7e-6 to its
+            // time, isp and delta-v
+            AssertBurn(segments[0], 0, padMass - boosterBurn - stagedMass, coreBurn, RS68_MAX_FUEL_FLOW, RS68_VACUUM_ISP, 1, stagedMass,
+                tolerance: 1e-5, ignoredForIsp: ablatorPerHydrolox);
+
+            // every RS-68 burned Ablator for as long as it ran, and only its own: the boosters' RS-68s until the boosters were
+            // dropped, and the core's to the end.  the core drawing on the boosters' Ablator would leave them less and it more.
+            // the boosters were dropped still holding ~706 units, and the core stopped on its hydrolox with ~114 left.
+            List<SimPart> engines = v.Parts.FindAll(p => p.IsEngine);
+            Assert.Equal(3, engines.Count);
+            Assert.Single(engines, p => p.DecoupledInStage == -1);
+            foreach (SimPart engine in engines)
+            {
+                bool booster = engine.DecoupledInStage == 0;
+                double runTime = booster ? segments[1].DeltaTime : segments[1].DeltaTime + segments[0].DeltaTime;
+                double ablator = engine.Resources[ABLATOR].Amount;
+                ablator.ShouldEqual(RS68_ABLATOR - ablatorFlow * runTime, 1e-8);
+                ablator.ShouldEqual(booster ? 705.67 : 114.16, 1e-4);
+            }
         }
 
         private static List<FuelStats> Run(SimVessel v)
@@ -548,20 +598,23 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertBurn(s, kspStage, startMass, propellant, MAINSAIL_MAX_FUEL_FLOW, isp, dirMagnitude, stagedMass, engines, tolerance);
 
         // engines burning the propellant at full throttle, their fuel flow does not depend on the atmosphere so only the
-        // thrust, isp and delta-v change with the atmospheric pressure.
+        // thrust, isp and delta-v change with the atmospheric pressure.  the maxFuelFlow and the rated isp are for the
+        // propellants that count for the isp, ignoredForIsp is the mass of the ignoreForIsp propellants burned per unit mass
+        // of those: it adds to the flow but not to the thrust, which lowers the isp of the whole flow.
         private static void AssertBurn(FuelStats s, int kspStage, double startMass, double propellant, double maxFuelFlow, double isp,
-            double dirMagnitude, double stagedMass = 0, int engines = 1, double tolerance = 1e-6)
+            double dirMagnitude, double stagedMass = 0, int engines = 1, double tolerance = 1e-6, double ignoredForIsp = 0)
         {
             double endMass = startMass - propellant;
+            double effectiveIsp = isp / (1 + ignoredForIsp);
 
             s.KSPStage.ShouldEqual(kspStage);
             s.StagedMass.ShouldEqual(stagedMass, tolerance);
             s.StartMass.ShouldEqual(startMass, tolerance);
             s.EndMass.ShouldEqual(endMass, tolerance);
-            s.DeltaTime.ShouldEqual(propellant / (engines * maxFuelFlow), tolerance);
+            s.DeltaTime.ShouldEqual(propellant / (engines * maxFuelFlow * (1 + ignoredForIsp)), tolerance);
             s.Thrust.ShouldEqual(engines * maxFuelFlow * isp * G0 * dirMagnitude, tolerance);
-            s.Isp.ShouldEqual(isp, tolerance);
-            s.DeltaV.ShouldEqual(isp * G0 * Math.Log(startMass / endMass), tolerance);
+            s.Isp.ShouldEqual(effectiveIsp, tolerance);
+            s.DeltaV.ShouldEqual(effectiveIsp * G0 * Math.Log(startMass / endMass), tolerance);
         }
 
         // the captured thrust directions are unit vectors rotated in single precision, so they are only nearly unit length.

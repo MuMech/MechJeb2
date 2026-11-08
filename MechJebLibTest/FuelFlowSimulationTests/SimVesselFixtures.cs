@@ -140,6 +140,71 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return Finish(v);
         }
 
+        // the litres of hydrolox in each of the RS68TinCanAsparagus's tanks, at the RS-68's mixture ratio
+        public const double RS68_TIN_CAN_HYDROLOX = 350000;
+
+        /// <summary>
+        ///     A Delta IV Heavy cut down to a tin can with stock asparagus staging: three stacks of a procedural hydrolox tank
+        ///     on an RS-68, the two boosters on radial decouplers, each with a fuel line feeding the core.  All three RS-68s are
+        ///     in stage 1 and the decouplers in stage 0.  The tanks hold the hydrolox in the ratio the RS-68 burns it, so the
+        ///     LqdHydrogen and LqdOxygen run out together.  Like the captured asparagus, the fuel lines put each booster's
+        ///     tank and RS-68 in the core's crossfeed set, so the core's set reaches the Ablator in the boosters' RS-68s.  This
+        ///     is built by hand rather than captured, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel RS68TinCanAsparagus()
+        {
+            SimVessel v = NewVessel(2);
+
+            var dir = new V3(1, 0, 0);
+
+            SimPart coreTank = RS68TinCanTank(v, 1, -1);
+            SimPart coreEngine = ROERS68(v, 2, 1, dir);
+
+            SimPart decouplerA = RadialDecoupler2(v, 3, 0, coreTank);
+            SimPart tankA = RS68TinCanTank(v, 4, 0);
+            SimPart engineA = ROERS68(v, 5, 1, dir);
+            SimPart fuelLineA = FuelLine(v, 6, 0);
+
+            SimPart decouplerB = RadialDecoupler2(v, 7, 0, coreTank);
+            SimPart tankB = RS68TinCanTank(v, 8, 0);
+            SimPart engineB = ROERS68(v, 9, 1, dir);
+            SimPart fuelLineB = FuelLine(v, 10, 0);
+
+            MakeRoot(coreTank);
+
+            Link(coreTank, coreEngine);
+            Link(coreTank, decouplerA);
+            Link(decouplerA, tankA);
+            Link(tankA, engineA);
+            Link(tankA, fuelLineA);
+            Link(coreTank, decouplerB);
+            Link(decouplerB, tankB);
+            Link(tankB, engineB);
+            Link(tankB, fuelLineB);
+
+            SimPart[] boosterA = { fuelLineA, engineA, tankA };
+            SimPart[] boosterB = { fuelLineB, engineB, tankB };
+
+            CrossFeedSet(Concat(new[] { coreEngine, coreTank }, boosterA, boosterB), coreEngine, coreTank);
+            CrossFeedSet(boosterA, boosterA);
+            CrossFeedSet(boosterB, boosterB);
+            CrossFeed(decouplerA);
+            CrossFeed(decouplerB);
+
+            Symmetry(decouplerA, decouplerB);
+            Symmetry(tankA, tankB);
+            Symmetry(engineA, engineB);
+            Symmetry(fuelLineA, fuelLineB);
+
+            return Finish(v);
+        }
+
+        // a full tank of the RS68TinCanAsparagus, 10 t dry
+        private static SimPart RS68TinCanTank(SimVessel v, uint persistentId, int inverseStage) =>
+            ROTGenericTankSeparateHydrolox(v, persistentId, inverseStage, 9,
+                RS68_LQD_HYDROGEN_RATIO * RS68_TIN_CAN_HYDROLOX,
+                RS68_LQD_OXYGEN_RATIO * RS68_TIN_CAN_HYDROLOX);
+
         /// <summary>
         ///     A probe core and a large battery bank on an ion engine, in stage 0.  With xenon a xenon tank feeds the engine
         ///     its XenonGas (marked ignoreForIsp with xenonIgnoreForIsp), otherwise it runs on ElectricCharge alone.  With
