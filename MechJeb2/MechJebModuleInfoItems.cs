@@ -126,7 +126,7 @@ namespace MuMech
             return rcsThrustAvg.Value * 1000; // kN to N
         }
 
-        // Returns a value in kN.
+        // Returns a value in kN: ModuleRCS.thrustForces holds each nozzle's thrust in kN.
         private double RCSThrustNow()
         {
             double rcsThrust = 0;
@@ -144,7 +144,7 @@ namespace MuMech
 
                     for (int j = 0; j < pm.thrustForces.Length; j++)
                     {
-                        rcsThrust += pm.thrustForces[j] * pm.thrusterPower;
+                        rcsThrust += pm.thrustForces[j];
                     }
                 }
             }
@@ -190,7 +190,7 @@ namespace MuMech
                         Vector3 thrusterDir = Quaternion.Inverse(Vessel.GetTransform().rotation) * (pm.useZaxis ? -t.forward : -t.up);
                         double thrusterEfficiency = Vector3.Dot(direction, thrusterDir.normalized);
 
-                        effectiveThrust += thrusterEfficiency * pm.thrusterPower * force;
+                        effectiveThrust += thrusterEfficiency * force;
                     }
                 }
             }

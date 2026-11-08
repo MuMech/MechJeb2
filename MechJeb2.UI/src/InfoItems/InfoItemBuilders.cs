@@ -273,10 +273,11 @@ namespace MuMech.UI
                             if (!first) states.Append(' ');
                             first = false;
                             states.Append('(').Append(pm.flowMult * 9, 0).Append(':');
+                            // thrustForces holds each nozzle's thrust in kN: a fraction of thrusterPower, the module's full thrust in vacuum
                             for (int k = 0; k < pm.thrustForces.Length; k++)
                             {
                                 if (k != 0) states.Append(',');
-                                states.Append(pm.thrustForces[k] * 9, 0);
+                                states.Append(pm.thrusterPower > 0 ? pm.thrustForces[k] / pm.thrusterPower * 9 : 0, 0);
                             }
 
                             states.Append(')');
