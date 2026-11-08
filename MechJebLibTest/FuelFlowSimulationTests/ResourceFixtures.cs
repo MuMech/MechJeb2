@@ -43,6 +43,16 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public const double LEAD_BALLAST_DENSITY = 0.011339999735355377;
         public const double TEATEB_DENSITY = 0.00070030998904258013;
 
+        // made up, since no capture has the RD-108's propellants.  the densities are the RealismOverhaul and Community
+        // Resource Pack values, which KSP holds in single precision.
+        public const int KEROSENE = 3;
+        public const int LQD_OXYGEN = 4;
+        public const int HTP = 5;
+
+        public const float KEROSENE_DENSITY = 0.000777f;
+        public const float LQD_OXYGEN_DENSITY = 0.001141f;
+        public const float HTP_DENSITY = 0.001431f;
+
         // this mirrors SimVesselUpdater.UpdateResources for a resource with its flowState enabled
         public static void AddResource(SimPart part, int id, double amount, double maxAmount, double density) =>
             part.Resources[id] = new SimResource

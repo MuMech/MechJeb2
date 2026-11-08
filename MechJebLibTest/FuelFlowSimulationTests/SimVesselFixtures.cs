@@ -109,6 +109,37 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return Finish(v);
         }
 
+        // the litres of kerolox in the RD108TinCan's tank, at the RD-108's mixture ratio
+        public const double RD108_TIN_CAN_KEROLOX = 88000;
+
+        /// <summary>
+        ///     An RP-1 R-7 core stage cut down to a tin can: a procedural tank on an RD-108, the engine in stage 0.  The tank
+        ///     holds the kerosene, liquid oxygen and HTP in the ratios the RD-108 burns them so they all run out together, about
+        ///     90.7t of propellant for a ~289 s burn.  This has not been captured in KSP, so the persistentIds are made up, and
+        ///     the KSC pad conditions are those of the MyFalcon9Block5 capture.
+        /// </summary>
+        public static SimVessel RD108TinCan(bool kscPad = false)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart tank = ROTGenericTankSeparateKeroloxHTP(v, 1, -1, 4,
+                RD108_KEROSENE_RATIO * RD108_TIN_CAN_KEROLOX,
+                RD108_LQD_OXYGEN_RATIO * RD108_TIN_CAN_KEROLOX,
+                RD108_HTP_RATIO * RD108_TIN_CAN_KEROLOX);
+            SimPart engine = ROERD108(v, 2, 0, new V3(1, 0, 0));
+
+            MakeRoot(tank);
+
+            Link(tank, engine);
+
+            CrossFeed(engine, tank);
+
+            if (kscPad)
+                v.SetConditions(0.95934332780160259, 0.9864236759662981, 3.4102277931687742E-09);
+
+            return Finish(v);
+        }
+
         /// <summary>
         ///     A probe core and a large battery bank on an ion engine, in stage 0.  With xenon a xenon tank feeds the engine
         ///     its XenonGas (marked ignoreForIsp with xenonIgnoreForIsp), otherwise it runs on ElectricCharge alone.  With

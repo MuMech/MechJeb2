@@ -10,6 +10,7 @@ using MechJebLib.FuelFlowSimulation.PartModules;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 using static MechJebLibTest.FuelFlowSimulationTests.ResourceFixtures;
+using static MechJebLibTest.FuelFlowSimulationTests.RP1PartFixtures;
 
 namespace MechJebLibTest.FuelFlowSimulationTests
 {
@@ -21,6 +22,9 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         private const double JET_MAX_FUEL_FLOW = 130f / (4000f * 9.80665f);
         private const double JET_ISP = 4000;
         private const double SEA_LEVEL_DENSITY = 1.225;
+        private const double RD108_MAX_FUEL_FLOW = 941.44f / (314.68f * 9.80665f);
+        private const double RD108_VACUUM_ISP = 314.68f;
+        private const double RD108_SEA_LEVEL_ISP = 247.71f;
 
         // the mass of the liquid fuel and oxidizer in a full Rockomax64
         private const double ROCKOMAX64_PROPELLANT = 32;
@@ -436,6 +440,41 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertNoBurn(segments[0], 0, payloadMass, segments[1].EndMass - payloadMass);
 
             AssertMassesMatchCapture(v, "MyFalcon9Block5.out", kscPad);
+        }
+
+        // the RD-108's HTP is ignoreForIsp: its fuel flow and rated isp are for the kerosene and liquid oxygen alone, so its
+        // thrust is the bench thrust, but it burns the HTP on top of that.  that lowers the isp of the whole flow and the
+        // delta-v by the mass of HTP burned per unit mass of kerolox, ~2.8%.  in vacuum the isp is ~306.16s against the
+        // rated 314.68s, and the tin can gets ~8218 m/s against the ~8446 m/s the rated isp would give.
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void RD108TinCan(bool kscPad)
+        {
+            SimVessel v = SimVesselFixtures.RD108TinCan(kscPad);
+            // the atmosphereCurve is linear between vacuum and 1 atm
+            double ratedIsp = RD108_VACUUM_ISP + (RD108_SEA_LEVEL_ISP - RD108_VACUUM_ISP) * v.ATMPressure;
+            double keroloxDensity = RD108_KEROSENE_RATIO * KEROSENE_DENSITY + RD108_LQD_OXYGEN_RATIO * LQD_OXYGEN_DENSITY;
+            double htpMass = RD108_HTP_RATIO * HTP_DENSITY;
+            double htpPerKerolox = htpMass / keroloxDensity;
+            double isp = ratedIsp / (1 + htpPerKerolox);
+            double propellant = SimVesselFixtures.RD108_TIN_CAN_KEROLOX * (keroloxDensity + htpMass);
+            // the RD-108 with its TEATEB, and the tank
+            double dryMass = 1.278 + TEATEB_DENSITY + 5;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            FuelStats s = segments[0];
+            s.KSPStage.ShouldEqual(0);
+            s.StagedMass.ShouldBeZero();
+            s.StartMass.ShouldEqual(dryMass + propellant, 1e-6);
+            // the HTP burns out along with the kerolox
+            s.EndMass.ShouldEqual(dryMass, 1e-6);
+            s.Thrust.ShouldEqual(RD108_MAX_FUEL_FLOW * ratedIsp * G0, 1e-6);
+            s.DeltaTime.ShouldEqual(propellant / (RD108_MAX_FUEL_FLOW * (1 + htpPerKerolox)), 1e-6);
+            s.Isp.ShouldEqual(isp, 1e-6);
+            s.DeltaV.ShouldEqual(isp * G0 * Math.Log(s.StartMass / s.EndMass), 1e-6);
         }
 
         private static List<FuelStats> Run(SimVessel v)

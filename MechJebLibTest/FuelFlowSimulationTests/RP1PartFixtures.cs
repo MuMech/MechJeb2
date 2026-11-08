@@ -46,6 +46,17 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return p;
         }
 
+        // a procedural tank holding the RD-108's propellants, written by hand since no capture has it
+        public static SimPart ROTGenericTankSeparateKeroloxHTP(SimVessel v, uint persistentId, int inverseStage, double modulesMass,
+            double kerosene, double lox, double htp)
+        {
+            SimPart p = NewProceduralPart(v, "ROT-GenericTank-Separate", persistentId, inverseStage, 1, modulesMass);
+            AddResource(p, KEROSENE, kerosene, kerosene, KEROSENE_DENSITY);
+            AddResource(p, LQD_OXYGEN, lox, lox, LQD_OXYGEN_DENSITY);
+            AddResource(p, HTP, htp, htp, HTP_DENSITY);
+            return p;
+        }
+
         public static SimPart RORFTankIntegral(SimVessel v, uint persistentId, int inverseStage, double modulesMass, double nitrogen)
         {
             SimPart p = NewProceduralPart(v, "RO-RFTank-Integral", persistentId, inverseStage, 1, modulesMass);
@@ -114,26 +125,59 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             NewMerlin(v, "ROE-Merlin1DV", persistentId, inverseStage, thrustDirection, 0.48997199535369873, 0.273717612f, 0.105487883f,
                 934.119995f, 360, 2.6730942726135254, 348, 227);
 
-        // a RealFuels Merlin with ullage, residuals, spoolup and auto cutoff, and an isp which is linear in the atmospheric
-        // pressure up to 1 atm, burning kerolox
+        // the RD-108 burns HTP to drive its turbopumps, it is ignoreForIsp so the engine's rated isp is for the kerolox alone
+        public const float RD108_KEROSENE_RATIO = 0.3806f;
+        public const float RD108_LQD_OXYGEN_RATIO = 0.6194f;
+        public const float RD108_HTP_RATIO = 0.0195f;
+
+        // the RD-108 in its RD-108-8D75 configuration (the R-7 8K71 core engine), written by hand from the RealismOverhaul
+        // config since no capture has it.  the residuals and spoolup that RealFuels would compute are left at zero, and the
+        // main chamber (0.852 of the thrust) and the four verniers (0.037 each) are lumped into one thrust transform.
+        public static SimPart ROERD108(SimVessel v, uint persistentId, int inverseStage, V3 thrustDirection)
+        {
+            const float MAX_FUEL_FLOW = 941.44f / (314.68f * 9.80665f);
+
+            SimModuleEngines e = NewRFEngine(v, "ROE-RD108", persistentId, inverseStage, thrustDirection, 1.278, 0, 1, MAX_FUEL_FLOW,
+                MAX_FUEL_FLOW, 941.44f, 941.44f, 0, 0, 314.68f, 247.71f);
+            e.Propellants.Add(new SimPropellant(KEROSENE, false, RD108_KEROSENE_RATIO, SimFlowMode.STACK_PRIORITY_SEARCH,
+                KEROSENE_DENSITY));
+            e.Propellants.Add(new SimPropellant(LQD_OXYGEN, false, RD108_LQD_OXYGEN_RATIO, SimFlowMode.STACK_PRIORITY_SEARCH,
+                LQD_OXYGEN_DENSITY));
+            e.Propellants.Add(new SimPropellant(HTP, true, RD108_HTP_RATIO, SimFlowMode.STACK_PRIORITY_SEARCH, HTP_DENSITY));
+            return e.Part;
+        }
+
+        // a RealFuels Merlin burning kerolox
         private static SimPart NewMerlin(SimVessel v, string name, uint persistentId, int inverseStage, V3 thrustDirection, double dryMass,
             float maxFuelFlow, float minFuelFlow, float maxThrust, float minThrust, double spoolupTime, double vacuumIsp, double seaLevelIsp)
         {
-            const double RESIDUALS = 0.0094669296351484397;
+            SimModuleEngines e = NewRFEngine(v, name, persistentId, inverseStage, thrustDirection, dryMass, 1, 4, maxFuelFlow, minFuelFlow,
+                maxThrust, minThrust, 0.0094669296351484397, spoolupTime, vacuumIsp, seaLevelIsp);
+            e.Propellants.Add(new SimPropellant(COOLED_RP1, false, 0.3877f, SimFlowMode.STACK_PRIORITY_SEARCH, COOLED_RP1_DENSITY));
+            e.Propellants.Add(new SimPropellant(COOLED_LQD_OXYGEN, false, 0.6123f, SimFlowMode.STACK_PRIORITY_SEARCH,
+                COOLED_LQD_OXYGEN_DENSITY));
+            return e.Part;
+        }
 
+        // a RealFuels engine with ullage, residuals, spoolup and auto cutoff, a TEATEB ignitor resource, a single thrust
+        // transform, and an isp which is linear in the atmospheric pressure up to 1 atm.  the caller adds the propellants.
+        private static SimModuleEngines NewRFEngine(SimVessel v, string name, uint persistentId, int inverseStage, V3 thrustDirection,
+            double dryMass, int moduleIndex, double teateb, float maxFuelFlow, float minFuelFlow, float maxThrust, float minThrust,
+            double residuals, double spoolupTime, double vacuumIsp, double seaLevelIsp)
+        {
             SimPart p = NewPart(v, name, persistentId, inverseStage, dryMass);
             p.IsEngine = true;
-            p.EngineResiduals = RESIDUALS;
-            AddResource(p, TEATEB, 4, 4, TEATEB_DENSITY);
+            p.EngineResiduals = residuals;
+            AddResource(p, TEATEB, teateb, teateb, TEATEB_DENSITY);
 
             SimModuleEngines e = NewModuleEngines(p);
             e.IsEnabled = true;
-            e.Index = 1;
+            e.Index = moduleIndex;
             e.MaxFuelFlow = maxFuelFlow;
             e.MinFuelFlow = minFuelFlow;
             e.MaxThrust = maxThrust;
             e.MinThrust = minThrust;
-            e.ModuleResiduals = RESIDUALS;
+            e.ModuleResiduals = residuals;
             e.ModuleSpoolupTime = spoolupTime;
             e.AutoCutoff = true;
             e.IsModuleEnginesRf = true;
@@ -141,12 +185,9 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AppendConstant(e.AtmosphereCurve, 0, 0, vacuumIsp);
             AppendCubicHermite(e.AtmosphereCurve, 0, 1, 0, 1, vacuumIsp, seaLevelIsp - vacuumIsp, seaLevelIsp, seaLevelIsp - vacuumIsp);
             AppendConstant(e.AtmosphereCurve, 1, 1, seaLevelIsp);
-            e.Propellants.Add(new SimPropellant(COOLED_RP1, false, 0.3877f, SimFlowMode.STACK_PRIORITY_SEARCH, COOLED_RP1_DENSITY));
-            e.Propellants.Add(new SimPropellant(COOLED_LQD_OXYGEN, false, 0.6123f, SimFlowMode.STACK_PRIORITY_SEARCH,
-                COOLED_LQD_OXYGEN_DENSITY));
             e.ThrustTransformMultipliers.Add(1);
             e.ThrustDirectionVectors.Add(thrustDirection);
-            return p;
+            return e;
         }
 
         // the prefabs weigh dryMass and the IPartMassModifier modules of the configured part add (or subtract) modulesMass
