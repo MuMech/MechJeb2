@@ -186,7 +186,8 @@ namespace MuMech
                         float force = pm.thrustForces[i];
                         Transform t = pm.thrusterTransforms[i];
 
-                        Vector3 thrusterDir = Quaternion.Inverse(Vessel.GetTransform().rotation) * -t.up;
+                        // the direction of the nozzle's force on the vessel, as ModuleRCS applies it
+                        Vector3 thrusterDir = Quaternion.Inverse(Vessel.GetTransform().rotation) * (pm.useZaxis ? -t.forward : -t.up);
                         double thrusterEfficiency = Vector3.Dot(direction, thrusterDir.normalized);
 
                         effectiveThrust += thrusterEfficiency * pm.thrusterPower * force;
