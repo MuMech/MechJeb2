@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using UnityEngine;
@@ -18,6 +19,9 @@ namespace MechJebLibBindings
         public static readonly bool IsLoadedPrincipia;
         public static readonly bool IsLoadedFAR;
         public static readonly bool IsLoadedRP0;
+
+        // the assemblies already logged as missing
+        private static readonly HashSet<string> _missingAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         static ReflectionUtils()
         {
@@ -55,9 +59,19 @@ namespace MechJebLibBindings
                 }
             }
 
-            // a mod that isn't installed is the normal case, so this says nothing, nor do the lookups of its types and members:
-            // on a stock install the static lookups for RealFuels, RP-0, FAR and Procedural Fairings logged 63 lines at start-up.
-            // a lookup that fails in an installed mod is still logged.
+            // a mod that isn't installed is the normal case: it is logged once per assembly, and the lookups of its types and
+            // members say nothing (on a stock install they logged 63 lines at start-up, for RealFuels, RP-0, FAR and Procedural
+            // Fairings). a lookup that fails in an installed mod is still logged each time.
+            if (assemblyName == "")
+            {
+                bool first;
+                lock (_missingAssemblies)
+                    first = _missingAssemblies.Add(assemblyString);
+
+                if (first)
+                    Debug.Log("[MechJeb] ReflectionUtils: could not find assembly " + assemblyString + ", so its lookups are skipped");
+            }
+
             return new AssemblyContext(assemblyName);
         }
 
