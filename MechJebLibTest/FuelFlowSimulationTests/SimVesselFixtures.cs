@@ -6,8 +6,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using MechJebLib.FuelFlowSimulation;
+using MechJebLib.FuelFlowSimulation.PartModules;
 using MechJebLib.Primitives;
 using static MechJebLibTest.FuelFlowSimulationTests.PartFixtures;
+using static MechJebLibTest.FuelFlowSimulationTests.ResourceFixtures;
 using static MechJebLibTest.FuelFlowSimulationTests.RP1PartFixtures;
 
 namespace MechJebLibTest.FuelFlowSimulationTests
@@ -264,6 +266,172 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             CrossFeed(crossFeed.ToArray());
 
             return Finish(v);
+        }
+
+        /// <summary>
+        ///     A probe core on an FL-R750 RCS tank with an O-10 Puff and an RV-105 RCS block, which both burn the tank's
+        ///     monopropellant.  The Puff is in stage 0, the RCS block is switched on.  residuals stands in for the predicted
+        ///     residuals RealFuels would give the Puff.  This has not been captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel PuffTinCan(double residuals = 0)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart tank = RCSTank1_2(v, 2);
+            SimPart puff = OmsEngine(v, 3, 0, new V3(1, 0, 0), residuals);
+            SimPart rcs = RCSBlockV2(v, 4);
+
+            MakeRoot(probe);
+
+            Link(probe, tank);
+            Link(tank, puff);
+            Link(tank, rcs);
+
+            CrossFeed(rcs, puff, tank, probe);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     The PuffTinCan with a second FL-R750 on a radial decoupler, which drops it in stage 0.  The Puff ignites in
+        ///     stage 1 and, by stage priority flow, burns the drop tank down to its residuals first, so the vessel stages with
+        ///     the Puff still running on the core tank.  This has not been captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel PuffTinCanDropTank(double residuals)
+        {
+            SimVessel v = NewVessel(1);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart tank = RCSTank1_2(v, 2);
+            SimPart puff = OmsEngine(v, 3, 1, new V3(1, 0, 0), residuals);
+            SimPart rcs = RCSBlockV2(v, 4);
+            SimPart dropDecoupler = RadialDecoupler2(v, 5, 0, tank);
+            SimPart dropTank = RCSTank1_2(v, 6, 0);
+
+            MakeRoot(probe);
+
+            Link(probe, tank);
+            Link(tank, puff);
+            Link(tank, rcs);
+            Link(tank, dropDecoupler);
+            Link(dropDecoupler, dropTank);
+
+            CrossFeed(rcs, puff, tank, probe);
+            CrossFeed(dropDecoupler);
+            CrossFeed(dropTank);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     The vessel of MechJeb2 issue #1919: a probe core carrying an RV-105 RCS block, on a decoupler with an FL-R750
+        ///     RCS tank below it.  An O-10 Puff on the probe core ignites in stage 0, as the decoupler drops the tank, so
+        ///     neither the RCS block nor the Puff has any monopropellant left once the vessel stages.  This has not been
+        ///     captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel RcsOverDecoupledTank()
+        {
+            SimVessel v = NewVessel(1);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart rcs = RCSBlockV2(v, 2);
+            SimPart puff = OmsEngine(v, 3, 0, new V3(1, 0, 0));
+            SimPart decoupler = Decoupler2(v, 4, 0, probe);
+            SimPart tank = RCSTank1_2(v, 5, 0);
+
+            MakeRoot(probe);
+
+            Link(probe, rcs);
+            Link(probe, puff);
+            Link(probe, decoupler);
+            Link(decoupler, tank);
+
+            CrossFeed(rcs, puff, probe, decoupler);
+            CrossFeed(tank, decoupler);
+            CrossFeed(decoupler);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     A probe core with a Sepratron I set to throttleLimiter, in stage 0.  This has not been captured in KSP, so the
+        ///     persistentIds are made up.
+        /// </summary>
+        public static SimVessel SepratronTinCan(float throttleLimiter)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart sepratron = SepMotor1(v, 2, 0, new V3(1, 0, 0), throttleLimiter);
+
+            MakeRoot(probe);
+
+            Link(probe, sepratron);
+
+            CrossFeed(sepratron, probe);
+            CrossFeed(sepratron);
+
+            return Finish(v);
+        }
+
+        // the litres of kerolox in each of the MerlinPair's full tanks, at the Merlin's mixture ratio
+        public const double MERLIN_PAIR_KEROLOX = 50000;
+
+        // the litres of kerolox a Merlin burns per second, at its mixture ratio
+        public const double MERLIN_KEROLOX_FLOW = 0.29972443f / (0.3877f * COOLED_RP1_DENSITY + 0.6123f * COOLED_LQD_OXYGEN_DENSITY);
+
+        /// <summary>
+        ///     A probe core with two pods in symmetry, each a procedural tank feeding a RealFuels Merlin and only that Merlin.
+        ///     Both Merlins are in stage 0.  Pod B's tank holds deficitSeconds less of the Merlin's flow than pod A's, as when
+        ///     its cryogenic propellants have boiled off a little faster.  autoCutoff is the RealFuels autoCutoff, which shuts
+        ///     a Merlin's symmetry counterpart down with it when it flames out.  Pod A's Merlin is listed before pod B's, so it
+        ///     is already in the active engines when pod B's flames out.  This is built by hand rather than captured, so the
+        ///     persistentIds are made up.
+        /// </summary>
+        public static SimVessel MerlinPair(bool autoCutoff, double deficitSeconds)
+        {
+            SimVessel v = NewVessel(0);
+
+            var dir = new V3(1, 0, 0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart tankA = MerlinPairTank(v, 2, 0);
+            SimPart merlinA = ROEMerlin1D(v, 3, 0, dir);
+            SimPart tankB = MerlinPairTank(v, 4, deficitSeconds);
+            SimPart merlinB = ROEMerlin1D(v, 5, 0, dir);
+
+            foreach (SimPart merlin in new[] { merlinA, merlinB })
+                ((SimModuleEngines)merlin.Modules[0]).AutoCutoff = autoCutoff;
+
+            MakeRoot(probe);
+
+            Link(probe, tankA);
+            Link(tankA, merlinA);
+            Link(probe, tankB);
+            Link(tankB, merlinB);
+
+            CrossFeed(probe);
+            CrossFeed(merlinA, tankA);
+            CrossFeed(merlinB, tankB);
+
+            Symmetry(tankA, tankB);
+            Symmetry(merlinA, merlinB);
+
+            return Finish(v);
+        }
+
+        // a procedural tank of the MerlinPair, 5 t dry, holding deficitSeconds of the Merlin's flow less than it can
+        private static SimPart MerlinPairTank(SimVessel v, uint persistentId, double deficitSeconds)
+        {
+            double rp1 = 0.3877f * MERLIN_PAIR_KEROLOX;
+            double lox = 0.6123f * MERLIN_PAIR_KEROLOX;
+            double deficit = deficitSeconds * MERLIN_KEROLOX_FLOW;
+
+            SimPart p = ROTGenericTankSeparate(v, persistentId, -1, 4, rp1, lox);
+            AddResource(p, COOLED_RP1, rp1 - 0.3877f * deficit, rp1, COOLED_RP1_DENSITY);
+            AddResource(p, COOLED_LQD_OXYGEN, lox - 0.6123f * deficit, lox, COOLED_LQD_OXYGEN_DENSITY);
+            return p;
         }
 
         /// <summary>
@@ -802,6 +970,25 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             DecouplingAnalyzer.Analyze(v);
             v.UpdateEngineSet();
             return v;
+        }
+
+        /// <summary>
+        ///     Moves the part to the front of the vessel's parts and does the analysis over again.  KSP lists the root part
+        ///     first, but not always: in the editor a vessel can be re-rooted.
+        /// </summary>
+        public static SimVessel MovePartToFront(SimVessel v, SimPart part)
+        {
+            v.Parts.Remove(part);
+            v.Parts.Insert(0, part);
+
+            v.PartsRemainingInStage.Clear();
+            v.AvionicsRemainingInStage.Clear();
+            v.EnginesDroppedInStage.Clear();
+            v.EnginesActivatedInStage.Clear();
+            v.RCSActivatedInStage.Clear();
+            v.RCSDroppedInStage.Clear();
+
+            return Finish(v);
         }
 
         // KSP appends the vessel name to the name of the root part in some captures but not others, even between captures of

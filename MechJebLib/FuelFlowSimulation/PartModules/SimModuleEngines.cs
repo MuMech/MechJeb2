@@ -311,7 +311,9 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             if (minFuelFlow == 0 && MinThrust > 0) minFuelFlow = MinThrust / (AtmosphereCurve.Evaluate(0f) * G);
             if (maxFuelFlow == 0 && MaxThrust > 0) maxFuelFlow = MaxThrust / (AtmosphereCurve.Evaluate(0f) * G);
 
-            return Lerp(minFuelFlow, maxFuelFlow, _throttle * 0.01f * ThrottleLimiter) * FlowMultiplier;
+            // as in KSP's ModuleEngines.RequiredPropellantMass, multFlow (TestFlight's thrust-loss failures) scales the mass flow
+            // along with the flowMultiplier, so it lowers the thrust and lengthens the burn without changing the isp
+            return Lerp(minFuelFlow, maxFuelFlow, _throttle * 0.01f * ThrottleLimiter) * FlowMultiplier * MultFlow;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -328,7 +330,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
             double eMaxThrust = minThrust + (maxThrust - minThrust) * thrustLimiter;
             double eMinThrust = ThrottleLocked ? eMaxThrust : minThrust;
-            double eCurrentThrust = MassFlowRate * ISP * G * MultIsp * MultFlow;
+            // the MassFlowRate already carries the FlowMultiplier and MultFlow
+            double eCurrentThrust = MassFlowRate * ISP * G * MultIsp;
 
             for (int i = 0; i < ThrustDirectionVectors.Count; i++)
             {
