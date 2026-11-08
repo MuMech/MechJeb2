@@ -626,6 +626,11 @@ namespace MechJebLib.Utils
             return ci;
         }
 
+        // the variables each mass residual depends on: static, they were allocated on every call
+        private static readonly int[] _mDotIdxs1 = { 24, 25, 36, 37, 38 };
+        private static readonly int[] _mDotIdxs2 = { 24, 26, 36, 37, 38 };
+        private static readonly int[] _mDotIdxs3 = { 24, 27, 36, 37, 38 };
+
         public static int ApplyMDotDynamics(double[] f, alglib.sparsematrix j, int ci, double mdot, GaussLegendreSegment segment, GaussLegendreIndexes indexes, int n)
         {
             var jac = Vec.Rent(NUM_VARS, true);
@@ -665,9 +670,7 @@ namespace MechJebLib.Utils
             };
             var dbt = new Dual(segment.Bt);
 
-            int[] idxs1 = { 24, 25, 36, 37, 38 };
-
-            foreach (int k in idxs1)
+            foreach (int k in _mDotIdxs1)
             {
                 if (k < 38)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
@@ -694,9 +697,7 @@ namespace MechJebLib.Utils
             jac.Dispose();
             jac = Vec.Rent(NUM_VARS, true);
 
-            int[] idxs2 = { 24, 26, 36, 37, 38 };
-
-            foreach (int k in idxs2)
+            foreach (int k in _mDotIdxs2)
             {
                 if (k < 38)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
@@ -723,9 +724,7 @@ namespace MechJebLib.Utils
             jac.Dispose();
             jac = Vec.Rent(NUM_VARS, true);
 
-            int[] idxs3 = { 24, 27, 36, 37, 38 };
-
-            foreach (int k in idxs3)
+            foreach (int k in _mDotIdxs3)
             {
                 if (k < 38)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
@@ -975,6 +974,11 @@ namespace MechJebLib.Utils
             return ci;
         }
 
+        // the variables each component of the first position residual depends on: static, they were allocated on every call
+        private static readonly int[] _rDot1IdxsX = { 0, 1, 13, 14, NUM_VARS - 1 };
+        private static readonly int[] _rDot1IdxsY = { 4, 5, 17, 18, NUM_VARS - 1 };
+        private static readonly int[] _rDot1IdxsZ = { 8, 9, 21, 22, NUM_VARS - 1 };
+
         private static int RDotEquation1(double[] f, alglib.sparsematrix j, int ci, GaussLegendreSegment segment,
             GaussLegendreIndexes indexes, int n, Dual dbt, GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2)
         {
@@ -1036,30 +1040,29 @@ namespace MechJebLib.Utils
 
             f[ci++] = ans.M.x;
 
-            int[] idxs1 = { 0, 1, 13, 14, NUM_VARS - 1 };
-
             alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs1)
+            foreach (int k in _rDot1IdxsX)
                 alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
 
             f[ci++] = ans.M.y;
 
-            int[] idxs2 = { 4, 5, 17, 18, NUM_VARS - 1 };
-
             alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs2)
+            foreach (int k in _rDot1IdxsY)
                 alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
 
             f[ci++] = ans.M.z;
 
-            int[] idxs3 = { 8, 9, 21, 22, NUM_VARS - 1 };
-
             alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs3)
+            foreach (int k in _rDot1IdxsZ)
                 alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
 
             return ci;
         }
+
+        // the variables each component of the second position residual depends on: static, they were allocated on every call
+        private static readonly int[] _rDot2IdxsX = { 0, 2, 13, 14, NUM_VARS - 1 };
+        private static readonly int[] _rDot2IdxsY = { 4, 6, 17, 18, NUM_VARS - 1 };
+        private static readonly int[] _rDot2IdxsZ = { 8, 10, 21, 22, NUM_VARS - 1 };
 
         private static int RDotEquation2(double[] f, alglib.sparsematrix j, int ci, GaussLegendreSegment segment,
             GaussLegendreIndexes indexes, int n, Dual dbt, GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2)
@@ -1122,30 +1125,29 @@ namespace MechJebLib.Utils
 
             f[ci++] = ans.M.x;
 
-            int[] idxs1 = { 0, 2, 13, 14, NUM_VARS - 1 };
-
             alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs1)
+            foreach (int k in _rDot2IdxsX)
                 alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
 
             f[ci++] = ans.M.y;
 
-            int[] idxs2 = { 4, 6, 17, 18, NUM_VARS - 1 };
-
             alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs2)
+            foreach (int k in _rDot2IdxsY)
                 alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
 
             f[ci++] = ans.M.z;
 
-            int[] idxs3 = { 8, 10, 21, 22, NUM_VARS - 1 };
-
             alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs3)
+            foreach (int k in _rDot2IdxsZ)
                 alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
 
             return ci;
         }
+
+        // the variables each component of the third position residual depends on: static, they were allocated on every call
+        private static readonly int[] _rDot3IdxsX = { 0, 3, 13, 14, NUM_VARS - 1 };
+        private static readonly int[] _rDot3IdxsY = { 4, 7, 17, 18, NUM_VARS - 1 };
+        private static readonly int[] _rDot3IdxsZ = { 8, 11, 21, 22, NUM_VARS - 1 };
 
         private static int RDotEquation3(double[] f, alglib.sparsematrix j, int ci, GaussLegendreSegment segment,
             GaussLegendreIndexes indexes, int n, Dual dbt, GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2, GaussLegendreDualPoint d3)
@@ -1206,26 +1208,20 @@ namespace MechJebLib.Utils
 
             f[ci++] = ans.M.x;
 
-            int[] idxs1 = { 0, 3, 13, 14, NUM_VARS - 1 };
-
             alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs1)
+            foreach (int k in _rDot3IdxsX)
                 alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
 
             f[ci++] = ans.M.y;
 
-            int[] idxs2 = { 4, 7, 17, 18, NUM_VARS - 1 };
-
             alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs2)
+            foreach (int k in _rDot3IdxsY)
                 alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
 
             f[ci++] = ans.M.z;
 
-            int[] idxs3 = { 8, 11, 21, 22, NUM_VARS - 1 };
-
             alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs3)
+            foreach (int k in _rDot3IdxsZ)
                 alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
 
             return ci;
