@@ -528,8 +528,9 @@ namespace MuMech
         /// </summary>
         private double RcsForwardThrust()
         {
+            // RCSThrustAvailable is indexed by the direction of the force on the vessel, so the forward push is Up
             if (Vessel.ActionGroups[KSPActionGroup.RCS])
-                return VesselState.RCSThrustAvailable.Down;
+                return VesselState.RCSThrustAvailable.Up;
 
             double thrust = 0;
             Transform vesselTransform = Vessel.GetTransform();
@@ -546,11 +547,12 @@ namespace MuMech
                         if (!t.gameObject.activeInHierarchy)
                             continue;
 
-                        // the exhaust direction: a nozzle pointing back (down in the vessel's frame) pushes forward
-                        Vector3d exhaust = rcs.useZaxis ? -t.forward : -t.up;
-                        double back = -vesselTransform.InverseTransformDirection(exhaust).y;
-                        if (back > 0)
-                            thrust += back * rcs.thrusterPower * rcs.thrustPercentage * 0.01 * rcs.flowMult;
+                        // the direction of the force on the vessel (ModuleRCS pushes along -t.up, or -t.forward): a nozzle whose
+                        // exhaust points back pushes it forward, up in the vessel's frame
+                        Vector3d force = rcs.useZaxis ? -t.forward : -t.up;
+                        double forward = vesselTransform.InverseTransformDirection(force).y;
+                        if (forward > 0)
+                            thrust += forward * rcs.thrusterPower * rcs.thrustPercentage * 0.01 * rcs.flowMult;
                     }
                 }
             }

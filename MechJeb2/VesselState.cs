@@ -1217,7 +1217,9 @@ namespace MuMech
             if (ThrustVectorMaxThrottle.magnitude == 0 && Vessel.ActionGroups[KSPActionGroup.RCS])
             {
                 RCSThrust = true;
-                ThrustVectorMaxThrottle += Forward * RCSThrustAvailable.Down;
+                // RCSThrustAvailable is indexed by the direction of the force on the vessel: the main throttle pushes it forward (Up),
+                // with the nozzles that point back
+                ThrustVectorMaxThrottle += Forward * RCSThrustAvailable.Up;
             }
             else
             {
