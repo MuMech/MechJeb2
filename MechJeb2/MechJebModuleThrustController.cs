@@ -301,7 +301,7 @@ namespace MuMech
             }
 
             // ThrustAvailable is the thrust along the control forward: on a control point that faces away from the engines it is 0 or
-            // negative, and Kill H/S, which aims the engines themselves, didn't run at all (#2368, the reverse point)
+            // negative, and Kill H/S, which aims the engines themselves, must run there too
             bool killH = Tmode == TMode.KEEP_VERTICAL && TransKillH;
             if (Tmode != TMode.OFF && (killH ? VesselState.ThrustVectorMaxThrottle.sqrMagnitude > 0 : VesselState.ThrustAvailable > 0))
             {
@@ -334,11 +334,11 @@ namespace MuMech
                                 rot = dir.normalized;
                             }
 
-                            // Aim the engines' thrust along rot, not the control forward: on a control point turned away from the engines
-                            // (a lander can's "forward" or "reverse" point) the thrust pushed sideways or down (#2368). The target is the
-                            // whole attitude: the vessel's own, turned by what takes its thrust to rot. A forward direction alone leaves roll
-                            // to the controller, and with the thrust off the forward axis any roll moves the thrust. When the thrust is on
-                            // rot this is the current attitude, so it holds; with the engines on the forward axis it's the same aim as before
+                            // Aim the engines' thrust along rot, not the control forward, which a control point can turn away from the engines (a
+                            // lander can's "forward" or "reverse" point). The target is the whole attitude: the vessel's own, turned by what takes
+                            // its thrust to rot. A forward direction alone leaves roll to the controller, and with the thrust off the forward axis
+                            // any roll moves the thrust. When the thrust is on rot this is the current attitude, so it holds; with the engines on
+                            // the forward axis it aims the control forward
                             Vector3d thrustDir = VesselState.ThrustVectorMaxThrottle;
                             if (thrustDir.sqrMagnitude > 0)
                             {
