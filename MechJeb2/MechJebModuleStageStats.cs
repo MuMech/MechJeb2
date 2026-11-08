@@ -61,16 +61,21 @@ namespace MuMech
         // the last failure logged: a failing simulation is retried every 100 ms (500 ms in the editor), so it is logged once
         private string _lastFailure;
 
-        private void GetResults()
+        // the editor's craft is empty: its empty stats are published once, and no run is started until it has parts
+        private bool _emptyShip;
+
+        // noShip: there is no ship to simulate (a new, empty craft in the editor), so no stats are published, the same way as
+        // after a failed run, rather than the stats of the craft before it. Both runs are ready then (TryStartSimulation)
+        private void GetResults(bool noShip = false)
         {
             var atmo = _vesselManagerAtmo.FuelFlowSimulation;
             var vac = _vesselManagerVac.FuelFlowSimulation;
 
             // the two runs start together and are published together: the stage table reads both lists with one index
-            if (!atmo.IsStopped || !vac.IsStopped)
+            if (!noShip && (!atmo.IsStopped || !vac.IsStopped))
                 return;
 
-            if (atmo.IsCompleted && vac.IsCompleted)
+            if (!noShip && atmo.IsCompleted && vac.IsCompleted)
             {
                 AtmoStats.Clear();
                 foreach (FuelStats item in atmo.Segments)
@@ -101,7 +106,7 @@ namespace MuMech
 
                 string failure = (atmo.IsCompleted ? "" : "atmo: " + (atmo.Exception?.ToString() ?? "no exception") + "\n") +
                                  (vac.IsCompleted ? "" : "vac: " + (vac.Exception?.ToString() ?? "no exception"));
-                if (failure != _lastFailure)
+                if (!noShip && failure != _lastFailure)
                 {
                     _lastFailure = failure;
                     Debug.Log("[MechJebModuleStageStats] stats failed (logged once until it changes or works):\n" + failure);
@@ -207,6 +212,18 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 if (EditorBody is null) return;
+
+                // a new, empty craft has nothing to simulate: it has no stages, rather than those of the craft before it.
+                // They are cleared once, through the same publication as a result, so all the stats go together
+                if (EditorLogic.fetch == null || EditorLogic.fetch.ship == null || EditorLogic.fetch.ship.parts.Count == 0)
+                {
+                    if (!_emptyShip)
+                        GetResults(true);
+                    _emptyShip = true;
+                    return;
+                }
+
+                _emptyShip = false;
             }
             else
             {

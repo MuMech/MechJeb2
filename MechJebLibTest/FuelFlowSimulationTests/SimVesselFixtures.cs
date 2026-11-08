@@ -24,9 +24,16 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         ///     The Mainsail and the launch clamps are both in stage 0.  This is the stock
         ///     MechJebLibTest/Craft/Stock/Mainsail Tin Can.craft, as captured in Captures/MainsailTinCan.out.
         /// </summary>
-        public static SimVessel MainsailTinCan(bool kscPad = false)
+        public static SimVessel MainsailTinCan(bool kscPad = false) => MainsailTinCanAtStage(1, kscPad);
+
+        /// <summary>
+        ///     The MainsailTinCan with the CurrentStage the vessel starts with.  KSP gives it 1, the KSP stage the launch
+        ///     clamps are decoupled in plus one.  The editor can give it 0, one too low, and then the DecouplingAnalyzer
+        ///     raises it to 1 when it reaches the launch clamps, after it has visited the parts above them.
+        /// </summary>
+        public static SimVessel MainsailTinCanAtStage(int currentStage, bool kscPad = false)
         {
-            SimVessel v = NewVessel(1);
+            SimVessel v = NewVessel(currentStage);
             v.SetInitial(105865.0041307488,
                 new V3(576839.96092781203, -165406.15003102238, -1017.9253790531925),
                 new V3(48.231074597909611, 168.18874204753263, -1.392905019470582E-05),

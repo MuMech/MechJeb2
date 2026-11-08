@@ -78,6 +78,36 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertMassesMatchCapture(v, "MainsailTinCan.out", kscPad);
         }
 
+        // the editor's CurrentStage one too low: the extra top segment still holds the whole vessel, so the stage below
+        // stages no mass
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void MainsailTinCanWithTheEditorsCurrentStage(bool kscPad)
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCanAtStage(0, kscPad);
+            double isp = kscPad ? MainsailIsp(v.ATMPressure) : MAINSAIL_VACUUM_ISP;
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertNoBurn(segments[1], 1, 79.7, 0);
+            AssertMainsailBurn(segments[0], 0, 79.7, 2 * ROCKOMAX64_PROPELLANT, isp, dirMagnitude);
+        }
+
+        // a new, empty craft in the editor: no parts, no thrust, no exception
+        [Fact]
+        public void EmptyVessel()
+        {
+            SimVessel v = SimVesselFixtures.Finish(SimVesselFixtures.NewVessel(0));
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertNoBurn(segments[0], 0, 0, 0);
+        }
+
         // at sea level the Whiplash runs at full flow, and burns the liquid fuel but no oxidizer and no intake air
         [Fact]
         public void JetBurnsInTheAtmosphere()
