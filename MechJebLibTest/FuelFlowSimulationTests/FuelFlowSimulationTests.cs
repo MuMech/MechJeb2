@@ -288,8 +288,8 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
         // tanks that share a priority share the demand in proportion to what each holds, as in KSP's PartSet.ProcessRequest,
         // so they run dry together.  here the drop tank, half full, has the core's priority (which KSP's flow priority tweakable
-        // can give it).  with the demand split equally it ran dry first and the vessel staged it with 32 t still in the core
-        // tanks, a staging that KSP doesn't do.
+        // can give it).  with the demand split equally it would run dry first and the vessel would stage it with 32 t still in
+        // the core tanks, a staging that KSP doesn't do.
         [Fact]
         public void TanksOfOnePriorityRunDryTogether()
         {

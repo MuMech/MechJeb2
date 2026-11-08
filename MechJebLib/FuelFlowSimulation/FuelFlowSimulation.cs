@@ -403,7 +403,7 @@ namespace MechJebLib.FuelFlowSimulation
 
             // like KSP's PartSet.ProcessRequest, the demand is shared between the tanks of the highest priority (or all of them,
             // without priority) in proportion to what each one holds, whatever the flow mode, _BALANCE or not: the tanks of a
-            // group run dry together.  an equal split ran a smaller tank dry first, and dropped it, or staged, early.
+            // group run dry together.  an equal split would run a smaller tank dry first, and drop it, or stage, early.
             double total = TotalAmount(_sources, resourceId);
 
             for (int i = 0; i < _sources.Count; i++)
