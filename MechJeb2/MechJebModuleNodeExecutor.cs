@@ -348,6 +348,7 @@ namespace MuMech
         {
             _lowestDvLeft     = double.MaxValue;
             _lowestDvLeftTime = VesselState.Time;
+            _burnProgressSeen = false;
         }
 
         private void OnEnterIdle() { }
@@ -393,6 +394,22 @@ namespace MuMech
         // the lowest delta-v left in this burn, and when it was reached: an RCS burn that stops making progress ends
         private double _lowestDvLeft = double.MaxValue, _lowestDvLeftTime;
 
+        // whether this burn has made progress (and so has thrust): the stall test waits for it
+        private bool _burnProgressSeen;
+
+        // the burn is done: remove its node and go on to the next one, or stop
+        private bool CompleteBurn()
+        {
+            Vessel.patchedConicSolver.maneuverNodes[0].RemoveSelf();
+
+            if (Mode == Modes.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
+                Init();
+            else
+                Abort();
+
+            return true;
+        }
+
         private bool ShouldTerminateStock()
         {
             // An RCS burn on the main throttle tapers like an engine's, but thrusters don't fire for a very small input: the last few
@@ -403,12 +420,21 @@ namespace MuMech
             // progress is 0.01 m/s within a second, well under 1 % of any RCS acceleration a burn would rely on
             if (_dvLeft < _lowestDvLeft - 0.01)
             {
-                _lowestDvLeft = _dvLeft;
+                // the first value of the burn is not progress. The stall clock starts once the burn has made progress, i.e. once it
+                // has thrust: VesselState's thrust acceleration counts engines only, not RCS
+                if (_lowestDvLeft < double.MaxValue)
+                    _burnProgressSeen = true;
+                _lowestDvLeft     = _dvLeft;
                 _lowestDvLeftTime = VesselState.Time;
             }
 
-            bool rcsDone = rcsBurn && (_dvLeft < 0.1 || VesselState.Time - _lowestDvLeftTime > 1);
-            if (AngleFromNode() < 0.5 * PI && !rcsDone) return false;
+            // A finished RCS burn is a completed burn, whatever is left of it: it removes the node here, before and independently of
+            // any test of the dV left, which would take a weak RCS's leftover for "knocked off the burn", keep the node, and have the
+            // rendezvous autopilot restart the executor on it every tick.
+            if (rcsBurn && (_dvLeft < 0.1 || (_burnProgressSeen && VesselState.Time - _lowestDvLeftTime > 1)))
+                return CompleteBurn();
+
+            if (AngleFromNode() < 0.5 * PI) return false;
 
             ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
 
