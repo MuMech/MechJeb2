@@ -38,9 +38,9 @@ namespace MuMech
         private bool _settingRate;
 
         // The warp someone else stopped: the player's stop key, or a mod such as Kerbal Alarm Clock, set the rate to 1x while MechJeb
-        // was warping to this UT. The autopilots ask again every tick, so MechJeb kept warping (#697, #1019, #2231). Now
-        // AutopilotWarpToUT raises no warp until that time has passed, the player warps by hand, or a new warp is started with
-        // ClearStop. WarpToUT, what other mods call, is such a new warp.
+        // was warping to this UT. The autopilots ask again every tick, so AutopilotWarpToUT raises no warp until that time has
+        // passed, the player warps by hand, or a new warp is started with ClearStop. WarpToUT, what other mods call, is such a
+        // new warp.
         private double _stoppedUT = double.NaN;
 
         /// <summary>True while MechJeb's autopilots hold off warping because someone else stopped its warp.</summary>

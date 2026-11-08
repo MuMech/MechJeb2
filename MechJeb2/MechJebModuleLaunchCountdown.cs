@@ -60,7 +60,7 @@ namespace MuMech
             return Start(TimeToPlane(Core.PSGSimulation.LAN));
         }
 
-        // whether the countdown asked the warp controller for a warp, so Abort, Disengage and unticking Auto-warp end it (#2231)
+        // whether the countdown asked the warp controller for a warp, so Abort, Disengage and unticking Auto-warp end it
         private bool _warping;
 
         public void Abort()

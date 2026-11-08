@@ -314,7 +314,7 @@ namespace MuMech
         {
             Core.Thrust.ThrustOff();
             // Auto-warp unticked while warping: stop the warp MechJeb started, once, which leaves the player free to warp by hand.
-            // The warp controller kept warping to the stored UT (#697)
+            // The warp controller would otherwise keep warping to its stored UT
             if (!_autowarp && Core.Warp.warpToUT > 0)
                 Core.Warp.MinimumWarp();
         }
