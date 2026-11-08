@@ -242,7 +242,7 @@ namespace MuMech.AttitudeControllers
             double warpFactor = Ac.VesselState.DeltaT / 0.02;
 
             // the roll control range gates roll on the pointing error of the axes that are controlled: with pitch and yaw left free their
-            // error never closes, and roll was never flown (#1129). With both controlled this is _distance
+            // error never closes, and roll would never be flown. With both controlled this is _distance
             double gateDistance = SafeAcos(Cos(_error[0] * Ac.AxisControl.x) * Cos(_error[2] * Ac.AxisControl.z));
 
             // see https://archive.is/NqoUm and the "Alt Hold Controller", the acceleration PID is not implemented, so we only

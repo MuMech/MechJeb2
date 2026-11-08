@@ -78,7 +78,7 @@ namespace MuMech.AttitudeControllers
             // law of cosines for the "distance" of the miss in radians
             _phiTotal = SafeAcos(Math.Cos(pitch) * Math.Cos(yaw));
 
-            // the roll control range gates roll on the miss of the axes that are controlled: with pitch and yaw free it never closes (#1129)
+            // the roll control range gates roll on the miss of the axes that are controlled: with pitch and yaw free it never closes
             _gateDistance = SafeAcos(Math.Cos(pitch * Ac.AxisControl.x) * Math.Cos(yaw * Ac.AxisControl.z));
 
             // this is the initial direction of the great circle route of the requested transform
