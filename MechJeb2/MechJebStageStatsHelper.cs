@@ -82,6 +82,11 @@ namespace MuMech
         internal bool ShowRcs => showRcs;
         internal int DisplayState => StageDisplayState;
         internal int TwrBody { get => TWRBody; set => TWRBody = infoItems.TWRBody = value; }
+
+        // the body for the editor's TWR.  the index is saved with the info items, so it can be out of range once the bodies
+        // change (a planet pack removed): the home body then
+        private CelestialBody TwrCelestialBody =>
+            FlightGlobals.Bodies[TWRBody >= 0 && TWRBody < FlightGlobals.Bodies.Count ? TWRBody : FlightGlobals.GetHomeBodyIndex()];
         internal float AltSLTScale { get => altSLTScale; set => altSLTScale = infoItems.altSLTScale = value; }
         internal float MachScale { get => machScale; set => machScale = infoItems.machScale = value; }
         internal double AltSLT => stats.AltSLT;
@@ -118,7 +123,7 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                stats.EditorBody = FlightGlobals.Bodies[TWRBody];
+                stats.EditorBody = TwrCelestialBody;
                 stats.AltSLT = Math.Pow(altSLTScale, 2) * stats.EditorBody.atmosphereDepth;
                 stats.Mach = Math.Pow(machScale * 2, 3);
             }
@@ -126,7 +131,7 @@ namespace MuMech
                 stats.EditorBody = stats.MainBody;
         }
 
-        internal double GeeASL => HighLogic.LoadedSceneIsEditor ? FlightGlobals.Bodies[TWRBody].GeeASL : stats.MainBody.GeeASL;
+        internal double GeeASL => HighLogic.LoadedSceneIsEditor ? TwrCelestialBody.GeeASL : stats.MainBody.GeeASL;
 
         /// <summary>UpdateStageStats without building the display strings.</summary>
         internal void UpdateStagesOnly()
@@ -379,7 +384,7 @@ namespace MuMech
         // This should only be called before Layout phase, and never in Repaint phase
         public void UpdateStageStats()
         {
-            double geeASL = HighLogic.LoadedSceneIsEditor ? FlightGlobals.Bodies[TWRBody].GeeASL : stats.MainBody.GeeASL;
+            double geeASL = HighLogic.LoadedSceneIsEditor ? TwrCelestialBody.GeeASL : stats.MainBody.GeeASL;
             stats.RequestUpdate();
             GatherStages(stages);
             UpdateStageDisplayInfo(stages, geeASL);
