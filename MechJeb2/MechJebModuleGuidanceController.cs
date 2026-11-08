@@ -139,8 +139,9 @@ namespace MuMech
                 return false;
 
             // We might have wonky transforms and have a tiny bit of fore RCS, so require at least 10% of the max RCS thrust to be
-            // in the pointy direction (which should be "up" / y-axis per KSP/Unity semantics).
-            bool hasRCS = Vessel.hasEnabledRCSModules() &&
+            // in the pointy direction (which should be "up" / y-axis per KSP/Unity semantics). VesselState counts the RCS thrust with the
+            // group off too: an ascent flown with RCS off ends without the RCS trim, as it always has.
+            bool hasRCS = Vessel.hasEnabledRCSModules() && Vessel.ActionGroups[KSPActionGroup.RCS] &&
                 VesselState.RCSThrustAvailable.Up > 0.1 * VesselState.RCSThrustAvailable.MaxMagnitude();
 
             return hasRCS && Status != PSGStatus.TERMINAL_RCS && Vessel.currentStage == Solution.TerminalKSPStage();

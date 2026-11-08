@@ -841,17 +841,20 @@ namespace MuMech
 
             bool stableUllage = VesselState.LowestUllage >= 0.996;
 
+            // VesselState counts the RCS thrust with the group off too: these tests take it as zero then, as they always have
+            double rcsThrustUp = Vessel.ActionGroups[KSPActionGroup.RCS] ? VesselState.RCSThrustAvailable.Up : 0;
+
             // ullage may dramatically drop below stable (by as much as to 0.76 in a single tick) so
             // we cannot "detect" low ullage and compensate, but must apply RCS until thrust has come
             // up sufficiently.
-            if (stableUllage && VesselState.ThrustCurrent > VesselState.RCSThrustAvailable.Up)
+            if (stableUllage && VesselState.ThrustCurrent > rcsThrustUp)
                 return;
 
             // if desiredThrust is less than the RCS thrust then don't worry about ullage.  avoids RCS
             // being applied when the user is doing dribble throttle (unlikely with RF loaded, but possible).
             double desiredThrust = (VesselState.ThrustAvailable - VesselState.ThrustMinimum) * s.mainThrottle + VesselState.ThrustMinimum;
 
-            if (stableUllage && desiredThrust < VesselState.RCSThrustAvailable.Up)
+            if (stableUllage && desiredThrust < rcsThrustUp)
                 return;
 
             // limit the throttle only if we aren't already burning (don't waste ignitions)

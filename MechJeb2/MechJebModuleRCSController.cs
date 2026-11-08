@@ -168,8 +168,7 @@ namespace MuMech
             // We work in local vessel coordinate
             Vector3d velocityDelta = Quaternion.Inverse(Vessel.GetTransform().rotation) * worldVelocityDelta;
 
-            // Inside the threshold the group stays on and gets no command: with it off the thrust available reads zero, so a speed law built on
-            // that commands nothing, the error stays inside the threshold, and the group never comes back. RCS attitude control goes with it too.
+            // Inside the threshold the group stays on and gets no command: turning it off would take RCS attitude control with it.
             if (!Vessel.ActionGroups[KSPActionGroup.RCS])
             {
                 Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);

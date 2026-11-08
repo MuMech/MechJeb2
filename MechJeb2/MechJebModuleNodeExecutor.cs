@@ -344,7 +344,12 @@ namespace MuMech
             UpdateDvLeft(); // we might be doing some RCS/ullage here so account for it.
         }
 
-        private void OnEnterBurn() { }
+        private void OnEnterBurn()
+        {
+            _lowestDvLeft     = double.MaxValue;
+            _lowestDvLeftTime = VesselState.Time;
+            _burnProgressSeen = false;
+        }
 
         private void OnEnterIdle() { }
 
@@ -370,7 +375,9 @@ namespace MuMech
             }
         }
 
-        private void SetAttitude() => Core.Attitude.AttitudeTo(_worldDirection, AttitudeReference.INERTIAL_COT, this, KillRollRotation);
+        // an "RCS only" burn pushes along the control forward (DoRCS), not along the engines' thrust axis
+        private void SetAttitude() => Core.Attitude.AttitudeTo(_worldDirection, RCSOnly ? AttitudeReference.INERTIAL : AttitudeReference.INERTIAL_COT, this,
+            KillRollRotation);
 
         private bool ShouldTerminatePrincipia()
         {
@@ -384,8 +391,48 @@ namespace MuMech
             return true;
         }
 
+        // the lowest delta-v left in this burn, and when it was reached: an RCS burn that stops making progress ends
+        private double _lowestDvLeft = double.MaxValue, _lowestDvLeftTime;
+
+        // whether this burn has made progress (and so has thrust): the stall test waits for it
+        private bool _burnProgressSeen;
+
+        // the burn is done: remove its node and go on to the next one, or stop
+        private bool CompleteBurn()
+        {
+            Vessel.patchedConicSolver.maneuverNodes[0].RemoveSelf();
+
+            if (Mode == Modes.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
+                Init();
+            else
+                Abort();
+
+            return true;
+        }
+
         private bool ShouldTerminateStock()
         {
+            // An RCS burn on the main throttle tapers like an engine's, but thrusters don't fire for a very small input, so the last
+            // few cm/s may never be burnt off nor overshot. It ends once under 0.1 m/s is left, or once what's left hasn't dropped by
+            // 0.01 m/s for a second.
+            bool rcsBurn = RCSOnly || VesselState.RCSThrust;
+            // progress is 0.01 m/s within a second, well under 1 % of any RCS acceleration a burn would rely on
+            if (_dvLeft < _lowestDvLeft - 0.01)
+            {
+                // the first value of the burn is not progress. The stall clock starts once the burn has made progress, i.e. once it
+                // has thrust: VesselState's thrust acceleration counts engines only, not RCS
+                if (_lowestDvLeft < double.MaxValue)
+                    _burnProgressSeen = true;
+                _lowestDvLeft     = _dvLeft;
+                _lowestDvLeftTime = VesselState.Time;
+            }
+
+            // A finished RCS burn is a completed burn, whatever is left of it: it removes the node here, before and independently of
+            // any test of the dV left, which would take a weak RCS's leftover for "knocked off the burn", keep the node, and have the
+            // rendezvous autopilot restart the executor on it every tick.
+            if (rcsBurn && (_dvLeft < 0.1 || (_burnProgressSeen && VesselState.Time - _lowestDvLeftTime > 1)))
+                return CompleteBurn();
+
             if (AngleFromNode() < 0.5 * PI) return false;
 
             ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
@@ -427,7 +474,7 @@ namespace MuMech
         // on (the attitude controller ignores the thrust axis then) or no engine gives one. Measuring the angle from forward
         // instead never reached the alignment tolerance when the thrust is off the forward axis.
         private Vector3d BurnAxis() =>
-            Core.Thrust.DifferentialThrottle || VesselState.ThrustForward.sqrMagnitude < 0.5 ? VesselState.Forward : VesselState.ThrustForward;
+            RCSOnly || Core.Thrust.DifferentialThrottle || VesselState.ThrustForward.sqrMagnitude < 0.5 ? VesselState.Forward : VesselState.ThrustForward;
 
         // This handles safely getting the current burning node in Principia without grabbing any subsequent node after
         // principia cleans it up for us.
@@ -458,8 +505,8 @@ namespace MuMech
             if (ReflectionUtils.IsLoadedPrincipia && SafeCurrentPrincipiaNode() == null)
                 return _direction;
 
-            // FIXME: need to deal with RCS forward thrust accel here if we're RCSOnly
-            if (!ReflectionUtils.IsLoadedPrincipia && _dvLeft < VesselState.MaxThrustAcceleration)
+            double accel = RCSOnly ? RcsForwardThrust() / VesselState.Mass : VesselState.MaxThrustAcceleration;
+            if (!ReflectionUtils.IsLoadedPrincipia && _dvLeft < accel)
                 return _direction;
 
             return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
@@ -500,9 +547,27 @@ namespace MuMech
             _dvLeft -= Vector3d.Dot(dV, _worldDirection);
         }
 
-        // FIXME: this needs to work with RCSOnly
+        // The forward thrust of the RCS thrusters in kN. VesselState counts it whether or not the RCS group is on, and "RCS only" turns the
+        // group on only at ignition. RCSThrustAvailable is indexed by the direction of the force on the vessel, so the forward push is Up.
+        private double RcsForwardThrust() => VesselState.RCSThrustAvailable.Up;
+
         private double BurnTime(double dv, out double halfBurnTime, out double spoolupTime)
         {
+            // RCS burns: the "RCS only" toggle, or a vessel whose only thrust is its RCS on the main throttle (VesselState.RCSThrust). The
+            // stage stats hold no RCS, so their burn time comes from the forward RCS thrust. Constant mass: monopropellant is about 2 %
+            // of the mass for 50 m/s
+            if (RCSOnly || VesselState.RCSThrust)
+            {
+                double rcsThrust = RcsForwardThrust();
+                if (rcsThrust > 0)
+                {
+                    double rcsBurnTime = dv / (rcsThrust / VesselState.Mass);
+                    halfBurnTime = rcsBurnTime / 2;
+                    spoolupTime  = 0;
+                    return rcsBurnTime;
+                }
+            }
+
             double dvLeft = dv;
             double halfDvLeft = dv / 2;
 
