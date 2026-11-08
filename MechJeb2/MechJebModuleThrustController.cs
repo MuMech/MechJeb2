@@ -822,7 +822,7 @@ namespace MuMech
             }
 
             // "Use RCS for rotation" off: the thrusters don't rotate the vessel, whether the pilot or the attitude controller (SmartASS and
-            // every autopilot) does the turning. The attitude controller wasn't counted, so SmartASS turned with RCS anyway (#979)
+            // every autopilot) does the turning
             bool disableThrusters = (_userCommandingRotation || Core.Attitude.Enabled) && !Core.RCS.rcsForRotation;
             if (disableThrusters != _lastDisableThrusters || (disableThrusters && Vessel.parts.Count != _rcsPartCount))
             {
