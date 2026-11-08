@@ -548,43 +548,9 @@ namespace MuMech
             _dvLeft -= Vector3d.Dot(dV, _worldDirection);
         }
 
-        /// <summary>
-        ///     The forward thrust of the RCS thrusters in kN, whether or not the RCS group is on: VesselState counts RCS only while it is, and
-        ///     "RCS only" turns it on at ignition. With the group off it sums the thrusters as VesselState does, without the balancer.
-        /// </summary>
-        private double RcsForwardThrust()
-        {
-            // RCSThrustAvailable is indexed by the direction of the force on the vessel, so the forward push is Up
-            if (Vessel.ActionGroups[KSPActionGroup.RCS])
-                return VesselState.RCSThrustAvailable.Up;
-
-            double thrust = 0;
-            Transform vesselTransform = Vessel.GetTransform();
-            foreach (Part p in Vessel.parts)
-            {
-                for (int i = 0; i < p.Modules.Count; i++)
-                {
-                    if (!(p.Modules[i] is ModuleRCS rcs) || p.ShieldedFromAirstream || !rcs.rcsEnabled || !rcs.isEnabled || rcs.isJustForShow ||
-                        rcs.flameout || !rcs.enableZ)
-                        continue;
-
-                    foreach (Transform t in rcs.thrusterTransforms)
-                    {
-                        if (!t.gameObject.activeInHierarchy)
-                            continue;
-
-                        // the direction of the force on the vessel (ModuleRCS pushes along -t.up, or -t.forward): a nozzle whose
-                        // exhaust points back pushes it forward, up in the vessel's frame
-                        Vector3d force = rcs.useZaxis ? -t.forward : -t.up;
-                        double forward = vesselTransform.InverseTransformDirection(force).y;
-                        if (forward > 0)
-                            thrust += forward * rcs.thrusterPower * rcs.thrustPercentage * 0.01 * rcs.flowMult;
-                    }
-                }
-            }
-
-            return thrust;
-        }
+        // The forward thrust of the RCS thrusters in kN. VesselState counts it whether or not the RCS group is on, and "RCS only" turns the
+        // group on only at ignition. RCSThrustAvailable is indexed by the direction of the force on the vessel, so the forward push is Up.
+        private double RcsForwardThrust() => VesselState.RCSThrustAvailable.Up;
 
         private double BurnTime(double dv, out double halfBurnTime, out double spoolupTime)
         {
