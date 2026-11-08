@@ -32,5 +32,17 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             Assert.Equal(right.AvionicsRemainingInStage[1].Count, low.AvionicsRemainingInStage[1].Count);
             Assert.Equal(right.AvionicsRemainingInStage[0].Count, low.AvionicsRemainingInStage[0].Count);
         }
+
+        // a new, empty craft in the editor has no root part: it threw an ArgumentOutOfRangeException
+        [Fact]
+        public void EmptyVessel()
+        {
+            SimVessel v = SimVesselFixtures.NewVessel(0);
+
+            DecouplingAnalyzer.Analyze(v);
+
+            Assert.Equal(0, v.CurrentStage);
+            Assert.Empty(v.PartsRemainingInStage[0]);
+        }
     }
 }

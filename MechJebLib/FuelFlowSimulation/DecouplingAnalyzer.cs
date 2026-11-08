@@ -28,6 +28,10 @@ namespace MechJebLib.FuelFlowSimulation
             // OR: could probably find all the decouplers with the lowest inverseStage and then
             // form an algorithm to pick which side of which decoupler was considered the "root".
 
+            // a new, empty craft in the editor: there is nothing to decouple
+            if (v.Parts.Count == 0)
+                return;
+
             SimPart rootPart = FindRootPart(v.Parts);
 
             // int.MinValue marks parts which the recursion has not visited yet

@@ -207,6 +207,14 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 if (EditorBody is null) return;
+
+                // a new, empty craft has nothing to simulate: it has no stages, rather than those of the craft before it
+                if (EditorLogic.fetch == null || EditorLogic.fetch.ship == null || EditorLogic.fetch.ship.parts.Count == 0)
+                {
+                    AtmoStats.Clear();
+                    VacStats.Clear();
+                    return;
+                }
             }
             else
             {
