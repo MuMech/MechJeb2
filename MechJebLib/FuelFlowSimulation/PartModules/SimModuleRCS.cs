@@ -160,6 +160,16 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 totalDensity += p.ratio * density;
             }
 
+            // like KSP's ModuleRCS (getMaxFuelFlow is 0 for a mixture with no density): without a propellant that has mass and
+            // counts for the Isp there is no fuel flow, so no thrust.  KSP's maxFuelFlow already is 0 for such a thruster.
+            if (totalDensity <= 0)
+            {
+                PropellantFlowModes.Clear();
+                MassFlowRate = 0;
+                Thrust = 0;
+                return;
+            }
+
             // this is also the volume flow rate of the non-ignoreForIsp fuels.  although this is a bit janky since the p.ratios in most
             // stock engines sum up to 2, not 1 (1.1 + 0.9), so this is not per-liter but per-summed-ratios (the massflowrate you get out
             // of the atmosphere curves (above) are also similarly adjusted by these ratios -- it is a bit of a horror show).
