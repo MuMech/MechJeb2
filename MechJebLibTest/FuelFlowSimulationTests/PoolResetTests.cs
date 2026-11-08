@@ -14,7 +14,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
     /// <summary>
     ///     The SimVesselManagers hand their parts and modules back to the pools on every rebuild (every 500 ms in the editor),
     ///     and the next vessel borrows them.  A field the builder or the updater sets only in some cases (Procedural Fairings'
-    ///     IsDecoupled, say) kept the last vessel's value, so every field goes back to its declared default.
+    ///     IsDecoupled, say) would otherwise keep the last vessel's value, so every field goes back to its declared default.
     /// </summary>
     public class PoolResetTests
     {

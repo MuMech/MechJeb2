@@ -346,7 +346,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             }
 
             // a propellant that isn't in the resource library (a mod's config error) counts for nothing, as in KSP's
-            // ModuleEngines.SetupPropellant, which logs it and leaves it out of the mixture: this was a NullReferenceException
+            // ModuleEngines.SetupPropellant, which logs it and leaves it out of the mixture
             private static double PropellantDensity(int id) => PartResourceLibrary.Instance.GetDefinition(id)?.density ?? 0;
 
             private SimProceduralFairingDecoupler BuildProceduralFairingDecoupler(SimPart part) => SimProceduralFairingDecoupler.Borrow(part);

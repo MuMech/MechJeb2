@@ -200,8 +200,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                 decoupler.Staged = kspModuleDockingNode.staged;
 
-                // null when nothing is attached, or the part isn't one of the ship's: this kept the part attached before, and
-                // threw for a part outside the ship
+                // null when nothing is attached, or the part isn't one of the ship's
                 Part? attached = kspModuleDockingNode.referenceNode?.attachedPart;
                 decoupler.AttachedPart = !(attached is null) && _partMapping.TryGetValue(attached, out SimPart simAttached) ? simAttached : null;
             }
@@ -232,8 +231,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
                     attach = kspModuleDecouple.ExplosiveNode;
                 }
 
-                // null when nothing is attached, or the part isn't one of the ship's (in the editor, one being dragged): this kept
-                // the part attached before, and threw for a part outside the ship
+                // null when nothing is attached, or the part isn't one of the ship's (in the editor, one being dragged)
                 decoupler.AttachedPart = attach is { attachedPart: { } } && _partMapping.TryGetValue(attach.attachedPart, out SimPart simAttached)
                     ? simAttached
                     : null;
