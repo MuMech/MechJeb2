@@ -62,6 +62,10 @@ namespace MuMech
             //if coming in hot, stop early to avoid crashing:
             if (approachSpeed > 10) UT -= 1;
 
+            //The node executor centres the burn on its node, so a burn that should end at UT is placed half a burn earlier. For a
+            //short engine burn it's a second or less; an RCS-only ship's 27 s burn braked from 340 m short to 340 m past the stop (#651)
+            UT -= Math.Max(0, Core.Node.BurnLeadTime(approachSpeed) - Core.Node.LeadTime);
+
             return UT;
         }
 
