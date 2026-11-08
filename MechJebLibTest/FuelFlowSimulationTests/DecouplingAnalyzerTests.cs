@@ -33,7 +33,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             Assert.Equal(right.AvionicsRemainingInStage[0].Count, low.AvionicsRemainingInStage[0].Count);
         }
 
-        // a new, empty craft in the editor has no root part: it threw an ArgumentOutOfRangeException
+        // a new, empty craft in the editor has no root part
         [Fact]
         public void EmptyVessel()
         {

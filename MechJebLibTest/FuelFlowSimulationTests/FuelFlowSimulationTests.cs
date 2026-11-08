@@ -79,8 +79,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         }
 
         // the editor's CurrentStage one too low: the extra top segment still holds the whole vessel, so the stage below
-        // stages no mass (it was -79 t, the parts the DecouplingAnalyzer visited before the launch clamps missing from the top
-        // stage)
+        // stages no mass
         [Theory]
         [InlineData(false)]
         [InlineData(true)]

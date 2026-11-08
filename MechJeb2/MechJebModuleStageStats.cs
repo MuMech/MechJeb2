@@ -61,7 +61,7 @@ namespace MuMech
         // the last failure logged: a failing simulation is retried every 100 ms (500 ms in the editor), so it is logged once
         private string _lastFailure;
 
-        // the editor's craft is empty: no stats were published for it once, and no run is started until it has parts
+        // the editor's craft is empty: its empty stats are published once, and no run is started until it has parts
         private bool _emptyShip;
 
         // noShip: there is no ship to simulate (a new, empty craft in the editor), so no stats are published, the same way as
