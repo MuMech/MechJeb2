@@ -96,7 +96,12 @@ namespace MuMech
         public void UpdateDirectionTarget(Vector3d direction) => targetDirection = direction;
 
         // A destroyed Unity object isn't null to the interface.
-        public bool NormalTargetExists => Target != null && !(Target is UnityEngine.Object target && target == null) && (Target is Vessel || Target is CelestialBody || CanAlign);
+        public bool NormalTargetExists => Target != null && !(Target is UnityEngine.Object target && target == null) && !TargetPartGone &&
+                                          (Target is Vessel || Target is CelestialBody || CanAlign);
+
+        // A targeted part (a docking port) that left its vessel: EVA construction detaches it with Part.OnDetachFlight, which sets its vessel
+        // to null while the part lives on in a kerbal's inventory. Its orbit and position then throw (#1488).
+        private bool TargetPartGone => Target is PartModule module && module != null && module.vessel == null;
 
         public bool PositionTargetExists => Target != null && (Target is PositionTarget || Target is Vessel) && !(Target is DirectionTarget);
 
@@ -108,7 +113,7 @@ namespace MuMech
         {
             get
             {
-                if (Target == null)
+                if (Target == null || TargetPartGone)
                     return null;
                 return Target.GetOrbit();
             }
@@ -175,7 +180,9 @@ namespace MuMech
             }
         }
 
-        public string Name => Target.GetName();
+        // ModuleDockingNode.GetName reads its vessel's name: a port that left its vessel throws there, which is the NRE of #1488, until
+        // the next physics tick drops it
+        public string Name => TargetPartGone ? "" : Target.GetName();
 
         ////////////////////////
         // Internal functions //
@@ -190,6 +197,10 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            // drop a part target that left its vessel, and the stock target with it: KSP's own FlightGlobals.UpdateInformation throws on it too
+            if (TargetPartGone)
+                Unset();
+
             //Restore the saved target when we are made active vessel
             if (!wasActiveVessel && Vessel.isActiveVessel)
             {
