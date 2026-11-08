@@ -344,7 +344,11 @@ namespace MuMech
             UpdateDvLeft(); // we might be doing some RCS/ullage here so account for it.
         }
 
-        private void OnEnterBurn() { }
+        private void OnEnterBurn()
+        {
+            _lowestDvLeft     = double.MaxValue;
+            _lowestDvLeftTime = VesselState.Time;
+        }
 
         private void OnEnterIdle() { }
 
@@ -386,13 +390,25 @@ namespace MuMech
             return true;
         }
 
+        // the lowest delta-v left in this burn, and when it was reached: an RCS burn that stops making progress ends
+        private double _lowestDvLeft = double.MaxValue, _lowestDvLeftTime;
+
         private bool ShouldTerminateStock()
         {
             // An RCS burn on the main throttle tapers like an engine's, but thrusters don't fire for a very small input: the last few
             // cm/s were never burnt off nor overshot, so the burn never ended and the rendezvous autopilot never planned its braking
-            // burn: an RCS-only tug flew into the station at 50 m/s (#651). It ends once under 0.1 m/s is left.
+            // burn: an RCS-only tug flew into the station at 50 m/s (#651). It ends once under 0.1 m/s is left, or once what's left
+            // hasn't dropped by 0.01 m/s for a second (the tug stalled at 0.18 m/s, at an input of 0.05).
             bool rcsBurn = RCSOnly || VesselState.RCSThrust;
-            if (AngleFromNode() < 0.5 * PI && !(rcsBurn && _dvLeft < 0.1)) return false;
+            // progress is 0.01 m/s within a second, well under 1 % of any RCS acceleration a burn would rely on
+            if (_dvLeft < _lowestDvLeft - 0.01)
+            {
+                _lowestDvLeft = _dvLeft;
+                _lowestDvLeftTime = VesselState.Time;
+            }
+
+            bool rcsDone = rcsBurn && (_dvLeft < 0.1 || VesselState.Time - _lowestDvLeftTime > 1);
+            if (AngleFromNode() < 0.5 * PI && !rcsDone) return false;
 
             ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
 
