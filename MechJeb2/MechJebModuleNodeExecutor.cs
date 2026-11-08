@@ -121,6 +121,8 @@ namespace MuMech
 
         private void Init()
         {
+            // a node executed anew may warp again, even after the player stopped the last warp
+            Core.Warp.ClearStop();
             _direction = Vector3d.zero;
             _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
             Core.Thrust.Users.Add(this);
