@@ -46,6 +46,41 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         private const double XENON_TANK_MASS = 0.09;
         private const double XENON_TANK_XENON = 0.04;
 
+        // the RealFuels Merlins of the MyFalcon9Block5 and the MerlinPair
+        private const float MERLIN_MAX_FUEL_FLOW = 0.29972443f;
+        private const float MERLIN_MIN_FUEL_FLOW = 0.108201399f;
+        private const double MERLIN_VACUUM_ISP = 311;
+        private const double MERLIN_SPOOLUP_TIME = 2.651231050491333;
+        private const float MVAC_MAX_FUEL_FLOW = 0.273717612f;
+        private const float MVAC_MIN_FUEL_FLOW = 0.105487883f;
+        private const double MVAC_SPOOLUP_TIME = 2.6730942726135254;
+        private const double MERLIN_RESIDUALS = 0.0094669296351484397;
+
+        // a Merlin with its TEATEB
+        private const double MERLIN_MASS = 0.46998396515846252 + 4 * TEATEB_DENSITY;
+
+        // the propellant in a full tank of the MerlinPair, which is 5 t dry
+        private const double MERLIN_PAIR_PROPELLANT =
+            SimVesselFixtures.MERLIN_PAIR_KEROLOX * (0.3877f * COOLED_RP1_DENSITY + 0.6123f * COOLED_LQD_OXYGEN_DENSITY);
+
+        private const double PUFF_MAX_FUEL_FLOW = 20f / (250f * 9.80665f);
+        private const double PUFF_ISP = 250;
+        private const double RCS_BLOCK_MAX_FUEL_FLOW = 1 / (240 * 9.80665);
+        private const double RCS_BLOCK_ISP = 240;
+
+        // the 750 units of monopropellant in an FL-R750
+        private const double RCS_TANK_MONOPROPELLANT = 750 * MONOPROPELLANT_DENSITY;
+
+        // the probe core (0.5), the FL-R750 (0.4), the Puff (0.09) and the RV-105 (0.04)
+        private const double PUFF_TIN_CAN_DRY_MASS = 1.03;
+
+        private const double SEPRATRON_MAX_FUEL_FLOW = 18f / (154f * 9.80665f);
+        private const double SEPRATRON_ISP = 154;
+        private const double SEPRATRON_SOLID_FUEL = 8 * SOLID_FUEL_DENSITY;
+
+        // the probe core (0.5) and the Sepratron (0.0125) with its solid fuel
+        private const double SEPRATRON_TIN_CAN_MASS = 0.5125 + SEPRATRON_SOLID_FUEL;
+
         [Fact]
         public void MainsailTinCanMatchesCapture() => AssertMatchesCapture("MainsailTinCan.out", SimVesselFixtures.MainsailTinCan);
 
@@ -451,17 +486,14 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             double mvacIsp = 348 - 121 * v.ATMPressure;
             double dirMagnitude = ThrustDirectionMagnitude(v);
 
-            const float MERLIN_MAX_FUEL_FLOW = 0.29972443f;
-            const float MVAC_MAX_FUEL_FLOW = 0.273717612f;
-            const double RESIDUALS = 0.0094669296351484397;
             const double PAD_MASS = 557.28197016018203;
             const double UPPER_STACK_MASS = 122.56389040936439;
             const double PAYLOAD_FAIRING_MASS = 2 * 0.82329875230789185;
             // the lead ballast payload and the upper stage avionics
             double payloadMass = 1 - 0.91552984714508057 + 659.92299999999966 * LEAD_BALLAST_DENSITY + 1 - 0.70491535891778767;
-            double firstStagePropellant = (1 - RESIDUALS) *
+            double firstStagePropellant = (1 - MERLIN_RESIDUALS) *
                 (149242.99723951373 * COOLED_RP1_DENSITY + 235701.53739390321 * COOLED_LQD_OXYGEN_DENSITY);
-            double upperStagePropellant = (1 - RESIDUALS) *
+            double upperStagePropellant = (1 - MERLIN_RESIDUALS) *
                 (38750.520237705852 * COOLED_RP1_DENSITY + 61199.234562294143 * COOLED_LQD_OXYGEN_DENSITY);
             double nitrogen = (4 * 44323.939999999995 + 4 * 200000) * NITROGEN_DENSITY;
 
@@ -472,6 +504,19 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             // the first stage's avionics can control 600t, the upper stage's 150t
             for (int i = 0; i < segments.Count; i++)
                 segments[i].ControllableMass.ShouldEqual(i >= 3 ? 600 : 150);
+
+            // the spoolup is that of the engines which ignite in the segment's stage: the Merlins while the launch clamps hold
+            // the vessel, the Merlin Vacuum as the first stage drops.  the other segments have no engines, or engines which are
+            // already running, and the NodeExecutor adds up the spoolup of every segment of a burn.  the spoolup was once
+            // counted again in every segment the engines burned in.
+            for (int i = 0; i < segments.Count; i++)
+                segments[i].SpoolUpTime.ShouldEqual(i == 4 ? MERLIN_SPOOLUP_TIME : i == 2 ? MVAC_SPOOLUP_TIME : 0, 1e-12);
+
+            // the thrust range, which the PSG's throttle limits use: the minimum is the engines' at their minimum fuel flow
+            segments[3].MaxThrust.ShouldEqual(9 * MERLIN_MAX_FUEL_FLOW * merlinIsp * G0 * dirMagnitude, 1e-6);
+            segments[3].MinThrust.ShouldEqual(9 * MERLIN_MIN_FUEL_FLOW * merlinIsp * G0 * dirMagnitude, 1e-6);
+            segments[1].MaxThrust.ShouldEqual(MVAC_MAX_FUEL_FLOW * mvacIsp * G0 * dirMagnitude, 1e-6);
+            segments[1].MinThrust.ShouldEqual(MVAC_MIN_FUEL_FLOW * mvacIsp * G0 * dirMagnitude, 1e-6);
 
             AssertNoBurn(segments[5], 5, PAD_MASS, 0);
             AssertNoBurn(segments[4], 4, PAD_MASS, 0, 9 * MERLIN_MAX_FUEL_FLOW * merlinIsp * G0 * dirMagnitude);
@@ -582,6 +627,312 @@ namespace MechJebLibTest.FuelFlowSimulationTests
                 ablator.ShouldEqual(booster ? 705.67 : 114.16, 1e-4);
             }
         }
+
+        // MechJeb2 PR #1901: as in KSP's ModuleEngines, multFlow (which TestFlight's loss of thrust failures lower) scales the
+        // fuel flow, so at half the flow the Mainsail burns for twice as long at half the thrust, with the same isp and
+        // delta-v.  scaling the thrust alone would halve the isp and the delta-v over the same burn time.
+        [Fact]
+        public void MultFlowScalesTheFuelFlow()
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCan();
+            FirstEngine(v).MultFlow = 0.5;
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertNoBurn(segments[1], 1, 79.7, 0);
+            AssertBurn(segments[0], 0, 79.7, 2 * ROCKOMAX64_PROPELLANT, 0.5 * MAINSAIL_MAX_FUEL_FLOW, MAINSAIL_VACUUM_ISP, dirMagnitude);
+            segments[0].MaxThrust.ShouldEqual(0.5 * MAINSAIL_MAX_FUEL_FLOW * MAINSAIL_VACUUM_ISP * G0 * dirMagnitude, 1e-6);
+        }
+
+        // with all of its thrust lost the Mainsail has no fuel flow, so it burns nothing
+        [Fact]
+        public void ZeroMultFlowBurnsNothing()
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCan();
+            FirstEngine(v).MultFlow = 0;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertNoBurn(segments[1], 1, 79.7, 0);
+            AssertNoBurn(segments[0], 0, 79.7, 0);
+        }
+
+        // MechJeb2 issue #1781: a solid motor's throttle is locked at its thrust limiter, so at 50% the Sepratron burns for
+        // twice as long at half the thrust, with the same delta-v, and its thrust can't go below that either.  the limiter
+        // was reset to 100% when the engine was activated, which kept the burn time of the full thrust.
+        [Theory]
+        [InlineData(100f)]
+        [InlineData(50f)]
+        public void SepratronThrustLimiter(float throttleLimiter)
+        {
+            SimVessel v = SimVesselFixtures.SepratronTinCan(throttleLimiter);
+            double maxFuelFlow = throttleLimiter / 100 * SEPRATRON_MAX_FUEL_FLOW;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertBurn(segments[0], 0, SEPRATRON_TIN_CAN_MASS, SEPRATRON_SOLID_FUEL, maxFuelFlow, SEPRATRON_ISP, 1);
+            segments[0].MaxThrust.ShouldEqual(maxFuelFlow * SEPRATRON_ISP * G0, 1e-6);
+            segments[0].MinThrust.ShouldEqual(maxFuelFlow * SEPRATRON_ISP * G0, 1e-6);
+        }
+
+        // higher up, the Whiplash's ATMCurve gives it a flowMultiplier below 1, and it burns its fuel more slowly, at less
+        // thrust and the same isp.  the mass flow already carries the flowMultiplier, so the thrust taking it again as well
+        // would lower the isp with it.  at sea level the flowMultiplier is 1, which can't tell the two apart.
+        [Fact]
+        public void JetFlowMultiplierKeepsTheIsp()
+        {
+            SimVessel v = SimVesselFixtures.JetTinCan();
+            // the ATMCurve takes the density over 49/40 kg/m³, here 0.3: inside its cubic segment from 0.16 to 0.5
+            v.SetConditions(0.3 * 49 / 40, 0.3, 0);
+            double flowMultiplier = Hermite(0.3, 0.16, 0.5, 0.5f, 0.5779132f, 0.6f, 0.4809403f);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertBurn(segments[0], 0, JET_TIN_CAN_MASS, ROCKOMAX64_LIQUID_FUEL, flowMultiplier * JET_MAX_FUEL_FLOW, JET_ISP, 1);
+        }
+
+        // RealFuels' autoCutoff shuts a Merlin's symmetry counterpart down with it when it flames out, so when pod B's tank
+        // runs down to its residuals a second before pod A's, both Merlins stop and pod A's tank keeps that second of
+        // propellant.  pod A's Merlin is already in the active engines when pod B's flames out, and has to be taken out again.
+        // without autoCutoff pod A's Merlin would burn on alone, in a segment of its own, for that second.
+        //
+        // the tanks are large enough that the rounding leaves pod B's RP-1 or LOX a sliver over its residuals after the step
+        // which should empty it, and the simulation steps at least 1 ms, so pod A's Merlin can burn 1 ms of its second
+        // finishing that sliver off with pod B's.  the tolerances allow for that one step.
+        [Fact]
+        public void AutoCutoffShutsDownTheSymmetryCounterpart()
+        {
+            SimVessel v = SimVesselFixtures.MerlinPair(true, 1);
+            double burnTime = MerlinPairBurnTime(1);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertBurn(segments[0], 0, MerlinPairMass(1), 2 * MERLIN_MAX_FUEL_FLOW * burnTime, MERLIN_MAX_FUEL_FLOW, MERLIN_VACUUM_ISP, 1,
+                engines: 2, tolerance: 1e-4);
+
+            SimPart tankA = v.Parts.Find(p => p.PersistentId == 2);
+            (PropellantMass(tankA) - MERLIN_RESIDUALS * MERLIN_PAIR_PROPELLANT).ShouldEqual(MERLIN_MAX_FUEL_FLOW, 1e-3);
+        }
+
+        // without autoCutoff pod A's Merlin burns on alone for the second of propellant pod B's tank lacks.  the stage splits
+        // into two segments of the same KSP stage, which the staging controller's hot staging adds up, and the second one has
+        // no spoolup since its Merlin is already running.  as above, pod A's Merlin can burn 1 ms of its second alongside the
+        // end of pod B's.
+        [Fact]
+        public void EngineBurningOnAloneSplitsTheStage()
+        {
+            SimVessel v = SimVesselFixtures.MerlinPair(false, 1);
+            double burnTime = MerlinPairBurnTime(1);
+            double startMass = MerlinPairMass(1);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertBurn(segments[1], 0, startMass, 2 * MERLIN_MAX_FUEL_FLOW * burnTime, MERLIN_MAX_FUEL_FLOW, MERLIN_VACUUM_ISP, 1,
+                engines: 2, tolerance: 1e-4);
+            segments[1].SpoolUpTime.ShouldEqual(MERLIN_SPOOLUP_TIME, 1e-12);
+
+            // pod A's Merlin burns its tank down to its residuals
+            FuelStats s = segments[0];
+            s.KSPStage.ShouldEqual(0);
+            s.StagedMass.ShouldBeZero();
+            s.StartMass.ShouldEqual(segments[1].EndMass);
+            s.EndMass.ShouldEqual(startMass - MERLIN_MAX_FUEL_FLOW * (2 * burnTime + 1), 1e-6);
+            s.DeltaTime.ShouldEqual(1, 1e-3);
+            s.Thrust.ShouldEqual(MERLIN_MAX_FUEL_FLOW * MERLIN_VACUUM_ISP * G0, 1e-6);
+            s.Isp.ShouldEqual(MERLIN_VACUUM_ISP, 1e-6);
+            s.SpoolUpTime.ShouldBeZero();
+        }
+
+        // pod B's tank lacks 10 ms of propellant: a segment that short isn't split off, it goes into the segment of the two
+        // Merlins.  splitting the stage at every change of thrust made segments of next to no time or delta-v.
+        [Fact]
+        public void NoSegmentForAShortBurnOn()
+        {
+            const double DEFICIT = 0.01;
+            SimVessel v = SimVesselFixtures.MerlinPair(false, DEFICIT);
+            double burnTime = MerlinPairBurnTime(DEFICIT);
+            double startMass = MerlinPairMass(DEFICIT);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            FuelStats s = segments[0];
+            s.KSPStage.ShouldEqual(0);
+            s.StartMass.ShouldEqual(startMass, 1e-6);
+            s.EndMass.ShouldEqual(startMass - MERLIN_MAX_FUEL_FLOW * (2 * burnTime + DEFICIT), 1e-6);
+            s.DeltaTime.ShouldEqual(burnTime + DEFICIT, 1e-6);
+            s.Thrust.ShouldEqual(2 * MERLIN_MAX_FUEL_FLOW * MERLIN_VACUUM_ISP * G0, 1e-6);
+        }
+
+        // the Puff and the RV-105 burn the same monopropellant.  at the start of the stage the RCS has the whole tank, but the
+        // Puff burns it all, leaving the RCS none.  the RCS propellant and time are those of the whole tank: taking them from
+        // the end of the stage left them at 0.
+        [Fact]
+        public void RcsSharingAnEnginesTank()
+        {
+            SimVessel v = SimVesselFixtures.PuffTinCan();
+            const double START_MASS = PUFF_TIN_CAN_DRY_MASS + RCS_TANK_MONOPROPELLANT;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            FuelStats s = segments[0];
+            AssertBurn(s, 0, START_MASS, RCS_TANK_MONOPROPELLANT, PUFF_MAX_FUEL_FLOW, PUFF_ISP, 1);
+            s.RcsThrust.ShouldEqual(1, 1e-6);
+            s.RcsISP.ShouldEqual(RCS_BLOCK_ISP, 1e-6);
+            s.MinRcsDeltaV.ShouldEqual(RcsDeltaV(START_MASS, RCS_TANK_MONOPROPELLANT), 1e-6);
+            s.RcsMass.ShouldEqual(RCS_TANK_MONOPROPELLANT, 1e-6);
+            s.RcsDeltaTime.ShouldEqual(RCS_TANK_MONOPROPELLANT / RCS_BLOCK_MAX_FUEL_FLOW, 1e-6);
+            s.MaxRcsDeltaV.ShouldBeZero();
+        }
+
+        // with residuals, as RealFuels gives its engines, the Puff stops with 1% of the tank left.  the RCS has no residuals of
+        // its own and burns that, so it has some delta-v left at the end of the stage.  the engine's residuals must be cleared
+        // for that: the RCS can't burn below them.
+        [Fact]
+        public void RcsBurnsTheResidualsAnEngineLeaves()
+        {
+            const double RESIDUALS = 0.01;
+            SimVessel v = SimVesselFixtures.PuffTinCan(RESIDUALS);
+            const double START_MASS = PUFF_TIN_CAN_DRY_MASS + RCS_TANK_MONOPROPELLANT;
+            const double END_MASS = START_MASS - (1 - RESIDUALS) * RCS_TANK_MONOPROPELLANT;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            FuelStats s = segments[0];
+            AssertBurn(s, 0, START_MASS, (1 - RESIDUALS) * RCS_TANK_MONOPROPELLANT, PUFF_MAX_FUEL_FLOW, PUFF_ISP, 1);
+            s.MinRcsDeltaV.ShouldEqual(RcsDeltaV(START_MASS, RCS_TANK_MONOPROPELLANT), 1e-6);
+            s.RcsMass.ShouldEqual(RCS_TANK_MONOPROPELLANT, 1e-6);
+            s.MaxRcsDeltaV.ShouldEqual(RcsDeltaV(END_MASS, RESIDUALS * RCS_TANK_MONOPROPELLANT), 1e-6);
+
+            // the RCS calculation puts back what it burns
+            SimPart tank = v.Parts.Find(p => p.PersistentId == 2);
+            tank.Resources[MONOPROPELLANT].Amount.ShouldEqual(RESIDUALS * 750, 1e-9);
+        }
+
+        // the Puff burns the drop tank down to its residuals and the vessel stages it with the Puff still running, now on the
+        // core tank, which holds the Puff's residuals.  ModuleRCS has none, so they are cleared for the RCS delta-v at the end
+        // of the stage, which burns the drop tank's residuals and the whole core tank.  left on, they would stop the RCS short
+        // of the last 1% of the core tank.
+        [Fact]
+        public void RcsAtStagingIgnoresTheResidualsOfARunningEngine()
+        {
+            const double RESIDUALS = 0.01;
+            SimVessel v = SimVesselFixtures.PuffTinCanDropTank(RESIDUALS);
+            // the core, and the radial decoupler (0.05) with the drop tank
+            const double START_MASS = PUFF_TIN_CAN_DRY_MASS + RCS_TANK_MONOPROPELLANT + 0.45 + RCS_TANK_MONOPROPELLANT;
+            const double BURNED = (1 - RESIDUALS) * RCS_TANK_MONOPROPELLANT;
+            const double STAGING_MASS = START_MASS - BURNED;
+            // the drop tank goes with its residuals
+            const double STAGED_MASS = 0.45 + RESIDUALS * RCS_TANK_MONOPROPELLANT;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertBurn(segments[1], 1, START_MASS, BURNED, PUFF_MAX_FUEL_FLOW, PUFF_ISP, 1);
+            segments[1].MinRcsDeltaV.ShouldEqual(RcsDeltaV(START_MASS, 2 * RCS_TANK_MONOPROPELLANT), 1e-6);
+            segments[1].MaxRcsDeltaV.ShouldEqual(RcsDeltaV(STAGING_MASS, (1 + RESIDUALS) * RCS_TANK_MONOPROPELLANT), 1e-6);
+
+            // the Puff burns the core tank down to its own residuals
+            AssertBurn(segments[0], 0, STAGING_MASS - STAGED_MASS, BURNED, PUFF_MAX_FUEL_FLOW, PUFF_ISP, 1, STAGED_MASS);
+            segments[0].MinRcsDeltaV.ShouldEqual(RcsDeltaV(STAGING_MASS - STAGED_MASS, RCS_TANK_MONOPROPELLANT), 1e-6);
+            segments[0].MaxRcsDeltaV.ShouldEqual(RcsDeltaV(STAGING_MASS - STAGED_MASS - BURNED, RESIDUALS * RCS_TANK_MONOPROPELLANT), 1e-6);
+        }
+
+        // MechJeb2 issue #1919: the decoupler drops the RCS tank, so after staging neither the RCS block nor the Puff above it
+        // can reach any monopropellant.  stage priority flow has to look at the parts still on the vessel, not every part:
+        // the RCS spun until it hit the step limit, and the Puff counted as running with nothing to burn.
+        [Fact]
+        public void RcsAndEngineLoseTheirDecoupledTank()
+        {
+            SimVessel v = SimVesselFixtures.RcsOverDecoupledTank();
+            // the probe core (0.5), the RV-105 (0.04) and the Puff (0.09)
+            const double UPPER_MASS = 0.63;
+            // the decoupler (0.16) and the FL-R750
+            const double LOWER_MASS = 0.56 + RCS_TANK_MONOPROPELLANT;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertNoBurn(segments[1], 1, UPPER_MASS + LOWER_MASS, 0);
+            segments[1].MinRcsDeltaV.ShouldEqual(RcsDeltaV(UPPER_MASS + LOWER_MASS, RCS_TANK_MONOPROPELLANT), 1e-6);
+            segments[1].MaxRcsDeltaV.ShouldEqual(RcsDeltaV(UPPER_MASS + LOWER_MASS, RCS_TANK_MONOPROPELLANT), 1e-6);
+
+            AssertNoBurn(segments[0], 0, UPPER_MASS, LOWER_MASS);
+            segments[0].RcsThrust.ShouldBeZero();
+            segments[0].MinRcsDeltaV.ShouldBeZero();
+            segments[0].MaxRcsDeltaV.ShouldBeZero();
+        }
+
+        // the DecouplingAnalyzer starts from the root part, wherever it is in the list: from the lower Mainsail the decoupler
+        // would drop the upper stage instead of the lower one
+        [Fact]
+        public void RootPartAnywhereInTheList()
+        {
+            List<FuelStats> expected = Run(SimVesselFixtures.MainsailTinCan2Stage());
+            SimVessel v = SimVesselFixtures.MainsailTinCan2Stage();
+            SimVesselFixtures.MovePartToFront(v, v.Parts.Find(p => p.PersistentId == 296107038));
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(expected.Count, segments.Count);
+            for (int i = 0; i < segments.Count; i++)
+            {
+                segments[i].KSPStage.ShouldEqual(expected[i].KSPStage);
+                segments[i].StartMass.ShouldEqual(expected[i].StartMass, 1e-9);
+                segments[i].EndMass.ShouldEqual(expected[i].EndMass, 1e-9);
+                segments[i].DeltaV.ShouldEqual(expected[i].DeltaV, 1e-9);
+            }
+        }
+
+        // MechJeb2 PR #1870: an engine with no ignitions left has no delta-v, the upper stage keeps its propellant
+        [Fact]
+        public void UnrestartableDeadEngineBurnsNothing()
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCan2Stage();
+            ((SimModuleEngines)v.Parts.Find(p => p.PersistentId == 1899096253).Modules[0]).IsUnrestartableDeadEngine = true;
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(5, segments.Count);
+            AssertNoBurn(segments[4], 4, 85.86, 0);
+            AssertNoBurn(segments[3], 3, 85.86, 0, MAINSAIL_MAX_FUEL_FLOW * MAINSAIL_VACUUM_ISP * G0 * dirMagnitude);
+            AssertMainsailBurn(segments[2], 2, 85.86, ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude);
+            AssertNoBurn(segments[1], 1, 43.7, 10.16);
+            AssertNoBurn(segments[0], 0, 43.7, 0);
+        }
+
+        private static SimModuleEngines FirstEngine(SimVessel v) => (SimModuleEngines)v.Parts.Find(p => p.IsEngine).Modules[0];
+
+        // the mass of the resources in the part
+        private static double PropellantMass(SimPart part)
+        {
+            double mass = 0;
+            foreach (SimResource resource in part.Resources.Values)
+                mass += resource.Amount * resource.Density;
+            return mass;
+        }
+
+        // the delta-v of the RV-105 burning propellant from a vessel of mass, with the engines off
+        private static double RcsDeltaV(double mass, double propellant) => RCS_BLOCK_ISP * G0 * Math.Log(mass / (mass - propellant));
+
+        // the MerlinPair on the pad, pod B's tank short of deficitSeconds of the Merlin's flow: the probe core (0.5), and the
+        // tanks with their Merlins
+        private static double MerlinPairMass(double deficitSeconds) =>
+            0.5 + 2 * (5 + MERLIN_MASS + MERLIN_PAIR_PROPELLANT) - deficitSeconds * MERLIN_MAX_FUEL_FLOW;
+
+        // how long the two Merlins of the MerlinPair burn together: until pod B's tank is down to its residuals
+        private static double MerlinPairBurnTime(double deficitSeconds) =>
+            (1 - MERLIN_RESIDUALS) * SimVesselFixtures.MERLIN_PAIR_KEROLOX / SimVesselFixtures.MERLIN_KEROLOX_FLOW - deficitSeconds;
 
         private static List<FuelStats> Run(SimVessel v)
         {

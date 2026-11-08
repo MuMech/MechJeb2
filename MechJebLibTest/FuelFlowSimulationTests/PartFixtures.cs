@@ -185,6 +185,82 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return p;
         }
 
+        // the O-10 Puff, written by hand from omsEngine.cfg: a monopropellant engine, which draws on the same tanks as RCS.  the
+        // tests run in vacuum, so only the atmosphereCurve's first key matters.  residuals stands in for the predicted residuals
+        // RealFuels gives its engines, which a stock engine doesn't have.
+        public static SimPart OmsEngine(SimVessel v, uint persistentId, int inverseStage, V3 thrustDirection, double residuals = 0)
+        {
+            SimPart p = NewPart(v, "omsEngine", persistentId, inverseStage, 0.09f);
+            p.IsEngine = true;
+            p.EngineResiduals = residuals;
+
+            SimModuleEngines e = NewModuleEngines(p);
+            e.IsEnabled = true;
+            e.Index = 0;
+            e.MaxFuelFlow = 20f / (250f * 9.80665f);
+            e.MaxThrust = 20;
+            e.ModuleResiduals = residuals;
+            e.Propellants.Add(new SimPropellant(MONOPROPELLANT, false, 0.9f, SimFlowMode.STAGE_PRIORITY_FLOW, MONOPROPELLANT_DENSITY));
+            e.ThrustTransformMultipliers.Add(1);
+            e.ThrustDirectionVectors.Add(thrustDirection);
+            AppendConstant(e.AtmosphereCurve, 0, 0, 250f);
+            return p;
+        }
+
+        // the RV-105 RCS thruster block, written by hand from rcsBlockRV-105.cfg.  KSP's ModuleRCS gives it a maxFuelFlow of
+        // thrusterPower / (isp * G), and it is switched on, as it is in the editor.  only the atmosphereCurve's first key matters.
+        public static SimPart RCSBlockV2(SimVessel v, uint persistentId, int inverseStage = -1)
+        {
+            SimPart p = NewPart(v, "RCSBlock.v2", persistentId, inverseStage, 0.04f);
+
+            SimModuleRCS r = AddModule(SimModuleRCS.Borrow(p));
+            r.IsEnabled = true;
+            r.StagingEnabled = false;
+            r.Index = 1;
+            r.RcsEnabled = true;
+            r.G = 9.80665;
+            r.ISPMult = 1;
+            r.ThrustPercentage = 100;
+            r.MaxFuelFlow = 1 / (240 * 9.80665);
+            r.Isp = 240;
+            r.Thrust = 1;
+            r.MassFlowRate = 1 / (240 * 9.80665);
+            AppendConstant(r.AtmosphereCurve, 0, 0, 240);
+            r.Propellants.Add(new SimPropellant(MONOPROPELLANT, false, 1, SimFlowMode.STAGE_PRIORITY_FLOW, MONOPROPELLANT_DENSITY));
+            return p;
+        }
+
+        // the FL-R750 RCS fuel tank, 3 t of monopropellant
+        public static SimPart RCSTank1_2(SimVessel v, uint persistentId, int inverseStage = -1)
+        {
+            SimPart p = NewPart(v, "RCSTank1-2", persistentId, inverseStage, 0.4f);
+            AddMonoPropellant(p, 750, 750);
+            return p;
+        }
+
+        // the Sepratron I, written by hand from solidBoosterSep.cfg: a solid motor, so its throttle is locked at its thrust
+        // limiter.  only the atmosphereCurve's first key matters.
+        public static SimPart SepMotor1(SimVessel v, uint persistentId, int inverseStage, V3 thrustDirection, float throttleLimiter = 100)
+        {
+            SimPart p = NewPart(v, "sepMotor1", persistentId, inverseStage, 0.0125f);
+            p.IsEngine = true;
+            p.IsThrottleLocked = true;
+            AddSolidFuel(p, 8, 8);
+
+            SimModuleEngines e = NewModuleEngines(p);
+            e.IsEnabled = true;
+            e.Index = 0;
+            e.MaxFuelFlow = 18f / (154f * 9.80665f);
+            e.MaxThrust = 18;
+            e.ThrottleLocked = true;
+            e.ThrottleLimiter = throttleLimiter;
+            e.Propellants.Add(new SimPropellant(SOLID_FUEL, false, 1, SimFlowMode.NO_FLOW, SOLID_FUEL_DENSITY));
+            e.ThrustTransformMultipliers.Add(1);
+            e.ThrustDirectionVectors.Add(thrustDirection);
+            AppendConstant(e.AtmosphereCurve, 0, 0, 154f);
+            return p;
+        }
+
         /// <summary>
         ///     Borrows a SimPart and sets every field that the KSP SimVesselBuilder and SimVesselUpdater would set, using
         ///     the declared defaults (which are the fields the SimVessel dump omits).  This matters since pooled SimParts are

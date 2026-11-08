@@ -57,6 +57,14 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public const float LQD_HYDROGEN_DENSITY = 0.00007085f;
         public const float ABLATOR_DENSITY = 0.001f;
 
+        // made up as well, since no capture has monopropellant or solid fuel.  the densities are the stock values.
+        // MonoPropellant's flowMode is STAGE_PRIORITY_FLOW and SolidFuel's NO_FLOW.
+        public const int MONOPROPELLANT = 8;
+        public const int SOLID_FUEL = 9;
+
+        public const float MONOPROPELLANT_DENSITY = 0.004f;
+        public const float SOLID_FUEL_DENSITY = 0.0075f;
+
         // this mirrors SimVesselUpdater.UpdateResources for a resource with its flowState enabled
         public static void AddResource(SimPart part, int id, double amount, double maxAmount, double density) =>
             part.Resources[id] = new SimResource
@@ -94,5 +102,11 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
         public static void AddXenonGas(SimPart part, double amount, double maxAmount) =>
             AddResource(part, XENON_GAS, amount, maxAmount, XENON_GAS_DENSITY);
+
+        public static void AddMonoPropellant(SimPart part, double amount, double maxAmount) =>
+            AddResource(part, MONOPROPELLANT, amount, maxAmount, MONOPROPELLANT_DENSITY);
+
+        public static void AddSolidFuel(SimPart part, double amount, double maxAmount) =>
+            AddResource(part, SOLID_FUEL, amount, maxAmount, SOLID_FUEL_DENSITY);
     }
 }

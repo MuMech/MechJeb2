@@ -225,11 +225,19 @@ namespace MechJebLib.FuelFlowSimulation
             ThrustNoCosLoss = 0;
             SpoolupCurrent = 0;
 
+            // the spoolup is that of the engines which ignite in this stage, weighted by their thrust: the engines lit in an
+            // earlier stage are already running, and the NodeExecutor adds up the SpoolUpTime of every segment of a burn
+            double spoolupThrust = 0;
+
             for (int i = 0; i < ActiveEngines.Count; i++)
             {
                 SimModuleEngines e = ActiveEngines[i];
 
-                SpoolupCurrent += e.ThrustCurrent.magnitude * e.ModuleSpoolupTime;
+                if (e.Part.InverseStage == CurrentStage)
+                {
+                    SpoolupCurrent += e.ThrustCurrent.magnitude * e.ModuleSpoolupTime;
+                    spoolupThrust += e.ThrustCurrent.magnitude;
+                }
 
                 // no e.Update() here: UpdateActiveEngines() runs right after UpdateEngineStats(), which has just updated every
                 // engine still on the vessel, so updating the active ones again (SetConsumptionRates() and all) did the same
@@ -243,7 +251,7 @@ namespace MechJebLib.FuelFlowSimulation
             ThrustMagnitude = ThrustCurrent.magnitude;
             ThrustMinMagnitude = ThrustMin.magnitude;
             ThrustMaxMagnitude = ThrustMax.magnitude;
-            SpoolupCurrent = ThrustMagnitude > 0 ? SpoolupCurrent / ThrustMagnitude : 0;
+            SpoolupCurrent = spoolupThrust > 0 ? SpoolupCurrent / spoolupThrust : 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

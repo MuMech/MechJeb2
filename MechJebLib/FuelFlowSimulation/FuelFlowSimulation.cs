@@ -182,6 +182,8 @@ namespace MechJebLib.FuelFlowSimulation
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
                     GetNextSegment(vessel);
+                    // this segment carries on the stage's burn with the engines that are still running, none ignite
+                    _currentSegment.SpoolUpTime = 0;
                     activeEngines = vessel.ActiveEngines.Count;
                 }
 
