@@ -300,7 +300,10 @@ namespace MuMech
                 _userCommandingRotationSmoothed--;
             }
 
-            if (Tmode != TMode.OFF && VesselState.ThrustAvailable > 0)
+            // ThrustAvailable is the thrust along the control forward: on a control point that faces away from the engines it is 0 or
+            // negative, and Kill H/S, which aims the engines themselves, didn't run at all (#2368, the reverse point)
+            bool killH = Tmode == TMode.KEEP_VERTICAL && TransKillH;
+            if (Tmode != TMode.OFF && (killH ? VesselState.ThrustVectorMaxThrottle.sqrMagnitude > 0 : VesselState.ThrustAvailable > 0))
             {
                 double spd = 0;
 
