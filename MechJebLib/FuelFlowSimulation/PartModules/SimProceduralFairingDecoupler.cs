@@ -25,6 +25,14 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
         private static SimProceduralFairingDecoupler New() => new SimProceduralFairingDecoupler();
 
+        // the updater sets IsDecoupled only when Procedural Fairings loaded correctly, so a pooled decoupler kept the last
+        // vessel's value otherwise
+        protected override void Clear()
+        {
+            base.Clear();
+            IsDecoupled = false;
+        }
+
         public override string ToString()
         {
             List<string> fields = CommonFieldList();
