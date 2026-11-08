@@ -123,6 +123,10 @@ namespace MechJebLibTest.ControlTests
             double riseTimeStart = -1;
             double riseTimeEnd = -1;
 
+            // MATLAB's step response starts at rest, with the setpoint at 0 until t = 0: a sample of that rest gives the
+            // derivative the history the step is taken from
+            pid.Update(0, 0);
+
             for (int i = 0; i < steps; i++)
             {
                 double t = i * pid.Ts;
@@ -457,6 +461,32 @@ namespace MechJebLibTest.ControlTests
             }
         }
 
+        // a controller engaged with an error already there, at its first sample after construction or a Reset(): no
+        // derivative kick.  with N = 50 and Td = 1 s the derivative's first step from 0 was 100 / 3 times the proportional term.
+        [Fact]
+        public void FirstSampleHasNoDerivativeKick()
+        {
+            var pid = new PIDLoop2 { K = 1, Td = 1, N = 50, Ts = 0.02 };
+
+            Assert.Equal(1.0, pid.Update(1, 0), 12);
+            Assert.Equal(0.0, pid.DTerm);
+
+            for (int i = 0; i < 5; i++)
+                pid.Update(i, 0);
+
+            pid.Reset();
+
+            Assert.Equal(0.0, pid.PTerm);
+            Assert.Equal(0.0, pid.ITerm);
+            Assert.Equal(0.0, pid.DTerm);
+
+            Assert.Equal(2.0, pid.Update(2, 0), 12);
+            Assert.Equal(0.0, pid.DTerm);
+
+            // the derivative works from the second sample on: a step of 1 with N Ts = Td is 2 N K Td / (2 Td + N Ts) = 100 / 3
+            Assert.Equal(3 + 100.0 / 3, pid.Update(3, 0), 12);
+        }
+
         [Fact]
         public void IntegralOnly()
         {
@@ -475,6 +505,7 @@ namespace MechJebLibTest.ControlTests
             pid.Tf = 0.5 * pid.Ts;
 
             Assert.Equal(0.1, pid.Kd, 12);
+            Assert.Equal(0.0, pid.Update(0, 0), 8);
             Assert.Equal(5.0, pid.Update(1, 0), 8);
             Assert.Equal(0.0, pid.Update(1, 0), 8);
         }
@@ -490,6 +521,9 @@ namespace MechJebLibTest.ControlTests
 
             double[] errors = { 1, 1, 3, 3, 2 };
             double e1 = 0;
+
+            // a first sample at rest, so that the first error is a step from 0
+            pid.Update(0, 0);
 
             foreach (double e in errors)
             {
