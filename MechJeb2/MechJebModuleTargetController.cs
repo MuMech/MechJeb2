@@ -180,7 +180,9 @@ namespace MuMech
             }
         }
 
-        public string Name => Target.GetName();
+        // ModuleDockingNode.GetName reads its vessel's name: a port that left its vessel throws there, which is the NRE of #1488, until
+        // the next physics tick drops it
+        public string Name => TargetPartGone ? "" : Target.GetName();
 
         ////////////////////////
         // Internal functions //
