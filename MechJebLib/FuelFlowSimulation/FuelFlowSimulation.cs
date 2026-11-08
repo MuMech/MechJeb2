@@ -293,8 +293,11 @@ namespace MechJebLib.FuelFlowSimulation
                 _sourcesRCS.Add(p);
             }
 
+            // shared in proportion to what each tank holds, as for the engines (see UpdateResourceDrainsAndResidualsInParts)
+            double total = TotalAmount(_sourcesRCS, resourceId);
+
             for (int i = 0; i < _sourcesRCS.Count; i++)
-                UpdateRCSDrainsInPart(_sourcesRCS[i], resourceConsumption / _sourcesRCS.Count, resourceId);
+                UpdateRCSDrainsInPart(_sourcesRCS[i], resourceConsumption * Share(_sourcesRCS[i], resourceId, total), resourceId);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -398,9 +401,30 @@ namespace MechJebLib.FuelFlowSimulation
                 _sources.Add(p);
             }
 
+            // like KSP's PartSet.ProcessRequest, the demand is shared between the tanks of the highest priority (or all of them,
+            // without priority) in proportion to what each one holds, whatever the flow mode, _BALANCE or not: the tanks of a
+            // group run dry together.  an equal split would run a smaller tank dry first, and drop it, or stage, early.
+            double total = TotalAmount(_sources, resourceId);
+
             for (int i = 0; i < _sources.Count; i++)
-                UpdateResourceDrainsAndResidualsInPart(_sources[i], resourceConsumption / _sources.Count, resourceId, residual);
+                UpdateResourceDrainsAndResidualsInPart(_sources[i], resourceConsumption * Share(_sources[i], resourceId, total), resourceId,
+                    residual);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double TotalAmount(List<SimPart> sources, int resourceId)
+        {
+            double total = 0;
+            for (int i = 0; i < sources.Count; i++)
+                if (sources[i].TryGetResource(resourceId, out SimResource resource))
+                    total += resource.Amount;
+            return total;
+        }
+
+        // the share of the demand this source takes.  every source holds more than its threshold, so the total is positive.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double Share(SimPart source, int resourceId, double total) =>
+            source.TryGetResource(resourceId, out SimResource resource) ? resource.Amount / total : 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateResourceDrainsAndResidualsInPart(SimPart p, double resourceConsumption, int resourceId, double residual)

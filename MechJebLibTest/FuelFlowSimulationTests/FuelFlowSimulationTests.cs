@@ -316,6 +316,32 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertMainsailBurn(segments[0], 0, 79.7, 2 * ROCKOMAX64_PROPELLANT, isp, dirMagnitude, 4.05, tolerance: TOLERANCE);
         }
 
+        // tanks that share a priority share the demand in proportion to what each holds, as in KSP's PartSet.ProcessRequest,
+        // so they run dry together.  here the drop tank, half full, has the core's priority (which KSP's flow priority tweakable
+        // can give it).  with the demand split equally it would run dry first and the vessel would stage it with 32 t still in
+        // the core tanks, a staging that KSP doesn't do.
+        [Fact]
+        public void TanksOfOnePriorityRunDryTogether()
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCanDropTank(false, true);
+            SimPart dropTank = v.Parts.Find(p => p.PersistentId == 1000000002);
+            dropTank.ResourcePriority = -10;
+            AddLiquidFuel(dropTank, 1440, 2880);
+            AddOxidizer(dropTank, 1760, 3520);
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+            const double START_MASS = 115.75 - ROCKOMAX64_PROPELLANT / 2;
+            const double PROPELLANT = 2.5 * ROCKOMAX64_PROPELLANT;
+            const double TOLERANCE = 1e-4;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(3, segments.Count);
+            AssertNoBurn(segments[2], 2, START_MASS, 0);
+            AssertMainsailBurn(segments[1], 1, START_MASS, PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude, tolerance: TOLERANCE);
+            // then the radial decoupler and the empty drop tank go, with nothing left to burn
+            AssertNoBurn(segments[0], 0, START_MASS - PROPELLANT - 4.05, 4.05);
+        }
+
         // the lower Mainsail lights while the launch clamps hold the vessel and burns the lower tank, then the decoupler
         // drops the lower stage and the upper Mainsail burns the upper tank
         [Theory]
