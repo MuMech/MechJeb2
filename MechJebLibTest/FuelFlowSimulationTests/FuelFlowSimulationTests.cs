@@ -29,6 +29,16 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         // a full Rockomax64 (36), the Whiplash (1.8), and the shock cone intake (0.12) with its 2 units of air
         private const double JET_TIN_CAN_MASS = 37.93;
 
+        private const double ION_MAX_FUEL_FLOW = 2f / (4200f * 9.80665f);
+        private const double ION_ISP = 4200;
+
+        // the probe core (0.5), the battery bank (0.2) and the ion engine (0.25): ElectricCharge has no mass
+        private const double ION_TIN_CAN_MASS = 0.95;
+
+        // the xenon tank (0.05) and its xenon (0.04)
+        private const double XENON_TANK_MASS = 0.09;
+        private const double XENON_TANK_XENON = 0.04;
+
         [Fact]
         public void MainsailTinCanMatchesCapture() => AssertMatchesCapture("MainsailTinCan.out", SimVesselFixtures.MainsailTinCan);
 
@@ -99,6 +109,84 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
             Assert.Single(segments);
             AssertNoBurn(segments[0], 0, JET_TIN_CAN_MASS, 0);
+        }
+
+        // the stock ion engine: its xenon is the propellant that has mass and counts for the isp
+        [Fact]
+        public void IonEngineBurnsItsXenon()
+        {
+            SimVessel v = SimVesselFixtures.IonTinCan(true);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertBurn(segments[0], 0, ION_TIN_CAN_MASS + XENON_TANK_MASS, XENON_TANK_XENON, ION_MAX_FUEL_FLOW, ION_ISP, 1);
+        }
+
+        // with its xenon ignoreForIsp no propellant with mass counts for the isp: KSP's ModuleEngines then divides the mass flow
+        // by 1, not by the mixture's density of 0, so the engine draws 0.1 units of xenon per tonne of flow, a very long burn.
+        // this was an infinite flow, which emptied the tank in one 1 ms step.
+        [Fact]
+        public void IgnoreForIspXenonBurnsAsInKsp()
+        {
+            SimVessel v = SimVesselFixtures.IonTinCan(true, true);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            FuelStats s = segments[0];
+            s.KSPStage.ShouldEqual(0);
+            s.StartMass.ShouldEqual(ION_TIN_CAN_MASS + XENON_TANK_MASS, 1e-6);
+            s.EndMass.ShouldEqual(ION_TIN_CAN_MASS + XENON_TANK_MASS - XENON_TANK_XENON, 1e-6);
+            s.DeltaTime.ShouldEqual(400 / (0.1f * ION_MAX_FUEL_FLOW), 1e-6);
+            s.Thrust.ShouldEqual(2, 1e-6);
+        }
+
+        // an engine on ElectricCharge alone draws nothing the simulation can run out of, so it would run for ever: it gives the
+        // stage its thrust but no burn.  this ran 10,000 steps of 1 ms and threw.
+        [Fact]
+        public void ElectricOnlyEngineHasThrustButNoBurn()
+        {
+            SimVessel v = SimVesselFixtures.IonTinCan();
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertNoBurn(segments[0], 0, ION_TIN_CAN_MASS, 0, 2);
+        }
+
+        // beside a rocket the electric engine adds its thrust while the rocket burns, and the stage ends when the rocket burns out
+        [Fact]
+        public void ElectricOnlyEngineBesideARocket()
+        {
+            SimVessel v = SimVesselFixtures.IonTinCan(withMainsail: true);
+            double startMass = ION_TIN_CAN_MASS + ROCKOMAX64_PROPELLANT + 4 + MAINSAIL_MASS;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            FuelStats s = segments[0];
+            s.KSPStage.ShouldEqual(0);
+            s.StartMass.ShouldEqual(startMass, 1e-6);
+            s.EndMass.ShouldEqual(startMass - ROCKOMAX64_PROPELLANT, 1e-6);
+            s.DeltaTime.ShouldEqual(ROCKOMAX64_PROPELLANT / MAINSAIL_MAX_FUEL_FLOW, 1e-6);
+            s.Thrust.ShouldEqual(MAINSAIL_MAX_FUEL_FLOW * MAINSAIL_VACUUM_ISP * 9.80665f + 2, 1e-6);
+        }
+
+        // an RCS thruster on ElectricCharge alone has no fuel flow, so no thrust, as in KSP.  this ran 10,000 steps of 1 ms
+        // with a NaN delta-v and threw.
+        [Fact]
+        public void ElectricOnlyRcsHasNoThrust()
+        {
+            SimVessel v = SimVesselFixtures.IonTinCan(true, electricRcs: true);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertBurn(segments[0], 0, ION_TIN_CAN_MASS + XENON_TANK_MASS + 0.05, XENON_TANK_XENON, ION_MAX_FUEL_FLOW, ION_ISP, 1);
+            segments[0].RcsThrust.ShouldBeZero();
+            segments[0].MinRcsDeltaV.ShouldBeZero();
+            segments[0].MaxRcsDeltaV.ShouldBeZero();
         }
 
         // in vacuum the rocket beside the jet has the fuel to itself

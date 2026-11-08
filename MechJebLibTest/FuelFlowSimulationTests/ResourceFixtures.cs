@@ -24,6 +24,10 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public const float ELECTRIC_CHARGE_DENSITY = 0;
         public const float INTAKE_AIR_DENSITY = 0.005f;
 
+        // made up as well: no capture has xenon
+        public const int XENON_GAS = 2;
+        public const float XENON_GAS_DENSITY = 0.0001f;
+
         // RP-1 (RealismOverhaul and RealFuels) resources
         public const int COOLED_RP1 = 1704334082;
         public const int COOLED_LQD_OXYGEN = 321082453;
@@ -73,5 +77,8 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
         public static void AddElectricCharge(SimPart part, double amount, double maxAmount) =>
             AddResource(part, ELECTRIC_CHARGE, amount, maxAmount, ELECTRIC_CHARGE_DENSITY);
+
+        public static void AddXenonGas(SimPart part, double amount, double maxAmount) =>
+            AddResource(part, XENON_GAS, amount, maxAmount, XENON_GAS_DENSITY);
     }
 }

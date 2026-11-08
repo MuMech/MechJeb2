@@ -99,7 +99,13 @@ namespace MechJebLib.FuelFlowSimulation
                     break;
 
                 UpdateRcsDrains(vessel);
-                double dt = MinimumRcsTimeStep();
+
+                // nothing the thrusters draw would ever run out (air an intake gathers, a ratio of 0): the vessel would never change again
+                double maxTime = RCSMaxTime();
+                if (maxTime >= double.MaxValue)
+                    break;
+
+                double dt = MinimumTimeStep(maxTime);
 
                 ApplyRcsDrains(dt);
                 vessel.UpdateMass();
@@ -162,7 +168,13 @@ namespace MechJebLib.FuelFlowSimulation
                 if (AllowedToStage(vessel))
                     return;
 
-                double dt = MinimumTimeStep();
+                // the running engines draw nothing that runs out, only massless propellants (an ElectricCharge-only engine) or
+                // air an intake gathers: the vessel would never change again, so the stage ends here as if they had burned out
+                double maxTime = ResourceMaxTime();
+                if (maxTime >= double.MaxValue)
+                    return;
+
+                double dt = MinimumTimeStep(maxTime);
 
                 if (dt >= 0.02 && activeEngines != vessel.ActiveEngines.Count)
                 {
@@ -399,14 +411,6 @@ namespace MechJebLib.FuelFlowSimulation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double MinimumRcsTimeStep()
-        {
-            double maxTime = RCSMaxTime();
-
-            return maxTime < double.MaxValue && maxTime > 0.001 ? maxTime : 0.001;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double RCSMaxTime()
         {
             double maxTime = double.MaxValue;
@@ -418,12 +422,7 @@ namespace MechJebLib.FuelFlowSimulation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double MinimumTimeStep()
-        {
-            double maxTime = ResourceMaxTime();
-
-            return maxTime < double.MaxValue && maxTime > 0.001 ? maxTime : 0.001;
-        }
+        private static double MinimumTimeStep(double maxTime) => maxTime > 0.001 ? maxTime : 0.001;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double ResourceMaxTime()
@@ -439,8 +438,9 @@ namespace MechJebLib.FuelFlowSimulation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FinishRcsSegment(bool max, double deltaTime, double startMass, double endMass, double rcsThrust)
         {
-            double rcsDeltaV = rcsThrust * deltaTime / (startMass - endMass) * Log(startMass / endMass);
-            double rcsISP = rcsDeltaV / (G0 * Log(startMass / endMass));
+            // no mass drained (rounding, in a very short step) would be 0/0
+            double rcsDeltaV = startMass > endMass ? rcsThrust * deltaTime / (startMass - endMass) * Log(startMass / endMass) : 0;
+            double rcsISP = startMass > endMass ? rcsDeltaV / (G0 * Log(startMass / endMass)) : 0;
 
             if (_currentSegment.RcsISP == 0)
                 _currentSegment.RcsISP = rcsISP;

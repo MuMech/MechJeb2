@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System.Collections.Generic;
 using System.Linq;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
@@ -104,6 +105,60 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             }
             else
                 CrossFeed(jet, intake, tank);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     A probe core and a large battery bank on an ion engine, in stage 0.  With xenon a xenon tank feeds the engine
+        ///     its XenonGas (marked ignoreForIsp with xenonIgnoreForIsp), otherwise it runs on ElectricCharge alone.  With
+        ///     withMainsail a full Rockomax64 and a Mainsail sit beside it, and with electricRcs an RCS thruster on
+        ///     ElectricCharge alone.  This has not been captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel IonTinCan(bool xenon = false, bool xenonIgnoreForIsp = false, bool withMainsail = false,
+            bool electricRcs = false)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart battery = BatteryBankLarge(v, 2);
+            SimPart ion = IonEngine(v, 3, 0, new V3(1, 0, 0), xenon, xenonIgnoreForIsp);
+
+            MakeRoot(probe);
+
+            Link(probe, battery);
+
+            var crossFeed = new List<SimPart> { probe, battery, ion };
+
+            SimPart parent = battery;
+            if (xenon)
+            {
+                SimPart tank = XenonTank(v, 4);
+                Link(battery, tank);
+                crossFeed.Add(tank);
+                parent = tank;
+            }
+
+            Link(parent, ion);
+
+            if (withMainsail)
+            {
+                SimPart tank = Rockomax64BW(v, 5);
+                SimPart rocket = LiquidEngineMainsailV2(v, 6, 0, new V3(1, 0, 0));
+                Link(battery, tank);
+                Link(tank, rocket);
+                crossFeed.Add(tank);
+                crossFeed.Add(rocket);
+            }
+
+            if (electricRcs)
+            {
+                SimPart rcs = ElectricRcs(v, 7, 0);
+                Link(battery, rcs);
+                crossFeed.Add(rcs);
+            }
+
+            CrossFeed(crossFeed.ToArray());
 
             return Finish(v);
         }

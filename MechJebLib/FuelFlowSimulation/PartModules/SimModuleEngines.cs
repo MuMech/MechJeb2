@@ -422,7 +422,10 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             // this is also the volume flow rate of the non-ignoreForIsp fuels.  although this is a bit janky since the p.ratios in most
             // stock engines sum up to 2, not 1 (1.1 + 0.9), so this is not per-liter but per-summed-ratios (the massflowrate you get out
             // of the atmosphere curves (above) are also similarly adjusted by these ratios -- it is a bit of a horror show).
-            double volumeFlowRate = MassFlowRate / totalDensity;
+            // when no propellant counts for the density (an ElectricCharge-only engine, or one whose only propellants with mass are
+            // ignoreForIsp) KSP's ModuleEngines divides by 1 instead (its mixtureDensityRecip), and so does this: dividing by 0 made
+            // the flow infinite.
+            double volumeFlowRate = totalDensity > 0 ? MassFlowRate / totalDensity : MassFlowRate;
 
             for (int j = 0; j < Propellants.Count; j++)
             {

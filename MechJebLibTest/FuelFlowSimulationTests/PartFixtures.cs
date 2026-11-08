@@ -132,6 +132,59 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return p;
         }
 
+        // the IX-6315 Dawn, written by hand from ionEngine.cfg.  xenon false leaves it on ElectricCharge alone, and
+        // xenonIgnoreForIsp marks its XenonGas ignoreForIsp, so that no propellant with mass counts for the isp: no stock
+        // engine is either, but mods have such engines
+        public static SimPart IonEngine(SimVessel v, uint persistentId, int inverseStage, V3 thrustDirection, bool xenon = true,
+            bool xenonIgnoreForIsp = false)
+        {
+            SimPart p = NewPart(v, "ionEngine", persistentId, inverseStage, 0.25f);
+            p.IsEngine = true;
+
+            SimModuleEngines e = NewModuleEngines(p);
+            e.IsEnabled = true;
+            e.Index = 0;
+            e.MaxFuelFlow = 2f / (4200f * 9.80665f);
+            e.MaxThrust = 2;
+            e.Propellants.Add(new SimPropellant(ELECTRIC_CHARGE, false, 1.8f, SimFlowMode.STAGE_PRIORITY_FLOW, ELECTRIC_CHARGE_DENSITY));
+            if (xenon)
+                e.Propellants.Add(new SimPropellant(XENON_GAS, xenonIgnoreForIsp, 0.1f, SimFlowMode.STAGE_PRIORITY_FLOW, XENON_GAS_DENSITY));
+            e.ThrustTransformMultipliers.Add(1);
+            e.ThrustDirectionVectors.Add(thrustDirection);
+            AppendConstant(e.AtmosphereCurve, 0, 0, 4200f);
+            return p;
+        }
+
+        // a xenon tank, with round made-up figures: 0.04 t of xenon
+        public static SimPart XenonTank(SimVessel v, uint persistentId, int inverseStage = -1)
+        {
+            SimPart p = NewPart(v, "xenonTank", persistentId, inverseStage, 0.05f);
+            AddXenonGas(p, 400, 400);
+            return p;
+        }
+
+        // an RCS thruster on ElectricCharge alone, with the flow of the cold gas thruster in RP1PartFixtures.  KSP gives such a
+        // thruster a maxFuelFlow of 0 (its mixture has no density), this one is what a vessel built some other way could have.
+        public static SimPart ElectricRcs(SimVessel v, uint persistentId, int inverseStage = -1)
+        {
+            SimPart p = NewPart(v, "electricRcs", persistentId, inverseStage, 0.05f);
+
+            SimModuleRCS r = AddModule(SimModuleRCS.Borrow(p));
+            r.IsEnabled = true;
+            r.Index = 0;
+            r.RcsEnabled = false;
+            r.G = 9.80665;
+            r.ISPMult = 1;
+            r.ThrustPercentage = 100;
+            r.MaxFuelFlow = 0.010197162129779282;
+            r.Isp = 100;
+            r.Thrust = 10;
+            r.MassFlowRate = 0.010197162129779282;
+            AppendConstant(r.AtmosphereCurve, 0, 0, 100);
+            r.Propellants.Add(new SimPropellant(ELECTRIC_CHARGE, false, 1, SimFlowMode.STAGE_PRIORITY_FLOW, ELECTRIC_CHARGE_DENSITY));
+            return p;
+        }
+
         /// <summary>
         ///     Borrows a SimPart and sets every field that the KSP SimVesselBuilder and SimVesselUpdater would set, using
         ///     the declared defaults (which are the fields the SimVessel dump omits).  This matters since pooled SimParts are
