@@ -146,6 +146,7 @@ namespace MechJebLib.FuelFlowSimulation
                     r.Activate();
         }
 
+        // call UpdateEngineStats() first: this reads the flows and thrusts it computes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UpdateActiveEngines()
         {
@@ -230,7 +231,9 @@ namespace MechJebLib.FuelFlowSimulation
 
                 SpoolupCurrent += e.ThrustCurrent.magnitude * e.ModuleSpoolupTime;
 
-                e.Update();
+                // no e.Update() here: UpdateActiveEngines() runs right after UpdateEngineStats(), which has just updated every
+                // engine still on the vessel, so updating the active ones again (SetConsumptionRates() and all) did the same
+                // work twice per simulation step
                 ThrustCurrent += e.ThrustCurrent;
                 ThrustMin += e.ThrustMin;
                 ThrustMax += e.ThrustMax;
