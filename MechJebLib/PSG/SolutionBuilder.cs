@@ -16,14 +16,16 @@ namespace MechJebLib.PSG
         private readonly VariableProxy _vars;
         private readonly Problem _problem;
         private readonly PhaseCollection _phases;
+        private readonly FlightPlan? _flightPlan;
         private readonly AscentProblem _ascentProblem;
 
-        public SolutionBuilder(int n, VariableProxy vars, Problem problem, PhaseCollection phases, AscentProblem ascentProblem)
+        public SolutionBuilder(int n, VariableProxy vars, Problem problem, PhaseCollection phases, FlightPlan? flightPlan, AscentProblem ascentProblem)
         {
             _n = n;
             _vars = vars;
             _problem = problem;
             _phases = phases.DeepCopy();
+            _flightPlan = flightPlan;
             _ascentProblem = ascentProblem;
             AnalyzeStages();
         }
@@ -74,7 +76,7 @@ namespace MechJebLib.PSG
 
         public Solution Build()
         {
-            var solution = new Solution(_problem);
+            var solution = new Solution(_problem, _flightPlan);
 
             double ti = 0;
 

@@ -4,6 +4,8 @@
  */
 
 using System;
+using System.Threading;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Functions;
 using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
@@ -18,21 +20,50 @@ namespace MechJebLibTest.PSGTests
     {
         private const int SAMPLES = 64;
 
+        private const double TIN_CAN_T0 = 82132.7494998545;
+
+        // KerbinTests.MainSailTinCanVacuum: a burn, a coast-during coast and the rest of the burn.  With a plan the three phases
+        // are built from its stages 2, 1 and 0 (see TinCanFlightPlan).
+        private static Ascent.AscentBuilder TinCanBuilder(FlightPlan? plan = null)
+        {
+            bool hasPlan = plan != null;
+
+            Ascent.AscentBuilder builder = Ascent.Builder()
+               .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0,
+                    flightPlanIndex: hasPlan ? 2 : -1)
+               .AddCoast(79699.9986022711, 79699.9986022711, 0, 450, 0, 0, massContinuity: true, flightPlanIndex: hasPlan ? 1 : -1)
+               .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0, massContinuity: true,
+                    flightPlanIndex: hasPlan ? 0 : -1)
+               .Initial(new V3(365592.912061998, -475862.737003702, -1017.92554628857), new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06), new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), TIN_CAN_T0, 3531600000000, 600000)
+               .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false);
+
+            if (plan != null)
+                builder.FlightPlan(plan);
+
+            return builder;
+        }
+
+        // The plan for TinCanBuilder, listed from the top of the rocket down as FlightPlan.FromLogicalPlan does.  Below the
+        // burn-coast-burn is a booster that has already burned out, so no phase is built from it and the phases don't line up
+        // with the plan's positions.
+        private static FlightPlan TinCanFlightPlan()
+        {
+            var plan = new FlightPlan();
+            plan.Stages.Add(new FlightPlanStage(0, new FuelStats(), false, true, StageType.BURN, 0, false, -1));
+            plan.Stages.Add(new FlightPlanStage(0, new FuelStats(), false, true, StageType.COAST_DURING, 0, false, -1));
+            plan.Stages.Add(new FlightPlanStage(0, new FuelStats(), false, true, StageType.BURN, 0, true, -1));
+            plan.Stages.Add(new FlightPlanStage(1, new FuelStats(), false, false, StageType.BURN, 1, true, -1) { Done = true });
+            return plan;
+        }
+
         // the solver warm starts from one copy while guidance flies another, so a copy has to agree bit-for-bit, own its T0 and
         // survive the original being disposed
         [Fact]
         public void DeepCopyIsIndependent()
         {
-            double t0 = 82132.7494998545;
+            double t0 = TIN_CAN_T0;
 
-            // KerbinTests.MainSailTinCanVacuum
-            Ascent ascent = Ascent.Builder()
-               .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0)
-               .AddCoast(79699.9986022711, 79699.9986022711, 0, 450, 0, 0, massContinuity: true)
-               .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0, massContinuity: true)
-               .Initial(new V3(365592.912061998, -475862.737003702, -1017.92554628857), new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06), new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), t0, 3531600000000, 600000)
-               .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false)
-               .Build();
+            Ascent ascent = TinCanBuilder().Build();
 
             ascent.Run();
 
@@ -54,7 +85,14 @@ namespace MechJebLibTest.PSGTests
                 (copy.CoastPhase(p) == solution.CoastPhase(p)).ShouldBeTrue();
                 copy.KSPStage(p).ShouldEqual(solution.KSPStage(p));
                 copy.MJPhase(p).ShouldEqual(solution.MJPhase(p));
+
+                // built without a FlightPlan
+                copy.FlightPlanIndex(p).ShouldEqual(-1);
+                Assert.Null(copy.FlightPlanStage(p));
             }
+
+            Assert.Null(solution.FlightPlan);
+            Assert.Null(copy.FlightPlan);
 
             // the stage flags SolutionBuilder set come along with the phases
             copy.TerminalKSPStage().ShouldEqual(solution.TerminalKSPStage());
@@ -108,6 +146,75 @@ namespace MechJebLibTest.PSGTests
             }
 
             copy.Dispose();
+        }
+
+        // The Solution carries the snapshot of the FlightPlan that the builder took, which every optimizer of the solve shares,
+        // and each phase finds the plan stage it was built from.  Copies and warm starts get their own plans.
+        [Fact]
+        public void FlightPlanFollowsTheSolution()
+        {
+            int[] index = { 2, 1, 0 };
+            FlightPlan plan = TinCanFlightPlan();
+
+            Ascent ascent = TinCanBuilder(plan).OptimizerTimeout(Timeout.Infinite).Build();
+
+            // the main thread keeps changing its plan (ReconcileStages) while the job runs, which mustn't reach the solve
+            plan.Stages[2].Done = true;
+
+            ascent.Run();
+
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            FlightPlan snapshot = solution.FlightPlan ?? throw new Exception("null flight plan");
+
+            Assert.NotSame(plan, snapshot);
+            Assert.Same(psg.FlightPlan, snapshot);
+            snapshot.Stages.Count.ShouldEqual(plan.Stages.Count);
+            snapshot.Stages[2].Done.ShouldBeFalse();
+            snapshot.Stages[3].Done.ShouldBeTrue();
+
+            solution.Segments.ShouldEqual(index.Length);
+            for (int p = 0; p < solution.Segments; p++)
+            {
+                solution.FlightPlanIndex(p).ShouldEqual(index[p]);
+                FlightPlanStage stage = solution.FlightPlanStage(p) ?? throw new Exception("null flight plan stage");
+                Assert.Same(snapshot.Stages[index[p]], stage);
+                Assert.Equal(solution.CoastPhase(p), stage.StageType == StageType.COAST_DURING);
+            }
+
+            // a copy has its own deep copy of the plan, and its phases find their stages in it
+            using Solution copy = solution.DeepCopy();
+            FlightPlan copyPlan = copy.FlightPlan ?? throw new Exception("null flight plan");
+
+            Assert.NotSame(snapshot, copyPlan);
+            copyPlan.Stages.Count.ShouldEqual(snapshot.Stages.Count);
+            for (int p = 0; p < copy.Segments; p++)
+            {
+                copy.FlightPlanIndex(p).ShouldEqual(index[p]);
+                FlightPlanStage stage = copy.FlightPlanStage(p) ?? throw new Exception("null flight plan stage");
+                Assert.Same(copyPlan.Stages[index[p]], stage);
+                Assert.NotSame(snapshot.Stages[index[p]], stage);
+                Assert.NotSame(snapshot.Stages[index[p]].FuelStats, stage.FuelStats);
+                Assert.Equal(snapshot.Stages[index[p]].StageType, stage.StageType);
+            }
+
+            // a warm start is built with the current plan, and its solution has the snapshot of that plan rather than the old
+            // solution's
+            FlightPlan plan2 = TinCanFlightPlan();
+            Ascent ascent2 = TinCanBuilder(plan2).OptimizerTimeout(Timeout.Infinite).OldSolution(solution).Build();
+            ascent2.Run();
+
+            Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+            FlightPlan snapshot2 = solution2.FlightPlan ?? throw new Exception("null flight plan");
+
+            Assert.NotSame(plan2, snapshot2);
+            Assert.NotSame(snapshot, snapshot2);
+            for (int p = 0; p < solution2.Segments; p++)
+            {
+                solution2.FlightPlanIndex(p).ShouldEqual(index[p]);
+                Assert.Same(snapshot2.Stages[index[p]], solution2.FlightPlanStage(p));
+            }
         }
 
         // A fixed booster can burn out a little before the frozen solution predicts, so the vessel is in the upper stage while
@@ -245,7 +352,7 @@ namespace MechJebLibTest.PSGTests
             InterpolantLayout x0 = segs[0].Y0;
             var problem = new Problem(_scale, x0.R, x0.V, x0.U, x0.M, T0, MU, RBODY / LENGTH_SCALE, 0, 0, 0, 0, V3.zero,
                 new Kepler3(1, 0, 0));
-            var solution = new Solution(problem);
+            var solution = new Solution(problem, null);
 
             using var y    = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             using var ynew = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);

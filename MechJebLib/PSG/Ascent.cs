@@ -15,22 +15,24 @@ namespace MechJebLib.PSG
         private readonly Problem _problem;
         private Optimizer? _optimizer;
         private readonly PhaseCollection _phases;
+        private readonly FlightPlan? _flightPlan;
         private readonly bool _fixedBurnTime;
         private readonly int _optimizerTimeout;
         private readonly AscentGuesser _guesser;
 
-        private Ascent(Problem problem, PhaseCollection phases, Solution? oldSolution, bool fixedBurnTime, int optimizerTimeout)
+        private Ascent(Problem problem, PhaseCollection phases, FlightPlan? flightPlan, Solution? oldSolution, bool fixedBurnTime, int optimizerTimeout)
         {
             _problem = problem;
             _phases = phases;
+            _flightPlan = flightPlan;
             _solution = oldSolution;
             _fixedBurnTime = fixedBurnTime;
             _optimizerTimeout = optimizerTimeout;
-            _guesser = new AscentGuesser(_problem);
+            _guesser = new AscentGuesser(_problem, _flightPlan);
         }
 
         private Optimizer NewOptimizer(Problem problem, PhaseCollection phases, ITerminal terminal, Optimizer.ObjectiveType objective) =>
-            new Optimizer(problem, phases, terminal, objective) { OptimizerTimeout = _optimizerTimeout, CancellationToken = CancelToken };
+            new Optimizer(problem, phases, _flightPlan, terminal, objective) { OptimizerTimeout = _optimizerTimeout, CancellationToken = CancelToken };
 
         private readonly Solution? _solution;
 
