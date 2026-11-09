@@ -21,10 +21,15 @@ namespace MechJebLib.PSG
     // FlightPlan is the snapshot of the plan this solution was built from (see AscentBuilder.FlightPlan), not the caller's
     // live plan, and nothing may change it.  Each phase's FlightPlanIndex indexes its Stages, and since the stage list is
     // frozen in flight the same index finds the stage in the live plan too.
+    //
+    // The clock is MET, the time since liftoff, which is zero on the ground: the public accessors take MET in seconds and the
+    // *Bar ones normalized MET.  A solution computed on the ground starts at MET zero, so guidance waiting on the pad always
+    // gets its first point, and one computed in flight starts at the MET of its initial state.
     public class Solution : IDisposable
     {
-        public double T0;
-        public double Tf => T0 + Tmax * _timeScale;
+        // the MET of the start and the end of the trajectory
+        public double T0 => Tmin * _timeScale;
+        public double Tf => Tmax * _timeScale;
         private readonly Scale _scale;
         private readonly List<double> _tmin = new List<double>();
         private readonly List<double> _tmax = new List<double>();
@@ -53,8 +58,6 @@ namespace MechJebLib.PSG
             _scale = problem.Scale;
             _mu = problem.Mu;
             _rbody = problem.RBody * _scale.LengthScale;
-            // t0 is a public API that can be updated while we're landed waiting for takeoff.
-            T0 = problem.T0;
         }
 
         public void AddSegment(VecInterpolant interpolant, Phase phase)
@@ -73,33 +76,18 @@ namespace MechJebLib.PSG
         public Solution DeepCopy()
         {
             var dup = new Solution(Problem, FlightPlan?.DeepCopy());
-            // T0 may have moved on since construction (guidance slides it forward while waiting on the pad)
-            dup.T0 = T0;
             for (int i = 0; i < _interpolants.Count; i++)
                 dup.AddSegment(_interpolants[i].DeepCopy(), Phases[i]);
             return dup;
         }
 
-        // convert kerbal time to normalized time
-        public double Tbar(double t)
-        {
-            double tbar = (t - T0) / _timeScale;
-            if (tbar < Tmin)
-                return Tmin;
+        public double StartTime(int p) => _tmin[p] * _timeScale;
 
-            if (tbar > Tmax)
-                return Tmax;
-
-            return tbar;
-        }
-
-        public double StartTime(int p) => T0 + _tmin[p] * _timeScale;
-
-        public double EndTime(int p) => T0 + _tmax[p] * _timeScale;
+        public double EndTime(int p) => _tmax[p] * _timeScale;
 
         public V3 R(double t)
         {
-            double tBar = (t - T0) / _timeScale;
+            double tBar = t / _timeScale;
             return RBar(tBar) * _lengthScale;
         }
 
@@ -119,7 +107,7 @@ namespace MechJebLib.PSG
 
         public V3 V(double t)
         {
-            double tBar = (t - T0) / _timeScale;
+            double tBar = t / _timeScale;
             return VBar(tBar) * _velocityScale;
         }
 
@@ -139,7 +127,7 @@ namespace MechJebLib.PSG
 
         public V3 U(double t)
         {
-            double tBar = (t - T0) / _timeScale;
+            double tBar = t / _timeScale;
             return UBar(tBar);
         }
 
@@ -159,7 +147,7 @@ namespace MechJebLib.PSG
 
         public double M(double t)
         {
-            double tBar = (t - T0) / _timeScale;
+            double tBar = t / _timeScale;
             return MBar(tBar) * _massScale;
         }
 
@@ -182,7 +170,7 @@ namespace MechJebLib.PSG
 
         public double Bt(int segment, double t)
         {
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
 
             return BtBar(segment, tbar) * _timeScale;
         }
@@ -205,13 +193,13 @@ namespace MechJebLib.PSG
 
         public double DV(double t)
         {
-            double tBar = (t - T0) / _timeScale;
+            double tBar = t / _timeScale;
             return DVBar(tBar) * _velocityScale;
         }
 
         public double DV(double t, int n)
         {
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
             tbar = Clamp(tbar, _tmin[n], _tmax[n]);
             double dv = Phases[n].DeltaVFromMass(MBar(n, tbar), MBar(n, _tmax[n]));
             return dv * _velocityScale;
@@ -248,13 +236,13 @@ namespace MechJebLib.PSG
 
         public double Tgo(double t)
         {
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
             return (Tmax - tbar) * _timeScale;
         }
 
         public double Tgo(double t, int n)
         {
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
             return TgoBar(tbar, n) * _timeScale;
         }
 
@@ -264,7 +252,7 @@ namespace MechJebLib.PSG
         // past, so a stage burned past its predicted end (residuals) still returns zero.
         public double TgoForKSPStage(double t, int kspStage)
         {
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
             double sum = 0;
             for (int i = 0; i < Phases.Count; i++)
             {
@@ -287,7 +275,7 @@ namespace MechJebLib.PSG
 
         public bool Coast(double t)
         {
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
             return Phases[IndexForTbar(tbar)].Coast;
         }
 
@@ -295,7 +283,7 @@ namespace MechJebLib.PSG
         // (or if we're in a coast right now)
         public bool WillCoast(double t)
         {
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
 
             for (int i = IndexForTbar(tbar); i < Phases.Count; i++)
                 if (Phases[i].Coast)
@@ -308,7 +296,7 @@ namespace MechJebLib.PSG
         // which is followed by other burns before the coast.
         public bool CoastFollows(double t)
         {
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
             int idx = IndexForTbar(tbar);
 
             return Phases[idx].Coast || (idx + 1 < Phases.Count && Phases[idx + 1].Coast);
@@ -348,7 +336,7 @@ namespace MechJebLib.PSG
 
         public bool Unguided(double t)
         {
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
             return Phases[IndexForTbar(tbar)].Unguided;
         }
 
@@ -366,7 +354,7 @@ namespace MechJebLib.PSG
 
         public double StageTimeLeft(double t)
         {
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
             int phase = IndexForTbar(tbar);
             return (_tmax[phase] - tbar) * _timeScale;
         }
@@ -374,7 +362,7 @@ namespace MechJebLib.PSG
         // engineMinThrottle is the fraction of available thrust the engines currently produce at zero KSP throttle
         public (V3, double) InertialGuidance(double t, double engineMinThrottle)
         {
-            double tBar = (t - T0) / _timeScale;
+            double tBar = t / _timeScale;
 
             using Vec xRaw = Interpolate(tBar);
             var x = InterpolantLayout.CreateFrom(xRaw);
@@ -392,7 +380,7 @@ namespace MechJebLib.PSG
 
         public (V3 r, V3 v) StateVectors(double t)
         {
-            double tBar = (t - T0) / _timeScale;
+            double tBar = t / _timeScale;
 
             using Vec xraw = Interpolate(tBar);
             var x = InterpolantLayout.CreateFrom(xraw);
@@ -486,7 +474,7 @@ namespace MechJebLib.PSG
              XXX: This tests for the angular momentum exceeding the target, so it is only applicable for orbit raising / ascents.
             */
             var hf = V3.Cross(pos, vel);
-            double tbar = (t - T0) / _timeScale;
+            double tbar = t / _timeScale;
 
             (V3 rT, V3 vT) = StateVectors(Tf);
 
@@ -505,7 +493,7 @@ namespace MechJebLib.PSG
                 while (idx < Segments - 1 && Phases[idx].AllowShutdown && Phases[idx + 1].AllowShutdown && !Phases[idx + 1].Coast)
                     idx++;
                 double end = _tmax[idx];
-                (rT, vT) = StateVectors(T0 + end * _timeScale);
+                (rT, vT) = StateVectors(end * _timeScale);
             }
 
             var hT = V3.Cross(rT, vT);

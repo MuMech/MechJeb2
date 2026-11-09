@@ -223,7 +223,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             var r0 = new V3(3325422.7282581064, -4497376.8210520744, 3050620.0222054715);
             var v0 = new V3(327.95389603474052, 242.49365454876852, -5.9322331954145923E-07);
             var u0 = new V3(0.52189787527420084, -0.70594155964731686, 0.47882068157196045);
-            const double T0 = 671815.788102704;
+            const double T0 = 0;
             const double MU = 398600435436096;
             const double R_BODY = 6371000;
             const double PER_T = 6551000;

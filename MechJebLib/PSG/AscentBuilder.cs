@@ -119,11 +119,15 @@ namespace MechJebLib.PSG
                 return this;
             }
 
+            /// <summary>
+            ///     The initial state.  t0 is the MET of r0/v0 in seconds: the time since liftoff, and zero on the ground.  The
+            ///     Solution's clock is MET as well.
+            /// </summary>
             public AscentBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu, double rbody)
             {
                 CheckDebug.NonZeroFinite(r0);
                 CheckDebug.NonZeroFinite(v0);
-                CheckDebug.Finite(t0);
+                CheckDebug.NonNegativeFinite(t0);
                 CheckDebug.PositiveFinite(mu);
                 CheckDebug.PositiveFinite(rbody);
 

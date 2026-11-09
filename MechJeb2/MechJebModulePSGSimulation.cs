@@ -335,10 +335,14 @@ namespace MuMech
             if (_blockOptimizerUntilTime > VesselState.Time)
                 return;
 
+            // The PSG clock is MET.  The stage stats snapshot is a little older than now, and one taken before liftoff is at MET
+            // zero, so a solution computed on the ground always starts at liftoff.
+            double met0 = Max(VesselState.MET - (VesselState.Time - Core.StageStats.VacT), 0);
+
             try
             {
                 Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
-                   .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
+                   .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, met0
                       , MainBody.gravParameter, MainBody.Radius)
                    .SetTarget(peR, apR, attR, Deg2Rad(Inc), Deg2Rad(lan), ArgP, fpa, attachAltFlag, lanflag, ArgPFlag)
                    .FlightPlan(FlightPlan);
@@ -363,12 +367,8 @@ namespace MuMech
                     ascentBuilder.AerodynamicConstants(cd, aRef, rho0, qAlphaMax, qMax, h0, w);
                 }
 
-                if (_solution != null && Core.Guidance.Solution != null)
-                {
-                    // guidance slides its copy's T0 forward while waiting on the pad, and the warm start has to begin at liftoff
-                    _solution.T0 = Core.Guidance.Solution.T0;
+                if (_solution != null)
                     ascentBuilder.OldSolution(_solution);
-                }
 
                 bool massContinuity = false;
 

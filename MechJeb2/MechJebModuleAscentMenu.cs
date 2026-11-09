@@ -173,7 +173,7 @@ namespace MuMech
 
             Solution solution = Core.Guidance.Solution;
             for (int psgPhase = solution.Segments - 1; psgPhase >= 0 && PhaseLineCount < MAX_PHASE_LINES - 1; psgPhase--)
-                PhaseLines[PhaseLineCount++] = PhaseString(solution, VesselState.Time, psgPhase);
+                PhaseLines[PhaseLineCount++] = PhaseString(solution, VesselState.MET, psgPhase);
             PhaseLines[PhaseLineCount++] = solution.TerminalString();
         }
 
