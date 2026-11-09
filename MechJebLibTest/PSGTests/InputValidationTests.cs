@@ -4,6 +4,7 @@
  */
 
 using System;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using MechJebLib.PSG.Terminal;
@@ -90,6 +91,53 @@ namespace MechJebLibTest.PSGTests
         [InlineData(-2)]
         public void BadOptimizerTimeout(int milliseconds) =>
             Assert.Throws<ArgumentException>(() => Builder().OptimizerTimeout(milliseconds));
+
+        // a plan listed from the top of the rocket down, as FlightPlan.FromLogicalPlan does
+        private static FlightPlan Plan()
+        {
+            var plan = new FlightPlan();
+            foreach (StageType type in new[] { StageType.BURN, StageType.COAST_DURING, StageType.BURN, StageType.COAST_BEFORE, StageType.BURN })
+                plan.Stages.Add(new FlightPlanStage(0, new FuelStats(), false, true, type, 0, false, -1));
+            return plan;
+        }
+
+        // the KerbinTests.MainSailTinCanVacuum burn, coast-during coast and burn, built from the given stages of Plan()
+        private static Ascent.AscentBuilder BurnCoastBurn(bool withPlan, int burn1, int coast, int burn2)
+        {
+            Ascent.AscentBuilder builder = Ascent.Builder()
+               .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, ispCurrent: 285.387620615011, minThrottle: 0.0,
+                    flightPlanIndex: burn1)
+               .AddCoast(79699.9986022711, 79699.9986022711, 0, 450, 0, 0, massContinuity: true, flightPlanIndex: coast)
+               .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, ispCurrent: 285.387620615011, minThrottle: 0.0,
+                    massContinuity: true, flightPlanIndex: burn2)
+               .Initial(new V3(365592.912061998, -475862.737003702, -1017.92554628857), new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06),
+                    new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), 82132.7494998545, 3531600000000, R_BODY)
+               .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false);
+
+            if (withPlan)
+                builder.FlightPlan(Plan());
+
+            return builder;
+        }
+
+        [Theory]
+        [InlineData(false, -1, -1, -1)]
+        [InlineData(true, 2, 1, 0)]
+        [InlineData(true, 4, 1, 0)] // stages may be skipped (burned out, or before the current coast)
+        public void ValidFlightPlanIndicesBuild(bool withPlan, int burn1, int coast, int burn2) =>
+            BurnCoastBurn(withPlan, burn1, coast, burn2).Build();
+
+        [Theory]
+        [InlineData(false, 2, 1, 0)]    // indices without a plan
+        [InlineData(true, -1, -1, -1)]  // a plan without indices
+        [InlineData(true, 2, -1, 0)]    // a phase without an index
+        [InlineData(true, 5, 1, 0)]     // past the end of the plan
+        [InlineData(true, 0, 1, 2)]     // not in flight order
+        [InlineData(true, 2, 1, 2)]     // the same stage twice
+        [InlineData(true, 3, 1, 0)]     // a burn from a coast stage
+        [InlineData(true, 4, 2, 0)]     // a coast from a burn stage
+        public void BadFlightPlanIndices(bool withPlan, int burn1, int coast, int burn2) =>
+            Assert.Throws<ArgumentException>(() => BurnCoastBurn(withPlan, burn1, coast, burn2).Build());
 
         [Fact]
         public void NewCoastAllowsNegativeTimes()

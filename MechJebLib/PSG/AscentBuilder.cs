@@ -45,9 +45,15 @@ namespace MechJebLib.PSG
             private int       _optimizerTimeout { get; set; } = Optimizer.DEFAULT_TIMEOUT;
             private Solution? _solution         { get; set; }
 
+            private FlightPlan? _flightPlan;
+
+            /// <summary>
+            ///     Adds a burn phase.  flightPlanIndex is the index into the FlightPlan's Stages of the stage it is built
+            ///     from, and must be given for every phase when there is a FlightPlan, and for none when there isn't.
+            /// </summary>
             public AscentBuilder AddStage(double m0, double mf, double thrust, double isp, int kspStage,
                 int mjPhase, bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1,
-                double minThrottle = 1.0)
+                double minThrottle = 1.0, int flightPlanIndex = -1)
             {
                 var sb = new StringBuilder();
                 sb.Append($"[MechJebLib.AscentBuilder] AddStage({m0}, {mf}, {thrust}, {isp}, {kspStage}, {mjPhase}");
@@ -65,7 +71,11 @@ namespace MechJebLib.PSG
                 sb.Append(")");
                 PrintDebug(sb.ToString());
 
-                _phases.Add(Phase.NewStage(m0, mf, thrust, isp, kspStage, mjPhase, unguided, allowShutdown, massContinuity, ispCurrent, minThrottle));
+                // the flightPlanIndex is left out of the debug line above so that a replayed builder call (which has no
+                // FlightPlan) passes CheckFlightPlanIndices
+                Phase phase = Phase.NewStage(m0, mf, thrust, isp, kspStage, mjPhase, unguided, allowShutdown, massContinuity, ispCurrent, minThrottle);
+                phase.FlightPlanIndex = flightPlanIndex;
+                _phases.Add(phase);
 
                 return this;
             }
@@ -81,7 +91,11 @@ namespace MechJebLib.PSG
                 return this;
             }
 
-            public AscentBuilder AddCoast(double m0, double mf, double mint, double maxt, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false)
+            /// <summary>
+            ///     Adds a coast phase.  flightPlanIndex is as for AddStage.
+            /// </summary>
+            public AscentBuilder AddCoast(double m0, double mf, double mint, double maxt, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false,
+                int flightPlanIndex = -1)
             {
                 var sb = new StringBuilder();
                 sb.Append($"[MechJebLib.AscentBuilder] AddCoast({m0}, {mf}, {mint}, {maxt}, {kspStage}, {mjPhase}");
@@ -98,7 +112,9 @@ namespace MechJebLib.PSG
                 Check.NonNegativeFinite(maxt, nameof(maxt));
                 Check.True(maxt >= mint, "coast maxt must be >= mint");
 
-                _phases.Add(Phase.NewCoast(m0, mf, mint, maxt, kspStage, mjPhase, unguided, massContinuity));
+                Phase phase = Phase.NewCoast(m0, mf, mint, maxt, kspStage, mjPhase, unguided, massContinuity);
+                phase.FlightPlanIndex = flightPlanIndex;
+                _phases.Add(phase);
 
                 return this;
             }
@@ -124,6 +140,7 @@ namespace MechJebLib.PSG
             public Ascent Build()
             {
                 Check.True(_phases.Count > 0, "no stages to optimize");
+                CheckFlightPlanIndices();
 
                 double m0 = _phases[0].M0;
                 ITerminal terminal;
@@ -185,9 +202,35 @@ namespace MechJebLib.PSG
 
                 normalizedPhases.FixLastShutdownStage();
 
-                var ascent = new Ascent(problem, normalizedPhases, _solution, _fixedBurnTime, _optimizerTimeout);
+                var ascent = new Ascent(problem, normalizedPhases, _flightPlan, _solution, _fixedBurnTime, _optimizerTimeout);
 
                 return ascent;
+            }
+
+            // Each phase must come from its own FlightPlan stage, and in flight order.  The stages are listed from the top of
+            // the rocket down and flown in reverse, so the indices strictly decrease, and a burn must come from a BURN stage
+            // and a coast from one of the coast stages.
+            private void CheckFlightPlanIndices()
+            {
+                if (_flightPlan == null)
+                {
+                    foreach (Phase phase in _phases)
+                        Check.True(phase.FlightPlanIndex == -1, "flightPlanIndex given without a FlightPlan");
+                    return;
+                }
+
+                int count = _flightPlan.Stages.Count;
+                int last = count;
+
+                foreach (Phase phase in _phases)
+                {
+                    int idx = phase.FlightPlanIndex;
+                    Check.True(idx >= 0 && idx < count, "flightPlanIndex must be an index into the FlightPlan stages");
+                    Check.True(idx < last, "flightPlanIndex must strictly decrease from phase to phase");
+                    Check.True((_flightPlan.Stages[idx].StageType == StageType.BURN) == !phase.Coast,
+                        "flightPlanIndex must point a burn at a BURN stage and a coast at a coast stage");
+                    last = idx;
+                }
             }
 
 
@@ -229,6 +272,20 @@ namespace MechJebLib.PSG
                 PrintDebug("[MechJebLib.AscentBuilder] OldSolution(<solution>)");
 
                 _solution = solution;
+
+                return this;
+            }
+
+            /// <summary>
+            ///     The FlightPlan the phases are built from, see flightPlanIndex on AddStage/AddCoast.  The builder keeps a
+            ///     deep copy made now, so the optimizer's worker thread and the Solution see the plan as it was when the
+            ///     problem was built, and later changes to the caller's plan (ReconcileStages) don't reach them.
+            /// </summary>
+            public AscentBuilder FlightPlan(FlightPlan flightPlan)
+            {
+                PrintDebug("[MechJebLib.AscentBuilder] FlightPlan(<flightplan>)");
+
+                _flightPlan = flightPlan.DeepCopy();
 
                 return this;
             }

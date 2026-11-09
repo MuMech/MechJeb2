@@ -17,6 +17,10 @@ namespace MechJebLib.PSG
 {
     // Evaluating a Solution updates its interpolants' lookup caches, so one Solution must never be used from two threads:
     // give each thread its own DeepCopy().
+    //
+    // FlightPlan is the snapshot of the plan this solution was built from (see AscentBuilder.FlightPlan), not the caller's
+    // live plan, and nothing may change it.  Each phase's FlightPlanIndex indexes its Stages, and since the stage list is
+    // frozen in flight the same index finds the stage in the live plan too.
     public class Solution : IDisposable
     {
         public double T0;
@@ -31,6 +35,7 @@ namespace MechJebLib.PSG
         private readonly double _mu;
         private readonly double _rbody;
         public readonly Problem Problem;
+        public readonly FlightPlan? FlightPlan;
 
         public  int    Segments       => Phases.Count;
         private double _timeScale     => _scale.TimeScale;
@@ -41,9 +46,10 @@ namespace MechJebLib.PSG
         public double Tmax => _tmax[Segments - 1];
         public double Tmin => _tmin[0];
 
-        public Solution(Problem problem)
+        public Solution(Problem problem, FlightPlan? flightPlan)
         {
             Problem = problem;
+            FlightPlan = flightPlan;
             _scale = problem.Scale;
             _mu = problem.Mu;
             _rbody = problem.RBody * _scale.LengthScale;
@@ -66,7 +72,7 @@ namespace MechJebLib.PSG
 
         public Solution DeepCopy()
         {
-            var dup = new Solution(Problem);
+            var dup = new Solution(Problem, FlightPlan?.DeepCopy());
             // T0 may have moved on since construction (guidance slides it forward while waiting on the pad)
             dup.T0 = T0;
             for (int i = 0; i < _interpolants.Count; i++)
@@ -351,6 +357,12 @@ namespace MechJebLib.PSG
         public int KSPStage(int phase) => Phases[phase].KSPStage;
 
         public int MJPhase(int phase) => Phases[phase].MJPhase;
+
+        // -1 without a FlightPlan
+        public int FlightPlanIndex(int phase) => Phases[phase].FlightPlanIndex;
+
+        // the stage of this solution's FlightPlan snapshot that the phase was built from, null without a FlightPlan
+        public FlightPlanStage? FlightPlanStage(int phase) => FlightPlan?.Stages[Phases[phase].FlightPlanIndex];
 
         public double StageTimeLeft(double t)
         {

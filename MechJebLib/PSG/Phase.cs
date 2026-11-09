@@ -75,6 +75,9 @@ namespace MechJebLib.PSG
         // the MJ phase of the rocket (index into stage stats)
         public int MJPhase;
 
+        // index into the FlightPlan's Stages of the stage this phase was built from (-1 without a FlightPlan)
+        public int FlightPlanIndex = -1;
+
         public double VacThrust   => Mdot * VexVacuum;
         public double Tau         => Coast ? double.PositiveInfinity : VexVacuum / VacThrust * M0;
         public bool   Coast       => Mdot == 0;
@@ -111,6 +114,7 @@ namespace MechJebLib.PSG
 
             phase.KSPStage = 0;
             phase.MJPhase = 0;
+            phase.FlightPlanIndex = -1;
         }
 
         public static Phase Rent() => _pool.Borrow();

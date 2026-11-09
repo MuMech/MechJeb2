@@ -19,6 +19,8 @@ namespace MechJebLib.PSG
 
         public readonly Problem Problem;
         public readonly PhaseCollection Phases;
+        // the snapshot the AscentBuilder took, which nothing changes, so it is safe to read on the worker thread
+        public readonly FlightPlan? FlightPlan;
         public readonly ITerminal Terminal;
         public readonly ObjectiveType Objective;
         private readonly VariableProxy _vars;
@@ -61,10 +63,11 @@ namespace MechJebLib.PSG
         public double ZeroCoastTime       { get; set; } = 1; // seconds, minimum coast of a burn-coast-burn with a nonzero first burn
         public double ZeroCoastMu         { get; set; } = 1e-6;
 
-        public Optimizer(Problem problem, PhaseCollection phases, ITerminal terminal, ObjectiveType objective)
+        public Optimizer(Problem problem, PhaseCollection phases, FlightPlan? flightPlan, ITerminal terminal, ObjectiveType objective)
         {
             Phases = phases.DeepCopy();
             Phases.SetControlContinuity();
+            FlightPlan = flightPlan;
             Terminal = terminal;
             Objective = objective;
             _vars = new VariableProxy(problem, Phases, Terminal, N);
@@ -536,7 +539,7 @@ namespace MechJebLib.PSG
             PrintDebug($"PrimalFeasibility: {PrimalFeasibility}");
 
             _vars.WrapVars(x);
-            Solution solution = new SolutionBuilder(N, _vars, Problem, Phases, _ascentProblem).Build();
+            Solution solution = new SolutionBuilder(N, _vars, Problem, Phases, FlightPlan, _ascentProblem).Build();
 
             return solution;
         }

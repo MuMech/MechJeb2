@@ -340,7 +340,8 @@ namespace MuMech
                 Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
                    .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
                       , MainBody.gravParameter, MainBody.Radius)
-                   .SetTarget(peR, apR, attR, Deg2Rad(Inc), Deg2Rad(lan), ArgP, fpa, attachAltFlag, lanflag, ArgPFlag);
+                   .SetTarget(peR, apR, attR, Deg2Rad(Inc), Deg2Rad(lan), ArgP, fpa, attachAltFlag, lanflag, ArgPFlag)
+                   .FlightPlan(FlightPlan);
 
                 // note that we have to solve the atmospheric solution even when flying in vacuum, or the optimizer may decide to dip back
                 // into the atmosphere again and burn up the rocket.
@@ -404,21 +405,24 @@ namespace MuMech
                                 double ispCurrent = stage.AtmoISP;
 
                                 ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.MaxThrust * 1000, fuelStats.Isp,
-                                    stage.KSPStage, stage.MJStage, stage.Unguided, stage.AllowShutdown, massContinuity, ispCurrent, minThrottle);
+                                    stage.KSPStage, stage.MJStage, stage.Unguided, stage.AllowShutdown, massContinuity, ispCurrent, minThrottle, flightPlanIndex: i);
                                 massContinuity = false;
                                 break;
                             }
                         case StageType.COAST_DURING:
                             if (i != startingIndex)
                                 massContinuity = true; // this coast and next burn should be mass continuity.
-                            ascentBuilder.AddCoast(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity);
+                            ascentBuilder.AddCoast(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity,
+                                flightPlanIndex: i);
                             break;
                         case StageType.COAST_BEFORE:
                         case StageType.COAST_DEDICATED:
-                            ascentBuilder.AddCoast(fuelStats.StartMass * 1000, fuelStats.StartMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity);
+                            ascentBuilder.AddCoast(fuelStats.StartMass * 1000, fuelStats.StartMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity,
+                                flightPlanIndex: i);
                             break;
                         case StageType.COAST_AFTER:
-                            ascentBuilder.AddCoast(fuelStats.EndMass * 1000, fuelStats.EndMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity);
+                            ascentBuilder.AddCoast(fuelStats.EndMass * 1000, fuelStats.EndMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity,
+                                flightPlanIndex: i);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();

@@ -17,10 +17,12 @@ namespace MechJebLib.PSG
     public class AscentGuesser
     {
         private readonly Problem _problem;
+        private readonly FlightPlan? _flightPlan;
 
-        public AscentGuesser(Problem problem)
+        public AscentGuesser(Problem problem, FlightPlan? flightPlan)
         {
             _problem = problem;
+            _flightPlan = flightPlan;
             _events = new List<Event> { new Event(OrbitalEnergy) };
         }
 
@@ -159,7 +161,7 @@ namespace MechJebLib.PSG
             enu.z = 1.0;
             V3 u0 = Astro.ENUToECI(r0, enu).normalized;
 
-            var solution = new Solution(_problem);
+            var solution = new Solution(_problem, _flightPlan);
 
             Shooting(solution, phases, u0, targetOrbitalEnergy);
 
