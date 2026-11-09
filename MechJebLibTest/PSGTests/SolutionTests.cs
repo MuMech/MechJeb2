@@ -57,8 +57,8 @@ namespace MechJebLibTest.PSGTests
             return plan;
         }
 
-        // the solver warm starts from one copy while guidance flies another, so a copy has to agree bit-for-bit and survive the
-        // original being disposed
+        // the solver warm starts from its normalized solution while guidance flies the SI copy, which must survive the original
+        // being disposed; and a copy of either has to agree bit-for-bit and survive the original being disposed
         [Fact]
         public void DeepCopyIsIndependent()
         {
@@ -69,10 +69,14 @@ namespace MechJebLibTest.PSGTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            Solution solution = psg.Solution ?? throw new Exception("null solution");
+            Solution normalized = psg.Solution ?? throw new Exception("null solution");
+            Solution solution = normalized.DeNormalized();
+            normalized.Dispose();
 
             Solution copy = solution.DeepCopy();
 
+            solution.Normalized.ShouldBeFalse();
+            copy.Normalized.ShouldBeFalse();
             copy.Segments.ShouldEqual(solution.Segments);
             copy.T0.ShouldEqual(solution.T0, 0);
             copy.Tf.ShouldEqual(solution.Tf, 0);
@@ -193,6 +197,20 @@ namespace MechJebLibTest.PSGTests
                 Assert.Equal(snapshot.Stages[index[p]].StageType, stage.StageType);
             }
 
+            // and so does the SI copy guidance flies
+            using Solution si = solution.DeNormalized();
+            FlightPlan siPlan = si.FlightPlan ?? throw new Exception("null flight plan");
+
+            Assert.NotSame(snapshot, siPlan);
+            Assert.NotSame(copyPlan, siPlan);
+            for (int p = 0; p < si.Segments; p++)
+            {
+                si.FlightPlanIndex(p).ShouldEqual(index[p]);
+                FlightPlanStage stage = si.FlightPlanStage(p) ?? throw new Exception("null flight plan stage");
+                Assert.Same(siPlan.Stages[index[p]], stage);
+                Assert.NotSame(snapshot.Stages[index[p]], stage);
+            }
+
             // a warm start is built with the current plan, and its solution has the snapshot of that plan rather than the old
             // solution's
             FlightPlan plan2 = TinCanFlightPlan();
@@ -237,7 +255,7 @@ namespace MechJebLibTest.PSGTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             solution.OptimizeKSPStage().ShouldEqual(2);
             solution.TerminalKSPStage().ShouldEqual(2);
@@ -280,8 +298,8 @@ namespace MechJebLibTest.PSGTests
             ascent.Run();
             shifted.Run();
 
-            using Solution s0 = ascent.GetOptimizer()?.Solution ?? throw new Exception("null solution");
-            using Solution s1 = shifted.GetOptimizer()?.Solution ?? throw new Exception("null solution");
+            using Solution s0 = (ascent.GetOptimizer()?.Solution ?? throw new Exception("null solution")).DeNormalized();
+            using Solution s1 = (shifted.GetOptimizer()?.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             // the shifted trajectory starts at its initial state at MET0
             s0.T0.ShouldBeZero();
@@ -319,8 +337,9 @@ namespace MechJebLibTest.PSGTests
 
         /*
          * Synthetic solutions, built straight from hand-made segments instead of an optimizer run.  Every component of every
-         * segment is linear in time, so each accessor has an exact expected value.  TimeScale is exactly 128 s and the phase
-         * boundaries are dyadic, so a phase's StartTime and EndTime convert back to exactly its normalized bounds.  The
+         * segment is linear in time, so each accessor has an exact expected value.  They are built normalized, like the
+         * optimizer's, and the tests mostly check the DeNormalized() copy guidance flies.  Every scale is a power of two, so
+         * denormalizing is exact, and a phase's StartTime and EndTime are exactly its normalized bounds times 128 s.  The
          * trajectories start in flight at MET 4096 s (normalized 32), so the segments' tbar is the normalized time since then.
          */
 
@@ -396,8 +415,15 @@ namespace MechJebLibTest.PSGTests
                 new InterpolantLayout { R = RBarAt(tbar), V = VBarAt(tbar), M = m / MASS_SCALE, U = u, T = throttle };
         }
 
-        // each segment is a single cubic Hermite node whose end slopes are both the chord's, so it interpolates linearly
+        // the SI copy of the normalized solution
         private static Solution Build(params Seg[] segs)
+        {
+            using Solution normalized = BuildNormalized(segs);
+            return normalized.DeNormalized();
+        }
+
+        // each segment is a single cubic Hermite node whose end slopes are both the chord's, so it interpolates linearly
+        private static Solution BuildNormalized(params Seg[] segs)
         {
             InterpolantLayout x0 = segs[0].Y0;
             var problem = new Problem(_scale, x0.R, x0.V, x0.U, x0.M, TBAR0, MU, RBODY / LENGTH_SCALE, 0, 0, 0, 0, V3.zero,
@@ -449,7 +475,7 @@ namespace MechJebLibTest.PSGTests
          *
          * The thrust direction is x in the booster, turns from x to y in p1, and turns from y to z in the coast.
          */
-        private static Solution TheStandardLike()
+        private static Solution TheStandardLike(bool normalized = false)
         {
             Phase booster = NewBurn(4, 7, 8192, 4096, 256, 64, false, true);
             Phase burn1   = NewBurn(2, 5, 2048, 1024, 320, 32, minThrottle: 0.5);
@@ -459,12 +485,16 @@ namespace MechJebLibTest.PSGTests
             Phase upper = NewBurn(0, 1, 256, 128, 448, 32, false);
             upper.TerminalStage = true;
 
-            return Build(
+            Seg[] segs =
+            {
                 new Seg(booster, 0, 0.5, 8192, 4096, _xHat, _xHat, 1, 1),
                 new Seg(burn1, 0.5, 0.75, 2048, 1024, _xHat, _yHat, 1, 0.25),
                 new Seg(burn2, 0.75, 1, 512, 384, _yHat, _yHat, 1, 1),
                 new Seg(coast, 1, 2, 384, 384, _yHat, _zHat, 0, 0),
-                new Seg(upper, 2, 2.25, 256, 128, _zHat, _zHat, 1, 1));
+                new Seg(upper, 2, 2.25, 256, 128, _zHat, _zHat, 1, 1)
+            };
+
+            return normalized ? BuildNormalized(segs) : Build(segs);
         }
 
         // a fixed booster (KSP stage 1, 4096-4160 s) and a fixed upper stage (KSP stage 0, 4160-4224 s) with no coast.  Without the
@@ -512,10 +542,10 @@ namespace MechJebLibTest.PSGTests
         {
             using Solution solution = TheStandardLike();
 
+            solution.Normalized.ShouldBeFalse();
             solution.Segments.ShouldEqual(5);
-            // the clock is MET, and the Problem's start is normalized like the rest of it
+            // the clock is MET in seconds
             solution.T0.ShouldEqual(T0, 0);
-            solution.Problem.T0.ShouldEqual(TBAR0, 0);
             solution.Tf.ShouldEqual(4384, 0);
 
             double[] start    = { 4096, 4160, 4192, 4224, 4352 };
@@ -643,18 +673,15 @@ namespace MechJebLibTest.PSGTests
             for (int p = 0; p < solution.Segments; p++)
             {
                 // all of the phase is left before it starts, including before T0
-                solution.Bt(p, 4000).ShouldEqual(duration[p], 0);
                 solution.Tgo(4000, p).ShouldEqual(duration[p], 0);
-                solution.Bt(p, T0).ShouldEqual(duration[p], 0);
                 solution.Tgo(T0, p).ShouldEqual(duration[p], 0);
                 // and none of it once it is over, including past Tf
-                solution.Bt(p, 4384).ShouldBeZero();
+                solution.Tgo(4384, p).ShouldBeZero();
                 solution.Tgo(4500, p).ShouldBeZero();
             }
 
             // part way through p1
-            solution.Bt(0, 4176).ShouldBeZero();
-            solution.Bt(1, 4176).ShouldEqual(16, 0);
+            solution.Tgo(4176, 0).ShouldBeZero();
             solution.Tgo(4176, 1).ShouldEqual(16, 0);
             solution.Tgo(4176, 2).ShouldEqual(32, 0);
 
@@ -693,31 +720,35 @@ namespace MechJebLibTest.PSGTests
 
         private static void ShouldSplit(Solution solution, double t, double burn1, double coast, double burn2)
         {
-            // TgoBarSplit takes normalized MET
-            (double actualBurn1, double actualCoast, double actualBurn2) = solution.TgoBarSplit(t / TIME_SCALE);
+            (double actualBurn1, double actualCoast, double actualBurn2) = solution.TgoSplit(t);
             actualBurn1.ShouldEqual(burn1, 0);
             actualCoast.ShouldEqual(coast, 0);
             actualBurn2.ShouldEqual(burn2, 0);
         }
 
-        // the normalized burn time left before the coast, the coast time left, and the burn time after the coast
+        // the burn time left before the coast, the coast time left, and the burn time after the coast
         [Fact]
-        public void TgoBarSplitAroundTheCoast()
+        public void TgoSplitAroundTheCoast()
         {
             using Solution solution = TheStandardLike();
 
-            ShouldSplit(solution, T0, 1.0, 1.0, 0.25);
-            ShouldSplit(solution, 4176, 0.375, 1.0, 0.25);
-            ShouldSplit(solution, 4224, 0, 1.0, 0.25);
-            ShouldSplit(solution, 4288, 0, 0.5, 0.25);
+            ShouldSplit(solution, T0, 128, 128, 32);
+            ShouldSplit(solution, 4176, 48, 128, 32);
+            ShouldSplit(solution, 4224, 0, 128, 32);
+            ShouldSplit(solution, 4288, 0, 64, 32);
             // past the coast everything left is the burn after it
-            ShouldSplit(solution, 4368, 0, 0, 0.125);
+            ShouldSplit(solution, 4368, 0, 0, 16);
             ShouldSplit(solution, 4384, 0, 0, 0);
 
             // with no coast, every burn counts as the burn after it
             using Solution allFixed = AllFixed();
-            ShouldSplit(allFixed, T0, 0, 0, 1.0);
-            ShouldSplit(allFixed, 4192, 0, 0, 0.25);
+            ShouldSplit(allFixed, T0, 0, 0, 128);
+            ShouldSplit(allFixed, 4192, 0, 0, 32);
+
+            // the optimizer's warm start splits the normalized solution in normalized MET
+            using Solution normalized = TheStandardLike(true);
+            ShouldSplit(normalized, TBAR0, 1.0, 1.0, 0.25);
+            ShouldSplit(normalized, TBAR0 + 0.625, 0.375, 1.0, 0.25);
         }
 
         [Fact]
@@ -923,7 +954,6 @@ namespace MechJebLibTest.PSGTests
             solution.EndTime(1).ShouldEqual(4160, 0);
             solution.Tf.ShouldEqual(4160, 0);
 
-            solution.Bt(1, T0).ShouldBeZero();
             solution.Tgo(T0, 1).ShouldBeZero();
             solution.DV(T0, 1).ShouldBeZero();
             solution.TgoForKSPStage(T0, 1).ShouldBeZero();
@@ -943,6 +973,96 @@ namespace MechJebLibTest.PSGTests
             ShouldTargetStateAt(solution, 4160, 4159, 2);
         }
 
+        // the fields Rescale and DeNormalize convert
+        private static void ShouldBeSamePhase(Phase actual, Phase expected)
+        {
+            Assert.Equal(expected.Normalized, actual.Normalized);
+            actual.VexVacuum.ShouldEqual(expected.VexVacuum, 0);
+            actual.VexCurrent.ShouldEqual(expected.VexCurrent, 0);
+            actual.Mdot.ShouldEqual(expected.Mdot, 0);
+            actual.Bt.ShouldEqual(expected.Bt, 0);
+            actual.MinT.ShouldEqual(expected.MinT, 0);
+            actual.MaxT.ShouldEqual(expected.MaxT, 0);
+            actual.M0.ShouldEqual(expected.M0, 0);
+            actual.Mf.ShouldEqual(expected.Mf, 0);
+            actual.MinM.ShouldEqual(expected.MinM, 0);
+        }
+
+        // the optimizer works in the normalized solution, whose clock is normalized MET and whose accessors are all in normalized
+        // units, and guidance flies its DeNormalized() copy
+        [Fact]
+        public void NormalizedAccessors()
+        {
+            Solution solution = TheStandardLike(true);
+
+            solution.Normalized.ShouldBeTrue();
+            solution.T0.ShouldEqual(TBAR0, 0);
+            solution.Tf.ShouldEqual(TBAR0 + 2.25, 0);
+            solution.StartTime(1).ShouldEqual(TBAR0 + 0.5, 0);
+            solution.EndTime(3).ShouldEqual(TBAR0 + 2, 0);
+
+            // 4128 s and 4176 s
+            solution.R(TBAR0 + 0.25).ShouldEqual(RBarAt(0.25), 1e-12);
+            solution.V(TBAR0 + 0.25).ShouldEqual(VBarAt(0.25), 1e-12);
+            solution.M(TBAR0 + 0.25).ShouldEqual(6144 / MASS_SCALE, 1e-12);
+            solution.U(TBAR0 + 0.625).ShouldEqual(new V3(0.5, 0.5, 0), 1e-12);
+
+            double dv0 = Vex(256) * Math.Log(2) / VELOCITY_SCALE;
+            solution.DV(TBAR0 + 0.5).ShouldEqual(dv0, 1e-12);
+            solution.DV(TBAR0, 0).ShouldEqual(dv0, 1e-12);
+            solution.Tgo(TBAR0).ShouldEqual(2.25, 0);
+            solution.Tgo(TBAR0 + 0.625, 1).ShouldEqual(0.125, 0);
+            solution.TgoForKSPStage(TBAR0, 4).ShouldEqual(0.5, 0);
+            solution.StageTimeLeft(TBAR0 + 1.5).ShouldEqual(0.5, 0);
+            solution.Coast(TBAR0 + 1.5).ShouldBeTrue();
+
+            solution.Phases[0].Normalized.ShouldBeTrue();
+            solution.Phases[0].VexVacuum.ShouldEqual(Vex(256) / VELOCITY_SCALE, 0);
+            solution.Phases[0].M0.ShouldEqual(8, 0);
+            solution.Phases[0].Bt.ShouldEqual(0.5, 0);
+
+            // a copy stays normalized
+            using (Solution copy = solution.DeepCopy())
+            {
+                copy.Normalized.ShouldBeTrue();
+                copy.R(TBAR0 + 0.25).ShouldEqual(solution.R(TBAR0 + 0.25), 0);
+                copy.DV(TBAR0 + 0.5).ShouldEqual(dv0, 1e-12);
+            }
+
+            // the terminal string is in SI units
+            Assert.Throws<ArgumentException>(() => solution.TerminalString());
+
+            using Solution si = solution.DeNormalized();
+
+            // the direction and the throttle have no units, and are the same at the same instant
+            (V3 u, double throttle) = solution.InertialGuidance(TBAR0 + 0.625, 0.5);
+            (V3 siU, double siThrottle) = si.InertialGuidance(4176, 0.5);
+            siU.ShouldEqual(u, 0);
+            siThrottle.ShouldEqual(throttle, 0);
+
+            // guidance's copy outlives the solver's
+            solution.Dispose();
+
+            si.Normalized.ShouldBeFalse();
+            Assert.Equal(_scale, si.Scale);
+            si.T0.ShouldEqual(T0, 0);
+            si.Tf.ShouldEqual(4384, 0);
+            si.R(4128).ShouldEqual(ExpectedR(4128), 1e-12);
+            si.V(4128).ShouldEqual(ExpectedV(4128), 1e-12);
+            si.M(4128).ShouldEqual(6144, 1e-12);
+            si.DV(4160).ShouldEqual(Vex(256) * Math.Log(2), 1e-12);
+            si.Tgo(4176, 1).ShouldEqual(16, 0);
+
+            // its phases are back in SI units, exactly as they were built
+            using (Phase booster = Phase.NewStage(8192, 4096, Astro.ThrustFromMassesIspBurntime(8192, 4096, 256, 64), 256, 4, 7, true, false))
+                ShouldBeSamePhase(si.Phases[0], booster);
+            using (Phase coast = Phase.NewCoast(384, 384, 0, 1000, 1, 3))
+                ShouldBeSamePhase(si.Phases[3], coast);
+
+            // and it is already in SI units
+            Assert.Throws<ArgumentException>(() => si.DeNormalized());
+        }
+
         // a copy keeps the clock and the phases' flags, and outlives the original
         [Fact]
         public void DeepCopyKeepsThePhases()
@@ -952,6 +1072,7 @@ namespace MechJebLibTest.PSGTests
             using Solution copy = solution.DeepCopy();
             solution.Dispose();
 
+            copy.Normalized.ShouldBeFalse();
             copy.T0.ShouldEqual(T0, 0);
             copy.Tf.ShouldEqual(4384, 0);
             copy.R(4128).ShouldEqual(ExpectedR(4128), 1e-12);

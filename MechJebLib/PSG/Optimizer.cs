@@ -125,7 +125,7 @@ namespace MechJebLib.PSG
                 Phase phase = Phases[p];
                 PhaseProxy thisPhase = _vars[p];
 
-                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0 * oldToNewScale.TimeScale) / oldToNewScale.MassScale : phase.M0;
+                double m0 = phase.MassContinuity ? oldSolution.M(oldt0 * oldToNewScale.TimeScale) / oldToNewScale.MassScale : phase.M0;
 
                 oldtbt = oldtf - oldt0;
                 double bt = Phases[p].Coast ? oldtbt : Clamp(phase.Bt, 0, oldtbt / frac);
@@ -162,15 +162,18 @@ namespace MechJebLib.PSG
         // this makes no assumptions about the phases in the old solution, just that
         // we must be doing burn / coast-burn or / burn-coast-burn, where the burns
         // may be multi-stage.  times on the old solution's timeline are MET in this problem's time units.
+        // the old solution must be normalized, though it may have been normalized with a different Scale.
         public void TranscribePreviousSolution(Solution oldSolution)
         {
+            Check.True(oldSolution.Normalized, "warm start needs the normalized Solution");
+
             _xGuess = new double[_vars.TotalVariables];
             _vars.WrapVars(_xGuess);
 
-            Scale oldToNewScale = oldSolution.Problem.Scale.ConvertTo(Problem.Scale);
+            Scale oldToNewScale = oldSolution.Scale.ConvertTo(Problem.Scale);
             // both clocks are MET, so this problem's start is the same instant on the old solution's normalized clock
-            double oldtBar = Clamp(Problem.T0 * oldToNewScale.TimeScale, oldSolution.Tmin, oldSolution.Tmax);
-            (double oldburn1, double oldcoast, double oldburn2) = oldSolution.TgoBarSplit(oldtBar);
+            double oldtBar = Clamp(Problem.T0 * oldToNewScale.TimeScale, oldSolution.T0, oldSolution.Tf);
+            (double oldburn1, double oldcoast, double oldburn2) = oldSolution.TgoSplit(oldtBar);
 
             double oldt0 = oldtBar / oldToNewScale.TimeScale;
             oldburn1 /= oldToNewScale.TimeScale;
@@ -220,9 +223,9 @@ namespace MechJebLib.PSG
         private void TranscribePoint(Solution oldSolution, Scale oldToNewScale, int k, PhaseProxy thisPhase, Phase phase, double m0, double oldt, double dt)
         {
             double oldtBar = oldt * oldToNewScale.TimeScale;
-            V3 r = oldSolution.RBar(oldtBar) / oldToNewScale.LengthScale;
-            V3 v = oldSolution.VBar(oldtBar) / oldToNewScale.VelocityScale;
-            V3 u = oldSolution.UBar(oldtBar);
+            V3 r = oldSolution.R(oldtBar) / oldToNewScale.LengthScale;
+            V3 v = oldSolution.V(oldtBar) / oldToNewScale.VelocityScale;
+            V3 u = oldSolution.U(oldtBar);
 
             thisPhase.R[k] = r;
             thisPhase.V[k] = v;
@@ -257,21 +260,23 @@ namespace MechJebLib.PSG
         // variables on the phases may change, but the number and order of phases must not.
         public void TranscribePreviousBootSolution(Solution oldSolution)
         {
+            Check.True(oldSolution.Normalized, "warm start needs the normalized Solution");
+
             _xGuess = new double[_vars.TotalVariables];
             _vars.WrapVars(_xGuess);
 
-            Scale oldToNewScale = oldSolution.Problem.Scale.ConvertTo(Problem.Scale);
+            Scale oldToNewScale = oldSolution.Scale.ConvertTo(Problem.Scale);
 
             double t0 = Problem.T0;
-            double oldt0 = oldSolution.Tmin / oldToNewScale.TimeScale;
+            double oldt0 = oldSolution.T0 / oldToNewScale.TimeScale;
             for (int p = 0; p < Phases.Count; p++)
             {
                 Phase phase = Phases[p];
                 PhaseProxy thisPhase = _vars[p];
 
-                // the whole of the old phase, every phase starts at or after Tmin
-                double oldbt = oldSolution.BtBar(p, oldSolution.Tmin) / oldToNewScale.TimeScale;
-                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0 * oldToNewScale.TimeScale) / oldToNewScale.MassScale : phase.M0;
+                // the whole of the old phase
+                double oldbt = (oldSolution.EndTime(p) - oldSolution.StartTime(p)) / oldToNewScale.TimeScale;
+                double m0 = phase.MassContinuity ? oldSolution.M(oldt0 * oldToNewScale.TimeScale) / oldToNewScale.MassScale : phase.M0;
 
                 double bt = oldbt;
                 if (!phase.Coast)

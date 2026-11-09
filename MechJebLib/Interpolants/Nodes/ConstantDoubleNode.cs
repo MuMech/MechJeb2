@@ -39,6 +39,8 @@ namespace MechJebLib.Interpolants
 
         public override InterpolantNode<double> DeepCopy() => CopyBoundsTo(Rent(_y));
 
+        internal override void Rescale(double timeScale, double yScale) => _y *= yScale;
+
         public override void Dispose() => _pool.Release(this);
 
         public override string ToString() => Invariant($"[ConstantDoubleNode leftT={LeftT:G17} rightT={RightT:G17} y={_y:G17}]");

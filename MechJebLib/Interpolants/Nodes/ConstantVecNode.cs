@@ -47,6 +47,8 @@ namespace MechJebLib.Interpolants
 
         public override InterpolantNode<Vec> DeepCopy() => CopyBoundsTo(Rent(_y));
 
+        internal override void Rescale(double timeScale, Vec yScale) => _y.Mul(yScale);
+
         public override void Dispose()
         {
             _y.Dispose();

@@ -62,6 +62,22 @@ namespace MechJebLib.Interpolants
 
         public override InterpolantNode<Vec> DeepCopy() => CopyBoundsTo(Rent(_t, _h, _y, _k1, _k3, _k4, _k5, _k6, _k7));
 
+        // the interpolant is y + h·Σ bᵢ(s)·kᵢ with s = (x - t) / h, and the kᵢ are derivatives, so they take yScale / timeScale
+        internal override void Rescale(double timeScale, Vec yScale)
+        {
+            double invTimeScale = 1.0 / timeScale;
+
+            _t *= timeScale;
+            _h *= timeScale;
+            _y.Mul(yScale);
+            _k1.Mul(yScale).Scal(invTimeScale);
+            _k3.Mul(yScale).Scal(invTimeScale);
+            _k4.Mul(yScale).Scal(invTimeScale);
+            _k5.Mul(yScale).Scal(invTimeScale);
+            _k6.Mul(yScale).Scal(invTimeScale);
+            _k7.Mul(yScale).Scal(invTimeScale);
+        }
+
         public override void Dispose()
         {
             _y.Dispose();

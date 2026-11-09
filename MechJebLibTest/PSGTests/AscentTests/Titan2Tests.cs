@@ -38,7 +38,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -94,7 +94,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -153,7 +153,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -205,7 +205,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -259,7 +259,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -318,7 +318,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -367,7 +367,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -418,7 +418,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -463,7 +463,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -508,7 +508,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -565,7 +565,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -619,7 +619,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -673,7 +673,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -729,7 +729,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                     ascent.Run();
 
                     Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-                    using Solution solution = psg.Solution ?? throw new Exception("null solution");
+                    using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
                     (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -784,7 +784,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -827,13 +827,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-               .OldSolution(solution)
+               .OldSolution(psg.Solution ?? throw new Exception("null solution"))
                .Build();
 
             ascent2.Run();
 
             Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+            using Solution solution2 = (psg2.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg2.PrimalFeasibility.ShouldBeZero(1e-5);
             psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
@@ -862,7 +862,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -905,13 +905,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-               .OldSolution(solution)
+               .OldSolution(psg.Solution ?? throw new Exception("null solution"))
                .Build();
 
             ascent2.Run();
 
             Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+            using Solution solution2 = (psg2.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg2.PrimalFeasibility.ShouldBeZero(1e-5);
             psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
@@ -939,7 +939,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -998,7 +998,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -1044,13 +1044,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-               .OldSolution(solution)
+               .OldSolution(psg.Solution ?? throw new Exception("null solution"))
                .Build();
 
             ascent2.Run();
 
             Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+            using Solution solution2 = (psg2.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg2.PrimalFeasibility.ShouldBeZero(1e-5);
             psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
@@ -1079,7 +1079,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
             solution.Tgo(solution.T0, 1).ShouldEqual(15.113269375351896, 1e-2);
@@ -1143,7 +1143,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -1191,13 +1191,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-               .OldSolution(solution)
+               .OldSolution(psg.Solution ?? throw new Exception("null solution"))
                .Build();
 
             ascent2.Run();
 
             Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+            using Solution solution2 = (psg2.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg2.PrimalFeasibility.ShouldBeZero(1e-5);
             psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
@@ -1231,7 +1231,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -1253,13 +1253,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(m1, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
                .Initial(solution.R(t1), solution.V(t1), solution.U(t1).normalized, t1, mu, rbody)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-               .OldSolution(solution)
+               .OldSolution(psg.Solution ?? throw new Exception("null solution"))
                .Build();
 
             ascent2.Run();
 
             Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+            using Solution solution2 = (psg2.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution2.TerminalStateVectors();
 
@@ -1310,7 +1310,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 

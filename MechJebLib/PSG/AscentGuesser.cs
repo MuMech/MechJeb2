@@ -144,7 +144,7 @@ namespace MechJebLib.PSG
 
                 y0.CopyFrom(terminal);
 
-                t0 = solution.Tmax;
+                t0 = solution.Tf;
             }
         }
 
