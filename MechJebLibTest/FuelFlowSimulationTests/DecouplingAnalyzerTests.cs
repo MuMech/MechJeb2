@@ -5,6 +5,8 @@
 
 using System.Linq;
 using MechJebLib.FuelFlowSimulation;
+using MechJebLib.FuelFlowSimulation.PartModules;
+using MechJebLib.Primitives;
 using Xunit;
 
 namespace MechJebLibTest.FuelFlowSimulationTests
@@ -81,6 +83,100 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             Assert.Equal(new uint[] { 1, 2, 3, 4, 5 }, Ids(v, 2).OrderBy(id => id));
             Assert.Equal(new uint[] { 1 }, Ids(v, 1));
             Assert.Equal(new uint[] { 1 }, Ids(v, 0));
+        }
+
+        // MechJeb2 issue #321: a decoupler which has already fired, or has its staging disabled, or sits on a part kept out of
+        // the staging, decouples nothing when its stage fires, and the tank under it stays on the vessel.  otherwise the tank
+        // is dropped in stage 0, and the decoupler stays with the probe core above it.
+        [Theory]
+        [InlineData(false, true, true, 0)]
+        [InlineData(true, true, true, -1)]
+        [InlineData(false, false, true, -1)]
+        [InlineData(false, true, false, -1)]
+        public void DecouplerThatCannotFireDropsNothing(bool isDecoupled, bool stagingEnabled, bool stagingOn, int tankDecoupledInStage)
+        {
+            SimVessel v = SimVesselFixtures.NewVessel(1);
+
+            SimPart probe = PartFixtures.ProbeStackLarge(v, 1);
+            SimPart tank = PartFixtures.Rockomax64BW(v, 3, 0);
+            SimPart decoupler = PartFixtures.Decoupler2(v, 2, 0, tank);
+            var decouple = (SimModuleDecouple)decoupler.Modules[0];
+            decouple.IsDecoupled = isDecoupled;
+            decouple.StagingEnabled = stagingEnabled;
+            decoupler.StagingOn = stagingOn;
+
+            SimVesselFixtures.MakeRoot(probe);
+
+            SimVesselFixtures.Link(probe, decoupler);
+            SimVesselFixtures.Link(decoupler, tank);
+
+            SimVesselFixtures.Finish(v);
+
+            Assert.Equal(-1, probe.DecoupledInStage);
+            Assert.Equal(-1, decoupler.DecoupledInStage);
+            Assert.Equal(tankDecoupledInStage, tank.DecoupledInStage);
+        }
+
+        // a separator decouples both of its nodes, so it is dropped in its stage along with everything on the far side of it
+        // from the root part: here the TS-25 Stack Separator and the tank under it
+        [Fact]
+        public void OmniDecouplerDropsItselfAndWhatIsBelow()
+        {
+            SimVessel v = SimVesselFixtures.NewVessel(1);
+
+            SimPart probe = PartFixtures.ProbeStackLarge(v, 1);
+            SimPart tank = PartFixtures.Rockomax64BW(v, 3, 0);
+            SimPart separator = PartFixtures.NewDecoupler(v, "Separator.2", 2, 0, 0.21f, tank);
+            ((SimModuleDecouple)separator.Modules[0]).IsOmniDecoupler = true;
+
+            SimVesselFixtures.MakeRoot(probe);
+
+            SimVesselFixtures.Link(probe, separator);
+            SimVesselFixtures.Link(separator, tank);
+
+            SimVesselFixtures.Finish(v);
+
+            Assert.Equal(-1, probe.DecoupledInStage);
+            Assert.Equal(0, separator.DecoupledInStage);
+            Assert.Equal(0, tank.DecoupledInStage);
+            Assert.Equal(new uint[] { 1 }, Ids(v, 0));
+        }
+
+        // as in KSP's ModuleDockingNode, a docking port only decouples when it is staged and its staging is enabled.  here two
+        // ports docked face to face hold a tank under a Mainsail, and the ports are in the Mainsail's stage 0 (as a port which
+        // isn't staged takes the stage of the staged part above it).  staged, the lower port and the tank are dropped in stage
+        // 0.  unstaged, nothing is: the stock ports which aren't staged have their staging disabled too, but a mod's port
+        // need not.  this dropped the lower port and the tank in stage 0 all the same.
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DockingPortDecouplesOnlyWhenStaged(bool staged)
+        {
+            SimVessel v = SimVesselFixtures.NewVessel(1);
+
+            SimPart probe = PartFixtures.ProbeStackLarge(v, 1);
+            SimPart upperTank = PartFixtures.Rockomax64BW(v, 2);
+            SimPart engine = PartFixtures.LiquidEngineMainsailV2(v, 3, 0, new V3(1, 0, 0));
+            SimPart upperPort = PartFixtures.DockingPort2(v, 4, 0, null, staged, true);
+            SimPart lowerPort = PartFixtures.DockingPort2(v, 5, 0, upperPort, staged, true);
+            SimPart lowerTank = PartFixtures.Rockomax64BW(v, 6, 0);
+            ((SimModuleDockingNode)upperPort.Modules[0]).AttachedPart = lowerPort;
+
+            SimVesselFixtures.MakeRoot(probe);
+
+            SimVesselFixtures.Link(probe, upperTank);
+            SimVesselFixtures.Link(upperTank, engine);
+            SimVesselFixtures.Link(engine, upperPort);
+            SimVesselFixtures.Link(upperPort, lowerPort);
+            SimVesselFixtures.Link(lowerPort, lowerTank);
+
+            SimVesselFixtures.Finish(v);
+
+            int dropped = staged ? 0 : -1;
+            Assert.Equal(-1, engine.DecoupledInStage);
+            Assert.Equal(-1, upperPort.DecoupledInStage);
+            Assert.Equal(dropped, lowerPort.DecoupledInStage);
+            Assert.Equal(dropped, lowerTank.DecoupledInStage);
         }
 
         // a new, empty craft in the editor has no root part

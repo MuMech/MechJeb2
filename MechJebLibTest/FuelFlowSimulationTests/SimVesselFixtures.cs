@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MechJebLib.FuelFlowSimulation;
@@ -114,6 +115,80 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             }
             else
                 CrossFeed(jet, intake, tank);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     The JetTinCan with a RAPIER, in its AirBreathing mode, in place of the Whiplash.  This has not been captured in
+        ///     KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel RapierTinCan()
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart tank = Rockomax64BW(v, 1);
+            SimPart intake = ShockConeIntake(v, 2);
+            SimPart rapier = Rapier(v, 3, 0, new V3(1, 0, 0));
+
+            MakeRoot(tank);
+
+            Link(tank, intake);
+            Link(tank, rapier);
+
+            CrossFeed(rapier, intake, tank);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     A probe core on a Rockomax64 with two Mainsails in symmetry under it, in stage 0, which are canted out by cant
+        ///     radians either way in the x-y plane, as engines on the side of a stack are.  This has not been captured in KSP,
+        ///     so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel CantedMainsailPair(double cant)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart tank = Rockomax64BW(v, 2);
+            SimPart engine1 = LiquidEngineMainsailV2(v, 3, 0, new V3(Math.Cos(cant), Math.Sin(cant), 0));
+            SimPart engine2 = LiquidEngineMainsailV2(v, 4, 0, new V3(Math.Cos(cant), -Math.Sin(cant), 0));
+
+            MakeRoot(probe);
+
+            Link(probe, tank);
+            Link(tank, engine1);
+            Link(tank, engine2);
+
+            CrossFeed(engine2, engine1, tank, probe);
+
+            Symmetry(engine1, engine2);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     A probe core in a stock 2.5 m fairing, on a Rockomax64 and a Mainsail.  The Mainsail is in stage 1 and the
+        ///     fairing in stage 0, where it jettisons its panels of panelMass and leaves its base on the vessel.  This has not
+        ///     been captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel FairingTinCan(double panelMass)
+        {
+            SimVessel v = NewVessel(1);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart fairing = FairingSize2(v, 2, 0, panelMass);
+            SimPart tank = Rockomax64BW(v, 3);
+            SimPart engine = LiquidEngineMainsailV2(v, 4, 1, new V3(1, 0, 0));
+
+            MakeRoot(probe);
+
+            Link(probe, fairing);
+            Link(fairing, tank);
+            Link(tank, engine);
+
+            CrossFeed(engine, tank, fairing, probe);
 
             return Finish(v);
         }
@@ -264,6 +339,41 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             }
 
             CrossFeed(crossFeed.ToArray());
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     The IonTinCan with its xenon tank and the ion engine in stage 1, and two Sepratron Is on the probe core in stage 0,
+        ///     to brake with when it lands.  Stage 0 decouples nothing, it only lights the Sepratrons.  This has not been captured
+        ///     in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel IonProbeWithBrakingSepratrons()
+        {
+            SimVessel v = NewVessel(1);
+
+            var dir = new V3(1, 0, 0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart battery = BatteryBankLarge(v, 2);
+            SimPart tank = XenonTank(v, 3);
+            SimPart ion = IonEngine(v, 4, 1, dir);
+            SimPart sepratron1 = SepMotor1(v, 5, 0, dir);
+            SimPart sepratron2 = SepMotor1(v, 6, 0, dir);
+
+            MakeRoot(probe);
+
+            Link(probe, battery);
+            Link(probe, sepratron1);
+            Link(probe, sepratron2);
+            Link(battery, tank);
+            Link(tank, ion);
+
+            CrossFeed(sepratron2, sepratron1, ion, tank, battery, probe);
+            CrossFeed(sepratron1);
+            CrossFeed(sepratron2);
+
+            Symmetry(sepratron1, sepratron2);
 
             return Finish(v);
         }
