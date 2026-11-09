@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.FuelFlowSimulation.PartModules;
+using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 using static MechJebLibTest.FuelFlowSimulationTests.ResourceFixtures;
@@ -35,6 +36,13 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
         // a full Rockomax64 (36), the Whiplash (1.8), and the shock cone intake (0.12) with its 2 units of air
         private const double JET_TIN_CAN_MASS = 37.93;
+
+        // the RAPIER's AirBreathing mode
+        private const double RAPIER_AIR_MAX_FUEL_FLOW = 105f / (3200f * 9.80665f);
+        private const double RAPIER_AIR_ISP = 3200;
+
+        // the JetTinCan with the RAPIER (2) in place of the Whiplash
+        private const double RAPIER_TIN_CAN_MASS = 38.13;
 
         private const double ION_MAX_FUEL_FLOW = 2f / (4200f * 9.80665f);
         private const double ION_ISP = 4200;
@@ -911,6 +919,206 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertNoBurn(segments[0], 0, 43.7, 0);
         }
 
+        // an engine which leaves its maxFuelFlow at zero gets the fuel flow of its maxThrust at its vacuum isp, as KSP's
+        // ModuleEngines.OnLoad would have given it.  the burn used that, but the segment's maximum thrust took the zero.
+        [Fact]
+        public void ZeroMaxFuelFlowFallsBackToMaxThrust()
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCan();
+            FirstEngine(v).MaxFuelFlow = 0;
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertNoBurn(segments[1], 1, 79.7, 0);
+            AssertMainsailBurn(segments[0], 0, 79.7, 2 * ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude);
+            segments[0].MaxThrust.ShouldEqual(MAINSAIL_MAX_FUEL_FLOW * MAINSAIL_VACUUM_ISP * G0 * dirMagnitude, 1e-6);
+            segments[0].MinThrust.ShouldBeZero();
+        }
+
+        // MechJeb2 bfee87fd and 7369cce3: an engine with a minimum thrust, as RealFuels engines have, throttles between its
+        // minimum and its maximum, and the thrust limiter scales the throttle.  so at 50% the Merlins burn halfway between
+        // their minimum and maximum flows, and at 0% at their minimum, and their thrust can't go below the minimum.  as in the
+        // AutoCutoff test, the rounding can leave a tank a sliver over its residuals, which takes one more step of 1 ms.
+        [Theory]
+        [InlineData(50f)]
+        [InlineData(0f)]
+        public void MerlinThrustLimiter(float throttleLimiter)
+        {
+            SimVessel v = SimVesselFixtures.MerlinPair(false, 0);
+            foreach (SimPart merlin in v.Parts.FindAll(p => p.IsEngine))
+                ((SimModuleEngines)merlin.Modules[0]).ThrottleLimiter = throttleLimiter;
+            double flow = MERLIN_MIN_FUEL_FLOW + throttleLimiter / 100 * (MERLIN_MAX_FUEL_FLOW - MERLIN_MIN_FUEL_FLOW);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertBurn(segments[0], 0, MerlinPairMass(0), 2 * (1 - MERLIN_RESIDUALS) * MERLIN_PAIR_PROPELLANT, flow, MERLIN_VACUUM_ISP,
+                1, engines: 2, tolerance: 1e-4);
+            segments[0].MaxThrust.ShouldEqual(2 * flow * MERLIN_VACUUM_ISP * G0, 1e-6);
+            segments[0].MinThrust.ShouldEqual(2 * MERLIN_MIN_FUEL_FLOW * MERLIN_VACUUM_ISP * G0, 1e-6);
+        }
+
+        // MechJeb2 efde192d and 4ad4ecd9: canted engines push the vessel along with only the cosine of their thrust, their
+        // sideways thrusts cancel out.  the "include cosine losses" option (DVLinearThrust) gives the delta-v of what is left,
+        // without it the delta-v is that of the engines' whole thrust.  the maximum thrust is the vessel's either way.
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void CantedEnginesCosineLosses(bool dvLinearThrust)
+        {
+            const double CANT = 20 * Math.PI / 180;
+            SimVessel v = SimVesselFixtures.CantedMainsailPair(CANT);
+            double effectiveIsp = MAINSAIL_VACUUM_ISP * (dvLinearThrust ? Math.Cos(CANT) : 1);
+
+            List<FuelStats> segments = Run(v, dvLinearThrust);
+
+            Assert.Single(segments);
+            AssertMainsailBurn(segments[0], 0, 0.5 + 4 + ROCKOMAX64_PROPELLANT + 2 * MAINSAIL_MASS, ROCKOMAX64_PROPELLANT, effectiveIsp, 1,
+                engines: 2);
+            segments[0].MaxThrust.ShouldEqual(2 * MAINSAIL_MAX_FUEL_FLOW * MAINSAIL_VACUUM_ISP * G0 * Math.Cos(CANT), 1e-6);
+        }
+
+        // MechJeb2 57aa35dd: KSP splits an engine's thrust between its nozzles by its thrustTransformMultipliers.  here the
+        // Mainsail's thrust is split three to one between two nozzles canted 30° either way, so its thrust is the length of
+        // the weighted sum of their directions.
+        [Fact]
+        public void ThrustTransformMultipliersWeightTheNozzles()
+        {
+            const double CANT = 30 * Math.PI / 180;
+            var up = new V3(Math.Cos(CANT), Math.Sin(CANT), 0);
+            var down = new V3(Math.Cos(CANT), -Math.Sin(CANT), 0);
+            SimVessel v = SimVesselFixtures.MainsailTinCan();
+            SimModuleEngines e = FirstEngine(v);
+            e.ThrustDirectionVectors.Clear();
+            e.ThrustTransformMultipliers.Clear();
+            e.ThrustDirectionVectors.Add(up);
+            e.ThrustTransformMultipliers.Add(0.75);
+            e.ThrustDirectionVectors.Add(down);
+            e.ThrustTransformMultipliers.Add(0.25);
+            double effectiveIsp = MAINSAIL_VACUUM_ISP * (0.75 * up + 0.25 * down).magnitude;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertNoBurn(segments[1], 1, 79.7, 0);
+            AssertMainsailBurn(segments[0], 0, 79.7, 2 * ROCKOMAX64_PROPELLANT, effectiveIsp, 1);
+            segments[0].MaxThrust.ShouldEqual(MAINSAIL_MAX_FUEL_FLOW * effectiveIsp * G0, 1e-6);
+        }
+
+        // MechJeb2 940db6f0: a stage which decouples nothing and only lights engines doesn't stage while an engine is still
+        // burning.  so the ion probe burns its xenon on the ion engine alone, and only then lights the Sepratrons it brakes
+        // with.  staging as soon as the ion engine was lit gave the ion stage the thrust of the Sepratrons, and the
+        // maneuver nodes the burn times of that.
+        [Fact]
+        public void IgnitionOnlyStageWaitsForBurnout()
+        {
+            SimVessel v = SimVesselFixtures.IonProbeWithBrakingSepratrons();
+            double startMass = ION_TIN_CAN_MASS + XENON_TANK_MASS + 2 * (0.0125 + SEPRATRON_SOLID_FUEL);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertBurn(segments[1], 1, startMass, XENON_TANK_XENON, ION_MAX_FUEL_FLOW, ION_ISP, 1);
+            AssertBurn(segments[0], 0, startMass - XENON_TANK_XENON, 2 * SEPRATRON_SOLID_FUEL, SEPRATRON_MAX_FUEL_FLOW, SEPRATRON_ISP,
+                1, engines: 2);
+        }
+
+        // MechJeb2 issue #747: the mass of a fairing's panels stays on the vessel until the fairing is staged.  the stock
+        // fairing jettisons its panels and keeps its base, so staging it drops no part, and the vessel only stages it once the
+        // Mainsail has burned out: the panels ride through the burn.
+        [Fact]
+        public void StockFairingPanelsCarriedUntilTheirStage()
+        {
+            const double PANEL_MASS = 0.4;
+            SimVessel v = SimVesselFixtures.FairingTinCan(PANEL_MASS);
+            // the probe core, the fairing base, the empty Rockomax64 and the Mainsail
+            const double DRY_MASS = 0.5 + 0.175 + 4 + MAINSAIL_MASS;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertMainsailBurn(segments[1], 1, DRY_MASS + PANEL_MASS + ROCKOMAX64_PROPELLANT, ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP,
+                1);
+            AssertNoBurn(segments[0], 0, DRY_MASS, PANEL_MASS);
+        }
+
+        // MechJeb2 003968b6 and 82b34265: the crew, and the resources whose flow is disabled, are dead weight.  here the upper
+        // tank's oxidizer is locked, so the Mainsail burns the oxidizer of the lower tank alone, with as much liquid fuel, and
+        // carries the rest.  the probe core carries the mass of a crew, as a pod would.
+        [Fact]
+        public void CrewAndDisabledResourcesAreDeadWeight()
+        {
+            const double CREW_MASS = 0.1;
+            SimVessel v = SimVesselFixtures.MainsailTinCan();
+            v.Parts.Find(p => p.PersistentId == 2919945081).CrewMass = CREW_MASS;
+            // as SimVesselUpdater.UpdateResources leaves a resource with its flowState off
+            SimPart upperTank = v.Parts.Find(p => p.PersistentId == 706255026);
+            upperTank.Resources.Remove(OXIDIZER);
+            upperTank.DisabledResourcesMass = 3520 * OXIDIZER_DENSITY;
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertNoBurn(segments[1], 1, 79.7 + CREW_MASS, 0);
+            AssertMainsailBurn(segments[0], 0, 79.7 + CREW_MASS, ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude);
+        }
+
+        // MechJeb2 b765f493: a RealismOverhaul ullage motor can burn out with a little more propellant left than the
+        // simulation takes for empty.  KSP has flamed it out with "No propellants", so it has no burn.
+        [Fact]
+        public void NoPropellantsEngineBurnsNothing()
+        {
+            const double LEFT_OVER = 0.08;
+            SimVessel v = SimVesselFixtures.SepratronTinCan(100);
+            SimPart sepratron = v.Parts.Find(p => p.IsEngine);
+            AddSolidFuel(sepratron, LEFT_OVER, 8);
+            ((SimModuleEngines)sepratron.Modules[0]).NoPropellants = true;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertNoBurn(segments[0], 0, SEPRATRON_TIN_CAN_MASS - SEPRATRON_SOLID_FUEL + LEFT_OVER * SOLID_FUEL_DENSITY, 0);
+        }
+
+        // MechJeb2 c3abe3a8: the simulation takes every enabled engine module of a part.  a multi-mode engine switches mode by
+        // enabling one module and disabling the other, so the RAPIER in its AirBreathing mode burns the liquid fuel alone, as
+        // the Whiplash does, and its ClosedCycle mode burns none of the oxidizer.
+        [Fact]
+        public void MultiModeEngineBurnsOnlyItsEnabledMode()
+        {
+            SimVessel v = SimVesselFixtures.RapierTinCan();
+            v.SetConditions(SEA_LEVEL_DENSITY, 1, 0);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertBurn(segments[0], 0, RAPIER_TIN_CAN_MASS, ROCKOMAX64_LIQUID_FUEL, RAPIER_AIR_MAX_FUEL_FLOW, RAPIER_AIR_ISP, 1);
+        }
+
+        // MechJeb2 issue #278: an engine lit by hand before the vessel has staged burns in the current stage.  here the lower
+        // Mainsail of the MainsailTinCan2Stage is lit on the pad, while the vessel is in stage 4.  stage 3 would only light
+        // it, so the vessel doesn't stage until it burns out, and its burn falls in stage 4.
+        [Fact]
+        public void EngineLitBeforeItsStageBurnsInTheCurrentStage()
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCan2Stage();
+            ((SimModuleEngines)v.Parts.Find(p => p.PersistentId == 296107038).Modules[0]).IsOperational = true;
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(5, segments.Count);
+            AssertMainsailBurn(segments[4], 4, 85.86, ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude);
+            AssertNoBurn(segments[3], 3, 53.86, 0);
+            AssertNoBurn(segments[2], 2, 53.86, 0);
+            // the decoupler, the empty lower tank and the lower Mainsail
+            AssertNoBurn(segments[1], 1, 43.7, 10.16);
+            AssertMainsailBurn(segments[0], 0, 43.7, ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude);
+        }
+
         private static SimModuleEngines FirstEngine(SimVessel v) => (SimModuleEngines)v.Parts.Find(p => p.IsEngine).Modules[0];
 
         // the mass of the resources in the part
@@ -934,9 +1142,9 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         private static double MerlinPairBurnTime(double deficitSeconds) =>
             (1 - MERLIN_RESIDUALS) * SimVesselFixtures.MERLIN_PAIR_KEROLOX / SimVesselFixtures.MERLIN_KEROLOX_FLOW - deficitSeconds;
 
-        private static List<FuelStats> Run(SimVessel v)
+        private static List<FuelStats> Run(SimVessel v, bool dvLinearThrust = true)
         {
-            var sim = new FuelFlowSimulation();
+            var sim = new FuelFlowSimulation { DVLinearThrust = dvLinearThrust };
             sim.Run(v);
 
             foreach (FuelStats s in sim.Segments)

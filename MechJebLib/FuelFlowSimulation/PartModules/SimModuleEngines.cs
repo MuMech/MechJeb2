@@ -302,19 +302,21 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             SetConsumptionRates();
         }
 
+        // KSP's ModuleEngines.OnLoad derives the fuel flows from the thrusts at the vacuum isp, but an engine which leaves a fuel
+        // flow at zero gets it from its thrust here.  the flow and the thrusts both use these, so they agree.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double FlowRateAtConditions()
-        {
-            double minFuelFlow = MinFuelFlow;
-            double maxFuelFlow = MaxFuelFlow;
+        private double EffectiveMinFuelFlow() =>
+            MinFuelFlow == 0 && MinThrust > 0 ? MinThrust / (AtmosphereCurve.Evaluate(0f) * G) : MinFuelFlow;
 
-            if (minFuelFlow == 0 && MinThrust > 0) minFuelFlow = MinThrust / (AtmosphereCurve.Evaluate(0f) * G);
-            if (maxFuelFlow == 0 && MaxThrust > 0) maxFuelFlow = MaxThrust / (AtmosphereCurve.Evaluate(0f) * G);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double EffectiveMaxFuelFlow() =>
+            MaxFuelFlow == 0 && MaxThrust > 0 ? MaxThrust / (AtmosphereCurve.Evaluate(0f) * G) : MaxFuelFlow;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double FlowRateAtConditions() =>
             // as in KSP's ModuleEngines.RequiredPropellantMass, multFlow (TestFlight's thrust-loss failures) scales the mass flow
             // along with the flowMultiplier, so it lowers the thrust and lengthens the burn without changing the isp
-            return Lerp(minFuelFlow, maxFuelFlow, _throttle * 0.01f * ThrottleLimiter) * FlowMultiplier * MultFlow;
-        }
+            Lerp(EffectiveMinFuelFlow(), EffectiveMaxFuelFlow(), _throttle * 0.01f * ThrottleLimiter) * FlowMultiplier * MultFlow;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void RefreshThrust()
@@ -325,8 +327,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
             double thrustLimiter = ThrottleLimiter / 100f;
 
-            double maxThrust = MaxFuelFlow * FlowMultiplier * ISP * G * MultIsp * MultFlow;
-            double minThrust = MinFuelFlow * FlowMultiplier * ISP * G * MultIsp * MultFlow;
+            double maxThrust = EffectiveMaxFuelFlow() * FlowMultiplier * ISP * G * MultIsp * MultFlow;
+            double minThrust = EffectiveMinFuelFlow() * FlowMultiplier * ISP * G * MultIsp * MultFlow;
 
             double eMaxThrust = minThrust + (maxThrust - minThrust) * thrustLimiter;
             double eMinThrust = ThrottleLocked ? eMaxThrust : minThrust;

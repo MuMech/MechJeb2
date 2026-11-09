@@ -55,6 +55,31 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public static SimPart RadialDecoupler2(SimVessel v, uint persistentId, int inverseStage, SimPart attachedPart) =>
             NewDecoupler(v, "radialDecoupler2", persistentId, inverseStage, 0.05f, attachedPart);
 
+        // the Clamp-O-Tron, written by hand from dockingPort2.cfg.  it is staged, but its config disables its staging, which
+        // the player can enable.  attachedPart is the part docked to it, on its reference node.
+        public static SimPart DockingPort2(SimVessel v, uint persistentId, int inverseStage, SimPart? attachedPart, bool staged = true,
+            bool stagingEnabled = false)
+        {
+            SimPart p = NewPart(v, "dockingPort2", persistentId, inverseStage, 0.05f);
+
+            SimModuleDockingNode d = AddModule(SimModuleDockingNode.Borrow(p));
+            d.Index = 0;
+            d.Staged = staged;
+            d.StagingEnabled = stagingEnabled;
+            d.AttachedPart = attachedPart;
+            return p;
+        }
+
+        // the AE-FF2 fairing base, written by hand from fairingSize2.cfg.  its ModuleProceduralFairing weighs the panels,
+        // panelMass, until it is staged and jettisons them, and nothing after: the base stays on the vessel.
+        public static SimPart FairingSize2(SimVessel v, uint persistentId, int inverseStage, double panelMass)
+        {
+            SimPart p = NewPart(v, "fairingSize2", persistentId, inverseStage, 0.175f);
+            p.ModulesUnstagedMass = panelMass;
+            p.ModulesStagedMass = 0;
+            return p;
+        }
+
         // the fuel line only affects the crossfeed sets, which KSP computes and the fixtures copy from the captures
         public static SimPart FuelLine(SimVessel v, uint persistentId, int inverseStage = -1) =>
             NewPart(v, "fuelLine", persistentId, inverseStage, 0.05f);
@@ -129,6 +154,55 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AppendConstant(e.ATMCurve, 1, 1, 1);
             // the tests stand still, so only the velCurve's first key matters
             AppendConstant(e.VelCurve, 0, 0, 1);
+            return p;
+        }
+
+        // the CR-7 R.A.P.I.E.R., written by hand from rapierEngine.cfg.  its MultiModeEngine (module 0) switches between the
+        // AirBreathing (module 1) and ClosedCycle (module 2) ModuleEnginesFX by enabling one and disabling the other, and it
+        // starts out in AirBreathing.  the tests stand still, so only the velCurve's first key matters.
+        public static SimPart Rapier(SimVessel v, uint persistentId, int inverseStage, V3 thrustDirection)
+        {
+            SimPart p = NewPart(v, "RAPIER", persistentId, inverseStage, 2);
+            p.IsEngine = true;
+
+            SimModuleEngines air = NewModuleEngines(p);
+            air.IsEnabled = true;
+            air.Index = 1;
+            air.MaxFuelFlow = 105f / (3200f * 9.80665f);
+            air.MaxThrust = 105;
+            air.AtmChangeFlow = true;
+            air.UseAtmCurve = true;
+            air.UseVelCurve = true;
+            air.FlowMultCap = 3;
+            air.Propellants.Add(new SimPropellant(INTAKE_AIR, true, 6, SimFlowMode.ALL_VESSEL, INTAKE_AIR_DENSITY));
+            air.Propellants.Add(new SimPropellant(LIQUID_FUEL, false, 1, SimFlowMode.STAGE_STACK_FLOW_BALANCE, LIQUID_FUEL_DENSITY));
+            air.ThrustTransformMultipliers.Add(1);
+            air.ThrustDirectionVectors.Add(thrustDirection);
+            AppendConstant(air.AtmosphereCurve, 0, 0, 3200f);
+            AppendConstant(air.ATMCurve, 0, 0, 0);
+            AppendCubicHermite(air.ATMCurve, 0, 0.018, 0, 0.018, 0, 0, 0.09f, 7.914787f);
+            AppendCubicHermite(air.ATMCurve, 0.018, 0.08, 0.018, 0.062, 0.09f, 7.914787f, 0.3f, 1.051923f);
+            AppendCubicHermite(air.ATMCurve, 0.08, 0.35, 0.08, 0.27, 0.3f, 1.051923f, 0.5f, 0.3927226f);
+            AppendCubicHermite(air.ATMCurve, 0.35, 1, 0.35, 0.65, 0.5f, 0.3927226f, 1, 1.055097f);
+            AppendConstant(air.ATMCurve, 1, 1, 1);
+            AppendConstant(air.VelCurve, 0, 0, 1);
+
+            SimModuleEngines closedCycle = NewModuleEngines(p);
+            closedCycle.IsEnabled = false;
+            closedCycle.Index = 2;
+            closedCycle.MaxFuelFlow = 180f / (305f * 9.80665f);
+            closedCycle.MaxThrust = 180;
+            closedCycle.Propellants.Add(new SimPropellant(LIQUID_FUEL, false, 0.9f, SimFlowMode.STAGE_STACK_FLOW_BALANCE,
+                LIQUID_FUEL_DENSITY));
+            closedCycle.Propellants.Add(new SimPropellant(OXIDIZER, false, 1.1f, SimFlowMode.STAGE_STACK_FLOW_BALANCE, OXIDIZER_DENSITY));
+            closedCycle.ThrustTransformMultipliers.Add(1);
+            closedCycle.ThrustDirectionVectors.Add(thrustDirection);
+            // the keys have no tangents, so Unity smooths them as it does the Mainsail's: the slope to the next key at the ends,
+            // the mean of the slopes on either side in between
+            AppendConstant(closedCycle.AtmosphereCurve, 0, 0, 305f);
+            AppendCubicHermite(closedCycle.AtmosphereCurve, 0, 1, 0, 1, 305f, -30f, 275f, -32.1874375f);
+            AppendCubicHermite(closedCycle.AtmosphereCurve, 1, 9, 1, 8, 275f, -32.1874375f, 0.001f, -34.374875f);
+            AppendConstant(closedCycle.AtmosphereCurve, 9, 9, 0.001f);
             return p;
         }
 

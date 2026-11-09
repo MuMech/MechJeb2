@@ -158,10 +158,12 @@ namespace MechJebLib.FuelFlowSimulation
 
                             break;
                         case SimModuleDockingNode dockingNode:
-                            if (dockingNode.StagingEnabled && p.StagingOn)
+                            // as in KSP's ModuleDockingNode.OnActive, a port that isn't staged, or has its staging disabled, never
+                            // decouples: whatever is docked to it stays on the vessel
+                            if (dockingNode is { Staged: true, StagingEnabled: true } && p.StagingOn)
                                 if (dockingNode.AttachedPart != null)
                                 {
-                                    if (dockingNode.AttachedPart == parent && dockingNode.Staged)
+                                    if (dockingNode.AttachedPart == parent)
                                     {
                                         // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                         p.DecoupledInStage = p.InverseStage;
