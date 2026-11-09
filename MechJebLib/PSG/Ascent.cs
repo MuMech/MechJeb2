@@ -200,10 +200,11 @@ namespace MechJebLib.PSG
                 return psg;
             }
 
-            // this should catch if free attachment picked the apoapsis accidentally
+            // this should catch if free attachment picked the apoapsis accidentally (both solutions are normalized with the same Scale)
             if (solution.Vgo(solution2.T0) < solution2.Vgo(solution2.T0))
             {
-                PrintDebug($"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution.Vgo(solution2.T0)} < {solution2.Vgo(solution2.T0)}) THAN FREE ATTACHMENT SOLUTION ***");
+                double vs = _problem.Scale.VelocityScale;
+                PrintDebug($"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution.Vgo(solution2.T0) * vs} < {solution2.Vgo(solution2.T0) * vs}) THAN FREE ATTACHMENT SOLUTION ***");
                 return psg;
             }
 

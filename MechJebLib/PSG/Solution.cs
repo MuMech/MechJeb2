@@ -22,270 +22,227 @@ namespace MechJebLib.PSG
     // live plan, and nothing may change it.  Each phase's FlightPlanIndex indexes its Stages, and since the stage list is
     // frozen in flight the same index finds the stage in the live plan too.
     //
-    // The clock is MET, the time since liftoff, which is zero on the ground: the public accessors take MET in seconds and the
-    // *Bar ones normalized MET.  A solution computed on the ground starts at MET zero, so guidance waiting on the pad always
+    // A Solution stays in one system of units for its whole life, and every accessor takes and returns that system's units.
+    // SolutionBuilder and AscentGuesser build it Normalized, in the units of its Problem's Scale, which the optimizer and its
+    // warm start work in.  DeNormalized() makes the SI copy (meters, m/s, kg and seconds) which guidance flies.
+    //
+    // The clock is MET, the time since liftoff, which is zero on the ground: normalized MET in a normalized Solution, and MET
+    // in seconds in an SI one.  A solution computed on the ground starts at MET zero, so guidance waiting on the pad always
     // gets its first point, and one computed in flight starts at the MET of its initial state.
     public class Solution : IDisposable
     {
-        // the MET of the start and the end of the trajectory
-        public double T0 => Tmin * _timeScale;
-        public double Tf => Tmax * _timeScale;
-        private readonly Scale _scale;
-        private readonly List<double> _tmin = new List<double>();
-        private readonly List<double> _tmax = new List<double>();
-        private readonly List<double> _dvstart = new List<double>();
-        private readonly List<double> _dvend = new List<double>();
-        private readonly List<VecInterpolant> _interpolants = new List<VecInterpolant>();
+        public readonly bool Normalized;
+
+        // the Scale of the Problem the solution was built for, which an SI copy keeps
+        public readonly Scale Scale;
+
         public readonly List<Phase> Phases = new List<Phase>();
-        private readonly double _mu;
-        private readonly double _rbody;
-        public readonly Problem Problem;
         public readonly FlightPlan? FlightPlan;
 
-        public  int    Segments       => Phases.Count;
-        private double _timeScale     => _scale.TimeScale;
-        private double _lengthScale   => _scale.LengthScale;
-        private double _velocityScale => _scale.VelocityScale;
-        private double _massScale     => _scale.MassScale;
+        private readonly List<double>         _tmin         = new List<double>();
+        private readonly List<double>         _tmax         = new List<double>();
+        private readonly List<double>         _dvstart      = new List<double>();
+        private readonly List<double>         _dvend        = new List<double>();
+        private readonly List<VecInterpolant> _interpolants = new List<VecInterpolant>();
 
-        public double Tmax => _tmax[Segments - 1];
-        public double Tmin => _tmin[0];
+        // in SI units, for TerminalString
+        private readonly double _mu;
+        private readonly double _rbody;
 
+        public int Segments => Phases.Count;
+
+        // the MET of the start and the end of the trajectory
+        public double T0 => _tmin[0];
+        public double Tf => _tmax[Segments - 1];
+
+        // a normalized solution for the problem
         public Solution(Problem problem, FlightPlan? flightPlan)
+            : this(problem.Scale, true, problem.Mu, problem.RBody * problem.Scale.LengthScale, flightPlan)
         {
-            Problem = problem;
+        }
+
+        private Solution(Scale scale, bool normalized, double mu, double rbody, FlightPlan? flightPlan)
+        {
+            Scale = scale;
+            Normalized = normalized;
+            _mu = mu;
+            _rbody = rbody;
             FlightPlan = flightPlan;
-            _scale = problem.Scale;
-            _mu = problem.Mu;
-            _rbody = problem.RBody * _scale.LengthScale;
         }
 
         public void AddSegment(VecInterpolant interpolant, Phase phase)
         {
+            CheckDebug.True(phase.Normalized == Normalized);
+
             _tmin.Add(interpolant.MinT);
             _tmax.Add(interpolant.MaxT);
             Phases.Add(phase.DeepCopy());
             _interpolants.Add(interpolant);
             int idx = _interpolants.Count - 1;
             double dvstart = _dvend.Count > 0 ? _dvend[_dvend.Count - 1] : 0;
-            double dvend = dvstart + phase.DeltaVFromMass(MBar(idx, interpolant.MinT), MBar(idx, interpolant.MaxT));
+            double dvend = dvstart + phase.DeltaVFromMass(M(idx, interpolant.MinT), M(idx, interpolant.MaxT));
             _dvstart.Add(dvstart);
             _dvend.Add(dvend);
         }
 
         public Solution DeepCopy()
         {
-            var dup = new Solution(Problem, FlightPlan?.DeepCopy());
+            var dup = new Solution(Scale, Normalized, _mu, _rbody, FlightPlan?.DeepCopy());
             for (int i = 0; i < _interpolants.Count; i++)
                 dup.AddSegment(_interpolants[i].DeepCopy(), Phases[i]);
             return dup;
         }
 
-        public double StartTime(int p) => _tmin[p] * _timeScale;
+        /// <summary>
+        ///     A copy of this normalized solution in SI units, for guidance to fly.  Like DeepCopy() it shares nothing with this
+        ///     one, including its own copy of the FlightPlan.
+        /// </summary>
+        public Solution DeNormalized()
+        {
+            Check.True(Normalized, "the Solution is already in SI units");
 
-        public double EndTime(int p) => _tmax[p] * _timeScale;
+            var dup = new Solution(Scale, false, _mu, _rbody, FlightPlan?.DeepCopy());
+
+            using var yScale = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            new InterpolantLayout
+            {
+                R = Scale.LengthScale * V3.one,
+                V = Scale.VelocityScale * V3.one,
+                M = Scale.MassScale,
+                U = V3.one,
+                T = 1
+            }.CopyTo(yScale);
+
+            for (int i = 0; i < _interpolants.Count; i++)
+            {
+                VecInterpolant interpolant = _interpolants[i].DeepCopy();
+                interpolant.Rescale(Scale.TimeScale, yScale);
+                dup.AddSegment(interpolant, Phases[i].DeNormalize(Scale));
+            }
+
+            return dup;
+        }
+
+        public double StartTime(int p) => _tmin[p];
+
+        public double EndTime(int p) => _tmax[p];
 
         public V3 R(double t)
         {
-            double tBar = t / _timeScale;
-            return RBar(tBar) * _lengthScale;
-        }
-
-        public V3 RBar(double tBar)
-        {
-            using Vec xRaw = Interpolate(tBar);
-            var x = InterpolantLayout.CreateFrom(xRaw);
-            return x.R;
-        }
-
-        public V3 RBar(int segment, double tBar)
-        {
-            using Vec xRaw = Interpolate(segment, tBar);
-            var x = InterpolantLayout.CreateFrom(xRaw);
-            return x.R;
+            using Vec xRaw = Interpolate(t);
+            return InterpolantLayout.CreateFrom(xRaw).R;
         }
 
         public V3 V(double t)
         {
-            double tBar = t / _timeScale;
-            return VBar(tBar) * _velocityScale;
-        }
-
-        public V3 VBar(double tBar)
-        {
-            using Vec xRaw = Interpolate(tBar);
-            var x = InterpolantLayout.CreateFrom(xRaw);
-            return x.V;
-        }
-
-        public V3 VBar(int segment, double tBar)
-        {
-            using Vec xRaw = Interpolate(segment, tBar);
-            var x = InterpolantLayout.CreateFrom(xRaw);
-            return x.V;
+            using Vec xRaw = Interpolate(t);
+            return InterpolantLayout.CreateFrom(xRaw).V;
         }
 
         public V3 U(double t)
         {
-            double tBar = t / _timeScale;
-            return UBar(tBar);
-        }
-
-        public V3 UBar(double tBar)
-        {
-            using Vec xRaw = Interpolate(tBar);
-            var x = InterpolantLayout.CreateFrom(xRaw);
-            return x.U;
-        }
-
-        public V3 UBar(int segment, double tBar)
-        {
-            using Vec xRaw = Interpolate(segment, tBar);
-            var x = InterpolantLayout.CreateFrom(xRaw);
-            return x.U;
+            using Vec xRaw = Interpolate(t);
+            return InterpolantLayout.CreateFrom(xRaw).U;
         }
 
         public double M(double t)
         {
-            double tBar = t / _timeScale;
-            return MBar(tBar) * _massScale;
+            using Vec xRaw = Interpolate(t);
+            return InterpolantLayout.CreateFrom(xRaw).M;
         }
 
-        // XXX: this is to deal with discontinuity of the mass at the boundary so that we can pick
-        // the correct one at the endpoints.  Particularly for needing the terminal mass at the endpoint.
-        // XXX: maybe should throw if tBar is outside the range?
-        public double MBar(int segment, double tBar)
+        // the mass on the given segment's own interpolant, which picks the right side of the drop in mass at a phase boundary,
+        // particularly for the terminal mass at the end of a phase
+        // XXX: maybe should throw if t is outside the segment?
+        private double M(int segment, double t)
         {
-            using Vec xRaw = Interpolate(segment, tBar);
-            var x = InterpolantLayout.CreateFrom(xRaw);
-            return x.M;
+            using Vec xRaw = Interpolate(segment, t);
+            return InterpolantLayout.CreateFrom(xRaw).M;
         }
 
-        public double MBar(double tBar)
+        // the delta-v used since the start of the trajectory
+        public double DV(double t)
         {
-            using Vec xRaw = Interpolate(tBar);
-            var x = InterpolantLayout.CreateFrom(xRaw);
-            return x.M;
-        }
-
-        public double Bt(int segment, double t)
-        {
-            double tbar = t / _timeScale;
-
-            return BtBar(segment, tbar) * _timeScale;
-        }
-
-        // burntime of the segment at the given normalized time, does not go below zero
-        public double BtBar(int segment, double tbar)
-        {
-            double hi = _tmax[segment];
-            double lo = Min(Max(_tmin[segment], tbar), hi);
-
-            return hi - lo;
-        }
-
-        public double DVBar(double tBar)
-        {
-            int idx = IndexForTbar(tBar);
-            double dv = Phases[idx].DeltaVFromMass(MBar(idx, _tmin[idx]), MBar(idx, tBar));
+            int idx = IndexFor(t);
+            double dv = Phases[idx].DeltaVFromMass(M(idx, _tmin[idx]), M(idx, t));
             return _dvstart[idx] + dv;
         }
 
-        public double DV(double t)
-        {
-            double tBar = t / _timeScale;
-            return DVBar(tBar) * _velocityScale;
-        }
-
+        // the delta-v left in phase n
         public double DV(double t, int n)
         {
-            double tbar = t / _timeScale;
-            tbar = Clamp(tbar, _tmin[n], _tmax[n]);
-            double dv = Phases[n].DeltaVFromMass(MBar(n, tbar), MBar(n, _tmax[n]));
-            return dv * _velocityScale;
+            t = Clamp(t, _tmin[n], _tmax[n]);
+            return Phases[n].DeltaVFromMass(M(n, t), M(n, _tmax[n]));
         }
 
-        public (double burn1, double coast, double burn2) TgoBarSplit(double tBar)
+        // the time left in the burn before the coast, in the coast, and in the burn after it (each may be multi-stage); without
+        // a coast every burn counts as the burn after it
+        public (double burn1, double coast, double burn2) TgoSplit(double t)
         {
             double burn1 = 0, coast = 0, burn2 = 0;
 
             int i;
 
-            for (i = IndexForTbar(tBar); i < Phases.Count; i++)
+            for (i = IndexFor(t); i < Phases.Count; i++)
             {
                 if (Phases[i].Coast)
                     break;
-                burn1 += TgoBar(tBar, i);
+                burn1 += Tgo(t, i);
             }
 
             // never found a coast
             if (i == Phases.Count)
                 return (0, 0, burn1);
 
-            coast = TgoBar(tBar, i);
+            coast = Tgo(t, i);
             i++;
 
             while (i < Phases.Count)
             {
-                burn2 += TgoBar(tBar, i);
+                burn2 += Tgo(t, i);
                 i++;
             }
 
             return (burn1, coast, burn2);
         }
 
-        public double Tgo(double t)
-        {
-            double tbar = t / _timeScale;
-            return (Tmax - tbar) * _timeScale;
-        }
+        // runs negative past Tf
+        public double Tgo(double t) => Tf - t;
 
+        // the time left in phase n: all of it before the phase starts, and none of it once it is over
         public double Tgo(double t, int n)
         {
-            double tbar = t / _timeScale;
-            return TgoBar(tbar, n) * _timeScale;
+            if (t > _tmin[n])
+                return Max(_tmax[n] - t, 0);
+            return _tmax[n] - _tmin[n];
         }
 
         // The burn time left in a KSP stage, summed over all of its burn phases.  This does not start from the phase the clock
         // is in: a vessel can stage ahead of the clock (a fixed booster burning out before its predicted end), and starting
-        // from the booster phase would find no phases for the new stage and return zero.  TgoBar gives zero for phases in the
+        // from the booster phase would find no phases for the new stage and return zero.  Tgo gives zero for phases in the
         // past, so a stage burned past its predicted end (residuals) still returns zero.
         public double TgoForKSPStage(double t, int kspStage)
         {
-            double tbar = t / _timeScale;
             double sum = 0;
             for (int i = 0; i < Phases.Count; i++)
             {
                 if (Phases[i].Coast || Phases[i].KSPStage != kspStage)
                     continue;
-                sum += TgoBar(tbar, i) * _timeScale;
+                sum += Tgo(t, i);
             }
 
             return sum;
         }
 
-        public double TgoBar(double tbar, int n)
-        {
-            if (tbar > _tmin[n])
-                return Max(_tmax[n] - tbar, 0);
-            return _tmax[n] - _tmin[n];
-        }
-
         public double Vgo(double t) => DV(Tf) - DV(t);
 
-        public bool Coast(double t)
-        {
-            double tbar = t / _timeScale;
-            return Phases[IndexForTbar(tbar)].Coast;
-        }
+        public bool Coast(double t) => Phases[IndexFor(t)].Coast;
 
         // Specialized API to determine if we still have the coast in our future or not
         // (or if we're in a coast right now)
         public bool WillCoast(double t)
         {
-            double tbar = t / _timeScale;
-
-            for (int i = IndexForTbar(tbar); i < Phases.Count; i++)
+            for (int i = IndexFor(t); i < Phases.Count; i++)
                 if (Phases[i].Coast)
                     return true;
 
@@ -296,8 +253,7 @@ namespace MechJebLib.PSG
         // which is followed by other burns before the coast.
         public bool CoastFollows(double t)
         {
-            double tbar = t / _timeScale;
-            int idx = IndexForTbar(tbar);
+            int idx = IndexFor(t);
 
             return Phases[idx].Coast || (idx + 1 < Phases.Count && Phases[idx + 1].Coast);
         }
@@ -334,11 +290,7 @@ namespace MechJebLib.PSG
             return -1;
         }
 
-        public bool Unguided(double t)
-        {
-            double tbar = t / _timeScale;
-            return Phases[IndexForTbar(tbar)].Unguided;
-        }
+        public bool Unguided(double t) => Phases[IndexFor(t)].Unguided;
 
         public bool CoastPhase(int phase) => Phases[phase].Coast;
 
@@ -352,23 +304,17 @@ namespace MechJebLib.PSG
         // the stage of this solution's FlightPlan snapshot that the phase was built from, null without a FlightPlan
         public FlightPlanStage? FlightPlanStage(int phase) => FlightPlan?.Stages[Phases[phase].FlightPlanIndex];
 
-        public double StageTimeLeft(double t)
-        {
-            double tbar = t / _timeScale;
-            int phase = IndexForTbar(tbar);
-            return (_tmax[phase] - tbar) * _timeScale;
-        }
+        // the time left until the end of the phase the clock is in
+        public double StageTimeLeft(double t) => _tmax[IndexFor(t)] - t;
 
         // engineMinThrottle is the fraction of available thrust the engines currently produce at zero KSP throttle
         public (V3, double) InertialGuidance(double t, double engineMinThrottle)
         {
-            double tBar = t / _timeScale;
-
-            using Vec xRaw = Interpolate(tBar);
+            using Vec xRaw = Interpolate(t);
             var x = InterpolantLayout.CreateFrom(xRaw);
             V3 u0 = x.U.normalized;
 
-            int phase = IndexForTbar(tBar);
+            int phase = IndexFor(t);
             // don't command less than the optimizer's throttle floor if the interpolant dips between collocation points
             double thrustPct = Clamp(x.T, Phases[phase].MinThrottle, 1.0);
             double kspThrottle = engineMinThrottle < 1.0 ? (thrustPct - engineMinThrottle) / (1.0 - engineMinThrottle) : 1.0;
@@ -380,16 +326,16 @@ namespace MechJebLib.PSG
 
         public (V3 r, V3 v) StateVectors(double t)
         {
-            double tBar = t / _timeScale;
-
-            using Vec xraw = Interpolate(tBar);
-            var x = InterpolantLayout.CreateFrom(xraw);
-            return (x.R * _lengthScale, x.V * _velocityScale);
+            using Vec xRaw = Interpolate(t);
+            var x = InterpolantLayout.CreateFrom(xRaw);
+            return (x.R, x.V);
         }
 
         // FIXME: this is really specific display logic
         public string TerminalString()
         {
+            Check.False(Normalized, "TerminalString prints SI units, use DeNormalized()");
+
             (V3 rf, V3 vf) = TerminalStateVectors();
 
             (double sma, double ecc, double inc, double lan, double argp, double tanom, _) = Astro.KeplerianFromStateVectors(_mu,
@@ -411,10 +357,10 @@ namespace MechJebLib.PSG
             return sb.ToString();
         }
 
-        private int IndexForTbar(double tbar)
+        private int IndexFor(double t)
         {
             for (int i = 0; i < _tmax.Count; i++)
-                if (tbar < _tmax[i])
+                if (t < _tmax[i])
                     return i;
             return _tmax.Count - 1;
         }
@@ -438,9 +384,9 @@ namespace MechJebLib.PSG
             return idx;
         }
 
-        private Vec Interpolate(double tbar) => _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
+        private Vec Interpolate(double t) => _interpolants[IndexFor(t)].Evaluate(t);
 
-        private Vec Interpolate(int segment, double tbar) => _interpolants[segment].Evaluate(tbar);
+        private Vec Interpolate(int segment, double t) => _interpolants[segment].Evaluate(t);
 
         /// <summary>
         ///     This handles the precise termination of a burn segment.  Our trajectory only supports one
@@ -450,10 +396,10 @@ namespace MechJebLib.PSG
         ///     - precise shutdown at the termination of the ascent
         ///     - precise shutdown before a coast
         ///     - precise shutdown before fixed burntime upper stages
-        ///     - some timing fuzz (particularly when we got over Tmax or burn slightly into the coast segment)
+        ///     - some timing fuzz (particularly when we got over Tf or burn slightly into the coast segment)
         ///     - staging during the 10-second terminal phase
         ///     So based on the time:
-        ///     - if we're over Tmax, just return the terminal conditions at the end of the trajectory
+        ///     - if we're over Tf, just return the terminal conditions at the end of the trajectory
         ///     - if we're in a coast phase, back up to find the burn phase
         ///     - if we're in a fixed phase, back up to find the previous allow shutdown phase
         ///     - if we're in an allow shutdown phase, and the next phase is also allow shutdown (and not a coast), go forward
@@ -461,7 +407,7 @@ namespace MechJebLib.PSG
         /// </summary>
         /// <param name="pos">Current BCI position</param>
         /// <param name="vel">Current BCI velocity</param>
-        /// <param name="t">Current World time</param>
+        /// <param name="t">Current MET</param>
         /// <param name="kspStage">The vessel's current KSP stage, which the checked phase must not come before</param>
         /// <returns></returns>
         public bool TerminalGuidanceSatisfied(V3 pos, V3 vel, double t, int kspStage)
@@ -474,16 +420,15 @@ namespace MechJebLib.PSG
              XXX: This tests for the angular momentum exceeding the target, so it is only applicable for orbit raising / ascents.
             */
             var hf = V3.Cross(pos, vel);
-            double tbar = t / _timeScale;
 
             (V3 rT, V3 vT) = StateVectors(Tf);
 
-            if (tbar < Tmax)
+            if (t < Tf)
             {
                 // the vessel may have staged ahead of the clock (a fixed booster burning out before its predicted end), so
                 // never check against a phase before the current KSP stage, such as the end of that booster
                 int first = Max(IndexForKSPStage(kspStage, false), 0);
-                int idx = Max(IndexForTbar(tbar), first);
+                int idx = Max(IndexFor(t), first);
                 // back up to find an AllowShutdown stage if we've gone past the terminal time and
                 // hit a coast or a fixed burn time stage (the first phase may be a coast in a solution
                 // computed during the coast, so don't walk off the front)
@@ -492,8 +437,7 @@ namespace MechJebLib.PSG
                 // go forward to the end of this multi-stage burn segment until we hit a coast or fixed stages
                 while (idx < Segments - 1 && Phases[idx].AllowShutdown && Phases[idx + 1].AllowShutdown && !Phases[idx + 1].Coast)
                     idx++;
-                double end = _tmax[idx];
-                (rT, vT) = StateVectors(end * _timeScale);
+                (rT, vT) = StateVectors(_tmax[idx]);
             }
 
             var hT = V3.Cross(rT, vT);

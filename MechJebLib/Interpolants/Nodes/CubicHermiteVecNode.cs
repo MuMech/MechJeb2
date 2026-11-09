@@ -81,6 +81,17 @@ namespace MechJebLib.Interpolants
             return CopyBoundsTo(node);
         }
 
+        // the power basis is in s = (x - t) / h, which doesn't change, so only t and h stretch and every coefficient takes yScale
+        internal override void Rescale(double timeScale, Vec yScale)
+        {
+            _t    *= timeScale;
+            _invH /= timeScale;
+            _c0.Mul(yScale);
+            _c1.Mul(yScale);
+            _c2.Mul(yScale);
+            _c3.Mul(yScale);
+        }
+
         public override void Dispose()
         {
             _c0.Dispose();

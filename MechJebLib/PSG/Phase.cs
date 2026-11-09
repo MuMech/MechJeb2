@@ -159,6 +159,27 @@ namespace MechJebLib.PSG
             return phase;
         }
 
+        // the inverse of Rescale, back to SI units
+        public Phase DeNormalize(Scale scale)
+        {
+            CheckDebug.True(Normalized);
+
+            var phase = (Phase)MemberwiseClone();
+
+            phase.VexVacuum = VexVacuum * scale.VelocityScale;
+            phase.VexCurrent = VexCurrent * scale.VelocityScale;
+            phase.Mdot = Mdot * scale.MdotScale;
+            phase.Bt = Bt * scale.TimeScale;
+            phase.MinT = MinT * scale.TimeScale;
+            phase.MaxT = MaxT * scale.TimeScale;
+            phase.M0 = M0 * scale.MassScale;
+            phase.Mf = Mf * scale.MassScale;
+            phase.MinM = MinM * scale.MassScale;
+            phase.Normalized = false;
+
+            return phase;
+        }
+
         public static Phase NewStage(double m0, double mf, double thrust, double isp, int kspStage, int mjPhase,
             bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1, double minThrottle = 1.0)
         {

@@ -101,8 +101,9 @@ namespace MuMech
 
         private Ascent? _ascent;
 
-        // The solver's own copy of the last converged solution, used to warm start the next solve; guidance flies a separate
-        // DeepCopy(). The worker thread reads it while a job runs, so the main thread only touches it between jobs.
+        // The solver's own copy of the last converged solution, in normalized units to warm start the next solve; guidance flies
+        // a separate DeNormalized() copy in SI units. The worker thread reads it while a job runs, so the main thread only touches
+        // it between jobs.
         private Solution? _solution;
 
         private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
@@ -213,7 +214,7 @@ namespace MuMech
                 if (psg.Success() && psg.Solution != null)
                 {
                     _solution = psg.Solution;
-                    Core.Guidance.SetSolution(psg.Solution.DeepCopy());
+                    Core.Guidance.SetSolution(psg.Solution.DeNormalized());
                     SuccessfulConverges += 1;
                     _lastTime = VesselState.Time;
                     Staleness = 0;

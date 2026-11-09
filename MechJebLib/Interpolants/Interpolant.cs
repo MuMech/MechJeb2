@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Interpolants
@@ -136,6 +137,29 @@ namespace MechJebLib.Interpolants
             return lo > 0 ? lo - 1 : 0;
         }
 
+        /// <summary>
+        ///     Changes units in place: the time axis is stretched by timeScale, so the value that was at x is now at
+        ///     timeScale·x, and every value is multiplied by yScale (elementwise for a Vec, whose derivatives scale by
+        ///     yScale / timeScale).
+        /// </summary>
+        public void Rescale(double timeScale, T yScale)
+        {
+            Check.PositiveFinite(timeScale, nameof(timeScale));
+
+            foreach (InterpolantNode<T> n in _nodes)
+            {
+                n.LeftT  *= timeScale;
+                n.RightT *= timeScale;
+                n.Rescale(timeScale, yScale);
+            }
+
+            _firstT    *= timeScale;
+            _lastT     *= timeScale;
+            MinT       *= timeScale;
+            MaxT       *= timeScale;
+            _lastIndex =  -1;
+        }
+
         public T Evaluate(double x)
         {
             int i = FindIndex(x);
@@ -162,6 +186,9 @@ namespace MechJebLib.Interpolants
 
         // a copy with its own pooled storage, disposing either one leaves the other intact
         public abstract InterpolantNode<Typ> DeepCopy();
+
+        // the node's own part of Interpolant.Rescale, which has already stretched LeftT and RightT
+        internal abstract void Rescale(double timeScale, Typ yScale);
 
         protected TNode CopyBoundsTo<TNode>(TNode node) where TNode : InterpolantNode<Typ>
         {

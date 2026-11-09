@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
+using MechJebLib.Utils;
 using MechJebLibBindings;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -499,8 +500,11 @@ namespace MuMech
             hasCoasted = true;
         }
 
+        // guidance flies in SI units and MET seconds, so this takes a DeNormalized() Solution
         public void SetSolution(Solution solution)
         {
+            Check.False(solution.Normalized, "guidance needs a DeNormalized() Solution");
+
             Solution = solution;
             if (Status == PSGStatus.ENABLED)
                 Status = PSGStatus.INITIALIZED;

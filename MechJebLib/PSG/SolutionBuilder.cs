@@ -107,8 +107,6 @@ namespace MechJebLib.PSG
                 double tf = ti + bt;
                 solution.AddSegment(interpolant, _phases[p]);
                 ti = tf;
-
-                //solution.DVBar(solution.Tmax);
             }
 
             return solution;

@@ -47,7 +47,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Vgo(t0).ShouldEqual(9669.6899155829542, 1e-3);
@@ -146,7 +146,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
             solution.Tgo(solution.T0, 1).ShouldBePositive();
@@ -226,7 +226,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
             solution.Tgo(solution.T0, 1).ShouldBePositive();
@@ -304,7 +304,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
