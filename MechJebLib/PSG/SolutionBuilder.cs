@@ -78,7 +78,7 @@ namespace MechJebLib.PSG
         {
             var solution = new Solution(_problem, _flightPlan);
 
-            double ti = 0;
+            double ti = _problem.T0;
 
             // scratch buffers, CubicHermiteVecNode.Rent copies out of them so they can be reused for every node
             using var y0 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);

@@ -15,7 +15,7 @@ namespace MechJebLib.PSG
         public readonly V3 R0;
         public readonly V3 V0;
         public readonly double M0;
-        public readonly double T0;
+        public readonly double T0; // MET (time since liftoff)
         public readonly V3 U0;
         public readonly double Mu;
         public readonly double RBody;
@@ -39,7 +39,7 @@ namespace MechJebLib.PSG
             Rho0InvQAlphaMax = rho0InvQAlphaMax * (Scale.VelocityScale * Scale.VelocityScale);
             Rho0InvQMax = rho0InvQMax * (Scale.VelocityScale * Scale.VelocityScale);
             Terminal = terminal.Rescale(Scale);
-            T0 = t0;
+            T0 = t0 / Scale.TimeScale;
             W = w * Scale.TimeScale;
         }
 

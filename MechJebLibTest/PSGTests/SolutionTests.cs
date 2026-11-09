@@ -20,11 +20,12 @@ namespace MechJebLibTest.PSGTests
     {
         private const int SAMPLES = 64;
 
-        private const double TIN_CAN_T0 = 82132.7494998545;
+        private static readonly V3 _tinCanR0 = new V3(365592.912061998, -475862.737003702, -1017.92554628857);
+        private static readonly V3 _tinCanV0 = new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06);
 
         // KerbinTests.MainSailTinCanVacuum: a burn, a coast-during coast and the rest of the burn.  With a plan the three phases
-        // are built from its stages 2, 1 and 0 (see TinCanFlightPlan).
-        private static Ascent.AscentBuilder TinCanBuilder(FlightPlan? plan = null)
+        // are built from its stages 2, 1 and 0 (see TinCanFlightPlan).  met0 is the MET of the initial state.
+        private static Ascent.AscentBuilder TinCanBuilder(FlightPlan? plan = null, double met0 = 0)
         {
             bool hasPlan = plan != null;
 
@@ -34,7 +35,7 @@ namespace MechJebLibTest.PSGTests
                .AddCoast(79699.9986022711, 79699.9986022711, 0, 450, 0, 0, massContinuity: true, flightPlanIndex: hasPlan ? 1 : -1)
                .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0, massContinuity: true,
                     flightPlanIndex: hasPlan ? 0 : -1)
-               .Initial(new V3(365592.912061998, -475862.737003702, -1017.92554628857), new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06), new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), TIN_CAN_T0, 3531600000000, 600000)
+               .Initial(_tinCanR0, _tinCanV0, new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), met0, 3531600000000, 600000)
                .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false);
 
             if (plan != null)
@@ -56,12 +57,12 @@ namespace MechJebLibTest.PSGTests
             return plan;
         }
 
-        // the solver warm starts from one copy while guidance flies another, so a copy has to agree bit-for-bit, own its T0 and
-        // survive the original being disposed
+        // the solver warm starts from one copy while guidance flies another, so a copy has to agree bit-for-bit and survive the
+        // original being disposed
         [Fact]
         public void DeepCopyIsIndependent()
         {
-            double t0 = TIN_CAN_T0;
+            double t0 = 0;
 
             Ascent ascent = TinCanBuilder().Build();
 
@@ -127,12 +128,6 @@ namespace MechJebLibTest.PSGTests
             (V3 rfCopy, V3 vfCopy) = copy.TerminalStateVectors();
             rfCopy.ShouldEqual(rf, 0);
             vfCopy.ShouldEqual(vf, 0);
-
-            double solutionT0 = solution.T0;
-            double copyT0     = copy.T0;
-            copy.T0 += 10;
-            solution.T0.ShouldEqual(solutionT0, 0);
-            copy.T0 = copyT0;
 
             solution.Dispose();
 
@@ -270,10 +265,63 @@ namespace MechJebLibTest.PSGTests
             solution.TerminalGuidanceSatisfied(rEarly, vEarly, tf - 5, 2).ShouldBeFalse();
         }
 
+        // The clock is MET, and a solve started in flight starts at the MET of its initial state.  The optimizer doesn't depend
+        // on absolute time, so the same problem started at MET 100 is the MET 0 trajectory moved 100 s later.  The two only
+        // agree to the optimizer's convergence: this solve is flat enough that moving the start by 1e-9 s already moves the
+        // states by ~5e-6 (relative), while a clock that is off by even a fraction of a second fails by orders of magnitude.
+        [Fact]
+        public void StartMetShiftsTheTrajectory()
+        {
+            const double MET0      = 100;
+            const double SOLVE_TOL = 1e-4;
+
+            Ascent ascent  = TinCanBuilder().OptimizerTimeout(Timeout.Infinite).Build();
+            Ascent shifted = TinCanBuilder(met0: MET0).OptimizerTimeout(Timeout.Infinite).Build();
+            ascent.Run();
+            shifted.Run();
+
+            using Solution s0 = ascent.GetOptimizer()?.Solution ?? throw new Exception("null solution");
+            using Solution s1 = shifted.GetOptimizer()?.Solution ?? throw new Exception("null solution");
+
+            // the shifted trajectory starts at its initial state at MET0
+            s0.T0.ShouldBeZero();
+            s1.T0.ShouldEqual(MET0, 1e-12);
+            s1.R(MET0).ShouldEqual(_tinCanR0, 1e-6);
+            s1.V(MET0).ShouldEqual(_tinCanV0, 1e-6);
+
+            s1.Segments.ShouldEqual(s0.Segments);
+            s1.Tf.ShouldEqual(s0.Tf + MET0, SOLVE_TOL);
+
+            for (int p = 0; p < s0.Segments; p++)
+            {
+                s1.StartTime(p).ShouldEqual(s0.StartTime(p) + MET0, SOLVE_TOL);
+                s1.EndTime(p).ShouldEqual(s0.EndTime(p) + MET0, SOLVE_TOL);
+            }
+
+            // short of the end, where Tgo and Vgo go to zero and the comparison would become an absolute one; the end is
+            // checked by Tf and the terminal state
+            double tf = s0.Tf;
+            for (int i = 0; i < SAMPLES; i++)
+            {
+                double t = tf * i / SAMPLES;
+                s1.R(MET0 + t).ShouldEqual(s0.R(t), SOLVE_TOL);
+                s1.V(MET0 + t).ShouldEqual(s0.V(t), SOLVE_TOL);
+                s1.M(MET0 + t).ShouldEqual(s0.M(t), SOLVE_TOL);
+                s1.Tgo(MET0 + t).ShouldEqual(s0.Tgo(t), SOLVE_TOL);
+                s1.Vgo(MET0 + t).ShouldEqual(s0.Vgo(t), SOLVE_TOL);
+            }
+
+            (V3 rf0, V3 vf0) = s0.TerminalStateVectors();
+            (V3 rf1, V3 vf1) = s1.TerminalStateVectors();
+            rf1.ShouldEqual(rf0, SOLVE_TOL);
+            vf1.ShouldEqual(vf0, SOLVE_TOL);
+        }
+
         /*
          * Synthetic solutions, built straight from hand-made segments instead of an optimizer run.  Every component of every
          * segment is linear in time, so each accessor has an exact expected value.  TimeScale is exactly 128 s and the phase
-         * boundaries are dyadic, so a phase's StartTime and EndTime convert back to exactly its normalized bounds.
+         * boundaries are dyadic, so a phase's StartTime and EndTime convert back to exactly its normalized bounds.  The
+         * trajectories start in flight at MET 4096 s (normalized 32), so the segments' tbar is the normalized time since then.
          */
 
         private const double LENGTH_SCALE   = 1 << 20;
@@ -281,6 +329,7 @@ namespace MechJebLibTest.PSGTests
         private const double MASS_SCALE     = 1 << 10;
         private const double TIME_SCALE     = LENGTH_SCALE / VELOCITY_SCALE;
         private const double T0             = 4096;
+        private const double TBAR0          = T0 / TIME_SCALE;
         private const double MU             = 4e14;
         private const double RBODY          = 6e6;
 
@@ -290,6 +339,7 @@ namespace MechJebLibTest.PSGTests
         private static readonly V3 _yHat = new V3(0, 1, 0);
         private static readonly V3 _zHat = new V3(0, 0, 1);
 
+        // the normalized time since the start of the trajectory, for the MET t
         private static double Tbar(double t) => (t - T0) / TIME_SCALE;
 
         private static double Vex(double isp) => isp * G0;
@@ -350,7 +400,7 @@ namespace MechJebLibTest.PSGTests
         private static Solution Build(params Seg[] segs)
         {
             InterpolantLayout x0 = segs[0].Y0;
-            var problem = new Problem(_scale, x0.R, x0.V, x0.U, x0.M, T0, MU, RBODY / LENGTH_SCALE, 0, 0, 0, 0, V3.zero,
+            var problem = new Problem(_scale, x0.R, x0.V, x0.U, x0.M, TBAR0, MU, RBODY / LENGTH_SCALE, 0, 0, 0, 0, V3.zero,
                 new Kepler3(1, 0, 0));
             var solution = new Solution(problem, null);
 
@@ -376,8 +426,9 @@ namespace MechJebLibTest.PSGTests
                 seg.Y1.CopyTo(ynew);
                 slope.CopyTo(dy);
 
+                // the solution's clock is normalized MET
                 var interpolant = VecInterpolant.Rent();
-                interpolant.Append(CubicHermiteVecNode.Rent(seg.Tbar0, h, y, dy, ynew, dy), seg.Tbar0, seg.Tbar1);
+                interpolant.Append(CubicHermiteVecNode.Rent(TBAR0 + seg.Tbar0, h, y, dy, ynew, dy), TBAR0 + seg.Tbar0, TBAR0 + seg.Tbar1);
                 solution.AddSegment(interpolant, seg.Phase);
             }
 
@@ -462,8 +513,9 @@ namespace MechJebLibTest.PSGTests
             using Solution solution = TheStandardLike();
 
             solution.Segments.ShouldEqual(5);
+            // the clock is MET, and the Problem's start is normalized like the rest of it
             solution.T0.ShouldEqual(T0, 0);
-            solution.Problem.T0.ShouldEqual(T0, 0);
+            solution.Problem.T0.ShouldEqual(TBAR0, 0);
             solution.Tf.ShouldEqual(4384, 0);
 
             double[] start    = { 4096, 4160, 4192, 4224, 4352 };
@@ -479,15 +531,6 @@ namespace MechJebLibTest.PSGTests
                 solution.MJPhase(p).ShouldEqual(mjPhase[p]);
                 Assert.Equal(p == 3, solution.CoastPhase(p));
             }
-
-            // T0 slides forward while the vessel waits on the pad, and the whole trajectory slides with it
-            solution.T0 += 10;
-            solution.Tf.ShouldEqual(4394, 0);
-            solution.StartTime(3).ShouldEqual(4234, 0);
-            solution.EndTime(3).ShouldEqual(4362, 0);
-            solution.R(4138).ShouldEqual(ExpectedR(4128), 1e-12);
-            solution.Coast(4234).ShouldBeTrue();
-            solution.Tgo(T0 + 10).ShouldEqual(288, 0);
         }
 
         // AddSegment keeps its own copy of the phase, so the caller can reuse or dispose of the one it passed
@@ -650,7 +693,8 @@ namespace MechJebLibTest.PSGTests
 
         private static void ShouldSplit(Solution solution, double t, double burn1, double coast, double burn2)
         {
-            (double actualBurn1, double actualCoast, double actualBurn2) = solution.TgoBarSplit(Tbar(t));
+            // TgoBarSplit takes normalized MET
+            (double actualBurn1, double actualCoast, double actualBurn2) = solution.TgoBarSplit(t / TIME_SCALE);
             actualBurn1.ShouldEqual(burn1, 0);
             actualCoast.ShouldEqual(coast, 0);
             actualBurn2.ShouldEqual(burn2, 0);
@@ -899,23 +943,22 @@ namespace MechJebLibTest.PSGTests
             ShouldTargetStateAt(solution, 4160, 4159, 2);
         }
 
-        // a copy taken after T0 slid forward on the pad keeps the moved T0 and the phases' flags, and outlives the original
+        // a copy keeps the clock and the phases' flags, and outlives the original
         [Fact]
-        public void DeepCopyKeepsTheMovedT0()
+        public void DeepCopyKeepsThePhases()
         {
             Solution solution = TheStandardLike();
-            solution.T0 += 10;
 
             using Solution copy = solution.DeepCopy();
             solution.Dispose();
 
-            copy.T0.ShouldEqual(T0 + 10, 0);
-            copy.Tf.ShouldEqual(4394, 0);
-            copy.R(4138).ShouldEqual(ExpectedR(4128), 1e-12);
-            copy.M(4138).ShouldEqual(6144, 1e-12);
-            copy.DV(4170).ShouldEqual(Vex(256) * Math.Log(2), 1e-12);
-            copy.Unguided(4138).ShouldBeTrue();
-            copy.InertialGuidance(4198, 0).Item2.ShouldEqual(0.5, 1e-12);
+            copy.T0.ShouldEqual(T0, 0);
+            copy.Tf.ShouldEqual(4384, 0);
+            copy.R(4128).ShouldEqual(ExpectedR(4128), 1e-12);
+            copy.M(4128).ShouldEqual(6144, 1e-12);
+            copy.DV(4160).ShouldEqual(Vex(256) * Math.Log(2), 1e-12);
+            copy.Unguided(4128).ShouldBeTrue();
+            copy.InertialGuidance(4188, 0).Item2.ShouldEqual(0.5, 1e-12);
             copy.TerminalKSPStage().ShouldEqual(0);
             copy.TerminalMJPhase().ShouldEqual(1);
             copy.OptimizeKSPStage().ShouldEqual(1);

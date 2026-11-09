@@ -104,7 +104,7 @@ namespace MechJebLib.PSG
 
             var y0 = new InterpolantLayout();
 
-            double t0 = 0;
+            double t0 = _problem.T0;
 
             y0.R = _problem.R0;
             y0.V = _problem.V0;

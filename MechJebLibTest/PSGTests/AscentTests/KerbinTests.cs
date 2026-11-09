@@ -21,7 +21,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact]
         private void MainSailTinCanVacuum()
         {
-            double t0 = 82132.7494998545;
+            double t0 = 0;
 
 
             Ascent ascent = Ascent.Builder()
@@ -63,7 +63,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact(Skip = "PSG is still unstable on this case (#2326)")]
         private void MainSailTinCanAtmo()
         {
-            double t0 = 82132.7494998545;
+            double t0 = 0;
 
 
             Ascent ascent = Ascent.Builder()
