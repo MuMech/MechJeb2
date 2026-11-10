@@ -102,15 +102,25 @@ namespace MuMech.UI
             var p11 = new GuidanceUi.Parts("#MechJeb_LandingGuidance_Label11");
             var p12 = new GuidanceUi.Parts("#MechJeb_LandingGuidance_Label12");
             var p13 = new GuidanceUi.Parts("#MechJeb_LandingGuidance_Label13");
+            // the second part's text starts with the line break that follows the target difference
+            string p11First = null;
             GuidanceUi.Live(w, landed, p10.Pre + "1234 km" + p11.Pre + "12.3g" + p12.Pre + "1234.5m/s" + p13.Pre + "123d 12h 12m 12.3s", false, ct =>
             {
                 ReentrySimulation.Result res = Result;
                 CelestialBody body = Body;
-                double error = Vector3d.Distance(
-                    body.GetWorldSurfacePosition(res.EndPosition.Latitude, res.EndPosition.Longitude, 0) - body.position,
-                    body.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) - body.position);
-                ct.Append(p10.Pre).AppendSI(error).Append('m')
-                    .Append(p11.Pre).Append(res.MaxDragGees, 1).Append('g')
+                // the distance to the target is for a position target on this body: without one the target coordinates are
+                // 0/0, or those of an earlier target, and the distance means nothing
+                if (Core.Target.Target is PositionTarget && Core.Target.targetBody == body)
+                {
+                    double error = Vector3d.Distance(
+                        body.GetWorldSurfacePosition(res.EndPosition.Latitude, res.EndPosition.Longitude, 0) - body.position,
+                        body.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) - body.position);
+                    ct.Append(p10.Pre).AppendSI(error).Append('m').Append(p11.Pre);
+                }
+                else
+                    ct.Append(p11First ??= p11.Pre.TrimStart('\n'));
+
+                ct.Append(res.MaxDragGees, 1).Append('g')
                     .Append(p12.Pre).Append(res.DeltaVExpended, 1).Append("m/s")
                     .Append(p13.Pre);
                 if (Core.vessel.Landed) ct.Append("0.0s");
