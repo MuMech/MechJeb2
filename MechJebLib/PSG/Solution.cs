@@ -28,7 +28,8 @@ namespace MechJebLib.PSG
     //
     // The clock is MET, the time since liftoff, which is zero on the ground: normalized MET in a normalized Solution, and MET
     // in seconds in an SI one.  A solution computed on the ground starts at MET zero, so guidance waiting on the pad always
-    // gets its first point, and one computed in flight starts at the MET of its initial state.
+    // gets its first point, and one computed in flight starts at the MET of its initial state.  While it waits on the ground
+    // the launch site turns with the planet, which RotateToLaunchSite turns the solution to follow.
     public class Solution : IDisposable
     {
         public readonly bool Normalized;
@@ -49,6 +50,12 @@ namespace MechJebLib.PSG
         private readonly double _mu;
         private readonly double _rbody;
 
+        // the initial position the solution was solved from, in its units
+        private readonly V3 _r0;
+
+        // the turn RotateToLaunchSite applies to every vector the solution returns
+        private Q3 _rotation = Q3.identity;
+
         public int Segments => Phases.Count;
 
         // the MET of the start and the end of the trajectory
@@ -57,16 +64,17 @@ namespace MechJebLib.PSG
 
         // a normalized solution for the problem
         public Solution(Problem problem, FlightPlan? flightPlan)
-            : this(problem.Scale, true, problem.Mu, problem.RBody * problem.Scale.LengthScale, flightPlan)
+            : this(problem.Scale, true, problem.Mu, problem.RBody * problem.Scale.LengthScale, problem.R0, flightPlan)
         {
         }
 
-        private Solution(Scale scale, bool normalized, double mu, double rbody, FlightPlan? flightPlan)
+        private Solution(Scale scale, bool normalized, double mu, double rbody, V3 r0, FlightPlan? flightPlan)
         {
             Scale = scale;
             Normalized = normalized;
             _mu = mu;
             _rbody = rbody;
+            _r0 = r0;
             FlightPlan = flightPlan;
         }
 
@@ -87,7 +95,7 @@ namespace MechJebLib.PSG
 
         public Solution DeepCopy()
         {
-            var dup = new Solution(Scale, Normalized, _mu, _rbody, FlightPlan?.DeepCopy());
+            var dup = new Solution(Scale, Normalized, _mu, _rbody, _r0, FlightPlan?.DeepCopy()) { _rotation = _rotation };
             for (int i = 0; i < _interpolants.Count; i++)
                 dup.AddSegment(_interpolants[i].DeepCopy(), Phases[i]);
             return dup;
@@ -95,13 +103,13 @@ namespace MechJebLib.PSG
 
         /// <summary>
         ///     A copy of this normalized solution in SI units, for guidance to fly.  Like DeepCopy() it shares nothing with this
-        ///     one, including its own copy of the FlightPlan.
+        ///     one, including its own copy of the FlightPlan, and it keeps the rotation to the launch site.
         /// </summary>
         public Solution DeNormalized()
         {
             Check.True(Normalized, "the Solution is already in SI units");
 
-            var dup = new Solution(Scale, false, _mu, _rbody, FlightPlan?.DeepCopy());
+            var dup = new Solution(Scale, false, _mu, _rbody, _r0 * Scale.LengthScale, FlightPlan?.DeepCopy()) { _rotation = _rotation };
 
             using var yScale = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             new InterpolantLayout
@@ -123,6 +131,26 @@ namespace MechJebLib.PSG
             return dup;
         }
 
+        /// <summary>
+        ///     The launch site turns with the planet while the vessel waits on the ground, so this turns a solution computed on
+        ///     the ground about the planet's pole (V3.northpole), from the launch site it was solved at to r0, the launch site
+        ///     now.  Every vector the solution returns is turned, which carries its initial position and velocity exactly onto the
+        ///     moved launch site and keeps its inclination.  A solution computed in flight (T0 > 0) is never turned.  Once the
+        ///     vessel has lifted off a solution computed on the ground keeps following the vessel, which is close enough while it
+        ///     climbs over the launch site, until the first solution computed in flight replaces it.
+        ///     Only the direction of r0 matters, so it can be in meters or normalized units.  Each call replaces the last
+        ///     rotation, so it can be called every tick.
+        /// </summary>
+        public void RotateToLaunchSite(V3 r0)
+        {
+            if (T0 > 0)
+                return;
+
+            // the angle about the pole between the two launch sites' projections onto the equator
+            double angle = Atan2(_r0.x * r0.y - _r0.y * r0.x, _r0.x * r0.x + _r0.y * r0.y);
+            _rotation = Q3.AngleAxis(angle, V3.northpole);
+        }
+
         public double StartTime(int p) => _tmin[p];
 
         public double EndTime(int p) => _tmax[p];
@@ -130,19 +158,19 @@ namespace MechJebLib.PSG
         public V3 R(double t)
         {
             using Vec xRaw = Interpolate(t);
-            return InterpolantLayout.CreateFrom(xRaw).R;
+            return _rotation * InterpolantLayout.CreateFrom(xRaw).R;
         }
 
         public V3 V(double t)
         {
             using Vec xRaw = Interpolate(t);
-            return InterpolantLayout.CreateFrom(xRaw).V;
+            return _rotation * InterpolantLayout.CreateFrom(xRaw).V;
         }
 
         public V3 U(double t)
         {
             using Vec xRaw = Interpolate(t);
-            return InterpolantLayout.CreateFrom(xRaw).U;
+            return _rotation * InterpolantLayout.CreateFrom(xRaw).U;
         }
 
         public double M(double t)
@@ -312,7 +340,7 @@ namespace MechJebLib.PSG
         {
             using Vec xRaw = Interpolate(t);
             var x = InterpolantLayout.CreateFrom(xRaw);
-            V3 u0 = x.U.normalized;
+            V3 u0 = (_rotation * x.U).normalized;
 
             int phase = IndexFor(t);
             // don't command less than the optimizer's throttle floor if the interpolant dips between collocation points
@@ -328,7 +356,7 @@ namespace MechJebLib.PSG
         {
             using Vec xRaw = Interpolate(t);
             var x = InterpolantLayout.CreateFrom(xRaw);
-            return (x.R, x.V);
+            return (_rotation * x.R, _rotation * x.V);
         }
 
         // FIXME: this is really specific display logic
