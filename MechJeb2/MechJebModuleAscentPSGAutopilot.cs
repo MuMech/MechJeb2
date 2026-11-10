@@ -48,7 +48,7 @@ namespace MuMech
             Core.Thrust.Users.Remove(this);
             Core.Staging.Users.Remove(this);
             Countdown.Users.Remove(this);
-            AscentSettings.LaunchingToPlane = AscentSettings.LaunchingToMatchLan = AscentSettings.LaunchingToLan = false;
+            Countdown.Abort();
 
             Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
 

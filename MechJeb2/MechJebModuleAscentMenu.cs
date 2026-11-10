@@ -60,11 +60,9 @@ namespace MuMech
             _settingsMenu.Enabled = _lastSettingsMenuEnabled;
         }
 
+        // a closed window leaves the launch mode alone: the countdown and the guidance still fly it
         protected override void OnModuleDisabled()
         {
-            _launchingToPlane = false;
-            _launchingToMatchLan = false;
-            _launchingToLan = false;
             _lastPSGSettingsEnabled = _psgSettingsMenu.Enabled;
             _lastSettingsMenuEnabled = _settingsMenu.Enabled;
             _psgSettingsMenu.Enabled = false;
@@ -110,11 +108,7 @@ namespace MuMech
 
         internal void LaunchToLan() => Core.LaunchCountdown.StartToLan();
 
-        internal void AbortTimedLaunch()
-        {
-            _launchingToPlane = _launchingToMatchLan = _launchingToLan = false;
-            Core.LaunchCountdown.Abort();
-        }
+        internal void AbortTimedLaunch() => Core.LaunchCountdown.Abort();
 
         private DateTime _lastRefresh = DateTime.MinValue;
         internal string vgo, heading, tgo, pitch, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
