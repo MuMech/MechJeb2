@@ -113,7 +113,7 @@ namespace MuMech.UI
             if (key != deltaKey || deltaText == null)
             {
                 deltaKey = key;
-                deltaText = KSP.Localization.Localizer.Format("#MechJeb_Ascent_label7", incDelta);
+                deltaText = KSP.Localization.Localizer.Format("#MechJeb_Ascent_label7", incDelta.ToString("F1"));
             }
 
             return deltaText;
