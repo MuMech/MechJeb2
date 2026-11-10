@@ -37,6 +37,10 @@ namespace MuMech
             _limitsSaved           = true;
             AscentSettings.ForcePsgThrustLimits();
 
+            // Each engage plans from the current settings and stages: Drive rebuilds the flight plan, so the plan of an earlier
+            // engage, with the stages it marked done, is not flown again. The simulation, which freezes the plan, is disabled here.
+            Core.PSGSimulation.FlightPlan = null;
+
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
             if (AscentSettings.Autostage) Core.Staging.Users.Add(this);
