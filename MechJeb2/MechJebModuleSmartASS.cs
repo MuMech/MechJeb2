@@ -135,10 +135,14 @@ namespace MuMech
         }
 
         /// <summary>
-        /// True while another module drives the attitude controller (SmartASS then shows only "AUTO").
-        /// Switches SmartASS off when autoDisableSmartASS is set. Called every frame by both the IMGUI and the KodeKit window.
+        /// True while another module drives the attitude controller: SmartASS then shows only "AUTO". Set every tick, with the
+        /// window open or closed.
         /// </summary>
-        internal bool OtherUsersControlAttitude()
+        internal bool OtherUsersControlAttitude { get; private set; }
+
+        // with autoDisableSmartASS, SmartASS steps aside as soon as another module takes the attitude controller, so it doesn't
+        // suddenly turn on when that autopilot finishes
+        private bool CheckOtherUsers()
         {
             if (!Core.Attitude.Enabled)
                 return false;
@@ -340,6 +344,8 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
+
+            OtherUsersControlAttitude = CheckOtherUsers();
 
             if (!smoothControl || target == Target.OFF || !Core.Attitude.Users.Contains(this))
             {

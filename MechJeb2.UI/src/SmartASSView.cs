@@ -17,7 +17,7 @@ namespace MuMech.UI
     {
         readonly MechJebModuleSmartASS ss;
 
-        // the result of ss.OtherUsersControlAttitude() for this frame (it has side effects, so it runs once, in BeforeSync)
+        // another module drives the attitude controller, as the module found on its last tick
         bool otherUsers;
 
         public SmartASSView(MechJebModuleSmartASSWindow window) : base(window) => ss = window.Core.SmartASS;
@@ -29,7 +29,7 @@ namespace MuMech.UI
         // the IMGUI window ran this before drawing
         protected override void BeforeSync()
         {
-            otherUsers = ss.OtherUsersControlAttitude();
+            otherUsers = ss.OtherUsersControlAttitude;
             if (!otherUsers) ss.ApplyPerFrameState();
         }
 

@@ -4,21 +4,21 @@ using KodeUI;
 namespace MuMech.UI
 {
     /// <summary>MechJebModuleSmartRcs ("SmartRcs") in KodeKit, row for row with its WindowGUI.</summary>
-    [KodeViewFor(typeof(MechJebModuleSmartRcs))]
+    [KodeViewFor(typeof(MechJebModuleSmartRcsWindow))]
     internal class SmartRcsView : KodeView
     {
         readonly MechJebModuleSmartRcs smart;
 
-        public SmartRcsView(MechJebModuleSmartRcs smart) : base(smart) => this.smart = smart;
+        public SmartRcsView(MechJebModuleSmartRcsWindow window) : base(window) => smart = window.SmartRcs;
 
         protected override float MinWidth => 180;
 
         MechJebCore Core => smart.Core;
 
-        // RCS is used by an other module (WindowGUI's first branch, including its side effect)
+        // another module uses the RCS controller, as the module found on its last tick
         bool blocked;
 
-        protected override void BeforeSync() => blocked = smart.RcsUsedByOtherModule();
+        protected override void BeforeSync() => blocked = smart.RcsUsedByOtherModule;
 
         bool NoTarget() => Core.Target == null || !Core.Target.NormalTargetExists;
 
