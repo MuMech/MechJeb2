@@ -248,6 +248,13 @@ namespace MuMech
                 Debug.Log(_ascent.Exception);
         }
 
+        // The target can be cleared, destroyed or recovered after the launch started: the launch then keeps the plane it started for.
+        private double TargetLan()
+        {
+            Orbit? targetOrbit = Core.Target.NormalTargetExists ? Core.Target.TargetOrbit : null;
+            return targetOrbit?.LAN ?? Core.LaunchCountdown.TargetLan;
+        }
+
         private bool _optimizeStageFlag => !LogicalPlan?.AllFixedBurnTimes() ?? true;
 
         private void MarkReady()
@@ -270,9 +277,7 @@ namespace MuMech
             double attR = MainBody.Radius + BurnoutAltitude;
 
             bool lanflag = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan || _ascentSettings.LaunchingToLan;
-            double lan = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan
-                ? Core.Target.TargetOrbit.LAN
-                : (double)LAN;
+            double lan = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan ? TargetLan() : (double)LAN;
 
             bool attachAltFlag = !_optimizeStageFlag || BurnoutAltitudeFlag;
 

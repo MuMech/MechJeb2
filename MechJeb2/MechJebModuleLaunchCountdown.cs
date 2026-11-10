@@ -22,6 +22,9 @@ namespace MuMech
 
         public double TMinus => _launchTime - VesselState.Time;
 
+        /// <summary>The target's LAN when a launch into its plane or to its LAN started, for when the target is gone since.</summary>
+        public double TargetLan { get; private set; }
+
         // Starting a countdown flushes the PSG solution and the optimizer restarts cold late in the countdown, which can take longer
         // than the countdown does. Staging with no solution would release the rocket at zero throttle, so T-0 waits for one.
         private bool WaitingForGuidance => AscentSettings.AscentType == AscentType.PSG && Core.Guidance.Solution == null;
@@ -36,6 +39,7 @@ namespace MuMech
             AscentSettings.LaunchingToPlane = true;
 
             Orbit targetOrbit = Core.Target.TargetOrbit;
+            TargetLan = targetOrbit.LAN;
             (double timeToPlane, double inclination) = Astro.MinimumTimeToPlane(
                 MainBody.rotationPeriod,
                 VesselState.Latitude,
@@ -51,7 +55,8 @@ namespace MuMech
         public double StartToTargetLan()
         {
             AscentSettings.LaunchingToMatchLan = true;
-            return Start(TimeToPlane(Core.Target.TargetOrbit.LAN - AscentSettings.LaunchLANDifference));
+            TargetLan = Core.Target.TargetOrbit.LAN;
+            return Start(TimeToPlane(TargetLan - AscentSettings.LaunchLANDifference));
         }
 
         /// <summary>Counts down to the next launch to the PSG LAN setting at the set inclination. Returns the launch UT.</summary>
