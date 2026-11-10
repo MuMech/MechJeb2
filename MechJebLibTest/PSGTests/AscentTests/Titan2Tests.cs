@@ -917,6 +917,67 @@ namespace MechJebLibTest.PSGTests.AscentTests
             psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
         }
 
+        // Circular, with the launch site turning with the Earth for a minute before the warm start, as it does between solves
+        // on the pad.  The old solution is turned about the pole to the launch site, which keeps its inclination, so it warm
+        // starts the solve there as well as it does on the pad it was solved at.
+        [Fact]
+        public void CircularTurnedLaunchSite()
+        {
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 185e+3;
+            double rbody = 6.371e+6;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
+
+            // v0 is the launch site's velocity, w × r0
+            Q3 turn = Q3.AngleAxis(60 * v0.magnitude / r0.x, V3.northpole);
+
+            Ascent.AscentBuilder Builder(V3 r, V3 v) =>
+                Ascent.Builder()
+                   .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+                   .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+                   .Initial(r, v, r.normalized, t0, mu, rbody)
+                   .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false);
+
+            Ascent ascent = Builder(r0, v0).Build();
+            ascent.Run();
+
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Solution old = psg.Solution ?? throw new Exception("null solution");
+
+            old.RotateToLaunchSite(turn * r0);
+
+            // the warm start's guess starts on the turned launch site.  Without the turn the guess misses the box constraints
+            // pinning the initial state, so InitialPrimalFeasibility is 3.8e-3 instead of 1.4e-6, and the solve has to move the
+            // whole trajectory onto the launch site, which takes 15 iterations instead of 2.
+            (old.R(0) * old.Scale.LengthScale).ShouldEqual(turn * r0, 1e-6);
+            (old.V(0) * old.Scale.VelocityScale).ShouldEqual(turn * v0, 1e-6);
+
+            Ascent ascent2 = Builder(turn * r0, turn * v0).OldSolution(old).Build();
+            ascent2.Run();
+
+            Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution2 = (psg2.Solution ?? throw new Exception("null solution")).DeNormalized();
+
+            psg2.PrimalFeasibility.ShouldBeZero(1e-5);
+            psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
+            Assert.InRange(psg2.Iterations, 0, 5);
+
+            solution2.R(0).ShouldEqual(turn * r0, 1e-6);
+            solution2.V(0).ShouldEqual(turn * v0, 1e-6);
+
+            (V3 rf, V3 vf) = solution2.TerminalStateVectors();
+
+            (double smaf, double eccf, double incf, double _, double _, double _, _) = Astro.KeplerianFromStateVectors(mu, rf, vf);
+
+            Astro.PeriapsisFromKeplerian(smaf, eccf).ShouldEqual(PeR, 1e-5);
+            Astro.ApoapsisFromKeplerian(smaf, eccf).ShouldEqual(ApR, 1e-5);
+            incf.ShouldEqual(incT, 1e-5);
+        }
+
         [Fact]
         public void CircularOptimizedBooster()
         {

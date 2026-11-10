@@ -374,6 +374,12 @@ namespace MuMech
             if (Solution == null)
                 return;
 
+            V3 r0 = VesselState.OrbitalPosition.WorldToV3Rotated();
+
+            // the launch site turns with the planet while we wait on the ground, so turn the Solution with it (only a Solution
+            // computed on the ground is turned)
+            Solution.RotateToLaunchSite(r0);
+
             // the Solution's clock is MET, which stays at zero until liftoff, so on the ground this flies its first point
             int idx = Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
 
@@ -384,8 +390,6 @@ namespace MuMech
                 if (idx >= 0)
                     CurrentPhaseTgo = Solution.Tgo(VesselState.MET, idx);
             }
-
-            V3 r0 = VesselState.OrbitalPosition.WorldToV3Rotated();
 
             // lock the inertial heading at tgo < 2.0 for any staging event or terminal burnout
             // (2 seconds is to hopefully allow for variance due to residuals, it may be less)

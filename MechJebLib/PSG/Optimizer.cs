@@ -79,7 +79,10 @@ namespace MechJebLib.PSG
             _nl = Array.Empty<double>();
         }
 
-        private void CalculatePrimalFeasibility(double[] f, bool debug = false)
+        // the root sum square of the violations of the nonlinear constraints f (the cost is f[0]) and of the box constraints
+        // bndl and bndu on the variables x (ALGLIB starts from a guess outside the box constraints, such as a warm start
+        // from a trajectory that does not begin at the initial position)
+        private void CalculatePrimalFeasibility(double[] f, double[] x, double[] bndl, double[] bndu, bool debug = false)
         {
             Cost = f[0];
             PrimalFeasibility = 0;
@@ -98,6 +101,25 @@ namespace MechJebLib.PSG
                 {
                     if (lower > 1e-5 && debug)
                         PrintDebug($"constraint violation {i}: {f[i]} lower limit: {_nl[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
+                    PrimalFeasibility += lower * lower;
+                }
+            }
+
+            for (int i = 0; i < x.Length; i++)
+            {
+                double upper = x[i] - bndu[i];
+                double lower = bndl[i] - x[i];
+
+                if (upper > 0)
+                {
+                    if (upper > 1e-5 && debug)
+                        PrintDebug($"box constraint violation on variable {i}: {x[i]} upper limit: {bndu[i]}");
+                    PrimalFeasibility += upper * upper;
+                }
+                else if (lower > 0)
+                {
+                    if (lower > 1e-5 && debug)
+                        PrintDebug($"box constraint violation on variable {i}: {x[i]} lower limit: {bndl[i]}");
                     PrimalFeasibility += lower * lower;
                 }
             }
@@ -491,7 +513,7 @@ namespace MechJebLib.PSG
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j2);
             _ascentProblem.ConstraintFunction(f, j2, _xGuess, new AscentProblem.ConstraintArgs(true));
 
-            CalculatePrimalFeasibility(f, true);
+            CalculatePrimalFeasibility(f, _xGuess, bndl, bndu, true);
 
             PrintDebug($"Initial Cost: {Cost}");
             PrintDebug($"Initial PrimalFeasibility: {PrimalFeasibility}");
@@ -540,7 +562,7 @@ namespace MechJebLib.PSG
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix jac);
 
             _ascentProblem.ConstraintFunction(f, jac, x, null);
-            CalculatePrimalFeasibility(f, true);
+            CalculatePrimalFeasibility(f, x, bndl, bndu, true);
 
             PrintDebug($"Cost: {Cost}");
             PrintDebug($"PrimalFeasibility: {PrimalFeasibility}");

@@ -369,7 +369,13 @@ namespace MuMech
                 }
 
                 if (_solution != null)
+                {
+                    // the launch site has turned with the planet since a solution computed on the ground was solved, so turn it
+                    // onto this problem's initial position before warm starting from it (only a solution computed on the ground
+                    // is turned)
+                    _solution.RotateToLaunchSite(Core.StageStats.VacR);
                     ascentBuilder.OldSolution(_solution);
+                }
 
                 bool massContinuity = false;
 

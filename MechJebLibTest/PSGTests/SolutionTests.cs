@@ -22,12 +22,15 @@ namespace MechJebLibTest.PSGTests
 
         private static readonly V3 _tinCanR0 = new V3(365592.912061998, -475862.737003702, -1017.92554628857);
         private static readonly V3 _tinCanV0 = new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06);
+        private static readonly V3 _tinCanU0 = new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861);
 
         // KerbinTests.MainSailTinCanVacuum: a burn, a coast-during coast and the rest of the burn.  With a plan the three phases
-        // are built from its stages 2, 1 and 0 (see TinCanFlightPlan).  met0 is the MET of the initial state.
-        private static Ascent.AscentBuilder TinCanBuilder(FlightPlan? plan = null, double met0 = 0)
+        // are built from its stages 2, 1 and 0 (see TinCanFlightPlan).  met0 is the MET of the initial state, and turn turns
+        // the initial state (the launch site turning with the planet when it turns about the pole).
+        private static Ascent.AscentBuilder TinCanBuilder(FlightPlan? plan = null, double met0 = 0, Q3? turn = null)
         {
             bool hasPlan = plan != null;
+            Q3 q = turn ?? Q3.identity;
 
             Ascent.AscentBuilder builder = Ascent.Builder()
                .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0,
@@ -35,7 +38,7 @@ namespace MechJebLibTest.PSGTests
                .AddCoast(79699.9986022711, 79699.9986022711, 0, 450, 0, 0, massContinuity: true, flightPlanIndex: hasPlan ? 1 : -1)
                .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0, massContinuity: true,
                     flightPlanIndex: hasPlan ? 0 : -1)
-               .Initial(_tinCanR0, _tinCanV0, new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), met0, 3531600000000, 600000)
+               .Initial(q * _tinCanR0, q * _tinCanV0, q * _tinCanU0, met0, 3531600000000, 600000)
                .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false);
 
             if (plan != null)
@@ -333,6 +336,186 @@ namespace MechJebLibTest.PSGTests
             (V3 rf1, V3 vf1) = s1.TerminalStateVectors();
             rf1.ShouldEqual(rf0, SOLVE_TOL);
             vf1.ShouldEqual(vf0, SOLVE_TOL);
+        }
+
+        // how far the launch site turns about the pole in the RotateToLaunchSite tests, about 34 s of Kerbin's rotation
+        private const double TURN = 0.01;
+
+        // A solution computed on the ground is turned about the pole to follow the launch site, which turns every vector it
+        // returns and nothing else, and carries its initial state onto the moved launch site.  Only the direction of r0
+        // matters, so the normalized solution turns the same with r0 in meters, and each call replaces the last turn.
+        [Fact]
+        public void RotateToLaunchSiteTurnsAboutThePole()
+        {
+            Q3 turn = Q3.AngleAxis(TURN, V3.northpole);
+            V3 r0   = turn * _tinCanR0;
+
+            Ascent ascent = TinCanBuilder().Build();
+            ascent.Run();
+
+            Solution normalized = ascent.GetOptimizer()?.Solution ?? throw new Exception("null solution");
+            using Solution solution = normalized.DeNormalized();
+            using Solution turned   = normalized.DeNormalized();
+
+            turned.RotateToLaunchSite(r0);
+
+            // a copy carries the turn, and so does the SI copy of the normalized solution turned with r0 in meters
+            using Solution copy = turned.DeepCopy();
+            normalized.RotateToLaunchSite(r0);
+            using Solution turnedSI = normalized.DeNormalized();
+
+            turned.T0.ShouldBeZero();
+            turned.R(0).ShouldEqual(r0, 1e-6);
+            turned.V(0).ShouldEqual(turn * _tinCanV0, 1e-6);
+
+            double tf = solution.Tf;
+            for (int i = 0; i <= SAMPLES; i++)
+            {
+                double t = tf * i / SAMPLES;
+
+                turned.R(t).ShouldEqual(turn * solution.R(t), 1e-12);
+                turned.V(t).ShouldEqual(turn * solution.V(t), 1e-12);
+                turned.U(t).ShouldEqual(turn * solution.U(t), 1e-12);
+
+                (V3 r, V3 v) = turned.StateVectors(t);
+                r.ShouldEqual(turned.R(t), 0);
+                v.ShouldEqual(turned.V(t), 0);
+
+                (V3 u, double throttle) = turned.InertialGuidance(t, 0.25);
+                (V3 u0, double throttle0) = solution.InertialGuidance(t, 0.25);
+                u.ShouldEqual(turn * u0, 1e-12);
+                throttle.ShouldEqual(throttle0, 0);
+
+                turned.M(t).ShouldEqual(solution.M(t), 0);
+                turned.DV(t).ShouldEqual(solution.DV(t), 0);
+                turned.Tgo(t).ShouldEqual(solution.Tgo(t), 0);
+                turned.Vgo(t).ShouldEqual(solution.Vgo(t), 0);
+
+                copy.R(t).ShouldEqual(turned.R(t), 0);
+                copy.V(t).ShouldEqual(turned.V(t), 0);
+                copy.U(t).ShouldEqual(turned.U(t), 0);
+
+                turnedSI.R(t).ShouldEqual(turned.R(t), 1e-14);
+                turnedSI.V(t).ShouldEqual(turned.V(t), 1e-14);
+                turnedSI.U(t).ShouldEqual(turned.U(t), 1e-14);
+            }
+
+            (V3 rf, V3 vf) = turned.TerminalStateVectors();
+            (V3 rf0, V3 vf0) = solution.TerminalStateVectors();
+            rf.ShouldEqual(turn * rf0, 1e-12);
+            vf.ShouldEqual(turn * vf0, 1e-12);
+
+            for (int p = 0; p < solution.Segments; p++)
+            {
+                turned.StartTime(p).ShouldEqual(solution.StartTime(p), 0);
+                turned.EndTime(p).ShouldEqual(solution.EndTime(p), 0);
+            }
+
+            // the same r0 again changes nothing, and the launch site it was solved at undoes the turn (to round-off, as the
+            // solution keeps its initial position in its own units)
+            turned.RotateToLaunchSite(r0);
+            turned.RotateToLaunchSite(r0);
+            for (int i = 0; i <= SAMPLES; i++)
+            {
+                double t = tf * i / SAMPLES;
+                turned.R(t).ShouldEqual(copy.R(t), 0);
+                turned.V(t).ShouldEqual(copy.V(t), 0);
+            }
+
+            turned.RotateToLaunchSite(_tinCanR0);
+            for (int i = 0; i <= SAMPLES; i++)
+            {
+                double t = tf * i / SAMPLES;
+                turned.R(t).ShouldEqual(solution.R(t), 1e-15);
+                turned.V(t).ShouldEqual(solution.V(t), 1e-15);
+                turned.U(t).ShouldEqual(solution.U(t), 1e-15);
+            }
+        }
+
+        // a solution computed in flight has nothing to follow, so it is never turned
+        [Fact]
+        public void RotateToLaunchSiteIgnoresAFlightSolution()
+        {
+            const double MET0 = 100;
+
+            Ascent ascent = TinCanBuilder(met0: MET0).Build();
+            ascent.Run();
+
+            using Solution solution = (ascent.GetOptimizer()?.Solution ?? throw new Exception("null solution")).DeNormalized();
+            using Solution turned   = solution.DeepCopy();
+
+            turned.RotateToLaunchSite(Q3.AngleAxis(TURN, V3.northpole) * _tinCanR0);
+
+            for (int i = 0; i <= SAMPLES; i++)
+            {
+                double t = MET0 + (solution.Tf - MET0) * i / SAMPLES;
+                turned.R(t).ShouldEqual(solution.R(t), 0);
+                turned.V(t).ShouldEqual(solution.V(t), 0);
+                turned.U(t).ShouldEqual(solution.U(t), 0);
+            }
+        }
+
+        // Warm starting on the pad from a solution solved before the launch site turned, as the solver does between solves on
+        // the pad.  TinCan is in vacuum with an equatorial target, so it is symmetric about the pole: the old solution turned
+        // to the launch site warm starts the problem there as well as it does on the pad it was solved at, and the solve lands
+        // on the old trajectory turned.  The old solution is itself a warm start, as on the pad, since a warm start from the
+        // cold start changes the objective and takes many iterations wherever it is.  Without the turn the guess misses the
+        // box constraints pinning the initial state, so InitialPrimalFeasibility is 1e-2 instead of 4e-11, and the solve still
+        // lands on the turned trajectory, but takes 17 iterations instead of 1 to move the whole trajectory onto the launch
+        // site.
+        [Fact]
+        public void WarmStartFromATurnedLaunchSite()
+        {
+            const double SOLVE_TOL = 1e-4;
+
+            Q3 turn = Q3.AngleAxis(TURN, V3.northpole);
+
+            Ascent ascent = TinCanBuilder().OptimizerTimeout(Timeout.Infinite).Build();
+            ascent.Run();
+
+            Ascent same = TinCanBuilder().OptimizerTimeout(Timeout.Infinite)
+               .OldSolution(ascent.GetOptimizer()?.Solution ?? throw new Exception("null solution")).Build();
+            same.Run();
+
+            Solution old = same.GetOptimizer()?.Solution ?? throw new Exception("null solution");
+            using Solution s0 = old.DeNormalized();
+
+            old.RotateToLaunchSite(turn * _tinCanR0);
+
+            Ascent warm = TinCanBuilder(turn: turn).OptimizerTimeout(Timeout.Infinite).OldSolution(old).Build();
+            warm.Run();
+
+            Optimizer psg = warm.GetOptimizer() ?? throw new Exception("null optimizer");
+            psg.Success().ShouldBeTrue();
+            psg.InitialPrimalFeasibility.ShouldBeZero(1e-3);
+            Assert.InRange(psg.Iterations, 0, 5);
+            using Solution s1 = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
+
+            s1.T0.ShouldBeZero();
+            s1.Segments.ShouldEqual(s0.Segments);
+            s1.Tf.ShouldEqual(s0.Tf, SOLVE_TOL);
+
+            for (int p = 0; p < s0.Segments; p++)
+            {
+                s1.StartTime(p).ShouldEqual(s0.StartTime(p), SOLVE_TOL);
+                s1.EndTime(p).ShouldEqual(s0.EndTime(p), SOLVE_TOL);
+            }
+
+            // short of the end, where Vgo goes to zero and the comparison would become an absolute one
+            double tf = s0.Tf;
+            for (int i = 0; i < SAMPLES; i++)
+            {
+                double t = tf * i / SAMPLES;
+                s1.R(t).ShouldEqual(turn * s0.R(t), SOLVE_TOL);
+                s1.V(t).ShouldEqual(turn * s0.V(t), SOLVE_TOL);
+                s1.M(t).ShouldEqual(s0.M(t), SOLVE_TOL);
+                s1.Vgo(t).ShouldEqual(s0.Vgo(t), SOLVE_TOL);
+            }
+
+            (V3 rf0, V3 vf0) = s0.TerminalStateVectors();
+            (V3 rf1, V3 vf1) = s1.TerminalStateVectors();
+            rf1.ShouldEqual(turn * rf0, SOLVE_TOL);
+            vf1.ShouldEqual(turn * vf0, SOLVE_TOL);
         }
 
         /*
