@@ -14,33 +14,7 @@ namespace MuMech.UI
 
         protected override float MinWidth => 240;
 
-        MechJebModuleRCSBalancer Balancer => window.balancer;
-
-        // the tuning parameters as they were last frame, to detect an edit (IMGUI compares before and after drawing)
-        bool haveLast;
-        double lastOverdrive, lastScale, lastTorque, lastTranslate, lastWaste;
-
-        protected override void BeforeSync()
-        {
-            MechJebModuleRCSBalancer b = Balancer;
-            if (b == null) return;
-
-            if (b.smartTranslation && haveLast &&
-                (lastOverdrive != b.overdrive || lastScale != b.overdriveScale || lastTorque != b.tuningParamFactorTorque ||
-                    lastTranslate != b.tuningParamFactorTranslate || lastWaste != b.tuningParamFactorWaste))
-            {
-                b.UpdateTuningParameters();
-            }
-
-            lastOverdrive = b.overdrive;
-            lastScale = b.overdriveScale;
-            lastTorque = b.tuningParamFactorTorque;
-            lastTranslate = b.tuningParamFactorTranslate;
-            lastWaste = b.tuningParamFactorWaste;
-            haveLast = true;
-
-            window.MaintainBalancerUser();
-        }
+        MechJebModuleRCSBalancer Balancer => window.Balancer;
 
         static void SimpleBox(KodeWindow w, UIObject parent, string key, Func<EditableDoubleMult> ed, string unit = null) =>
             EditUi.Row(w, parent, key, ed, unit);
@@ -49,12 +23,7 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            w.Toggle(r, "#MechJeb_RCSBalancer_checkbox1", () => Balancer.smartTranslation, v => //"Smart translation"
-            {
-                bool was = Balancer.smartTranslation;
-                Balancer.smartTranslation = v;
-                if (was != v) window.OnSmartTranslationToggled();
-            });
+            w.Toggle(r, "#MechJeb_RCSBalancer_checkbox1", () => Balancer.smartTranslation, v => Balancer.smartTranslation = v); //"Smart translation"
 
             Layout smart = KodeWindow.Panel(r);
             w.Visible(smart.gameObject, () => Balancer.smartTranslation);
