@@ -224,6 +224,16 @@ namespace MuMech
         public bool LaunchingToLan;
         public bool OverrideWarpToPlane;
 
+        /// <summary>
+        ///     PSG plans the ascent at full thrust and manages the throttle itself, so the throttle and electric limits are off while
+        ///     it flies. Both are persistent settings that a classic ascent or a kOS script may have left on.
+        /// </summary>
+        public void ForcePsgThrustLimits()
+        {
+            Core.Thrust.LimitThrottle = false;
+            Core.Thrust.ElectricThrottle = false;
+        }
+
         /*
          * Helpers for dealing with switching between modules
          */

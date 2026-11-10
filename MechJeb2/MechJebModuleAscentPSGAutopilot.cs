@@ -68,6 +68,8 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            AscentSettings.ForcePsgThrustLimits();
+
             // the guidance needs a flight plan, which nothing else makes unless the Ascent window is open
             if (Core.PSGSimulation.FlightPlan == null)
             {
