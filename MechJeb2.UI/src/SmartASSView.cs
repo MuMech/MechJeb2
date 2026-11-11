@@ -30,7 +30,6 @@ namespace MuMech.UI
         protected override void BeforeSync()
         {
             otherUsers = ss.OtherUsersControlAttitude;
-            if (!otherUsers) ss.ApplyPerFrameState();
         }
 
         static string TargetKey(Target t) => "#MechJeb_SmartASS_button" + (11 + (int)t);

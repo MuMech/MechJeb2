@@ -174,13 +174,13 @@ namespace MuMech
         internal bool ShowsSurfaceAngles =>
             mode == Mode.SURFACE && (target == Target.SURFACE || target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE);
 
-        /// <summary>The per-frame side effects WindowGUI has outside the "other users" case, for the KodeKit window.</summary>
-        internal void ApplyPerFrameState()
+        // Smooth control exists only for the surface angle targets, and the Force pitch/yaw/roll toggles apply to them: AttitudeTo
+        // sets all three axes, so they are applied again after it, window open or closed.
+        private void ApplySurfaceState()
         {
-            // Disable smooth control for modes that don't have it
             if (!ShowsSurfaceAngles)
                 smoothControl = false;
-            else
+            else if (Core.Attitude.Users.Contains(this))
                 Core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
         }
 
@@ -338,6 +338,8 @@ namespace MuMech
                     Core.Attitude.AttitudeTo(attitude, reference, this);
             }
 
+            ApplySurfaceState();
+
             if (resetPID) { Core.Attitude.Controller.Reset(); }
         }
 
@@ -346,6 +348,8 @@ namespace MuMech
             base.OnFixedUpdate();
 
             OtherUsersControlAttitude = CheckOtherUsers();
+            if (!OtherUsersControlAttitude)
+                ApplySurfaceState();
 
             if (!smoothControl || target == Target.OFF || !Core.Attitude.Users.Contains(this))
             {
