@@ -209,8 +209,9 @@ namespace MuMech
             return VesselState.RCSThrustAvailable.GetMagnitude(localAxis) / VesselState.Mass;
         }
 
-        // The velocity of the point we dock to, and not of the target's CoM: the docking magnets turn the target when the port's axis misses its CoM,
-        // and the port then slides away from a vessel that's matching the CoM. The target's spin is mass-weighted, so its bending stays out of this.
+        // The target's velocity where our docking point is (its CoM's, plus its spin times the lever from its CoM to our docking point), and not its CoM's:
+        // the docking magnets turn the target when the port's axis misses its CoM, and the port then slides away from a vessel that's matching the CoM.
+        // The target's spin is mass-weighted, so its bending stays out of this.
         private Vector3d TargetPointVelocity()
         {
             Vector3d velocity = Core.Target.TargetOrbit.GetVel();
