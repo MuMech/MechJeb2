@@ -45,7 +45,7 @@ namespace MuMech.AttitudeControllers
             return TrackedRotation;
         }
 
-        public (Vector3d desired, Vector3d error, double distance) Desired(QuaternionD desiredRotation)
+        public (Vector3d desired, Vector3d error) Desired(QuaternionD desiredRotation)
         {
             QuaternionD deltaRotation = QuaternionD.Inverse(_previousRotation) * desiredRotation;
             Vector3d deltaEuler = MathExtensions.EulerAngles(deltaRotation);
@@ -57,9 +57,7 @@ namespace MuMech.AttitudeControllers
 
             var error = new Vector3d(deltaPitch, deltaRoll, deltaYaw);
 
-            double distance = SafeAcos(Cos(deltaPitch) * Cos(deltaYaw));
-
-            return (TrackedRotation + error, error, distance);
+            return (TrackedRotation + error, error);
         }
 
         // This method is used to reset the accumulated rotation

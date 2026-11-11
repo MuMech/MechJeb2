@@ -120,9 +120,6 @@ namespace MuMech.AttitudeControllers
         internal Vector3d _current = Vector3d.zero;
         internal Vector3d _desired = Vector3d.zero;
 
-        /* error */
-        private double _distance;
-
         /* max angular acceleration */
         internal Vector3d _maxAlpha = Vector3d.zero;
 
@@ -228,7 +225,7 @@ namespace MuMech.AttitudeControllers
             QuaternionD currentAttitude = (QuaternionD)vesselTransform.transform.rotation * MathExtensions.Euler(-90, 0, 0);
 
             _current = _directionTracker.Update(currentAttitude);
-            (_desired, _error, _distance) = _directionTracker.Desired(Ac.RequestedAttitude);
+            (_desired, _error) = _directionTracker.Desired(Ac.RequestedAttitude);
 
             // low-pass filter the control torque
             _controlTorque = _controlTorque == Vector3d.zero ? Ac.Torque : _controlTorque + SmoothTorque * (Ac.Torque - _controlTorque);
@@ -242,7 +239,7 @@ namespace MuMech.AttitudeControllers
             double warpFactor = Ac.VesselState.DeltaT / 0.02;
 
             // the roll control range gates roll on the pointing error of the axes that are controlled: with pitch and yaw left free their
-            // error never closes, and roll would never be flown. With both controlled this is _distance
+            // error never closes, and roll would never be flown. With both controlled this is the angle between the two directions
             double gateDistance = SafeAcos(Cos(_error[0] * Ac.AxisControl.x) * Cos(_error[2] * Ac.AxisControl.z));
 
             // see https://archive.is/NqoUm and the "Alt Hold Controller", the acceleration PID is not implemented, so we only
