@@ -15,7 +15,7 @@ namespace MuMech
 
         // A window split from the module that does its work (SmartASS, Translatron, Warp Helper): that module's type name.
         // MechJebCore loads the window's settings from that module's node until the window has its own (they were saved there
-        // before the split), gates it with that module's part cfg entry, and removes it when that module is blacklisted.
+        // before the split) and gates it with that module's part cfg entry.
         public virtual string LogicModuleName => null;
 
         // the module whose controller users make the window's menu entry show as active

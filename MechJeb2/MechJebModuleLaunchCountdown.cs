@@ -83,8 +83,7 @@ namespace MuMech
                 return false;
             }
 
-            // null when a part's blacklist removed the controller
-            if (Core.Solarpanel?.RetractForLaunch() ?? true)
+            if (Core.Solarpanel.RetractForLaunch())
                 return true;
 
             status.Set(Localizer.Format("#MechJeb_Ascent_status5")); //"Retracting solar panels"
