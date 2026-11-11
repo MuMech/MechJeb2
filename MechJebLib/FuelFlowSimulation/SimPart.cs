@@ -99,6 +99,7 @@ namespace MechJebLib.FuelFlowSimulation
             p.Resources.Clear();
             p._resourceDrains.Clear();
             p._rcsDrains.Clear();
+            p._resourceKeys.Clear();
 
             // every field back to its declared default: a pooled part goes to whichever vessel borrows it next, and a field
             // that the builder or the updater sets only in some cases would otherwise keep the last vessel's value
