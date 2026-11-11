@@ -92,9 +92,6 @@ namespace MuMech
             }
         }
 
-        [KSPField(isPersistant = false)]
-        public string blacklist = "";
-
         [KSPField]
         private ConfigNode _partSettings;
 
@@ -755,8 +752,7 @@ namespace MuMech
                 try
                 {
                     if (t != typeof(ComputerModule) && t != typeof(DisplayModule) && t != typeof(MechJebModuleCustomInfoWindow)
-                        && t != typeof(AutopilotModule)
-                        && !blacklist.Contains(t.Name) && GetComputerModule(t.Name) == null)
+                        && t != typeof(AutopilotModule) && GetComputerModule(t.Name) == null)
                     {
                         ConstructorInfo constructorInfo = t.GetConstructor(new[] { typeof(MechJebCore) });
                         if (constructorInfo != null)
@@ -791,11 +787,6 @@ namespace MuMech
             Spinup = GetComputerModule<MechJebModuleSpinupController>();
             Hoverslam = GetComputerModule<MechJebModuleHoverslamSimulation>();
             SmartASS = GetComputerModule<MechJebModuleSmartASS>();
-
-            // a window goes with its logic module when a blacklist removed that one
-            foreach (DisplayModule window in GetComputerModules<DisplayModule>().ToList())
-                if (window.LogicModuleName != null && GetComputerModule(window.LogicModuleName) == null)
-                    RemoveComputerModule(window);
         }
 
         public override void OnLoad(ConfigNode sfsNode)

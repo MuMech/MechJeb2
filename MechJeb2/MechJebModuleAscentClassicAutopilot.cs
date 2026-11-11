@@ -98,9 +98,8 @@ namespace MuMech
 
             if (Countdown.HoldForLiftoff(Status)) return;
 
-            // null when a part's blacklist removed the controller
-            Core.Solarpanel?.DriveForAscent();
-            Core.AntennaControl?.DriveForAscent();
+            Core.Solarpanel.DriveForAscent();
+            Core.AntennaControl.DriveForAscent();
 
             switch (_mode)
             {
