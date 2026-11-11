@@ -243,6 +243,9 @@ namespace MuMech
                 mod.ShowHideWindow();
         }
 
+        // how many modules of this pass had each icon name: custom windows can share a title, and each gets its own button
+        private readonly Dictionary<string, int> _iconNameCounts = new Dictionary<string, int>();
+
         public void SetupToolBarButtons()
         {
             if (!ToolbarManager.ToolbarAvailable)
@@ -250,11 +253,16 @@ namespace MuMech
 
             SetupMainToolbarButton();
 
+            _iconNameCounts.Clear();
             foreach (DisplayModule module in Core.GetDisplayModules(DisplayOrder.instance).Where(m => m.ShowInMenu && !m.TechLocked))
             {
                 string name = GetCleanName(module.IconName());
+                _iconNameCounts.TryGetValue(name, out int occurrence);
+                _iconNameCounts[name] = occurrence + 1;
+                // the first module with a name keeps the plain id, the next ones get a numbered one
+                string key = occurrence == 0 ? name : name + "_" + occurrence;
 
-                if (!toolbarButtons.TryGetValue(name, out Button button))
+                if (!toolbarButtons.TryGetValue(key, out Button button))
                 {
                     Debug.Log("Create button for module " + module.GetName());
 
@@ -262,7 +270,7 @@ namespace MuMech
                     string TexturePathActive = TexturePath + "_active";
 
                     button = new Button();
-                    button.button = ToolbarManager.Instance.add("MechJeb2", name);
+                    button.button = ToolbarManager.Instance.add("MechJeb2", key);
 
                     if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
                     {
@@ -284,7 +292,7 @@ namespace MuMech
                         button.texturePathActive = TexturePathActive;
                     }
 
-                    toolbarButtons[name] = button;
+                    toolbarButtons[key] = button;
 
                     button.button.ToolTip = "MechJeb " + module.GetName();
                     button.button.OnClick += b =>
@@ -295,7 +303,8 @@ namespace MuMech
 
                         // the module that made the button belongs to the vessel that was active then
                         DisplayModule mod = mj.GetDisplayModules(DisplayOrder.instance)
-                           .FirstOrDefault(m => m.ShowInMenu && GetCleanName(m.IconName()) == name);
+                           .Where(m => m.ShowInMenu && !m.TechLocked && GetCleanName(m.IconName()) == name)
+                           .Skip(occurrence).FirstOrDefault();
                         if (mod != null)
                         {
                             mod.Enabled = !mod.Enabled;
