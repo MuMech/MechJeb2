@@ -834,49 +834,76 @@ namespace MuMech
             }
         }
 
-        // The rotation flags of the thrusters MechJeb turned off, with their own values (an editor setting) to give back.
-        private readonly Dictionary<ModuleRCS, (bool pitch, bool yaw, bool roll)> _rcsRotationSaved =
-            new Dictionary<ModuleRCS, (bool pitch, bool yaw, bool roll)>();
+        // The rotation flags of the thrusters MechJeb turned off, with their own values (an editor setting) to give back, and the
+        // controller that turned them off. Shared by every core: a thruster that leaves with an undock keeps its own values when the
+        // other vessel's MechJeb turns it off in turn, and the save of any vessel can write them.
+        private static readonly Dictionary<ModuleRCS, (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner)> _rcsRotationSaved =
+            new Dictionary<ModuleRCS, (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner)>();
 
-        // the part count when the flags were last turned off: thrusters that come with a docking or go with staging are caught again
+        private static readonly List<ModuleRCS> _rcsToRestore = new List<ModuleRCS>();
+
+        // the part count when the flags were last turned off: thrusters that come with a docking or go with staging or an undock
+        // are caught again
         private int _rcsPartCount = -1;
 
         private void DisableRcsRotation()
         {
+            // thrusters that left this vessel get their own flags back, unless the other vessel's MechJeb has already taken them over
+            RestoreRcsRotation(true);
+
             _rcsPartCount = Vessel.parts.Count;
             foreach (ModuleRCS pm in Vessel.FindPartModulesImplementing<ModuleRCS>())
             {
-                if (!_rcsRotationSaved.ContainsKey(pm))
-                    _rcsRotationSaved[pm] = (pm.enablePitch, pm.enableYaw, pm.enableRoll);
+                if (_rcsRotationSaved.TryGetValue(pm, out (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner) v))
+                    _rcsRotationSaved[pm] = (v.pitch, v.yaw, v.roll, this);
+                else
+                    _rcsRotationSaved[pm] = (pm.enablePitch, pm.enableYaw, pm.enableRoll, this);
                 pm.enablePitch = pm.enableRoll = pm.enableYaw = false;
             }
         }
 
-        private void RestoreRcsRotation()
+        // Gives back the flags of the thrusters this controller turned off; with onlyDeparted, only of those no longer on its vessel.
+        // Entries of destroyed thrusters are dropped.
+        private void RestoreRcsRotation(bool onlyDeparted = false)
         {
-            foreach (KeyValuePair<ModuleRCS, (bool pitch, bool yaw, bool roll)> kv in _rcsRotationSaved)
+            _rcsToRestore.Clear();
+            foreach (KeyValuePair<ModuleRCS, (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner)> kv in _rcsRotationSaved)
             {
-                if (kv.Key == null) continue;
-                kv.Key.enablePitch = kv.Value.pitch;
-                kv.Key.enableYaw   = kv.Value.yaw;
-                kv.Key.enableRoll  = kv.Value.roll;
+                if (kv.Key == null || (kv.Value.owner == this && (!onlyDeparted || kv.Key.part == null || kv.Key.part.vessel != Vessel)))
+                    _rcsToRestore.Add(kv.Key);
             }
 
-            _rcsRotationSaved.Clear();
-            _rcsPartCount = -1;
+            foreach (ModuleRCS pm in _rcsToRestore)
+            {
+                if (pm != null)
+                {
+                    (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner) v = _rcsRotationSaved[pm];
+                    pm.enablePitch = v.pitch;
+                    pm.enableYaw   = v.yaw;
+                    pm.enableRoll  = v.roll;
+                }
+
+                _rcsRotationSaved.Remove(pm);
+            }
+
+            _rcsToRestore.Clear();
+            if (!onlyDeparted)
+                _rcsPartCount = -1;
         }
 
         // The flags are persistent: a save while they are off writes the thrusters' own values instead, or the vessel would keep them off.
-        // KSP snapshots the parts when it builds the ProtoVessel from the live vessel, then fires this with no node.
+        // KSP snapshots the parts when it builds the ProtoVessel from the live vessel, then fires this with no node. Any vessel's
+        // snapshot is patched, so a thruster that left with an undock is saved with its own values too.
         private void OnProtoVesselSave(GameEvents.FromToAction<ProtoVessel, ConfigNode> data)
         {
-            if (_rcsRotationSaved.Count == 0 || data.from == null || data.to != null || data.from.vesselRef != Vessel)
+            if (_rcsRotationSaved.Count == 0 || data.from == null || data.to != null)
                 return;
 
             foreach (ProtoPartSnapshot part in data.from.protoPartSnapshots)
             foreach (ProtoPartModuleSnapshot module in part.modules)
             {
-                if (!(module.moduleRef is ModuleRCS rcs) || module.moduleValues == null || !_rcsRotationSaved.TryGetValue(rcs, out (bool pitch, bool yaw, bool roll) v))
+                if (!(module.moduleRef is ModuleRCS rcs) || module.moduleValues == null ||
+                    !_rcsRotationSaved.TryGetValue(rcs, out (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner) v))
                     continue;
                 module.moduleValues.SetValue("enablePitch", v.pitch.ToString());
                 module.moduleValues.SetValue("enableYaw", v.yaw.ToString());
