@@ -24,6 +24,7 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             _placedCircularizeNode = false;
+            _coastWarping = false;
             _mode = AscentMode.PRELAUNCH;
             _actualTurnStart = 0;
 
@@ -190,6 +191,9 @@ namespace MuMech
             Status.Set(Localizer.Format("#MechJeb_Ascent_status22")); //"Gravity turn"
         }
 
+        // whether the coast asked for its 2x physics warp
+        private bool _coastWarping;
+
         private void DriveCoastToApoapsis()
         {
             if (VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude())
@@ -209,7 +213,16 @@ namespace MuMech
                 Core.Thrust.ThrustOff();
 
             if (Core.Node.Autowarp)
+            {
                 Core.Warp.WarpPhysicsAtRate(2); // 2x physics warp
+                _coastWarping = true;
+            }
+            else if (_coastWarping)
+            {
+                // Auto-warp unticked during the coast ends the warp it started
+                Core.Warp.MinimumWarp();
+                _coastWarping = false;
+            }
 
             Status.Set(Localizer.Format("#MechJeb_Ascent_status23")); //"Coasting to edge of atmosphere"
         }

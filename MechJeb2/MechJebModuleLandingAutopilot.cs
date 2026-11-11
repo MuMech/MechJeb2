@@ -141,6 +141,8 @@ namespace MuMech
         //public interface:
         public void LandAtPositionTarget(object controller)
         {
+            // engaged anew, it may warp again even after the player stopped another autopilot's warp
+            Core.Warp.ClearStop();
             LandAtTarget = true;
             Users.Add(controller);
 
@@ -164,6 +166,7 @@ namespace MuMech
 
         public void LandUntargeted(object controller)
         {
+            Core.Warp.ClearStop();
             LandAtTarget = false;
             Users.Add(controller);
 
@@ -238,6 +241,9 @@ namespace MuMech
             Core.Thrust.Users.Remove(this);
             if (Core.Landing.RCSAdjustment)
                 Core.RCS.Enabled = false;
+            // a warp the landing started does not run on without it
+            if (Core.Warp.MechJebWarping)
+                Core.Warp.MinimumWarp();
             SetStep(null);
         }
 

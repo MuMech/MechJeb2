@@ -124,8 +124,9 @@ namespace MuMech
                     double velocityGuess = Math.Max(Math.Abs(VesselState.SpeedVertical), VesselState.LocalGravity * 5);
                     Core.Warp.WarpRegularAtRate((float)(VesselState.AltitudeASL / (10 * velocityGuess)));
                 }
-                else
+                else if (Core.Warp.MechJebWarping)
                 {
+                    // MechJeb's own warp ends; with Auto-warp off the player may warp by hand
                     Core.Warp.MinimumWarp();
                 }
 

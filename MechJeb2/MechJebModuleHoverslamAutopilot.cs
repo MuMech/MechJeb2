@@ -48,6 +48,7 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             Reset();
+            _warping = false;
             // engaged anew, it may warp again even after the player stopped the last warp
             Core.Warp.ClearStop();
             Core.Thrust.Users.Add(this);
@@ -59,7 +60,10 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             Reset();
-            Core.Warp.MinimumWarp(true);
+            // only a warp the coast started: one the player started by hand goes on
+            if (_warping && Core.Warp.MechJebWarping)
+                Core.Warp.MinimumWarp(true);
+            _warping = false;
             Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
             Core.Attitude.Users.Remove(this);
