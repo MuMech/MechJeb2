@@ -96,7 +96,12 @@ namespace MuMech.UI
             // how long the menu takes to slide open or closed
             Layout anim = KodeWindow.Row(r);
             KodeWindow.Label(anim, "#MechJeb_MenuAnimationTime");
-            w.Slider(anim, () => settings.MenuAnimationTime, v => settings.MenuAnimationTime = Mathf.Round(v * 20) / 20, 0f, 1f);
+            // marked dirty so it is saved, like the other settings; it needs no ApplySettings (the menu reads it as it slides)
+            w.Slider(anim, () => settings.MenuAnimationTime, v =>
+            {
+                settings.MenuAnimationTime = Mathf.Round(v * 20) / 20;
+                settings.Dirty = true;
+            }, 0f, 1f);
             float shownTime = -1;
             string timeText = "";
             w.BoundLabel(anim, () =>
@@ -108,7 +113,7 @@ namespace MuMech.UI
                 }
                 return timeText;
             }).transform.parent.GetComponent<UnityEngine.UI.LayoutElement>().preferredWidth = 40;
-            Tooltips.Add(anim.gameObject, "How long the MechJeb menu takes to slide open or closed. 0 opens it at once.");
+            Tooltips.Add(anim.gameObject, "#MechJeb_MenuAnimationTime_tooltip");
 
             RoverUi.ToggleRow(w, r, editor, "Toggle:Settings.RssMode");
 
