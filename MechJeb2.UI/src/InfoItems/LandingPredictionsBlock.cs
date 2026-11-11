@@ -107,14 +107,31 @@ namespace MuMech.UI
             GuidanceUi.Live(w, landed, p10.Pre + "1234 km" + p11.Pre + "12.3g" + p12.Pre + "1234.5m/s" + p13.Pre + "123d 12h 12m 12.3s", false, ct =>
             {
                 ReentrySimulation.Result res = Result;
-                CelestialBody body = Body;
-                // the distance to the target is for a position target on this body: without one the target coordinates are
-                // 0/0, or those of an earlier target, and the distance means nothing
+                // the prediction lands on its own body, which is not the vessel's for a return from a moon
+                CelestialBody body = res.Body != null ? res.Body : Body;
+                // the distance to the target is for a position target, or a landed vessel, on the body the prediction lands on:
+                // otherwise the target coordinates are 0/0, those of an earlier target or of another body, and the distance
+                // means nothing
+                bool hasTarget = false;
+                double targetLat = 0, targetLon = 0;
                 if (Core.Target.Target is PositionTarget && Core.Target.targetBody == body)
+                {
+                    hasTarget = true;
+                    targetLat = Core.Target.targetLatitude;
+                    targetLon = Core.Target.targetLongitude;
+                }
+                else if (Core.Target.Target is Vessel target && target.LandedOrSplashed && target.mainBody == body)
+                {
+                    hasTarget = true;
+                    targetLat = target.latitude;
+                    targetLon = target.longitude;
+                }
+
+                if (hasTarget)
                 {
                     double error = Vector3d.Distance(
                         body.GetWorldSurfacePosition(res.EndPosition.Latitude, res.EndPosition.Longitude, 0) - body.position,
-                        body.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) - body.position);
+                        body.GetWorldSurfacePosition(targetLat, targetLon, 0) - body.position);
                     ct.Append(p10.Pre).AppendSI(error).Append('m').Append(p11.Pre);
                 }
                 else
