@@ -17,7 +17,7 @@ namespace MuMech
 
         // Smart RCS translation. The balancer is its own user while it is on, so the setting works the same from the RCS
         // Balancer window and from a custom window's item, with the Balancer window open or closed. The lower-case name is the
-        // item id that saved custom windows hold. A loaded value bypasses the setter: OnStart adds the user for it.
+        // item id that saved custom windows hold. A loaded value bypasses the setter: OnStart and OnLoad set the user from it.
         [ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)] //Smart RCS translation
         public bool smartTranslation
         {
@@ -171,6 +171,22 @@ namespace MuMech
 
             if (_smartTranslation)
                 Users.Add(this);
+        }
+
+        // a reload (a vessel switch, or a type file shared by vessels of one name) writes the field: the user follows it
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+
+            if (_smartTranslation)
+            {
+                Users.Add(this);
+            }
+            else if (Users.Contains(this))
+            {
+                Users.Remove(this);
+                ResetThrusterForces();
+            }
         }
 
         // the tuning values the solver was last given: an edit, from the RCS Balancer window or a custom window's item, reaches
