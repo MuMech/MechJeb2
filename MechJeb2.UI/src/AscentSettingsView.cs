@@ -27,7 +27,6 @@ namespace MuMech.UI
         protected override void BeforeSync()
         {
             psg = Settings.AscentType == AscentType.PSG;
-            menu.ForcePsgThrustLimits();
         }
 
         // "° (x.x°)" after the AoA field, formatted when the tenth changes

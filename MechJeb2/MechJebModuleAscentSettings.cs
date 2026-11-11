@@ -226,7 +226,8 @@ namespace MuMech
 
         /// <summary>
         ///     PSG plans the ascent at full thrust and manages the throttle itself, so the throttle and electric limits are off while
-        ///     it flies. Both are persistent settings that a classic ascent or a kOS script may have left on.
+        ///     it flies. Both are persistent settings that the player, a classic ascent or a kOS script may have left on: the PSG
+        ///     autopilot keeps their values when it engages and gives them back when it disengages.
         /// </summary>
         public void ForcePsgThrustLimits()
         {
