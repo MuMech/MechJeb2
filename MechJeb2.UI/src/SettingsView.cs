@@ -96,12 +96,7 @@ namespace MuMech.UI
             // how long the menu takes to slide open or closed
             Layout anim = KodeWindow.Row(r);
             KodeWindow.Label(anim, "#MechJeb_MenuAnimationTime");
-            // marked dirty so it is saved, like the other settings; it needs no ApplySettings (the menu reads it as it slides)
-            w.Slider(anim, () => settings.MenuAnimationTime, v =>
-            {
-                settings.MenuAnimationTime = Mathf.Round(v * 20) / 20;
-                settings.Dirty = true;
-            }, 0f, 1f);
+            w.Slider(anim, () => settings.MenuAnimationTime, v => settings.MenuAnimationTime = Mathf.Round(v * 20) / 20, 0f, 1f);
             float shownTime = -1;
             string timeText = "";
             w.BoundLabel(anim, () =>
