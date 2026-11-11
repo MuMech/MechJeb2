@@ -22,8 +22,9 @@ namespace MuMech.UI
         /// <summary>MuUtils.PadPositive(v, "F" + decimals): a leading space unless the number starts with '-'.</summary>
         public static CharText PadPositive(this CharText ct, double v, int decimals)
         {
-            // the rule CharText.Append uses to print '-': the value rounded through decimal is not zero. Beyond decimal's
-            // range CharText formats with ToString, which always prints the '-'.
+            // the rule CharText.Append uses to print '-': the value rounded through decimal is not zero. A value at or under
+            // -1e15 can't round to zero at any number of decimals, and skipping the conversion for it keeps (decimal)v from
+            // overflowing past decimal's range (about 7.9e28).
             bool negative = v < 0 && (v <= -1e15 || Math.Round(-(decimal)v, decimals, MidpointRounding.AwayFromZero) > 0);
             if (!negative) ct.Append(' ');
             return ct.Append(v, decimals);

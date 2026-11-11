@@ -138,7 +138,7 @@ namespace MuMech
 
             if (masterMechJeb == null) return;
 
-            MechJebModuleLandingGuidance moduleLandingGuidance = GetComputerModule<MechJebModuleLandingGuidance>();
+            MechJebModuleLandingGuidance moduleLandingGuidance = masterMechJeb.GetComputerModule<MechJebModuleLandingGuidance>();
 
             moduleLandingGuidance?.SetAndLandTargetKSC();
         }
@@ -149,7 +149,7 @@ namespace MuMech
 
             if (masterMechJeb == null) return;
 
-            MechJebModuleLandingGuidance moduleLandingGuidance = GetComputerModule<MechJebModuleLandingGuidance>();
+            MechJebModuleLandingGuidance moduleLandingGuidance = masterMechJeb.GetComputerModule<MechJebModuleLandingGuidance>();
 
             moduleLandingGuidance?.LandSomewhere();
         }
@@ -245,7 +245,7 @@ namespace MuMech
                 return;
 
             IAscentAutopilot autopilot = masterMechJeb.AscentSettings.AscentAutopilot;
-            MechJebModuleAscentMenu ascentMenu = GetComputerModule<MechJebModuleAscentMenu>();
+            MechJebModuleAscentMenu ascentMenu = masterMechJeb.GetComputerModule<MechJebModuleAscentMenu>();
 
             if (autopilot == null || ascentMenu == null)
                 return;

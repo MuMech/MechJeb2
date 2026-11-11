@@ -43,10 +43,6 @@ namespace MuMech.UI
 
         readonly Dictionary<DisplayModule, KodeView> views = new Dictionary<DisplayModule, KodeView>();
 
-        // modules whose view threw while it was built: they have no window until the views are made again (another vessel,
-        // a layout change)
-        readonly HashSet<DisplayModule> broken = new HashSet<DisplayModule>();
-
         // views whose per-frame update threw, logged once each; the other windows still update
         readonly HashSet<KodeView> failedSync = new HashSet<KodeView>();
 
@@ -106,7 +102,6 @@ namespace MuMech.UI
             if (s != settings)
             {
                 settings = s;
-                broken.Clear(); // the broken modules were recreated as well
                 ApplyTheme();
             }
             // a language switch: the views keep many texts made when they were built (tooltips, button captions, cached
@@ -140,7 +135,7 @@ namespace MuMech.UI
             foreach (ComputerModule cm in modules)
             {
                 var m = (DisplayModule)cm;
-                if (!factories.TryGetValue(m.GetType(), out Func<DisplayModule, KodeView> factory) || broken.Contains(m)) continue;
+                if (!factories.TryGetValue(m.GetType(), out Func<DisplayModule, KodeView> factory)) continue;
                 bool want = show && m.Enabled && m.ShowInCurrentScene;
                 views.TryGetValue(m, out KodeView v);
                 if (want && (v == null || v.RebuildRequested))
@@ -187,7 +182,8 @@ namespace MuMech.UI
             {
                 v?.Destroy();
                 views.Remove(m);
-                broken.Add(m);
+                // the window is closed, so the menu shows it closed, and it is built again only when the player opens it again
+                m.Enabled = false;
                 Debug.LogError($"[MechJeb2.UI] the \"{m.GetName()}\" window could not be built:");
                 Debug.LogException(e);
                 ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_NewUI_WindowFailed", m.GetName()), 10, ScreenMessageStyle.UPPER_CENTER);
@@ -320,7 +316,6 @@ namespace MuMech.UI
         {
             foreach (KodeView v in views.Values) v.Destroy();
             views.Clear();
-            broken.Clear();
             failedSync.Clear();
         }
     }

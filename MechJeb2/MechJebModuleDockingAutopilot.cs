@@ -84,7 +84,9 @@ namespace MuMech
         private const double leaveSpeed = 1;
         private const int maxRetries = 3;
         private const double captureTimeLimit = 30;
-        private const double portTargetRange = 190; // KSP makes a port's vessel the target past 200 m
+        // KSP makes a port's vessel the target while the active vessel's root part is over 200 m from the port
+        // (ModuleDockingNode.Update): the port is put back 10 m inside that, measured the same way
+        private const double portTargetRange = 190;
         private double stopDistance;
         private bool portTarget;
         private bool targetMeasured;
@@ -209,8 +211,9 @@ namespace MuMech
             return VesselState.RCSThrustAvailable.GetMagnitude(localAxis) / VesselState.Mass;
         }
 
-        // The velocity of the point we dock to, and not of the target's CoM: the docking magnets turn the target when the port's axis misses its CoM,
-        // and the port then slides away from a vessel that's matching the CoM. The target's spin is mass-weighted, so its bending stays out of this.
+        // The target's velocity where our docking point is (its CoM's, plus its spin times the lever from its CoM to our docking point), and not its CoM's:
+        // the docking magnets turn the target when the port's axis misses its CoM, and the port then slides away from a vessel that's matching the CoM.
+        // The target's spin is mass-weighted, so its bending stays out of this.
         private Vector3d TargetPointVelocity()
         {
             Vector3d velocity = Core.Target.TargetOrbit.GetVel();
@@ -447,7 +450,8 @@ namespace MuMech
                         // The speed law has run out by here, so this brakes what's left: RCS is off afterwards, and the target isn't far.
                         if (portTarget)
                             EndDocking();
-                        else if (Core.Target.RelativeVelocity.magnitude < stoppedSpeed)
+                        // stopped against the point the loop holds: a turning target's CoM moves relative to it
+                        else if ((VesselState.OrbitalVelocity - TargetPointVelocity()).magnitude < stoppedSpeed)
                             StopWithMessage("#MechJeb_Docking_stoppedShort"); //Docking autopilot stopped short of the target: choose a docking port and start it again.
                     }
 
@@ -464,7 +468,10 @@ namespace MuMech
                 return;
             }
 
-            if (wantedPort.vessel.packed || Vector3d.Distance(Vessel.GetTransform().position, wantedPort.GetTransform().position) > portTargetRange)
+            // from the root part, not the control point, as KSP measures it: from a control point far ahead of the root the port
+            // would come back while KSP still drops it, and the target would switch every frame
+            Vector3d root = FlightGlobals.ActiveVessel != null ? FlightGlobals.ActiveVessel.transform.position : Vessel.transform.position;
+            if (wantedPort.vessel.packed || Vector3d.Distance(root, wantedPort.GetTransform().position) > portTargetRange)
                 return;
 
             Core.GetComputerModule<MechJebModuleDockingGuidance>().SelectTargetPort(wantedPort);

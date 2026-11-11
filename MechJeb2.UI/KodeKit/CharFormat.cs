@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using UnityEngine;
 
 namespace KodeKit
 {
@@ -16,6 +17,8 @@ namespace KodeKit
         char[] shown = new char[32];
         int len, shownLen = -1;
         float pushWidth = -1; // the box's width at the last push
+        float pushTime;       // realtime of the last push
+        const float RepushInterval = 1f; // seconds between two pushes of an unchanged text that shows cut
 
         public CharText(TMP_Text target) => this.target = target;
 
@@ -201,12 +204,16 @@ namespace KodeKit
             // at every later width, and the cut text ends in the ellipsis even where it fits. TMP can cut it again at each
             // layout between two commits, and its isTextTruncated only tells about the last one, so look at what it shows:
             // cut, in a box of another width than at the push, push it again (TMP then cuts it afresh, or shows all of it).
-            // A box that keeps its width costs nothing more, cut or not.
-            if (len == shownLen && SameAsShown() && (!ShowsEllipsis() || target.rectTransform.rect.width == pushWidth)) return false;
+            // A box that keeps its width costs nothing more, cut or not, but for one push a second while it shows cut: the box can
+            // narrow and come back to the same width between two commits, which leaves the text cut where it fits.
+            if (len == shownLen && SameAsShown() &&
+                (!ShowsEllipsis() || target.rectTransform.rect.width == pushWidth && Time.realtimeSinceStartup - pushTime < RepushInterval))
+                return false;
             if (shown.Length < len) shown = new char[buf.Length];
             Array.Copy(buf, shown, len);
             shownLen = len;
             pushWidth = target.rectTransform.rect.width;
+            pushTime = Time.realtimeSinceStartup;
             target.SetCharArray(buf, 0, len);
             return true;
         }
