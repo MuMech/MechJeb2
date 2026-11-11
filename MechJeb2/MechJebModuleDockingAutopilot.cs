@@ -84,7 +84,9 @@ namespace MuMech
         private const double leaveSpeed = 1;
         private const int maxRetries = 3;
         private const double captureTimeLimit = 30;
-        private const double portTargetRange = 190; // KSP makes a port's vessel the target past 200 m
+        // KSP makes a port's vessel the target while the active vessel's root part is over 200 m from the port
+        // (ModuleDockingNode.Update): the port is put back 10 m inside that, measured the same way
+        private const double portTargetRange = 190;
         private double stopDistance;
         private bool portTarget;
         private bool targetMeasured;
@@ -464,7 +466,10 @@ namespace MuMech
                 return;
             }
 
-            if (wantedPort.vessel.packed || Vector3d.Distance(Vessel.GetTransform().position, wantedPort.GetTransform().position) > portTargetRange)
+            // from the root part, not the control point, as KSP measures it: from a control point far ahead of the root the port
+            // would come back while KSP still drops it, and the target would switch every frame
+            Vector3d root = FlightGlobals.ActiveVessel != null ? FlightGlobals.ActiveVessel.transform.position : Vessel.transform.position;
+            if (wantedPort.vessel.packed || Vector3d.Distance(root, wantedPort.GetTransform().position) > portTargetRange)
                 return;
 
             Core.GetComputerModule<MechJebModuleDockingGuidance>().SelectTargetPort(wantedPort);
