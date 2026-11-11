@@ -587,7 +587,11 @@ namespace MuMech
                 FuelStats s = stats.VacStats[mjPhase];
                 if (s.DeltaV <= 0 || s.Thrust <= 0)
                 {
-                    if (Core.Staging.Enabled)
+                    // a segment with nothing burning inside a stage (where the vacuum run lines up with the atmosphere's)
+                    // is no staging
+                    bool staging = mjPhase == stats.VacStats.Count - 1 || stats.VacStats[mjPhase + 1].KSPStage != s.KSPStage;
+
+                    if (staging && Core.Staging.Enabled)
                     {
                         // We staged again before autostagePreDelay is elapsed.
                         // Add the remaining wait time

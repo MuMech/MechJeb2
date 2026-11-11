@@ -47,6 +47,7 @@ namespace MuMech
 
         private readonly SimVesselManager _vesselManagerAtmo = new SimVesselManager();
         private readonly SimVesselManager _vesselManagerVac = new SimVesselManager();
+        private readonly SegmentReconciler _reconciler = new SegmentReconciler();
 
         public override void OnFixedUpdate() => GetResults();
 
@@ -94,6 +95,10 @@ namespace MuMech
                 VacR = _vesselManagerVac.R;
                 VacV = _vesselManagerVac.V;
                 VacU = _vesselManagerVac.U;
+
+                // the runs can split a stage differently (jets don't run in vacuum): bookkeeping segments line them up, so
+                // that one index is the same segment in both lists
+                _reconciler.Reconcile(AtmoStats, VacStats);
 
                 _lastFailure = null;
             }
