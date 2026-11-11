@@ -22,7 +22,7 @@ namespace MuMech
 
         public double TMinus => _launchTime - VesselState.Time;
 
-        /// <summary>The target's LAN when a launch into its plane or to its LAN started, for when the target is gone since.</summary>
+        /// <summary>The target's LAN when a launch into its plane or to its LAN started: the LAN that launch flies to.</summary>
         public double TargetLan { get; private set; }
 
         // Starting a countdown flushes the PSG solution and the optimizer restarts cold late in the countdown, which can take longer
