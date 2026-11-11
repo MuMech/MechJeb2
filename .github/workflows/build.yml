@@ -61,7 +61,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
-      image: ghcr.io/sarbian/ksp-ci:26.04
+      # pinned by digest: the 26.04 tag is pushed again on each change of the image, so a release builds with the image
+      # this file names. To update: docker buildx imagetools inspect ghcr.io/sarbian/ksp-ci:26.04 (the index Digest)
+      image: ghcr.io/sarbian/ksp-ci:26.04@sha256:801391cca13ab54384b296b2dbab9222430bcffe1b1b1b71b103437d6224461a
       options: --user 1001:1001 # the image's unprivileged runner user, as on GitHub's hosted runners
     permissions:
       contents: read
