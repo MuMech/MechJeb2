@@ -287,10 +287,8 @@ namespace MuMech
                     stages.Add(i);
         }
 
-        private static readonly FuelStats _noStats = new FuelStats();
-
-        // the two lists can differ in length: jets stop in the vacuum simulation, so a stage can split in two in the atmosphere alone
-        private FuelStats Vac(int index) => index < stats.VacStats.Count ? stats.VacStats[index] : _noStats;
+        // the lists are lined up (MechJebModuleStageStats): one index is the same segment in both
+        private FuelStats Vac(int index) => stats.VacStats[index];
 
         private double _isp(int index)        => showRcs ? Vac(index).RcsISP : Vac(index).Isp;
         private double _thrust(int index)     => showRcs ? Vac(index).RcsThrust : Vac(index).Thrust;
