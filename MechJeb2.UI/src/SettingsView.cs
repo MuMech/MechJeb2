@@ -108,7 +108,7 @@ namespace MuMech.UI
                 }
                 return timeText;
             }).transform.parent.GetComponent<UnityEngine.UI.LayoutElement>().preferredWidth = 40;
-            Tooltips.Add(anim.gameObject, "How long the MechJeb menu takes to slide open or closed. 0 opens it at once.");
+            Tooltips.Add(anim.gameObject, "#MechJeb_MenuAnimationTime_tooltip");
 
             RoverUi.ToggleRow(w, r, editor, "Toggle:Settings.RssMode");
 
