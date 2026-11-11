@@ -108,7 +108,14 @@ namespace MuMech
 
         internal void LaunchToLan() => Core.LaunchCountdown.StartToLan();
 
-        internal void AbortTimedLaunch() => Core.LaunchCountdown.Abort();
+        // Abort cancels the launch, not only its timer: an autopilot left engaged would launch at once from a landed vessel, or
+        // after T-0 without the plane. Disengaging ends the countdown too.
+        internal void AbortTimedLaunch()
+        {
+            if (Core.Ascent is { Enabled: true } autopilot)
+                autopilot.Users.Clear();
+            Core.LaunchCountdown.Abort();
+        }
 
         private DateTime _lastRefresh = DateTime.MinValue;
         internal string vgo, heading, tgo, pitch, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
