@@ -449,7 +449,8 @@ namespace MuMech
                         // The speed law has run out by here, so this brakes what's left: RCS is off afterwards, and the target isn't far.
                         if (portTarget)
                             EndDocking();
-                        else if (Core.Target.RelativeVelocity.magnitude < stoppedSpeed)
+                        // stopped against the point the loop holds: a turning target's CoM moves relative to it
+                        else if ((VesselState.OrbitalVelocity - TargetPointVelocity()).magnitude < stoppedSpeed)
                             StopWithMessage("#MechJeb_Docking_stoppedShort"); //Docking autopilot stopped short of the target: choose a docking port and start it again.
                     }
 
