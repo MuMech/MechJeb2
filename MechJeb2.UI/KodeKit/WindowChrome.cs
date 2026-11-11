@@ -201,7 +201,11 @@ namespace KodeKit
 
         // ---- z-order ----
 
-        /// <summary>Above the other windows, and below the PopupDialogs that share the canvas: the pause menu is one.</summary>
+        /// <summary>
+        /// Above the other windows, and below the stock dialogs that share the canvas: the PopupDialogs (the pause menu is
+        /// one), and the dialogs KSP parents there without a PopupDialog (science results, crew hatch, vessel rename, craft
+        /// browser, robotic controller, part category popup).
+        /// </summary>
         public void BringToFront()
         {
             Transform canvas = Rect.parent;
@@ -210,11 +214,20 @@ namespace KodeKit
             {
                 Transform child = canvas.GetChild(i);
                 if (child == Rect) continue;
-                if (child.GetComponent<PopupDialog>() == null) break;
+                if (!IsStockDialog(child)) break;
                 top--;
             }
             Rect.SetSiblingIndex(top);
         }
+
+        static bool IsStockDialog(Transform t) =>
+            t.GetComponent<PopupDialog>() != null
+            || t.GetComponent<KSP.UI.Screens.Flight.Dialogs.ExperimentsResultDialog>() != null
+            || t.GetComponent<KSP.UI.Screens.Flight.Dialogs.CrewHatchDialog>() != null
+            || t.GetComponent<KSP.UI.Screens.VesselRenameDialog>() != null
+            || t.GetComponent<KSP.UI.Screens.CraftBrowserDialog>() != null
+            || t.GetComponent<Expansions.Serenity.RoboticControllerWindow>() != null
+            || t.GetComponent<KSP.UI.Screens.PartCategorizerPopup>() != null;
 
         static readonly List<RaycastResult> hits = new List<RaycastResult>();
 
