@@ -63,6 +63,13 @@ namespace MuMech
             ActiveController = Math.Max(0, Math.Min(i, _controllers.Count - 1));
             Controller = _controllers[ActiveController];
             Controller.OnStart();
+
+            // a controller switched to while the module flies starts from fresh state, as it would on enable
+            if (Enabled)
+            {
+                Controller.Reset();
+                Controller.OnModuleEnabled();
+            }
         }
 
         /// <summary>The controllers, indexed as ActiveController; the active one is Controller.</summary>
@@ -133,7 +140,7 @@ namespace MuMech
             _controllers.Add(new HybridController(this));
             _controllers.Add(new BetterController(this));
 
-            Controller = new BetterController(this);
+            Controller = _controllers[ActiveController];
         }
 
         protected override void OnModuleDisabled() => Controller.OnModuleDisabled();
