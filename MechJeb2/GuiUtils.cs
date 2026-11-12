@@ -773,7 +773,8 @@ namespace MuMech
                 int unitPos = s.IndexOf(units[i]);
                 if (unitPos == -1) continue;
 
-                if (!double.TryParse(s.Substring(0, unitPos), out double value)) return false;
+                // as a plain number in the same field reads it: "1,5h" is an hour and a half
+                if (!NumberText.TryParseDouble(s.Substring(0, unitPos), out double value)) return false;
                 seconds += value * intervals[i];
                 s = s.Substring(unitPos + 1);
                 parsedSomething = true;
