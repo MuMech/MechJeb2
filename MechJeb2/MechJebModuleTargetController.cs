@@ -22,10 +22,11 @@ namespace MuMech
 
         public CelestialBody targetBody;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        // per vessel: a focus change must not hand one vessel's landing site to another
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableAngle targetLatitude = new EditableAngle(0);
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableAngle targetLongitude = new EditableAngle(0);
 
         private Vector3d targetDirection;
