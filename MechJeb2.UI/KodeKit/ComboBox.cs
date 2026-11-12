@@ -26,6 +26,8 @@ namespace KodeKit
         readonly TMP_Text label;
         GameObject popup;
         RectTransform list;
+        // the entries the open popup's rows were made from: a list that changes under it closes it
+        string[] popupEntries;
 
         public bool IsOpen => popup != null;
         public RectTransform PopupList => list;
@@ -92,6 +94,7 @@ namespace KodeKit
                 if (!on && IsOpen) Close();
 
                 string[] e = this.entries();
+                if (IsOpen && !SameEntries(e, popupEntries)) Close();
                 int i = Mathf.Clamp(this.get(), 0, Math.Max(0, e.Length - 1));
                 string s = e.Length == 0 ? "" : e[i];
                 if (s == shown) return;
@@ -253,6 +256,7 @@ namespace KodeKit
             panel.gameObject.AddComponent<WindowBehaviour>(); // click-through lock while hovered
 
             string[] e = entries();
+            popupEntries = (string[])e.Clone();
             var rows = new UIButton[e.Length];
             string lastGroup = null;
             for (int i = 0; i < e.Length; i++)
@@ -353,14 +357,26 @@ namespace KodeKit
 
         void Select(int i)
         {
+            // the row picks the entry it shows, or nothing if the list changed since the popup opened
+            bool same = SameEntries(entries(), popupEntries);
             Close();
-            if (i != get()) set(i);
+            if (same && i != get()) set(i);
+        }
+
+        static bool SameEntries(string[] a, string[] b)
+        {
+            if (ReferenceEquals(a, b)) return true;
+            if (a == null || b == null || a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++)
+                if (a[i] != b[i]) return false;
+            return true;
         }
 
         public void Close()
         {
             if (popup != null) UnityEngine.Object.Destroy(popup);
             popup = null;
+            popupEntries = null;
             list = null;
             Blocker = null;
             Scroll = null;
