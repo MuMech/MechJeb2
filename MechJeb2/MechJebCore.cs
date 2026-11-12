@@ -1101,6 +1101,15 @@ namespace MuMech
                     ConfigNodeWriter.Save(global, MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
                 }
 
+                // The modules are clean once the global file is written (a vessel that lost the focus leaves it to the new
+                // focus's master, which reloads it). A write that throws leaves them dirty, so the periodic save tries again; a
+                // module whose own OnSave threw is clean too, or it would rewrite both files every five seconds.
+                if (global != null)
+                {
+                    foreach (ComputerModule module in GetComputerModules<ComputerModule>())
+                        module.Dirty = false;
+                }
+
                 Profiler.EndSample();
             }
             catch (Exception e)
