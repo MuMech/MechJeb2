@@ -75,6 +75,24 @@ namespace MuMech.UI
 
         StageMarkers stageMarkers;
         int scannedStages, lastStage;
+        double seenMarkUT;
+
+        // a Mark restarts the history, whoever made it (this window, a custom window's MARK, a script): the scales and the stage
+        // markers start again. The scales belong to the module, which outlives this view, so their mark is kept there.
+        void CheckMark()
+        {
+            double markUT = Rec.MarkUT;
+            if (!markUT.Equals(g.scaleMarkUT))
+            {
+                g.scaleMarkUT = markUT;
+                g.ResetScale();
+            }
+
+            if (markUT.Equals(seenMarkUT)) return;
+            seenMarkUT = markUT;
+            stageMarkers.Indices.Clear();
+            scannedStages = 0;
+        }
 
         void ScanStages()
         {
@@ -246,6 +264,7 @@ namespace MuMech.UI
                 g.scaleIdx = newIdx;
             }
 
+            CheckMark();
             // what IMGUI's Repaint pass did
             g.UpdateScale();
             g.ApplySizes();
@@ -331,6 +350,8 @@ namespace MuMech.UI
             builtWidth = g.width;
             builtHeight = g.height;
             stageMarkers = new StageMarkers(this);
+            scannedStages = 0;
+            seenMarkUT = Rec.MarkUT;
 
             if (KodeWindow.ModernLayout)
             {
@@ -392,11 +413,7 @@ namespace MuMech.UI
 
         // ---- the controls' actions, in both layouts ----
 
-        void Mark()
-        {
-            g.ResetScale(); // TODO : should check something else to catch Mark calls from other code
-            Rec.Mark();
-        }
+        void Mark() => Rec.Mark();
 
         void ScaleBy(int d)
         {
