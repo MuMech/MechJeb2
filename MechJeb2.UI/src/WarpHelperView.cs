@@ -46,8 +46,12 @@ namespace MuMech.UI
 
             Layout warpTo = KodeWindow.Row(r);
             KodeWindow.Label(warpTo, "#MechJeb_WarpHelper_label1"); //"Warp to: "
-            new ComboBox(w, warpTo, () => (int)helper.warpTarget, i => helper.warpTarget = (MechJebModuleWarpHelper.WarpTarget)i,
-                () => MechJebModuleWarpHelper.warpTargetStrings);
+            // a warp keeps the time it started with, so the target is fixed until the warp ends or is aborted
+            var targetCombo = new ComboBox(w, warpTo, () => (int)helper.warpTarget, i =>
+            {
+                if (!helper.warping) helper.warpTarget = (MechJebModuleWarpHelper.WarpTarget)i;
+            }, () => MechJebModuleWarpHelper.warpTargetStrings);
+            GuidanceUi.Enable(w, targetCombo.Button, () => !helper.warping);
 
             Layout time = KodeWindow.Row(r);
             KodeWindow.Label(time, "#MechJeb_WarpHelper_label2", true); //"Warp for: "
