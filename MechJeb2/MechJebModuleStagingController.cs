@@ -392,6 +392,11 @@ namespace MuMech
         // bypasses staging delays and other checks and immediately stages
         public void ImmediateStage()
         {
+            // KSP refuses a stage during its staging cooldown, and a remote stage waits for the focus switch: nothing is staged
+            // then, so the countdown and "Autostage once" stay for the next call
+            if (_remoteStagingStatus == RemoteStagingState.WAITING_FOCUS || (Vessel.isActiveVessel && !StageManager.CanSeparate))
+                return;
+
             if (InverseStageFiresDecoupler(Vessel.currentStage - 1))
             {
                 // track the last stage time for the post delay
@@ -405,6 +410,7 @@ namespace MuMech
 
                 _remoteStagingStatus = RemoteStagingState.WAITING_FOCUS;
                 FlightGlobals.ForceSetActiveVessel(Vessel);
+                return;
             }
             else
             {
