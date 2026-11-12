@@ -48,8 +48,7 @@ namespace MuMech
         // Stability Control
         public readonly bool StabilityControl;
 
-        [ToggleInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Rover), Persistent(pass = (int)Pass.LOCAL | (int)Pass.TYPE)]
-        // Limit Acceleration
+        // has no effect: nothing reads it, and no window shows it. Kept so that code setting it still compiles.
         public bool LimitAcceleration;
 
         // The controller is its own user while one of the switches that use it is on, so they work from the Rover window, a custom

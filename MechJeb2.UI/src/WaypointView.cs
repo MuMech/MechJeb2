@@ -325,7 +325,6 @@ namespace MuMech.UI
             RoverUi.EditableRow(w, left, ed, "Editable:RoverController.hPIDd");
             RoverUi.EditableRow(w, left, ed, "Editable:RoverController.terrainLookAhead");
             RoverUi.EditableRow(w, left, ed, "Editable:RoverController.tractionLimit");
-            RoverUi.ToggleRow(w, left, ed, "Toggle:RoverController.LimitAcceleration", () => Ap != null && Ap.LimitAcceleration);
             Layout right = KodeWindow.Panel(rover);
             RoverUi.EditableRow(w, right, ed, "Editable:RoverController.sPIDp");
             RoverUi.EditableRow(w, right, ed, "Editable:RoverController.sPIDi");
