@@ -579,6 +579,9 @@ namespace MuMech
                 return;
             }
 
+            // the rover controller enables itself from its switches, which nothing else watches while it is disabled
+            Rover?.UpdateUsers();
+
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
                 // Staging runs explicitly after the loop so it sees every other module's writes this tick.

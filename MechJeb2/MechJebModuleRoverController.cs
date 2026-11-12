@@ -52,6 +52,17 @@ namespace MuMech
         // Limit Acceleration
         public bool LimitAcceleration;
 
+        // The controller is its own user while one of the switches that use it is on, so they work from the Rover window, a custom
+        // window's item, a load or another mod's write to the fields, with the Rover window open or closed. The core calls this every
+        // physics tick, with the controller enabled or not.
+        internal void UpdateUsers()
+        {
+            if (ControlHeading || ControlSpeed || StabilityControl || BrakeOnEnergyDepletion || BrakeOnEject)
+                Users.Add(this);
+            else if (Users.Contains(this))
+                Users.Remove(this);
+        }
+
         public PIDController headingPID;
         public PIDController speedPID;
 
@@ -122,6 +133,10 @@ namespace MuMech
             GameEvents.onVesselWasModified.Add(OnVesselModified);
 
             base.OnStart(state);
+
+            // a rover saved while driving stays put when it is loaded: the player starts the drive again. The safety switches keep
+            // their saved values
+            ControlHeading = ControlSpeed = false;
         }
 
         public override void OnDestroy()
@@ -508,12 +523,6 @@ namespace MuMech
                 etaSpeed.Value = curSpeed;
                 lastETA = Time.realtimeSinceStartup;
             }
-
-            if (!Core.GetComputerModule<MechJebModuleRoverWindow>().Enabled)
-            {
-                Core.GetComputerModule<MechJebModuleRoverWindow>()
-                   .OnUpdate(); // update users for Stability Control, Brake on Eject and Brake on Energy Depletion
-            }
         }
 
         public override void OnUpdate()
@@ -545,12 +554,6 @@ namespace MuMech
             else if (!WarpToDaylight && waitingForDaylight)
             {
                 waitingForDaylight = false;
-            }
-
-            if (!Core.GetComputerModule<MechJebModuleRoverWindow>().Enabled)
-            {
-                Core.GetComputerModule<MechJebModuleRoverWindow>()
-                   .OnUpdate(); // update users for Stability Control, Brake on Eject and Brake on Energy Depletion
             }
 
             if (!StabilityControl && Core.Attitude.Users.Contains(this))
