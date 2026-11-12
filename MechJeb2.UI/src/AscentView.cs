@@ -86,7 +86,6 @@ namespace MuMech.UI
         double incDelta;
 
         bool HasVessel => Core.vessel != null;
-        double BodyRadius => HasVessel && Core.vessel.mainBody != null ? Core.vessel.mainBody.Radius : 0;
 
         // what WindowGUI did before and while drawing
         protected override void BeforeSync()
@@ -222,14 +221,15 @@ namespace MuMech.UI
                 Psgs.BurnoutAltitude, "km", 100);
             AscentUi.ToggledBox(w, opt, "Arg Periapsis:", () => Psgs.ArgPFlag, v => Psgs.ArgPFlag = v, Psgs.ArgP, "°", 100);
 
-            bool ApLtPe() => Psgs.ApoapsisAltitude + BodyRadius >= 0 && Psgs.ApoapsisAltitude < Psgs.PeriapsisAltitude;
+            // as the PSG simulation reads them: a negative apoapsis asks for a hyperbola, a lower positive one for a circle
+            bool ApLtPe() => Psgs.ApoapsisAltitude >= 0 && Psgs.ApoapsisAltitude < Psgs.PeriapsisAltitude;
             UIText l3 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label3", Tone.Warn); //Ap < Pe: circularizing orbit
             w.Visible(l3.gameObject, ApLtPe);
             // IMGUI draws these three with OrangeLabel (green until dev fixed it), the one above yellow
             UIText high = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltHigh", Tone.Caution); //Attach > Ap: apoapsis insertion
             w.Visible(high.gameObject, () => !ApLtPe() && Psgs.BurnoutAltitudeFlag && Psgs.BurnoutAltitude > Psgs.ApoapsisAltitude);
             UIText l4 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label4", Tone.Caution); //Hyperbolic target orbit (neg Ap)
-            w.Visible(l4.gameObject, () => Psgs.ApoapsisAltitude + BodyRadius < 0);
+            w.Visible(l4.gameObject, () => Psgs.ApoapsisAltitude < 0);
             UIText low = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltLow", Tone.Caution); //Attach < Pe: periapsis insertion
             w.Visible(low.gameObject, () => Psgs.BurnoutAltitudeFlag && Psgs.BurnoutAltitude < Psgs.PeriapsisAltitude);
 
