@@ -168,8 +168,8 @@ namespace MuMech
 
         public void Save(ConfigNode node)
         {
-            node.SetValue("positive", KSPUtil.WriteVector(Positive));
-            node.SetValue("negative", KSPUtil.WriteVector(Negative));
+            node.SetValue("positive", KSPUtil.WriteVector(Positive), true);
+            node.SetValue("negative", KSPUtil.WriteVector(Negative), true);
         }
     }
 }

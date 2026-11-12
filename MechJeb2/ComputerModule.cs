@@ -126,10 +126,6 @@ namespace MuMech
         {
         }
 
-        public virtual void OnAwake()
-        {
-        }
-
         public virtual void OnFixedUpdate()
         {
         }

@@ -2,7 +2,6 @@ extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using JetBrainsAnnotations::JetBrains.Annotations;
@@ -15,7 +14,7 @@ using Logger = MechJebLib.Utils.Logger;
 
 namespace MuMech
 {
-    public class MechJebCore : PartModule, IComparable<MechJebCore>
+    public class MechJebCore : PartModule
     {
         private readonly List<ComputerModule> _unorderedComputerModules = new List<ComputerModule>();
         private readonly List<ComputerModule> _modulesToLoad = new List<ComputerModule>();
@@ -337,15 +336,6 @@ namespace MuMech
             return false;
         }
 
-        [UsedImplicitly]
-        public int GetImportance() => part.State == PartStates.DEAD ? 0 : GetInstanceID();
-
-        public int CompareTo(MechJebCore other)
-        {
-            if (other == null) return 1;
-            return GetImportance().CompareTo(other.GetImportance());
-        }
-
         public T GetComputerModule<T>() where T : ComputerModule
         {
             for (int i = 0; i < _unorderedComputerModules.Count; i++)
@@ -493,13 +483,6 @@ namespace MuMech
                 }
             }
 
-            if (vessel != null && this != vessel.GetMasterMechJeb())
-            {
-                vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
-                vessel.OnFlyByWire += OnFlyByWire;
-                _controlledVessel = vessel;
-            }
-
             Logger.GlobalRegister(SafePrint);
         }
 
@@ -538,18 +521,6 @@ namespace MuMech
             CachedLocalizer.Bootstrap();
 
             Dispatcher.CreateDispatcher();
-
-            foreach (ComputerModule module in GetComputerModules<ComputerModule>())
-            {
-                try
-                {
-                    module.OnAwake();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnAwake: " + e);
-                }
-            }
         }
 
         public void FixedUpdate()
@@ -573,13 +544,13 @@ namespace MuMech
 
             Profiler.BeginSample("MechJebCore.FixedUpdate");
 
-            if (!_wasMasterAndFocus && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel))
+            // FlightGlobals.ready is false in the editor, so this runs in flight only; the editor reloads in Update
+            if (!_wasMasterAndFocus && vessel.isActiveVessel)
             {
                 // The previous focus's master saves its settings before this core loads them. When this core is that master but
                 // another core loaded them (the master changed on the focused vessel), this core still holds what it loaded at
                 // scene start: it reloads the files without writing over them.
-                MechJebCore lastFocusMaster =
-                    HighLogic.LoadedSceneIsFlight && _lastFocus != null && _lastFocus.loaded ? _lastFocus.GetMasterMechJeb() : null;
+                MechJebCore lastFocusMaster = _lastFocus != null && _lastFocus.loaded ? _lastFocus.GetMasterMechJeb() : null;
                 if (lastFocusMaster != null && (lastFocusMaster != this || _lastFocusMaster == this))
                 {
                     Print("Focus changed! Forcing " + _lastFocus.vesselName + " to save");
@@ -1014,16 +985,6 @@ namespace MuMech
                 if (generateDefaultWindows || windowEditor.RegenerateDefaultWindows)
                 {
                     windowEditor.AddDefaultWindows();
-                }
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                Debug.LogError("MechJeb caught a ReflectionTypeLoadException. Those DLL are not built for this KSP version:");
-                IEnumerable<Assembly> brokenAssembly = ex.Types.Where(x => x != null).Select(x => x.Assembly).Distinct();
-                foreach (Assembly assembly in brokenAssembly)
-                {
-                    Debug.LogError(assembly.GetName().Name + " " + assembly.GetName().Version + " " +
-                        assembly.Location.Remove(0, Path.GetFullPath(KSPUtil.ApplicationRootPath).Length));
                 }
             }
             catch (Exception e)
