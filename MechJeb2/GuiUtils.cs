@@ -40,6 +40,7 @@ namespace MuMech
             {
                 ValConfig = value;
                 TextConfig = (ValConfig / _multiplier).ToString();
+                Parsed = true; // the text is now the value's
             }
         }
 
@@ -124,6 +125,7 @@ namespace MuMech
             {
                 ValConfig = value;
                 TextConfig = GuiUtils.TimeToDHMS(ValConfig);
+                Parsed = true; // the text is now the value's
             }
         }
 
