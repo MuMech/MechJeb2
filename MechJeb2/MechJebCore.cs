@@ -456,6 +456,7 @@ namespace MuMech
             GameEvents.onVesselChange.Add(UnlockControl);
             GameEvents.onVesselWasModified.Add(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Add(OnVesselStandardModification);
+            GameEvents.onGameSceneLoadRequested.Add(OnGameSceneLoadRequested);
 
             _lastSettingsSaveTime = Time.time;
 
@@ -1144,6 +1145,16 @@ namespace MuMech
             GameEvents.onVesselChange.Remove(UnlockControl);
             GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
+            GameEvents.onGameSceneLoadRequested.Remove(OnGameSceneLoadRequested);
+        }
+
+        // The last save of a scene. KSP sets the next scene's flags before it destroys this one, so the save in OnDestroy does
+        // not run when leaving flight or the editor; this event comes before both. It saves whether or not a module is dirty:
+        // settings set from code (kOS) do not mark it.
+        private void OnGameSceneLoadRequested(GameScenes scene)
+        {
+            if (this == vessel.GetMasterMechJeb() && (HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel)))
+                OnSave(null);
         }
 
         private void OnFlyByWire(FlightCtrlState s)
