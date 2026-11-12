@@ -1332,7 +1332,9 @@ namespace MuMech
                 PreventClickthrough();
                 GUI.matrix = previousGuiMatrix;
 
-                for (int i = 0; i < _postDrawQueue.Count; i++)
+                // GL lines show only on Repaint; OnGUI also runs for Layout and every input event. The map callbacks read the
+                // mouse with Input, which holds for the whole frame, so they need no other event.
+                for (int i = 0; Event.current.type == EventType.Repaint && i < _postDrawQueue.Count; i++)
                 {
                     try
                     {
