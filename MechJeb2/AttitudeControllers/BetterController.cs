@@ -195,10 +195,17 @@ namespace MuMech.AttitudeControllers
             Version = SETTINGS_VERSION;
         }
 
-        public override void OnModuleEnabled()
+        // settings saved by an older version (or never saved) are replaced by the defaults; kOS calls this before changing one, so a
+        // value set before the first engage is not then reset
+        internal void UpgradeSettings()
         {
             if (Version < SETTINGS_VERSION)
                 Defaults();
+        }
+
+        public override void OnModuleEnabled()
+        {
+            UpgradeSettings();
             Reset();
         }
 
