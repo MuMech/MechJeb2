@@ -106,7 +106,21 @@ namespace MuMech.UI
             Autopilot(w, autopilot);
         }
 
-        double TargetAsl() => Body.TerrainAltitude(Core.Target.targetLatitude, Core.Target.targetLongitude);
+        // the terrain height runs the body's PQS: asked again only when the target or the body changes
+        CelestialBody aslBody;
+        double aslLat = double.NaN, aslLon = double.NaN, asl;
+
+        double TargetAsl()
+        {
+            CelestialBody body = Body;
+            double lat = Core.Target.targetLatitude, lon = Core.Target.targetLongitude;
+            if (body == aslBody && lat.Equals(aslLat) && lon.Equals(aslLon)) return asl;
+            aslBody = body;
+            aslLat = lat;
+            aslLon = lon;
+            asl = body.TerrainAltitude(lat, lon);
+            return asl;
+        }
 
         /// <summary>EditableAngle.DrawEditGUI (d ° m ' s " N/S) followed by the 10 m step buttons, on one row.</summary>
         void AngleRow(KodeWindow w, UIObject parent, Func<EditableAngle> angle, EditableAngle.Direction direction, Sprites.Direction first, double firstDelta, Sprites.Direction second, double secondDelta,
