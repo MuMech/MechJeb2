@@ -91,12 +91,11 @@ namespace MuMech
 
             Guid vesselKey = vessel == null ? Guid.Empty : vessel.id;
 
+            // a vessel without MechJeb is remembered too, for the fixed step: the UI asks every frame for the active vessel
             if (!masterMechJeb.TryGetValue(vesselKey, out MechJebCore mj))
             {
                 mj = vessel.GetModule<MechJebCore>(p => p.running);
-                if (mj != null)
-                    masterMechJeb.Add(vesselKey, mj);
-                return mj;
+                masterMechJeb.Add(vesselKey, mj);
             }
 
             return mj;
