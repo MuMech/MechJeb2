@@ -1051,7 +1051,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (Vessel.isActiveVessel && (_renderer == null || _renderer.AP != _ap)) { MechJebRouteRenderer.AttachToMapView(Core); }
+            if (Vessel.isActiveVessel && (_renderer == null || _renderer.AP != _ap)) { _renderer = MechJebRouteRenderer.AttachToMapView(Core); }
 
             _ap.Waypoints.ForEach(wp => wp.Update());
             //			float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
@@ -1209,7 +1209,9 @@ namespace MuMech
             return true;
         }
 
-        private static Vector3 RaisePositionOverTerrain(Vector3 position, float heightOffset)
+        // A waypoint's position is already on the terrain (MechJebWaypoint caches its height): its own altitude saves the PQS query
+        // the map view would make for each vertex every frame
+        private static Vector3 RaisePositionOverTerrain(Vector3 position, float heightOffset, bool positionOnTerrain = false)
         {
             CelestialBody body = FlightGlobals.ActiveVessel.mainBody;
             if (!MapView.MapIsEnabled)
@@ -1217,8 +1219,9 @@ namespace MuMech
                     body.GetAltitude(position) + heightOffset);
             double lat = body.GetLatitude(position);
             double lon = body.GetLongitude(position);
+            double terrain = positionOnTerrain ? body.GetAltitude(position) : body.TerrainAltitude(lat, lon);
             return ScaledSpace.LocalToScaledSpace(body.position +
-                (body.Radius + heightOffset + body.TerrainAltitude(lat, lon)) *
+                (body.Radius + heightOffset + terrain) *
                 body.GetSurfaceNVector(lat, lon));
         }
 
@@ -1233,6 +1236,8 @@ namespace MuMech
                 if (_currPath != null) { _currPath.enabled = value; }
 
                 if (_nextPath != null) { _nextPath.enabled = value; }
+
+                if (_selWp != null) { _selWp.enabled = value; }
             }
         }
 
@@ -1308,8 +1313,8 @@ namespace MuMech
                     float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, AP.Waypoints[sel].Position) / 600f + 0.1f;
                     _selWp.startWidth = 0;
                     _selWp.endWidth = w * 10f;
-                    _selWp.SetPosition(0, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f));
-                    _selWp.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f + w * 15f));
+                    _selWp.SetPosition(0, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f, true));
+                    _selWp.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f + w * 15f, true));
                 }
 
                 if (AP.WaypointIndex > 0)
@@ -1320,7 +1325,7 @@ namespace MuMech
                     for (int i = 0; i < AP.WaypointIndex; i++)
                     {
                         //						Debug.Log("vert " + i.ToString());
-                        _pastPath.SetPosition(i, RaisePositionOverTerrain(AP.Waypoints[i].Position, targetHeight));
+                        _pastPath.SetPosition(i, RaisePositionOverTerrain(AP.Waypoints[i].Position, targetHeight, true));
                     }
 
                     _pastPath.SetPosition(AP.WaypointIndex, RaisePositionOverTerrain(AP.Vessel.CoM, targetHeight));
@@ -1337,7 +1342,7 @@ namespace MuMech
                     //					Debug.Log("drawing currPath");
                     _currPath.enabled = true;
                     _currPath.SetPosition(0, RaisePositionOverTerrain(AP.Vessel.CoM, targetHeight));
-                    _currPath.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex].Position, targetHeight));
+                    _currPath.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex].Position, targetHeight, true));
                     //					Debug.Log("currPath drawn");
                 }
                 else
@@ -1358,7 +1363,7 @@ namespace MuMech
                     for (int i = 0; i < nextCount - 1; i++)
                     {
                         //						Debug.Log("vert " + i.ToString() + " (" + (ap.WaypointIndex + 1 + i).ToString() + ")");
-                        _nextPath.SetPosition(i + 1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex + 1 + i].Position, targetHeight));
+                        _nextPath.SetPosition(i + 1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex + 1 + i].Position, targetHeight, true));
                     }
                     //					Debug.Log("nextPath drawn");
                 }
