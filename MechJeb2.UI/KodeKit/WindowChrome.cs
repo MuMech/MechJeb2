@@ -295,10 +295,8 @@ namespace KodeKit
 
         void Unlock()
         {
-            if (HighLogic.LoadedSceneIsEditor)
-                EditorLogic.fetch?.Unlock(lockId);
-            else
-                InputLockManager.RemoveControlLock(lockId);
+            // what EditorLogic.Unlock does, also when the editor is already gone
+            InputLockManager.RemoveControlLock(lockId);
             Locked = false;
         }
 

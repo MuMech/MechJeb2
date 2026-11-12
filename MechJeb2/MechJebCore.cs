@@ -1141,9 +1141,18 @@ namespace MuMech
         public void OnDestroy()
         {
             // FlightGlobals is already gone when the game quits from flight, and with it the active vessel: Update's periodic save has to do
-            if (this == vessel.GetMasterMechJeb() && (vessel == null || (FlightGlobals.fetch != null && vessel.isActiveVessel)))
+            // each step on its own: one that throws must not keep the modules from their OnDestroy, where they leave the static
+            // GameEvents
+            try
             {
-                OnSave(null);
+                if (this == vessel.GetMasterMechJeb() && (vessel == null || (FlightGlobals.fetch != null && vessel.isActiveVessel)))
+                {
+                    OnSave(null);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("MechJeb caught exception saving in core OnDestroy: " + e);
             }
 
             RemoveGameEvents();
@@ -1414,17 +1423,11 @@ namespace MuMech
 
         private void UnlockControl(Vessel v) => UnlockControl();
 
+        // EditorLogic.Unlock is RemoveControlLock: called directly, it needs neither the editor nor the scene flags, which already
+        // name the next scene when the core is destroyed
         private void UnlockControl()
         {
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                EditorLogic.fetch.Unlock(LOCK_ID);
-            }
-            else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
-            {
-                InputLockManager.RemoveControlLock(LOCK_ID);
-            }
-
+            InputLockManager.RemoveControlLock(LOCK_ID);
             _weLockedInputs = false;
         }
 
