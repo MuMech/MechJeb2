@@ -183,15 +183,40 @@ namespace MuMech
 
         private void StageActivate(int data) => _waitingForFirstStaging = false;
 
+        // the users that AutostageOnce added, which the next staging removes
+        private readonly List<object> _autostageOnceUsers = new List<object>();
+
         public void AutostageOnce(object user)
         {
+            // a user that already autostages keeps autostaging
+            if (user == null || Users.Contains(user))
+                return;
+
             Users.Add(user);
+            _autostageOnceUsers.Add(user);
             AutostagingOnce = true;
+        }
+
+        public bool IsAutostageOnceUser(object user) => AutostagingOnce && user != null && _autostageOnceUsers.Contains(user);
+
+        // ends the pending "autostage once" requests without staging: only their users leave, the others keep autostaging
+        public void CancelAutostageOnce()
+        {
+            AutostagingOnce = false;
+            // copied first: the last removal disables the module, and OnModuleDisabled clears the list
+            object[] onceUsers = _autostageOnceUsers.ToArray();
+            _autostageOnceUsers.Clear();
+            foreach (object user in onceUsers)
+                Users.Remove(user);
         }
 
         protected override void OnModuleEnabled() => _autoStageModuleLimit.Clear();
 
-        protected override void OnModuleDisabled() => AutostagingOnce = false;
+        protected override void OnModuleDisabled()
+        {
+            AutostagingOnce = false;
+            _autostageOnceUsers.Clear();
+        }
 
         internal readonly string _sFairingMaxDynamicPressure = $"  {CachedLocalizer.Instance.MechJebAscentLabel39} <";
         internal readonly string _sFairingMinAltitude = $"  {CachedLocalizer.Instance.MechJebAscentLabel40} >";
@@ -401,7 +426,7 @@ namespace MuMech
             _countingDown = false;
 
             if (AutostagingOnce)
-                Users.Clear();
+                CancelAutostageOnce();
         }
 
         public void Stage()
