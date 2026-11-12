@@ -1,11 +1,10 @@
 extern alias JetBrainsAnnotations;
-using System.Linq;
 using KSP.Localization;
-using UnityEngine;
 
 namespace MuMech
 {
-    internal class MechJebModuleSmartRcs : DisplayModule
+    // The SmartRcs logic: it runs all flight, with the window (MechJebModuleSmartRcsWindow) open or closed
+    internal class MechJebModuleSmartRcs : ComputerModule
     {
         public enum Target
         {
@@ -24,12 +23,24 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_DisableSmartRcsAutomatically", InfoItem.Category.Misc)] //Disable SmartRcs automatically
         public void AutoDisableSmartRCS() { } //"Disable SmartRcs automatically"
 
-        public MechJebModuleSmartRcs(MechJebCore core) : base(core)
+        public MechJebModuleSmartRcs(MechJebCore core) : base(core) => Enabled = true;
+
+        /// <summary>
+        /// True while another module uses the RCS controller: SmartRcs then shows only "AUTO". Set every tick, with the window
+        /// open or closed.
+        /// </summary>
+        internal bool RcsUsedByOtherModule { get; private set; }
+
+        public override void OnFixedUpdate()
         {
+            base.OnFixedUpdate();
+
+            RcsUsedByOtherModule = CheckOtherUsers();
         }
 
-        // shared by the IMGUI window and the new UI: true when RCS is used by an other module (and then switches SmartRcs off if configured so)
-        internal bool RcsUsedByOtherModule()
+        // with autoDisableSmartRCS, SmartRcs steps aside as soon as another module takes the RCS controller, so it doesn't
+        // suddenly turn on when that autopilot finishes
+        private bool CheckOtherUsers()
         {
             if (!Core.RCS.Enabled)
                 return false;
@@ -51,7 +62,7 @@ namespace MuMech
             {
                 target = Target.OFF;
                 if (Core.RCS.Users.Contains(this))
-                    Core.RCS.Users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                    Core.RCS.Users.Remove(this);
             }
 
             return true;
@@ -70,9 +81,5 @@ namespace MuMech
                     break;
             }
         }
-
-        public override string GetName() => Localizer.Format("#MechJeb_SmartRcs_title"); //"SmartRcs"
-
-        public override string IconName() => "SmartRcs";
     }
 }
