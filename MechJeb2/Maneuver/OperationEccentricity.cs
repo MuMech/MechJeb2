@@ -14,7 +14,9 @@ namespace MuMech
 
         private static readonly TimeReference[] _timeReferences = { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE };
 
-        internal static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+        internal readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+
+        internal override TimeSelector Timing => _timeSelector;
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {

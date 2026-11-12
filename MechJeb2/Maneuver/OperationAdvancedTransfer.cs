@@ -14,7 +14,7 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationAdvancedTransfer : Operation
     {
-        private enum Mode
+        internal enum Mode
         {
             LIMITED_TIME,
             PORKCHOP
@@ -63,7 +63,9 @@ namespace MuMech
         private int[]? _nativeSelected;
         private Texture2D? _nativeTexture;
 
-        private int[]? SelectedPoint => _nativeSelected;
+        // the chosen point, else the lowest ΔV one once the grid is done (which ViewUpdate also selects when it draws the plot)
+        private int[]? SelectedPoint =>
+            _nativeSelected ?? (_worker is { Finished: true } w && w.ArrivalDate >= 0 ? new[] { w.BestDate, w.BestDuration } : null);
 
         private string? CheckPreconditions(Orbit o, MechJebModuleTargetController target)
         {
@@ -190,12 +192,16 @@ namespace MuMech
                     _nativePlotReady = true;
                     _nativeSelected = new[] { _worker.BestDate, _worker.BestDuration };
                 }
+            }
 
+            // in both modes: limited time solves for the same arrival periapsis
+            if (_worker != null)
+            {
                 var targetCelestial = target.Target as CelestialBody;
 
                 // fixup the default value of the periapsis if the target changes
                 if (targetCelestial != null && _lastTargetCelestial != targetCelestial)
-                    _periapsisHeight = targetCelestial.atmosphere ? targetCelestial.atmosphereDepth / 1000 + 10 : 100;
+                    _periapsisHeight.Val = DefaultPeriapsisKm(targetCelestial);
 
                 _lastTargetCelestial = targetCelestial;
             }
@@ -263,15 +269,16 @@ namespace MuMech
             _nativeChanged = true;
         }
 
+        // a finished grid, not a drawn plot: kOS selects without one (the window draws the plot the frame the grid finishes)
         internal void SelectLowestDv()
         {
-            if (_nativePlotReady && _worker != null)
+            if (_worker is { Finished: true })
                 _nativeSelected = new[] { _worker.BestDate, _worker.BestDuration };
         }
 
         internal void SelectAsap()
         {
-            if (_nativePlotReady && _worker != null)
+            if (_worker is { Finished: true })
                 _nativeSelected = new[] { 0, AsapDuration(_worker) };
         }
 
@@ -352,6 +359,99 @@ namespace MuMech
             return (epoch, arrivalDt, arrivalDtLower, arrivalDtUpper);
         }
 
+        // ---- without the window (kOS) ----
+
+        /// <summary>The window's default arrival periapsis for <paramref name="body"/>, in km: 10 km above its atmosphere, or 100 km.</summary>
+        internal static double DefaultPeriapsisKm(CelestialBody body) => body.atmosphere ? body.atmosphereDepth / 1000 + 10 : 100;
+
+        internal Mode SelectionMode
+        {
+            get => _selectionMode;
+            set => ModeIndex = (int)value;
+        }
+
+        /// <summary>
+        /// Start the grid search from orbit <paramref name="o"/> at <paramref name="ut"/> without the window, which does this in
+        /// ViewUpdate. Each window bound left null takes the window's default (ComputeTimes); the earliest departure is no earlier
+        /// than <paramref name="ut"/> and the shortest transfer no shorter than an hour, as the plot's zoom has them. Null when the
+        /// computation started, else why it didn't.
+        /// </summary>
+        internal string? Compute(Orbit o, double ut, MechJebModuleTargetController target, double? minDepartureTime = null,
+            double? maxDepartureTime = null, double? minTransferTime = null, double? maxTransferTime = null, double? maxArrivalTime = null)
+        {
+            string? error = CheckPreconditions(o, target);
+            if (error != null)
+                return error;
+
+            ComputeTimes(o, target.TargetOrbit, ut);
+            _minDepartureTime = Math.Max(minDepartureTime ?? _minDepartureTime, ut);
+            _maxDepartureTime = maxDepartureTime ?? _maxDepartureTime;
+            _minTransferTime  = Math.Max(minTransferTime ?? _minTransferTime, 3600);
+            _maxTransferTime  = maxTransferTime ?? _maxTransferTime;
+            if (maxArrivalTime != null)
+                MaxArrivalTime.Val = maxArrivalTime.Value;
+
+            if (_selectionMode == Mode.PORKCHOP && !(_maxDepartureTime > _minDepartureTime))
+                return "the latest departure must be after the earliest one, and after now";
+            if (_selectionMode == Mode.PORKCHOP && !(_maxTransferTime > _minTransferTime))
+                return "the longest transfer must be longer than the shortest one, and than an hour";
+            if (_selectionMode == Mode.LIMITED_TIME && !(MaxArrivalTime.Val > 3600))
+                return "the maximum arrival time must be more than an hour";
+
+            ComputeStuff(o, ut, target);
+            _nativeChanged = false;
+            return null;
+        }
+
+        /// <summary>The grid was computed from another orbit or for another target than these (the window would compute it again).</summary>
+        internal bool IsStale(Orbit o, Orbit? targetOrbit) => _worker != null && (_worker.OriginOrbit != o || _worker.DestinationOrbit != targetOrbit);
+
+        internal bool IsFinished => _worker is { Finished: true };
+
+        /// <summary>The grid is done and no point of it has a transfer.</summary>
+        internal bool HasFailed => _worker is { Finished: true } w && w.ArrivalDate < 0;
+
+        internal int Progress => _worker?.Progress ?? 0;
+
+        /// <summary>
+        /// Select the point of a finished porkchop grid nearest a departure time and a transfer duration (both in seconds); false, leaving
+        /// the selection alone, when that point is off the grid or has no transfer.
+        /// </summary>
+        internal bool SelectTimes(double departureTime, double duration)
+        {
+            if (_selectionMode != Mode.PORKCHOP || !(_worker is { Finished: true } w))
+                return false;
+
+            int width = w.Computed.GetLength(0);
+            int height = w.Computed.GetLength(1);
+            double dateStep = (w.MaxDepartureTime - w.MinDepartureTime) / w.DateSamples;
+            double x = Math.Round((departureTime - w.MinDepartureTime) / dateStep);
+            double y = Math.Round((duration - w.MinTransferTime) / w.DurationStep);
+            if (!(x >= 0 && x < width && y >= 0 && y < height))
+                return false;
+
+            double dv = w.Computed[(int)x, (int)y];
+            if (!(dv > 0) || !dv.IsFinite())
+                return false;
+
+            _nativeSelected = new[] { (int)x, (int)y };
+            return true;
+        }
+
+        /// <summary>The selected point of a finished grid: its departure time, transfer duration and the grid's ΔV estimate there.</summary>
+        internal bool TryGetSelection(out double departureTime, out double duration, out double deltaV)
+        {
+            departureTime = duration = deltaV = double.NaN;
+            int[]? point = SelectedPoint;
+            if (!(_worker is { Finished: true } w) || point == null)
+                return false;
+
+            departureTime = w.DateFromIndex(point[0]);
+            duration      = w.DurationFromIndex(point[1]);
+            deltaV        = w.Computed[point[0], point[1]];
+            return true;
+        }
+
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double ut, MechJebModuleTargetController target)
         {
             // Check preconditions
@@ -364,14 +464,22 @@ namespace MuMech
                 case { Finished: false }:
                     throw new OperationException(Localizer.Format("#MechJeb_adv_Exception1")); //Computation not finished
                 case null:
-                    ComputeStuff(o, ut, target);
-                    throw new OperationException(Localizer.Format("#MechJeb_adv_Exception2")); //Started computation
+                    // with the default window: the one the fields hold was never set (ViewUpdate sets it with the worker)
+                    throw new OperationException(Compute(o, ut, target) ?? Localizer.Format("#MechJeb_adv_Exception2")); //Started computation
+            }
+
+            // the window has already started again (ViewUpdate) when the orbit or the target changed, but nothing else does
+            if (IsStale(o, target.TargetOrbit))
+            {
+                ComputeStuff(o, ut, target);
+                throw new OperationException(Localizer.Format("#MechJeb_adv_Exception2")); //Started computation
             }
 
             if (_worker.ArrivalDate < 0)
                 throw new OperationException(Localizer.Format("#MechJeb_adv_Exception3")); //Computation failed
 
-            double targetPeR = (_lastTargetCelestial?.Radius ?? 0) + _periapsisHeight * 1000;
+            // the radius of the target as it is now, not of the one ViewUpdate last saw (it never ran in limited time mode, nor without the window)
+            double targetPeR = ((target.Target as CelestialBody)?.Radius ?? 0) + _periapsisHeight * 1000;
 
             if (_selectionMode == Mode.PORKCHOP && SelectedPoint == null)
                 throw new OperationException(Localizer.Format("#MechJeb_adv_Exception4")); //Invalid point selected.
