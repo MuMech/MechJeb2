@@ -95,10 +95,6 @@ namespace MuMech.UI
                 op.ResetTimes(o, c.Target, ut);
             });
 
-            w.Toggle(porkchop, "#MechJeb_adv_captureburn", () => op.IncludeCaptureBurn, v => op.IncludeCaptureBurn = v); //include capture burn
-            OpUi.LabeledField(w, porkchop, "#MechJeb_adv_periapsis", () => op.PeriapsisHeight, "km");
-            OpUi.ToggledField(w, porkchop, "Inclination", () => op.TargetInclinationFlag, v => op.TargetInclinationFlag = v, () => op.TargetInclination, "°");
-
             Layout select = KodeWindow.Row(porkchop);
             KodeWindow.Label(select, "#MechJeb_adv_label2", true); //Select:
             KodeWindow.Button(select, "#MechJeb_adv_button1", op.SelectLowestDv); //Lowest ΔV
@@ -106,6 +102,13 @@ namespace MuMech.UI
 
             w.BoundLabel(porkchop, () => readout.Departure, true);
             w.BoundLabel(porkchop, () => readout.Duration, true);
+
+            // the arrival, used by both modes
+            Layout arrival = KodeWindow.Panel(c.Panel);
+            w.Visible(arrival.gameObject, () => !op.IsPorkchopMode || op.HasWorker);
+            w.Toggle(arrival, "#MechJeb_adv_captureburn", () => op.IncludeCaptureBurn, v => op.IncludeCaptureBurn = v); //include capture burn
+            OpUi.LabeledField(w, arrival, "#MechJeb_adv_periapsis", () => op.PeriapsisHeight, "km");
+            OpUi.ToggledField(w, arrival, "Inclination", () => op.TargetInclinationFlag, v => op.TargetInclinationFlag = v, () => op.TargetInclination, "°");
         }
     }
 }
