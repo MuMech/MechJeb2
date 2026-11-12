@@ -115,6 +115,8 @@ namespace MuMech
                     try
                     {
                         targetUT = Core.GetComputerModule<MechJebModuleHoverslamSimulation>().IgnitionUT;
+                        // NaN without a hoverslam solution
+                        if (double.IsNaN(targetUT) || double.IsInfinity(targetUT)) valid = false;
                     }
                     catch
                     {
@@ -152,6 +154,14 @@ namespace MuMech
                 catch
                 {
                     warping = false;
+                }
+
+                // the solution is gone: a NaN target would neither warp nor ever end
+                if (double.IsNaN(targetUT) || double.IsInfinity(targetUT))
+                {
+                    Core.Warp.MinimumWarp(true);
+                    warping = false;
+                    return;
                 }
             }
 
