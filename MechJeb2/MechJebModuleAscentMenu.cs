@@ -95,13 +95,6 @@ namespace MuMech
 
         internal bool AutoWarpTargetExists => Core.Target.NormalTargetExists && Core.Target.TargetOrbit?.referenceBody == MainBody;
 
-        // what ShowAutoWarpGUIElements does before drawing when nothing is being launched and there is no usable target
-        internal void ResetLaunchWithoutTarget()
-        {
-            if (!_launchingWithAnyPlaneControl && !AutoWarpTargetExists)
-                _launchingToPlane = _launchingToMatchLan = false;
-        }
-
         internal void LaunchToPlaneOfTarget() => Core.LaunchCountdown.StartToPlaneOfTarget();
 
         internal void LaunchToTargetLan() => Core.LaunchCountdown.StartToTargetLan();

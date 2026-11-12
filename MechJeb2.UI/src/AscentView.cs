@@ -97,7 +97,6 @@ namespace MuMech.UI
             landed = HasVessel && Core.vessel.LandedOrSplashed;
             if (psg) Core.StageStats.RequestUpdate();
 
-            if (landed) menu.ResetLaunchWithoutTarget();
             anyPlaneControl = menu._launchingWithAnyPlaneControl;
             targetExists = landed && menu.AutoWarpTargetExists;
             incDelta = HasVessel ? menu.InclinationBelowLatitude(menu.InclinationSetting) : 0;
