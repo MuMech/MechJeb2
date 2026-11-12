@@ -948,6 +948,8 @@ namespace MuMech
 
                 _routes.Sort(SortRoutes);
                 SaveRoutes();
+                // the sort moves the rows: select the saved route, wherever it is now
+                _saveIndex = BodyRoutes().IndexOf(wps);
             }
         }
 
