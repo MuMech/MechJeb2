@@ -498,7 +498,7 @@ namespace MuMech
             // if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
             // should end a safe height above the landing site in order to allow braking from terminal velocity
             // FIXME: Drag Length is quite large now without parachutes, check this better
-            double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragCoef(), VesselState.Mass);
+            double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragArea(), VesselState.Mass);
 
             //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
             return 1.1 * landingSiteDragLength + _landingAltitude;
@@ -512,7 +512,7 @@ namespace MuMech
         //expect to get slowed to near terminal velocity before impacting the ground.
         public bool UseAtmosphereToBrake()
         {
-            double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragCoef(), VesselState.Mass);
+            double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragArea(), VesselState.Mass);
 
             //if (mainBody.RealMaxAtmosphereAltitude() > 0 && (ParachutesDeployable() || ParachutesDeployed()))
             return MainBody.RealMaxAtmosphereAltitude() > 0 &&
@@ -545,37 +545,43 @@ namespace MuMech
             return dragCoef * PhysicsGlobals.DragCubeMultiplier;
         }
 
-        // This is not the exact number, but it's good enough for our use
-        private double ParachuteAddedDragCoef()
+        // The drag area the chutes add once fully open, averaged over the six faces as VesselAverageDrag averages a part: the DEPLOYED
+        // cube's area times its drag coefficient, less what the chute counts for there now. This is not the exact number, but it's good
+        // enough for our use
+        private double ParachuteAddedDragArea()
         {
-            double addedDragCoef = 0;
-            if (!MainBody.atmosphere || !DeployChutes) return addedDragCoef * PhysicsGlobals.DragCubeMultiplier;
+            if (!MainBody.atmosphere || !DeployChutes) return 0;
 
+            double addedDragArea = 0;
             for (int i = 0; i < VesselState.Parachutes.Count; i++)
             {
                 ModuleParachute p = VesselState.Parachutes[i];
-                if (p.part.inverseStage < LimitChutesStage) continue;
+                if (p.part.inverseStage < LimitChutesStage || p.deploymentState == ModuleParachute.deploymentStates.CUT) continue;
 
-                //addedDragMass += p.part.DragCubes.Cubes.Where(c => c.Name == "DEPLOYED").m
+                DragCubeList cubes = p.part.DragCubes;
 
-                float maxCoef = 0;
-                for (int c = 0; c < p.part.DragCubes.Cubes.Count; c++)
+                float deployedArea = 0;
+                for (int c = 0; c < cubes.Cubes.Count; c++)
                 {
-                    DragCube dragCube = p.part.DragCubes.Cubes[c];
+                    DragCube dragCube = cubes.Cubes[c];
                     if (dragCube.Name != "DEPLOYED")
                         continue;
 
                     for (int f = 0; f < 6; f++)
-                    {
-                        // we only want the additional coef from going fully deployed
-                        maxCoef = Mathf.Max(maxCoef, p.part.DragCubes.WeightedDrag[f] - dragCube.Weight * dragCube.Drag[f]);
-                    }
+                        deployedArea += dragCube.Area[f] * dragCube.Drag[f];
                 }
 
-                addedDragCoef += maxCoef;
+                float currentArea = 0;
+                if (!cubes.None && !p.part.ShieldedFromAirstream)
+                {
+                    for (int f = 0; f < 6; f++)
+                        currentArea += cubes.WeightedDrag[f] * cubes.AreaOccluded[f];
+                }
+
+                addedDragArea += Math.Max(0, deployedArea - currentArea) / 6;
             }
 
-            return addedDragCoef * PhysicsGlobals.DragCubeMultiplier;
+            return addedDragArea * PhysicsGlobals.DragCubeMultiplier;
         }
 
         private bool UseLowDeorbitStrategy()
