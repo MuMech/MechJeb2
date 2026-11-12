@@ -179,9 +179,14 @@ namespace MuMech
 
             // markVector is the position of the mark, as it was at the time the mark was made.
             CelestialBody markBody = MarkCelestialBody;
-            Vector3d markVector = markBody.GetSurfaceNVector(MarkLatitude, MarkLongitude - TimeSinceMark * 360.0 / markBody.rotationPeriod);
+            double rotation = markBody.rotationPeriod != 0 ? TimeSinceMark * 360.0 / markBody.rotationPeriod : 0;
+            Vector3d markVector = markBody.GetSurfaceNVector(MarkLatitude, MarkLongitude - rotation);
             Vector3d vesselVector = VesselState.CoM - markBody.transform.position;
-            double traversedAngle = Vector3d.Angle(markVector, vesselVector);
+            // the angle from the mark to the vessel in the direction the vessel moves, 0-360°: an unsigned angle would fold back
+            // after half an orbit
+            Vector3d normal = Vector3d.Cross(vesselVector, VesselState.OrbitalVelocity);
+            double traversedAngle = Math.Atan2(Vector3d.Dot(Vector3d.Cross(markVector, vesselVector), normal.normalized),
+                Vector3d.Dot(markVector, vesselVector)) * UtilMath.Rad2Deg;
             double circularOrbitAngle = 360 * TimeSinceMark / Orbit.CircularOrbitPeriod();
             return Clamp360(circularOrbitAngle - traversedAngle);
         }
