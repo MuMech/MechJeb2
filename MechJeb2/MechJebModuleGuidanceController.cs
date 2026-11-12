@@ -130,8 +130,6 @@ namespace MuMech
             HandleSpinup();
 
             HandleThrottle();
-
-            DrawTrajectory();
         }
 
         private bool WillDoRCSButNotYet()
