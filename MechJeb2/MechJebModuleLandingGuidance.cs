@@ -54,6 +54,8 @@ namespace MuMech
             if (LandingSites == null)
                 return;
 
+            AddLaunchSites();
+
             foreach ((string site, string facilityName, string spawnPointName) in _kscSites)
             {
                 PSystemSetup.SpaceCenterFacility facility = PSystemSetup.Instance.GetSpaceCenterFacility(facilityName);
@@ -63,6 +65,23 @@ namespace MuMech
                     continue;
 
                 LandingSites[index] = new LandingSite { Name = site, Latitude = latitude, Longitude = longitude, Body = facility.hostBody };
+            }
+        }
+
+        // the KSP launch sites already in LandingSites
+        private static readonly HashSet<LaunchSite> _launchSitesAdded = new HashSet<LaunchSite>();
+
+        // KSP sets a launch site's spawn point when the site's city is placed, once its body's terrain has started: a session that
+        // loads straight into a flight around another body has them unset. A site is listed once its position is known.
+        private static void AddLaunchSites()
+        {
+            foreach (LaunchSite site in PSystemSetup.Instance.LaunchSites)
+            {
+                if (site.spawnPoints.Length == 0 || _launchSitesAdded.Contains(site)) continue;
+                LaunchSite.SpawnPoint point = site.spawnPoints[0];
+                if (!point.latlonaltSet) continue;
+                LandingSites.Add(new LandingSite { Name = point.name.Replace("_", " "), Latitude = point.latitude, Longitude = point.longitude, Body = site.Body });
+                _launchSitesAdded.Add(site);
             }
         }
 
@@ -169,14 +188,8 @@ namespace MuMech
             }
 
             // Import KSP launch sites
-            foreach (LaunchSite site in PSystemSetup.Instance.LaunchSites)
-            {
-                if (site.spawnPoints.Length > 0)
-                {
-                    LaunchSite.SpawnPoint point = site.spawnPoints[0];
-                    LandingSites.Add(new LandingSite { Name = point.name.Replace("_", " "), Latitude = point.latitude, Longitude = point.longitude, Body = site.Body });
-                }
-            }
+            _launchSitesAdded.Clear();
+            AddLaunchSites();
 
             // Import KerbTown/Kerbal-Konstructs launch site
             foreach (UrlDir.UrlConfig config in GameDatabase.Instance.GetConfigs("STATIC"))
