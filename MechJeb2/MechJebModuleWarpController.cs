@@ -60,6 +60,8 @@ namespace MuMech
         // Turn SAS on during regular warp for compatibility with PersistentRotation
         private void SetTimeWarpRate(int rateIndex, bool instant)
         {
+            if (!OwnsWarp) return;
+
             if (rateIndex != TimeWarp.CurrentRateIndex)
             {
                 if (activateSASOnWarp && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
@@ -172,10 +174,16 @@ namespace MuMech
             }
         }
 
+        // The warp is the game's, not the vessel's: only the active vessel's modules change it. Another loaded vessel keeps its
+        // warp requests (warpToUT) and acts on them once it is the active vessel again.
+        private bool OwnsWarp => Vessel != null && Vessel.isActiveVessel;
+
         //If the warp mode is regular warp, returns true
         //If the warp mode is physics warp, switches it to regular warp and returns false
         private bool CheckRegularWarp()
         {
+            if (!OwnsWarp) return false;
+
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH)
             {
                 double instantAltitudeASL = (VesselState.CoM - MainBody.position).magnitude - MainBody.Radius;
@@ -195,6 +203,8 @@ namespace MuMech
         //If the warp mode is regular warp, switches it to physics warp and returns false
         private bool CheckPhysicsWarp()
         {
+            if (!OwnsWarp) return false;
+
             if (TimeWarp.WarpMode != TimeWarp.Modes.LOW)
             {
                 TimeWarp.fetch.Mode = TimeWarp.Modes.LOW;
