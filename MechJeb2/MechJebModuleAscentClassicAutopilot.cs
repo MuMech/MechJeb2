@@ -21,11 +21,16 @@ namespace MuMech
 
         private double _actualTurnStart;
 
+        // the altitude above sea level the vessel was engaged at on the ground (0 when engaged in flight): from a site above the
+        // turn start altitude the turn starts there, not from sea level
+        private double _launchAltitude;
+
         protected override void OnModuleEnabled()
         {
             _placedCircularizeNode = false;
             _mode = AscentMode.PRELAUNCH;
-            _actualTurnStart = 0;
+            _launchAltitude = Vessel.LandedOrSplashed ? Math.Max(VesselState.AltitudeASL, 0) : 0;
+            _actualTurnStart = _launchAltitude;
 
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
@@ -57,7 +62,7 @@ namespace MuMech
 
         private bool IsVerticalAscent(double altitude, double velocity)
         {
-            _actualTurnStart = Math.Min(_actualTurnStart, VerticalAscentEnd());
+            _actualTurnStart = Math.Min(_actualTurnStart, Math.Max(VerticalAscentEnd(), _launchAltitude));
             if (altitude < VerticalAscentEnd() && velocity < SpeedAscentEnd())
             {
                 _actualTurnStart = Math.Max(_actualTurnStart, altitude);
