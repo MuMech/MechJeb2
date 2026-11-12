@@ -757,8 +757,14 @@ namespace MuMech
                     //if (rcsbal.enabled)
                     //    continue;
 
-                    if (p.ShieldedFromAirstream || !rcs.rcsEnabled || !rcs.isEnabled || rcs.isJustForShow || rcs.flameout)
+                    if ((p.ShieldedFromAirstream && !rcs.shieldedCanThrust) || !rcs.rcsEnabled || !rcs.isEnabled || rcs.isJustForShow || rcs.flameout)
                         continue;
+
+                    // ModuleRCS keeps the vacuum fuel flow and lets the thrust follow the Isp: thrusterPower is the vacuum thrust
+                    float vacuumIsp = rcs.atmosphereCurve.Evaluate(0);
+                    float ispFactor = vacuumIsp > 0
+                        ? rcs.atmosphereCurve.Evaluate((float)p.staticPressureAtm) / vacuumIsp * (float)rcs.ispMult
+                        : 0;
 
                     // ModuleRCS copies the RCS group into rcs_active in its own FixedUpdate: the torque needs both, the thrust neither
                     bool countTorque = rcsGroup && rcs.rcs_active;
@@ -779,7 +785,7 @@ namespace MuMech
 
                         Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
 
-                        float power = rcs.thrusterPower * rcs.thrustPercentage * 0.01f * (float)rcs.flowMult;
+                        float power = rcs.thrusterPower * rcs.thrustPercentage * 0.01f * (float)rcs.flowMult * ispFactor;
 
                         if (FlightInputHandler.fetch.precisionMode)
                         {
