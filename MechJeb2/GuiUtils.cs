@@ -708,9 +708,6 @@ namespace MuMech
             void DrawLabel() => GUILayout.Label(label, expandWidth ? ArrowSelectorStyeGuiStyleExpand : ArrowSelectorStyeGuiStyleNoExpand);
         }
 
-        public static int HoursPerDay => GameSettings.KERBIN_TIME ? 6 : 24;
-        public static int DaysPerYear => GameSettings.KERBIN_TIME ? 426 : 365;
-
         public static string TimeToDHMS(double seconds, int decimalPlaces = 0)
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
