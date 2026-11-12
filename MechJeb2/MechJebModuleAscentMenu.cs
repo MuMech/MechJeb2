@@ -60,11 +60,9 @@ namespace MuMech
             _settingsMenu.Enabled = _lastSettingsMenuEnabled;
         }
 
+        // a closed window leaves the launch mode alone: the countdown and the guidance still fly it
         protected override void OnModuleDisabled()
         {
-            _launchingToPlane = false;
-            _launchingToMatchLan = false;
-            _launchingToLan = false;
             _lastPSGSettingsEnabled = _psgSettingsMenu.Enabled;
             _lastSettingsMenuEnabled = _settingsMenu.Enabled;
             _psgSettingsMenu.Enabled = false;
@@ -110,9 +108,12 @@ namespace MuMech
 
         internal void LaunchToLan() => Core.LaunchCountdown.StartToLan();
 
+        // Abort cancels the launch, not only its timer: an autopilot left engaged would launch at once from a landed vessel, or
+        // after T-0 without the plane. Disengaging ends the countdown too.
         internal void AbortTimedLaunch()
         {
-            _launchingToPlane = _launchingToMatchLan = _launchingToLan = false;
+            if (Core.Ascent is { Enabled: true } autopilot)
+                autopilot.Users.Clear();
             Core.LaunchCountdown.Abort();
         }
 
