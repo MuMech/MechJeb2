@@ -206,7 +206,7 @@ namespace MuMech.UI
         {
             if (s != settings) return;
             ApplyTheme();
-            foreach (KodeView v in views.Values) v.ApplyScale();
+            foreach (KodeView v in views.Values) v.Rescale();
         }
 
         string layoutKey;

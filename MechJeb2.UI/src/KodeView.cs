@@ -69,6 +69,18 @@ namespace MuMech.UI
             if (Window != null) Window.Behaviour.Scale = GuiUtils.Scale;
         }
 
+        /// <summary>
+        /// A UI scale change: the window grows or shrinks about its top-left corner and keeps its place on screen. The stored
+        /// position is in IMGUI units (screen / scale), so a shown window stores its place again in the new units; a hidden one
+        /// is placed from the stored position when it is shown.
+        /// </summary>
+        public void Rescale()
+        {
+            if (Window == null || Window.Behaviour.Scale.Equals(GuiUtils.Scale)) return;
+            ApplyScale();
+            if (Window.Root.gameObject.activeSelf) StorePosition();
+        }
+
         // DisplayModule.WindowPos keeps one position per scene
         Vector4 StoredPosition
         {
