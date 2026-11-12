@@ -488,6 +488,8 @@ namespace MuMech
             return new SafeDescentSpeedPolicy(MainBody.Radius + DecelerationEndAltitude(), MainBody.GeeASL * 9.81, VesselState.LimitedMaxThrustAcceleration);
         }
 
+        private const double MIN_ATMOSPHERE_DECELERATION_END = 50;
+
         public double DecelerationEndAltitude()
         {
             //if the atmosphere is thin, the deceleration burn should end
@@ -501,7 +503,8 @@ namespace MuMech
             double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragArea(), VesselState.Mass);
 
             //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
-            return 1.1 * landingSiteDragLength + _landingAltitude;
+            // under open chutes the drag length is a few metres: keep a margin for terrain above the prediction and for the engines' spool-up
+            return Math.Max(1.1 * landingSiteDragLength, MIN_ATMOSPHERE_DECELERATION_END) + _landingAltitude;
         }
 
         //On planets with thick enough atmospheres, we shouldn't do a deceleration burn. Rather,
