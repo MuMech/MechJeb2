@@ -453,14 +453,15 @@ namespace MuMech
                     _lastReferenceTransform = Vessel.ReferenceTransform;
                 }
 
-            if (userCommandingPitch)
+            // input on pitch or yaw hands both axes to the player (below), so both controllers stop integrating
+            if (userCommandingPitch || userCommandingYaw)
+            {
                 Controller.Reset(0);
+                Controller.Reset(2);
+            }
 
             if (userCommandingRoll)
                 Controller.Reset(1);
-
-            if (userCommandingYaw)
-                Controller.Reset(2);
 
             if (!userCommandingRoll)
                 if (!double.IsNaN(act.y))
