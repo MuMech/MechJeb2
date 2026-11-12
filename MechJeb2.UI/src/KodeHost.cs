@@ -92,7 +92,10 @@ namespace MuMech.UI
         void Update()
         {
             MechJebCore c = FindCore();
-            if (c != core)
+            // Unity's == counts a destroyed core (its pod deleted in the editor, or destroyed in flight) as null: compare the
+            // references, so the views of a destroyed core are let go
+            if (c == null) c = null;
+            if (!ReferenceEquals(c, core))
             {
                 DestroyViews();
                 core = c;
