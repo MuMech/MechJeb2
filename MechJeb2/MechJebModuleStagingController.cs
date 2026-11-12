@@ -261,6 +261,7 @@ namespace MuMech
         // lazily computed (and cached) once per fixed update, only when first needed
         private bool _droppingSolids => _shouldDropSolids ??= ShouldDropSolids();
         private double _stageCountdownStart;
+        private double _lastStageRequestTime;
         private Vessel _currentActiveVessel;
         private bool _initializedOnce;
 
@@ -436,12 +437,15 @@ namespace MuMech
             if (Vessel.currentStage <= 0 || Vessel.currentStage <= AutostageLimit || VesselState.Time - _lastStageTime < AutostagePostDelay)
                 return;
 
-            // enforce the predelay
-            if (!_countingDown)
+            // enforce the predelay: the countdown runs while Stage() is asked every tick; a tick without the request (the
+            // condition stopped holding, or the module was off) starts it over
+            if (!_countingDown || VesselState.Time - _lastStageRequestTime > 1.5 * TimeWarp.fixedDeltaTime)
             {
                 _countingDown = true;
                 _stageCountdownStart = VesselState.Time;
             }
+
+            _lastStageRequestTime = VesselState.Time;
 
             if (VesselState.Time - _stageCountdownStart >= AutostagePreDelay)
                 ImmediateStage();
