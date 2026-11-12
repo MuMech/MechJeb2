@@ -24,10 +24,18 @@ namespace MuMech
 
         private MechJebModuleLaunchCountdown Countdown => Core.LaunchCountdown;
 
+        // the player's throttle and electric limits, off while PSG flies and given back when it stops
+        private bool _savedLimitThrottle, _savedElectricThrottle, _limitsSaved;
+
         protected override void OnModuleEnabled()
         {
             Debug.Log("Enabling PSG Ascent Autopilot");
             _mode = AscentMode.PRELAUNCH;
+
+            _savedLimitThrottle    = Core.Thrust.LimitThrottle;
+            _savedElectricThrottle = Core.Thrust.ElectricThrottle;
+            _limitsSaved           = true;
+            AscentSettings.ForcePsgThrustLimits();
 
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
@@ -48,6 +56,13 @@ namespace MuMech
             Core.Thrust.Users.Remove(this);
             Core.Staging.Users.Remove(this);
             Countdown.Users.Remove(this);
+            if (_limitsSaved)
+            {
+                Core.Thrust.LimitThrottle    = _savedLimitThrottle;
+                Core.Thrust.ElectricThrottle = _savedElectricThrottle;
+                _limitsSaved                 = false;
+            }
+
             Countdown.Abort();
 
             Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
@@ -68,6 +83,8 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            AscentSettings.ForcePsgThrustLimits();
+
             // the guidance needs a flight plan, which nothing else makes unless the Ascent window is open
             if (Core.PSGSimulation.FlightPlan == null)
             {
