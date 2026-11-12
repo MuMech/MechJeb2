@@ -28,6 +28,9 @@ namespace MuMech
         internal ManeuverNode node;
         private ManeuverGizmo gizmo;
 
+        // the node's burn as the three fields last read or wrote it
+        private Vector3d fieldsDeltaV;
+
         internal enum Snap { PERIAPSIS, APOAPSIS, REL_ASCENDING, REL_DESCENDING, EQ_ASCENDING, EQ_DESCENDING }
 
         internal static readonly int numSnaps = Enum.GetNames(typeof(Snap)).Length;
@@ -35,11 +38,14 @@ namespace MuMech
 
         internal readonly string[] snapStrings = { Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"), Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6") }; //"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
 
-        private void GizmoUpdateHandler(Vector3d dV, double UT)
+        private void GizmoUpdateHandler(Vector3d dV, double UT) => LoadFields(dV);
+
+        private void LoadFields(Vector3d dV)
         {
             prograde = dV.z;
             radialPlus = dV.x;
             normalPlus = dV.y;
+            fieldsDeltaV = dV;
         }
 
         internal void MergeNext(int index)
@@ -52,18 +58,17 @@ namespace MuMech
             next.RemoveSelf();
         }
 
-        /// <summary>Make `newNode` the edited node: reload the fields when it changed and follow its gizmo.</summary>
+        /// <summary>
+        /// Make `newNode` the edited node and follow its gizmo. The fields are reloaded when the node changed, or when its burn was
+        /// changed elsewhere: KSP's own node panel, a gizmo with this window closed, or a merge.
+        /// </summary>
         internal void SelectNode(ManeuverNode newNode)
         {
             ManeuverNode oldNode = node;
             node = newNode;
 
-            if (node != oldNode)
-            {
-                prograde = node.DeltaV.z;
-                radialPlus = node.DeltaV.x;
-                normalPlus = node.DeltaV.y;
-            }
+            if (node != oldNode || node.DeltaV != fieldsDeltaV)
+                LoadFields(node.DeltaV);
 
             if (gizmo != node.attachedGizmo)
             {
@@ -74,7 +79,11 @@ namespace MuMech
         }
 
         /// <summary>Write the three edited components to the node.</summary>
-        internal void UpdateNodeFromFields() => node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+        internal void UpdateNodeFromFields()
+        {
+            node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+            fieldsDeltaV = node.DeltaV;
+        }
 
         /// <summary>Move the node by `dt` seconds. A move to a non-finite time or into the past is refused: the stock game misbehaves with either.</summary>
         internal void ShiftNode(double dt) => MoveNode(node.UT + dt);
