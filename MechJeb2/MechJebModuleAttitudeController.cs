@@ -143,6 +143,11 @@ namespace MuMech
             base.OnLoad(local, type, global);
 
             foreach (BaseAttitudeController attitudeController in _controllers) attitudeController.OnLoad(local, type, global);
+
+            // a load writes the saved index without switching to that controller: switch now when they differ
+            int loaded = Math.Max(0, Math.Min(ActiveController, _controllers.Count - 1));
+            if (Controller != _controllers[loaded])
+                SetActiveController(ActiveController);
         }
 
         public override void OnStart(PartModule.StartState state) => SetActiveController(ActiveController);
