@@ -1287,7 +1287,7 @@ namespace MuMech
         //Lifted this more or less directly from the Kerbal Engineer source. Thanks cybutek!
         private void PreventClickthrough()
         {
-            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this) || MechJebUiHost.MouseOverHostWindow();
+            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
             switch (_weLockedInputs)
             {
                 case false when mouseOverWindow && !Input.GetMouseButton(1):

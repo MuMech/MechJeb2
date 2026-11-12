@@ -982,7 +982,7 @@ namespace MuMech
             }
             else
             {
-                if (!GuiUtils.MouseIsOverWindow(Core) && !MechJebUiHost.MouseOverHostWindow())
+                if (!GuiUtils.MouseIsOverWindow(Core))
                 {
                     Coordinates mouseCoords = GetMouseFlightCoordinates();
                     if (mouseCoords != null)

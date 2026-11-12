@@ -780,7 +780,7 @@ namespace MuMech
                     return true;
             }
 
-            return false;
+            return MechJebUiHost.MouseOverHostWindow();
         }
 
         public static Coordinates GetMouseCoordinates(CelestialBody body)
