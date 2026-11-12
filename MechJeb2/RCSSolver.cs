@@ -8,9 +8,9 @@ using UnityEngine;
 
 namespace MuMech
 {
-    // Recalculating throttles is expensive. This class is used as a key into a
+    // Recalculating throttles is expensive. This struct is used as a key into a
     // dictionary of previously-calculated throttles.
-    public class RCSSolverKey
+    public readonly struct RCSSolverKey : IEquatable<RCSSolverKey>
     {
         // x, y, and z values will each be mapped to the integer range
         // [-precision..precision]. The results cache will have
@@ -28,14 +28,14 @@ namespace MuMech
 
         public static void SetPrecision(int precision) => _precision = Math.Max(MIN_PRECISION, Math.Min(MAX_PRECISION, precision));
 
-        private float Bucketize(double d, int precision) => (float)Mathf.RoundToInt((float)d * precision) / precision;
+        private static float Bucketize(double d, int precision) => (float)Mathf.RoundToInt((float)d * precision) / precision;
 
         public RCSSolverKey(ref Vector3 d, Vector3 rot)
         {
+            _hash = 0;
             if (d == Vector3.zero)
             {
                 // We shouldn't be solving for this, but just in case...
-                _hash = 0;
                 return;
             }
 
@@ -60,11 +60,9 @@ namespace MuMech
             _hash = ((x & 0xFF) << 16) + ((y & 0xFF) << 8) + (z & 0xFF);
         }
 
-        public override bool Equals(object other)
-        {
-            var oth = other as RCSSolverKey;
-            return oth != null && _hash == oth._hash;
-        }
+        public bool Equals(RCSSolverKey other) => _hash == other._hash;
+
+        public override bool Equals(object other) => other is RCSSolverKey key && Equals(key);
 
         public override int GetHashCode() => _hash;
 
@@ -207,7 +205,7 @@ namespace MuMech
         // Returns the throttles for 'direction', indexed the same way as the
         // array last passed to SetThrusters(). Returns an empty array if there
         // are no thrusters, the direction is zero, or the result has not been
-        // calculated yet.
+        // calculated yet. The array is the cached one: callers only read it.
         // Note that rotation balancing is not supported at the moment.
         public double[] GetThrottles(Vector3 direction)
         {
@@ -270,8 +268,7 @@ namespace MuMech
                 }
             }
 
-            // Return a copy of the array to make sure ours isn't modified.
-            return (double[])throttles.Clone();
+            return throttles;
         }
 
         private void Run()

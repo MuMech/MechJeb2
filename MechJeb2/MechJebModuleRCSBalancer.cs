@@ -403,7 +403,8 @@ namespace MuMech
         //      foreach part in vessel.parts:
         //          foreach rcsModule in part.Modules.OfType<ModuleRCS>:
         //              ...
-        // The throttles will be empty if they haven't been calculated yet.
+        // The throttles will be empty if they haven't been calculated yet. They are the solver's cached array: read them, don't
+        // change them.
         public void GetThrottles(Vector3 direction, out double[] throttles, out IReadOnlyList<RCSSolver.Thruster> thrusters)
         {
             // Update vessel info if needed.
