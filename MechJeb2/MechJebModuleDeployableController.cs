@@ -37,6 +37,8 @@ namespace MuMech
                     CachedPartModules.Add(mdp);
         }
 
+        // KSP shows neither event while the part moves, once it is broken, or when it is extended and cannot retract: this
+        // chooses the parts to act on, never their state
         [UsedImplicitly]
         protected bool IsDeployable(ModuleDeployablePart sa) => sa.Events["Extend"].active || sa.Events["Retract"].active;
 
@@ -50,15 +52,35 @@ namespace MuMech
         public void RetractAll()
         {
             foreach (ModuleDeployablePart mdp in CachedPartModules)
-                if (!(mdp is null) && IsDeployable(mdp) && !mdp.part.ShieldedFromAirstream)
+                if (!(mdp is null) && IsDeployable(mdp))
                     mdp.Retract();
         }
 
+        /// <summary>No part that can move is extended or moving: each is retracted, or broken. A fixed panel (no animation) does not count.</summary>
         public bool AllRetracted()
         {
             foreach (ModuleDeployablePart mdp in CachedPartModules)
-                if (!(mdp is null) && IsDeployable(mdp) && mdp.deployState != ModuleDeployablePart.DeployState.RETRACTED)
+                if (!(mdp is null) && mdp.useAnimation && mdp.deployState != ModuleDeployablePart.DeployState.RETRACTED &&
+                    mdp.deployState != ModuleDeployablePart.DeployState.BROKEN)
                     return false;
+            return true;
+        }
+
+        /// <summary>RetractAll has nothing left to do: no part moves, and no extended part can still retract (KSP offers its Retract).</summary>
+        private bool DoneRetracting()
+        {
+            foreach (ModuleDeployablePart mdp in CachedPartModules)
+            {
+                if (mdp is null) continue;
+                switch (mdp.deployState)
+                {
+                    case ModuleDeployablePart.DeployState.EXTENDING:
+                    case ModuleDeployablePart.DeployState.RETRACTING:
+                    case ModuleDeployablePart.DeployState.EXTENDED when IsDeployable(mdp):
+                        return false;
+                }
+            }
+
             return true;
         }
 
@@ -84,7 +106,7 @@ namespace MuMech
                 return true;
 
             RetractAll();
-            return AllRetracted();
+            return DoneRetracting();
         }
 
         private bool ShouldDeploy()
@@ -162,9 +184,8 @@ namespace MuMech
         protected bool ExtendingOrRetracting()
         {
             foreach (ModuleDeployablePart mdp in CachedPartModules)
-                if (mdp != null && IsDeployable(mdp)
-                    && (mdp.deployState == ModuleDeployablePart.DeployState.EXTENDING ||
-                        mdp.deployState == ModuleDeployablePart.DeployState.RETRACTING))
+                if (mdp != null && (mdp.deployState == ModuleDeployablePart.DeployState.EXTENDING ||
+                                    mdp.deployState == ModuleDeployablePart.DeployState.RETRACTING))
                     return true;
             return false;
         }
