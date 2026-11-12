@@ -535,6 +535,7 @@ namespace MuMech
             _einfo.Update(CoM, Vessel);
             _iinfo.Update();
             AnalyzeParts(_einfo, _iinfo);
+            _einfo.TrimWrappers(EngineWrappers.Count);
 
             UpdateResourceRequirements(_einfo, _iinfo);
 
@@ -1301,6 +1302,9 @@ namespace MuMech
         {
             private readonly List<KeyValuePair<Transform, Quaternion>> _rotSave = new List<KeyValuePair<Transform, Quaternion>>();
 
+            // the engine wrappers, reused every tick instead of one new wrapper per ignited engine
+            private readonly List<EngineWrapper> _wrapperPool = new List<EngineWrapper>();
+
             public readonly Dictionary<int, FuelRequirement> ResourceRequired = new Dictionary<int, FuelRequirement>();
 
             public readonly Vector6 TorqueDifferentialThrottle = new Vector6();
@@ -1335,6 +1339,13 @@ namespace MuMech
                 _atmP0 = (float)(vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres);
                 float alt1 = (float)(vessel.altitude + TimeWarp.fixedDeltaTime * vessel.verticalSpeed);
                 _atmP1 = (float)(FlightGlobals.getStaticPressure(alt1, vessel.mainBody) * PhysicsGlobals.KpaToAtmospheres);
+            }
+
+            // the wrappers this tick did not use go: they must not keep a staged engine's module alive
+            public void TrimWrappers(int used)
+            {
+                if (_wrapperPool.Count > used)
+                    _wrapperPool.RemoveRange(used, _wrapperPool.Count - used);
             }
 
             public void CheckUllageStatus(ModuleEngines e)
@@ -1486,7 +1497,13 @@ namespace MuMech
                         }
                     }
 
-                    enginesWrappers.Add(new EngineWrapper(e, maxVariableForce, constantTorque, maxVariableTorque));
+                    // enginesWrappers is emptied each tick and filled only here: its count indexes the pool
+                    int index = enginesWrappers.Count;
+                    if (index == _wrapperPool.Count)
+                        _wrapperPool.Add(new EngineWrapper(e, maxVariableForce, constantTorque, maxVariableTorque));
+                    else
+                        _wrapperPool[index].Set(e, maxVariableForce, constantTorque, maxVariableTorque);
+                    enginesWrappers.Add(_wrapperPool[index]);
                 }
                 finally
                 {
@@ -1709,9 +1726,12 @@ namespace MuMech
                     double mass = Math.Min(mass0, mass1);
 
                     // Also, we can't have more airflow than what fits in the resource tank of the intake part.
+                    // indexed: foreach over a PartResourceList boxes its enumerator
                     double capacity = 0;
-                    foreach (PartResource tank in intake.part.Resources)
+                    PartResourceList tanks = intake.part.Resources;
+                    for (int t = 0; t < tanks.Count; t++)
                     {
+                        PartResource tank = tanks[t];
                         if (tank.info.id == r.id)
                             capacity += tank.maxAmount; // units per timestep
                     }
@@ -1766,12 +1786,21 @@ namespace MuMech
             }
         }
 
+        // VesselState reuses its wrappers from tick to tick: one in EngineWrappers holds this tick's values only
         public class EngineWrapper
         {
-            public readonly ModuleEngines Engine;
+            public ModuleEngines Engine { get; private set; }
 
             public EngineWrapper(ModuleEngines module, Vector3d maxVariableForce, Vector3d constantTorque,
                 Vector3d maxVariableTorque)
+            {
+                Engine = module;
+                MaxVariableForce = maxVariableForce;
+                ConstantTorque = constantTorque;
+                MaxVariableTorque = maxVariableTorque;
+            }
+
+            internal void Set(ModuleEngines module, Vector3d maxVariableForce, Vector3d constantTorque, Vector3d maxVariableTorque)
             {
                 Engine = module;
                 MaxVariableForce = maxVariableForce;
@@ -1785,11 +1814,11 @@ namespace MuMech
                 set => Engine.thrustPercentage = value * 100;
             }
 
-            public Vector3d MaxVariableForce { get; }
+            public Vector3d MaxVariableForce { get; private set; }
 
-            public Vector3d ConstantTorque { get; }
+            public Vector3d ConstantTorque { get; private set; }
 
-            public Vector3d MaxVariableTorque { get; }
+            public Vector3d MaxVariableTorque { get; private set; }
         }
     }
 }
