@@ -100,7 +100,7 @@ namespace MuMech.UI
             {
                 if (HasNode) Core.Node.RCSOnly = v;
             });
-            w.Toggle(options, "Kill Rotation", () => HasNode && Core.Node.KillRollRotation, v =>
+            w.Toggle(options, "#MechJeb_SmartASS_button35", () => HasNode && Core.Node.KillRollRotation, v =>
             {
                 if (HasNode) Core.Node.KillRollRotation = v;
             });
@@ -200,7 +200,7 @@ namespace MuMech.UI
             {
                 if (HasNode) Core.Node.RCSOnly = v;
             });
-            w.SwitchRow(exec, "Kill Rotation", () => HasNode && Core.Node.KillRollRotation, v =>
+            w.SwitchRow(exec, "#MechJeb_SmartASS_button35", () => HasNode && Core.Node.KillRollRotation, v =>
             {
                 if (HasNode) Core.Node.KillRollRotation = v;
             });

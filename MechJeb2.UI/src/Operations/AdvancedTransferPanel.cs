@@ -108,7 +108,7 @@ namespace MuMech.UI
             w.Visible(arrival.gameObject, () => !op.IsPorkchopMode || op.HasWorker);
             w.Toggle(arrival, "#MechJeb_adv_captureburn", () => op.IncludeCaptureBurn, v => op.IncludeCaptureBurn = v); //include capture burn
             OpUi.LabeledField(w, arrival, "#MechJeb_adv_periapsis", () => op.PeriapsisHeight, "km");
-            OpUi.ToggledField(w, arrival, "Inclination", () => op.TargetInclinationFlag, v => op.TargetInclinationFlag = v, () => op.TargetInclination, "°");
+            OpUi.ToggledField(w, arrival, "#MechJeb_Inclination", () => op.TargetInclinationFlag, v => op.TargetInclinationFlag = v, () => op.TargetInclination, "°");
         }
     }
 }
