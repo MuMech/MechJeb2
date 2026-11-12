@@ -26,7 +26,7 @@ namespace MuMech
         //Conserve RCS fuel
         public readonly bool conserveFuel;
 
-        [EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")] //Conserve RCS fuel threshold
+        [Persistent(pass = (int)Pass.GLOBAL), EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")] //Conserve RCS fuel threshold
         public readonly EditableDouble conserveThreshold = 0.05;
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL)), EditableInfoItem("#MechJeb_RCSTf", InfoItem.Category.Thrust)]
