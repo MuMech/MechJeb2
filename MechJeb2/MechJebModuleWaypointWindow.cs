@@ -217,18 +217,26 @@ namespace MuMech
             return cn;
         }
 
+        // the length along the surface of the route's own body: the waypoints' positions are placed on the active vessel's body,
+        // which is another one for a saved route of another body
         private void UpdateStats()
         {
-            float distance = 0;
-            if (Count > 1)
-            {
-                for (int i = 1; i < Count; i++)
-                {
-                    distance += Vector3.Distance(this[i - 1].Position, this[i].Position);
-                }
-            }
+            double distance = 0;
+            double radius = Body != null ? Body.Radius : 0;
+            for (int i = 1; i < Count; i++)
+                distance += radius * CentralAngle(this[i - 1].Latitude, this[i - 1].Longitude, this[i].Latitude, this[i].Longitude);
 
             _stats = $"{Count} waypoints over {distance.ToSI()}m";
+        }
+
+        // the angle in radians between two points given in degrees, by the haversine formula
+        private static double CentralAngle(double lat1, double lon1, double lat2, double lon2)
+        {
+            double phi1 = Deg2Rad(lat1), phi2 = Deg2Rad(lat2);
+            double sinDPhi = Math.Sin((phi2 - phi1) / 2);
+            double sinDLambda = Math.Sin(Deg2Rad(lon2 - lon1) / 2);
+            double h = sinDPhi * sinDPhi + Math.Cos(phi1) * Math.Cos(phi2) * sinDLambda * sinDLambda;
+            return 2 * SafeAsin(Math.Sqrt(Clamp(h, 0, 1)));
         }
 
         public MechJebWaypointRoute(string name = "", CelestialBody body = null, string mode = "Rover")
