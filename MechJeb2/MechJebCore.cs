@@ -376,7 +376,7 @@ namespace MuMech
 
         [UsedImplicitly]
         public ComputerModule GetComputerModule(string type) =>
-            _unorderedComputerModules.FirstOrDefault(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant()); //null if none
+            _unorderedComputerModules.FirstOrDefault(a => string.Equals(a.GetType().Name, type, StringComparison.OrdinalIgnoreCase)); //null if none
 
         public void AddComputerModule(ComputerModule module)
         {
@@ -791,17 +791,25 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
                 Print("Loading Mechjeb " + version);
 
+            // the names of the modules this core has, compared as GetComputerModule(string) does
+            var loadedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (ComputerModule module in _unorderedComputerModules)
+                loadedNames.Add(module.GetType().Name);
+
             foreach (Type t in _moduleRegistry)
             {
                 // one module whose constructor throws (another mod's included) must not keep the ones after it from existing
                 try
                 {
                     if (t != typeof(ComputerModule) && t != typeof(DisplayModule) && t != typeof(MechJebModuleCustomInfoWindow)
-                        && t != typeof(AutopilotModule) && GetComputerModule(t.Name) == null)
+                        && t != typeof(AutopilotModule) && !loadedNames.Contains(t.Name))
                     {
                         ConstructorInfo constructorInfo = t.GetConstructor(new[] { typeof(MechJebCore) });
                         if (constructorInfo != null)
+                        {
                             AddComputerModule((ComputerModule)constructorInfo.Invoke(new object[] { this }));
+                            loadedNames.Add(t.Name);
+                        }
                     }
                 }
                 catch (Exception e)
