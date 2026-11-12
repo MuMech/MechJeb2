@@ -480,7 +480,9 @@ namespace MuMech
             _solverFactorTranslate = tuningParamFactorTranslate;
             _solverFactorWaste     = tuningParamFactorWaste;
 
-            double wasteThreshold = overdrive * overdriveScale;
+            // overdrive runs 0..1 on the slider, but its text field takes any value: above 1 the threshold lets unhelpful
+            // thrusters fire
+            double wasteThreshold = Clamp01(overdrive) * overdriveScale;
             var tuningParams = new RCSSolverTuningParams(wasteThreshold, tuningParamFactorTorque, tuningParamFactorTranslate,
                 tuningParamFactorWaste);
             solverThread.UpdateTuningParameters(tuningParams);
