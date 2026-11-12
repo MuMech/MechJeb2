@@ -189,8 +189,10 @@ namespace MuMech.UI
             }
             else
             {
-                UnityEngine.UI.Toggle classicPath = w.Toggle(r, "#MechJeb_Ascent_checkbox10", () => menu._classicPathMenu.Enabled,
-                    v => menu._classicPathMenu.Enabled = v); //Edit ascent path
+                // looked up once: the menu's getter scans every module
+                MechJebModuleAscentClassicPathMenu pathMenu = menu._classicPathMenu;
+                UnityEngine.UI.Toggle classicPath = w.Toggle(r, "#MechJeb_Ascent_checkbox10", () => pathMenu.Enabled,
+                    v => pathMenu.Enabled = v); //Edit ascent path
                 w.Visible(KodeWindow.RowOf(classicPath), () => Settings.AscentType == AscentType.CLASSIC);
             }
 
@@ -273,10 +275,13 @@ namespace MuMech.UI
                 return;
             }
 
+            // looked up once: the menu's getters scan every module
+            MechJebModuleAscentSettingsMenu settingsMenu = menu._settingsMenu;
+            MechJebModuleAscentPSGSettingsMenu psgSettingsMenu = menu._psgSettingsMenu;
             LayoutPanel box = KodeWindow.Box(r);
             Layout row = KodeWindow.Row(box);
-            w.Toggle(row, "Ascent Settings", () => menu._settingsMenu.Enabled, v => menu._settingsMenu.Enabled = v);
-            UnityEngine.UI.Toggle psgSettings = w.Toggle(row, "PSG Settings", () => menu._psgSettingsMenu.Enabled, v => menu._psgSettingsMenu.Enabled = v);
+            w.Toggle(row, "Ascent Settings", () => settingsMenu.Enabled, v => settingsMenu.Enabled = v);
+            UnityEngine.UI.Toggle psgSettings = w.Toggle(row, "PSG Settings", () => psgSettingsMenu.Enabled, v => psgSettingsMenu.Enabled = v);
             w.Visible(KodeWindow.RowOf(psgSettings), () => psg);
         }
 
