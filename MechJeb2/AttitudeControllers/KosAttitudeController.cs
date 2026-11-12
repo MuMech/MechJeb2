@@ -137,6 +137,14 @@ namespace MuMech.AttitudeControllers
                 _rollRatePI.ResetI();
             }
 
+            // a rate requested by SetOmegaTarget (the spin-up) replaces the one that steers to the attitude; _omega is the opposite
+            // of the vessel's angular velocity
+            for (int i = 0; i < 3; i++)
+            {
+                if (IsFinite(Ac.OmegaTarget[i]))
+                    _targetOmega[i] = -Ac.OmegaTarget[i];
+            }
+
             _targetTorque[0] = _pitchPI.Update(_omega[0], _targetOmega[0], Ac.VesselState.MoI[0], _controlTorque[0]);
             _targetTorque[1] = _rollPI.Update(_omega[1], _targetOmega[1], Ac.VesselState.MoI[1], _controlTorque[1]);
             _targetTorque[2] = _yawPI.Update(_omega[2], _targetOmega[2], Ac.VesselState.MoI[2], _controlTorque[2]);

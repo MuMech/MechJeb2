@@ -2,6 +2,7 @@ extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
@@ -232,6 +233,17 @@ namespace MuMech.AttitudeControllers
             //omega.y = vessel.angularVelocity.z; // y <=> z
             //omega.z = vessel.angularVelocity.y; // z <=> y
             omega.Scale(normFactor);
+
+            // on an axis with a rate requested by SetOmegaTarget (the spin-up) the damping term drives the angular velocity to that rate
+            // instead of to zero, and the attitude error is left out
+            for (int i = 0; i < 3; i++)
+            {
+                if (!IsFinite(Ac.OmegaTarget[i]))
+                    continue;
+
+                err[i] = 0;
+                omega[i] -= Ac.OmegaTarget[i] * normFactor[i];
+            }
 
             if (TfAutoTune)
                 TuneTf(Ac.Torque);
