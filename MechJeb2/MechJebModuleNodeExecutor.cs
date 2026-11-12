@@ -250,6 +250,14 @@ namespace MuMech
                 return;
             }
 
+            // Principia removes the node during its burn, and the burn goes on along the stored direction; before the burn there is
+            // nothing to burn without a node
+            if (ReflectionUtils.IsLoadedPrincipia && !_hasNodes && State != States.BURN)
+            {
+                Abort();
+                return;
+            }
+
             // keep the dV used for the ignition time current while warping and aligning, not just in LEAD and BURN
             if (!ReflectionUtils.IsLoadedPrincipia)
                 UpdateDvLeft();
