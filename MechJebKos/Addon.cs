@@ -50,6 +50,7 @@ namespace MuMech.MechJebKos
             var maneuverPlanner = new ManeuverPlannerBinding(() => _core, shared);
             var attitude = new AttitudeBinding(() => _core, shared);
             var smartASS = new SmartASSBinding(() => _core, attitude);
+            var target = new TargetBinding(() => _core, shared);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() => _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
@@ -87,6 +88,8 @@ namespace MuMech.MechJebKos
                 "The attitude controller, driven directly (point in any reference frame), and its controllers' settings."));
             AddSuffix("SMARTASS", new NoArgsSuffix<SmartASSBinding>(() => smartASS,
                 "SmartASS, as in its window (prograde, surface heading/pitch/roll, ...)."));
+            AddSuffix("TARGET", new NoArgsSuffix<TargetBinding>(() => target,
+                "MechJeb's target: position targets (a latitude/longitude to land at), and the vessel, body or docking port targeted."));
         }
     }
 }

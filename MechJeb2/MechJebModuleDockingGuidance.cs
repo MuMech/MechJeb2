@@ -164,9 +164,8 @@ namespace MuMech
         internal void SelectTargetPort(ModuleDockingNode targetPort)
         {
             selectedTargetPort = targetPort;
+            // also KSP's own target, so other docking aids see the port change at once
             Core.Target.Set(targetPort);
-            // Keep KSP's global target in sync so other docking aids observe the port change immediately.
-            FlightGlobals.fetch.SetVesselTarget(targetPort);
         }
 
         internal static string GetPortName(ModuleDockingNode port)
