@@ -1133,12 +1133,20 @@ namespace MuMech
 
         private bool _vesselStateFailed;
 
+        // the UT of the last VesselState.Update that threw
+        private double _vesselStateFailedUT = double.NaN;
+
         // VesselState.Update runs in FixedUpdate and in Drive, which is called from the vessel's OnFlyByWire chain: an exception
         // must not leave here (it would reach stock's and other mods' FlyByWire callbacks). The modules skip the tick
         // (_vesselStateFailed), _ready keeps its value as it did when the exception left (so the windows stay up), and the
-        // first failure of a run is logged.
+        // first failure of a run is logged. VesselState.Update returns at once when it already ran this tick, even when that
+        // run threw half-way, so the second call of a tick that failed fails too, without running it again.
         private bool UpdateVesselState()
         {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (_vesselStateFailed && _vesselStateFailedUT == Planetarium.GetUniversalTime())
+                return _ready;
+
             try
             {
                 bool ready = VesselState.Update();
@@ -1147,6 +1155,7 @@ namespace MuMech
             }
             catch (Exception e)
             {
+                _vesselStateFailedUT = Planetarium.GetUniversalTime();
                 if (!_vesselStateFailed)
                 {
                     _vesselStateFailed = true;
