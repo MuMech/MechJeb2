@@ -138,7 +138,7 @@ namespace MechJebLib.FuelFlowSimulation
         public void ActivateEnginesAndRCS()
         {
             foreach (SimModuleEngines e in EnginesActivatedInStage[CurrentStage])
-                if (e.IsEnabled)
+                if (e.IsEnabled && !e.IsShutdown)
                     e.Activate();
 
             foreach (SimModuleRCS r in RCSActivatedInStage[CurrentStage])

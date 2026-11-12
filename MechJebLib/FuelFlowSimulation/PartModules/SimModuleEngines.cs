@@ -67,6 +67,11 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         public double ModuleSpoolupTime;
         public bool AutoCutoff;
         public bool NoPropellants;
+
+        // in flight, KSP has fired this engine's stage and the engine is not ignited (shut down by the player, an action
+        // group or an autopilot): the simulation does not light it again
+        public bool IsShutdown;
+
         public bool IsModuleEnginesRf;
         public bool IsUnrestartableDeadEngine;
         public bool Ullage;
