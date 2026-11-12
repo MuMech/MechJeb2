@@ -175,6 +175,19 @@ namespace MuMech
                     windowSide = WindowSide.RIGHT;
                     break;
             }
+
+            Dirty = true;
+        }
+
+        // the column count is saved: the new UI's - and + buttons set it here
+        internal void SetColumns(int count)
+        {
+            count = Math.Max(1, count);
+            if (count == columns)
+                return;
+
+            columns = count;
+            Dirty = true;
         }
 
         // the new UI reports the size of its button too: KSP's UI scale grows it, and IMGUI units don't include that scale
@@ -543,6 +556,7 @@ namespace MuMech
                     {
                         windowProgr = 1;
                         windowStat = WindowStat.NORMAL;
+                        Dirty = true;
                     }
 
                     break;
@@ -552,6 +566,7 @@ namespace MuMech
                     {
                         windowProgr = 0;
                         windowStat = WindowStat.HIDDEN;
+                        Dirty = true;
                     }
 
                     break;
@@ -590,6 +605,7 @@ namespace MuMech
                 else if (Input.GetMouseButtonUp(1))
                 {
                     movingButton = false;
+                    Dirty = true;
                 }
             }
 
