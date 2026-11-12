@@ -249,11 +249,10 @@ namespace MuMech
         {
             GameEvents.onVesselStandardModification.Add(onVesselStandardModification);
             GameEvents.StageManager.OnGUIStageSequenceModified.Add(OnGUIStageSequenceModified);
+            GameEvents.onPartCrossfeedStateChange.Add(OnPartFlowChanged);
+            GameEvents.onPartPriorityChanged.Add(OnPartFlowChanged);
             if (HighLogic.LoadedSceneIsEditor)
-            {
                 GameEvents.onEditorShipModified.Add(OnEditorShipModified);
-                GameEvents.onPartCrossfeedStateChange.Add(OnPartCrossfeedStateChange);
-            }
         }
 
         public override void OnDestroy()
@@ -261,13 +260,21 @@ namespace MuMech
             GameEvents.onVesselStandardModification.Remove(onVesselStandardModification);
             GameEvents.StageManager.OnGUIStageSequenceModified.Remove(OnGUIStageSequenceModified);
             GameEvents.onEditorShipModified.Remove(OnEditorShipModified);
-            GameEvents.onPartCrossfeedStateChange.Remove(OnPartCrossfeedStateChange);
+            GameEvents.onPartCrossfeedStateChange.Remove(OnPartFlowChanged);
+            GameEvents.onPartPriorityChanged.Remove(OnPartFlowChanged);
         }
 
-        private void OnPartCrossfeedStateChange(Part data)
+        // KSP turns neither a crossfeed toggle (a docking port, a decoupler) nor a tank priority change into a vessel
+        // modification, and the simulation reads both only when it is built
+        private void OnPartFlowChanged(Part data)
         {
-            _vesselModified = true;
-            _vabRebuildTimer = 2;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                _vesselModified  = true;
+                _vabRebuildTimer = 2;
+            }
+            else if (data != null && data.vessel == Vessel)
+                _vesselModified = true;
         }
 
         private void OnEditorShipModified(ShipConstruct data)
