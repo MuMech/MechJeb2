@@ -117,21 +117,21 @@ namespace MuMech.UI
             EditFields.Field(w, limits, () => m._tmpRadius, s =>
             {
                 m._tmpRadius = s;
-                Selected(wp => { if (float.TryParse(s, out float v)) wp.Radius = v; });
+                Selected(wp => { if (MechJebModuleWaypointWindow.TryParseNonNegative(s, out float v)) wp.Radius = v; });
             }, 50);
             KodeWindow.Button(limits, "A", () => m.RadiusToRest(m.SelIndex));
             KodeWindow.Label(limits, "- Speed: ");
             EditFields.Field(w, limits, () => m._tmpMinSpeed, s =>
             {
                 m._tmpMinSpeed = s;
-                Selected(wp => { if (float.TryParse(s, out float v)) wp.MinSpeed = v; });
+                Selected(wp => { if (MechJebModuleWaypointWindow.TryParseNonNegative(s, out float v)) wp.MinSpeed = v; });
             }, 40);
             KodeWindow.Button(limits, "A", () => m.MinSpeedToRest(m.SelIndex));
             KodeWindow.Label(limits, " - ");
             EditFields.Field(w, limits, () => m._tmpMaxSpeed, s =>
             {
                 m._tmpMaxSpeed = s;
-                Selected(wp => { if (float.TryParse(s, out float v)) wp.MaxSpeed = v; });
+                Selected(wp => { if (MechJebModuleWaypointWindow.TryParseNonNegative(s, out float v)) wp.MaxSpeed = v; });
             }, 40);
             KodeWindow.Button(limits, "A", () => m.MaxSpeedToRest(m.SelIndex));
             KodeWindow.FlexibleSpace(limits);

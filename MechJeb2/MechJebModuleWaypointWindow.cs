@@ -597,7 +597,22 @@ namespace MuMech
             return string.Format(CultureInfo.InvariantCulture, "{0} {1}° {2}' {3:F3}\"", ew, h, m, s);
         }
 
-        /// <summary>Parse a latitude or longitude as the edit fields show it; false (and 0) when the text is not a coordinate.</summary>
+        // the edit panel's five fields, from the waypoint it edits
+        private void RefreshEditFields(MechJebWaypoint wp)
+        {
+            _tmpRadius   = wp.Radius.ToString();
+            _tmpMinSpeed = wp.MinSpeed.ToString();
+            _tmpMaxSpeed = wp.MaxSpeed.ToString();
+            _tmpLat      = LatToString(wp.Latitude);
+            _tmpLon      = LonToString(wp.Longitude);
+        }
+
+        /// <summary>Parse a radius or a speed as the edit fields show it: a finite number, 0 or more.</summary>
+        internal static bool TryParseNonNegative(string text, out float value) =>
+            float.TryParse(text, out value) && !float.IsNaN(value) && !float.IsInfinity(value) && value >= 0;
+
+        /// <summary>Parse a latitude or longitude as the edit fields show it; false (and 0) when the text is not a coordinate. A longitude
+        /// is wrapped into ±180°; a latitude beyond ±90° is no coordinate.</summary>
         internal static bool TryParseCoord(string latLon, bool isLongitute, out double value)
         {
             value = 0;
@@ -635,6 +650,8 @@ namespace MuMech
 
             h = (h + m / 60 + s / 3600) * nsew;
             if (float.IsNaN(h) || float.IsInfinity(h)) return false;
+
+            if (!isLongitute && Math.Abs(h) > range) return false;
 
             // the loops below never end on a huge value
             h %= range * 2;
@@ -715,11 +732,7 @@ namespace MuMech
                 else
                 {
                     SelIndex = i;
-                    _tmpRadius = wp.Radius.ToString();
-                    _tmpMinSpeed = wp.MinSpeed.ToString();
-                    _tmpMaxSpeed = wp.MaxSpeed.ToString();
-                    _tmpLat = LatToString(wp.Latitude);
-                    _tmpLon = LonToString(wp.Longitude);
+                    RefreshEditFields(wp);
                 }
             }
         }
@@ -1000,9 +1013,7 @@ namespace MuMech
                         if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                         {
                             InsertWaypoint(SelIndex, new MechJebWaypoint(Core.Target.targetLatitude, Core.Target.targetLongitude));
-                            _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
-                            _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
-                            _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
+                            RefreshEditFields(_ap.Waypoints[SelIndex]);
                         }
                         else
                         {
@@ -1033,9 +1044,7 @@ namespace MuMech
                             if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                             {
                                 InsertWaypoint(SelIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
-                                _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
-                                _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
-                                _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
+                                RefreshEditFields(_ap.Waypoints[SelIndex]);
                             }
                             else
                             {
