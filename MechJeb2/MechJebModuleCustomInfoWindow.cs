@@ -481,33 +481,41 @@ namespace MuMech
 
             foreach ((MemberInfo member, Attribute attribute) in _cache[objType])
             {
-                switch (attribute)
+                // a member that cannot be bound (a mod's action with parameters, say) loses its item, not the windows read after
+                try
                 {
-                    case ValueInfoItemAttribute item:
-                        _valueInfoItemStopwatch.Start();
-                        registry.Add(new ValueInfoItem(obj, member, item));
-                        _valueInfoItemStopwatch.Stop();
-                        break;
-                    case ActionInfoItemAttribute item:
-                        _actionInfoItemStopwatch.Start();
-                        registry.Add(new ActionInfoItem(obj, (MethodInfo)member, item));
-                        _actionInfoItemStopwatch.Stop();
-                        break;
-                    case ToggleInfoItemAttribute item:
-                        _toggleInfoItemStopwatch.Start();
-                        registry.Add(new ToggleInfoItem(obj, member, item));
-                        _toggleInfoItemStopwatch.Stop();
-                        break;
-                    case GeneralInfoItemAttribute item:
-                        _generalInfoItemStopwatch.Start();
-                        registry.Add(new GeneralInfoItem(obj, (MethodInfo)member, item));
-                        _generalInfoItemStopwatch.Stop();
-                        break;
-                    case EditableInfoItemAttribute item:
-                        _editableInfoItemStopwatch.Start();
-                        registry.Add(new EditableInfoItem(obj, member, item));
-                        _editableInfoItemStopwatch.Stop();
-                        break;
+                    switch (attribute)
+                    {
+                        case ValueInfoItemAttribute item:
+                            _valueInfoItemStopwatch.Start();
+                            registry.Add(new ValueInfoItem(obj, member, item));
+                            _valueInfoItemStopwatch.Stop();
+                            break;
+                        case ActionInfoItemAttribute item:
+                            _actionInfoItemStopwatch.Start();
+                            registry.Add(new ActionInfoItem(obj, (MethodInfo)member, item));
+                            _actionInfoItemStopwatch.Stop();
+                            break;
+                        case ToggleInfoItemAttribute item:
+                            _toggleInfoItemStopwatch.Start();
+                            registry.Add(new ToggleInfoItem(obj, member, item));
+                            _toggleInfoItemStopwatch.Stop();
+                            break;
+                        case GeneralInfoItemAttribute item:
+                            _generalInfoItemStopwatch.Start();
+                            registry.Add(new GeneralInfoItem(obj, (MethodInfo)member, item));
+                            _generalInfoItemStopwatch.Stop();
+                            break;
+                        case EditableInfoItemAttribute item:
+                            _editableInfoItemStopwatch.Start();
+                            registry.Add(new EditableInfoItem(obj, member, item));
+                            _editableInfoItemStopwatch.Stop();
+                            break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Print($"cannot make the info item of {objType.Name}.{member.Name}, skipped: {e.Message}");
                 }
             }
 
