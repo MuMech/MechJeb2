@@ -771,14 +771,14 @@ namespace MuMech
                 {
                     _waitingForPick = true;
                     if (MapView.MapIsEnabled)
-                    {
-                        Core.Target.Unset();
-                        Core.Target.PickPositionTargetOnMap();
-                    }
+                        StartMapPick();
                 }
                 else
                 {
                     _waitingForPick = false;
+                    if (Core.Target.pickingPositionTarget)
+                        Core.Target.StopPickPositionTargetOnMap();
+                    EndMapPick();
                 }
             }
         }
@@ -948,6 +948,43 @@ namespace MuMech
             }
         }
 
+        // A map pick carries its result in the vessel's target: the player's target is kept here while it runs and given back after
+        private bool _mapPickStarted;
+        private ITargetable _targetBeforePick;
+        private CelestialBody _targetBodyBeforePick;
+        private double _targetLatitudeBeforePick, _targetLongitudeBeforePick;
+
+        private void StartMapPick()
+        {
+            if (!_mapPickStarted)
+            {
+                _mapPickStarted              = true;
+                _targetBeforePick            = Core.Target.Target;
+                _targetBodyBeforePick        = Core.Target.targetBody;
+                _targetLatitudeBeforePick    = Core.Target.targetLatitude;
+                _targetLongitudeBeforePick   = Core.Target.targetLongitude;
+            }
+
+            Core.Target.Unset();
+            Core.Target.PickPositionTargetOnMap();
+        }
+
+        private void EndMapPick()
+        {
+            if (!_mapPickStarted) return;
+            _mapPickStarted = false;
+
+            ITargetable target = _targetBeforePick;
+            _targetBeforePick = null;
+
+            if (target is PositionTarget && _targetBodyBeforePick != null)
+                Core.Target.SetPositionTarget(_targetBodyBeforePick, _targetLatitudeBeforePick, _targetLongitudeBeforePick);
+            else if (target == null || (target is UnityEngine.Object obj && obj == null))
+                Core.Target.Unset();
+            else
+                Core.Target.Set(target);
+        }
+
         /// <summary>The click on the terrain or the map while "Add Waypoint" waits for a position (the IMGUI window ran this on Repaint).</summary>
         internal void ProcessWaypointPick(bool alt)
         {
@@ -957,7 +994,8 @@ namespace MuMech
             {
                 if (!Core.Target.pickingPositionTarget)
                 {
-                    if (Core.Target.PositionTargetExists)
+                    // only a position this window's pick set: a vessel target, or one set before the pick, is no pick result
+                    if (_mapPickStarted && Core.Target.Target is PositionTarget)
                     {
                         if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                         {
@@ -971,17 +1009,20 @@ namespace MuMech
                             _ap.Waypoints.Add(new MechJebWaypoint(Core.Target.targetLatitude, Core.Target.targetLongitude));
                         }
 
-                        Core.Target.Unset();
+                        EndMapPick();
                         _waitingForPick = alt;
                     }
                     else
                     {
-                        Core.Target.PickPositionTargetOnMap();
+                        StartMapPick();
                     }
                 }
             }
             else
             {
+                // leaving the map view cancels its pick
+                EndMapPick();
+
                 if (!GuiUtils.MouseIsOverWindow(Core))
                 {
                     Coordinates mouseCoords = GetMouseFlightCoordinates();
