@@ -23,8 +23,8 @@ namespace MuMech
                     Core.vessel.mainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) - MainBody.position;
                 Vector3d currentRadialVector = Core.VesselState.CoM - Core.vessel.mainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
-                //this calculation seems like it might be be working right:
-                double timeToTarget = Orbit.TimeOfTrueAnomaly(Core.vessel.orbit.trueAnomaly * UtilMath.Rad2Deg + angleToTarget, VesselState.Time) -
+                // TimeOfTrueAnomaly takes radians, like Orbit.trueAnomaly; angleToTarget is in degrees.
+                double timeToTarget = Orbit.TimeOfTrueAnomaly(Core.vessel.orbit.trueAnomaly + angleToTarget * UtilMath.Deg2Rad, VesselState.Time) -
                     VesselState.Time;
                 double planetRotationAngle = 360 * timeToTarget / MainBody.rotationPeriod;
                 var planetRotation = Quaternion.AngleAxis((float)planetRotationAngle, MainBody.angularVelocity);
