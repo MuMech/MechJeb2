@@ -15,13 +15,18 @@ namespace MuMech
         // x, y, and z values will each be mapped to the integer range
         // [-precision..precision]. The results cache will have
         //      6 * (p + 1)^2 + 2
-        // entries, assuming p >= 1. Setting precision to 0 is a bad idea.
+        // entries, assuming p >= 1.
         // (p: cache_size) 1: 26, 2: 56, 3: 98, 4: 152, 5: 218
         private static int _precision = 2;
 
+        // Each component is packed into 8 bits as (int)(bucket * 127), which keeps neighbouring buckets apart only up to a precision
+        // of 127; past 16 the cache holds thousands of solves, each run once before it is used.
+        public const int MIN_PRECISION = 1; // Bucketize divides by it
+        public const int MAX_PRECISION = 16;
+
         private readonly int _hash;
 
-        public static void SetPrecision(int precision) => _precision = Math.Max(1, precision); // Bucketize divides by it
+        public static void SetPrecision(int precision) => _precision = Math.Max(MIN_PRECISION, Math.Min(MAX_PRECISION, precision));
 
         private float Bucketize(double d, int precision) => (float)Mathf.RoundToInt((float)d * precision) / precision;
 

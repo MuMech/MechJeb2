@@ -446,6 +446,9 @@ namespace MuMech
             // RCS balancing on rotation isn't supported.
             //Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
 
+            // the field shows the precision that is used
+            if (calcPrecision < RCSSolverKey.MIN_PRECISION || calcPrecision > RCSSolverKey.MAX_PRECISION)
+                calcPrecision.Val = Math.Max(RCSSolverKey.MIN_PRECISION, Math.Min(RCSSolverKey.MAX_PRECISION, calcPrecision));
             RCSSolverKey.SetPrecision(calcPrecision);
             double[] throttles = solverThread.GetThrottles(direction);
 
