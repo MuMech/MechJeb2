@@ -258,7 +258,7 @@ namespace MuMech.UI
 
                 row.Text.Clear().Append('[').AppendInt(i + 1).Append("] - ").Append(NameWithCoords(row, wp)).Append(" - R: ").Append(wp.Radius, 1)
                     .Append(" m\n       S: ").Append(minSpeed, 0).Append(" ~ ").Append(maxSpeed, 0).Append(" - D: ").AppendSI(dist, -1)
-                    .Append("m - ETA: ").AppendDHMS(eta, 0, GuidanceUi.HoursPerDay, GuidanceUi.DaysPerYear);
+                    .Append("m - ETA: ").AppendDHMS(eta, 0);
                 row.Text.Commit();
 
                 int tone = i == m.SelIndex ? 1 : wp.Quicksave ? 2 : 0;
@@ -463,7 +463,7 @@ namespace MuMech.UI
             {
                 case Pages.WAYPOINTS:
                     if (Ap.Waypoints.Count > 0)
-                        title.Append(" - Distance: ").AppendSI(statDist, -1).Append("m - ETA: ").AppendDHMS(statEta, 0, GuidanceUi.HoursPerDay, GuidanceUi.DaysPerYear);
+                        title.Append(" - Distance: ").AppendSI(statDist, -1).Append("m - ETA: ").AppendDHMS(statEta, 0);
                     break;
                 case Pages.SETTINGS:
                     title.Append(" - Settings");

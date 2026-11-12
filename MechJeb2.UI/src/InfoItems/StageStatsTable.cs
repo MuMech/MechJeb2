@@ -254,11 +254,7 @@ namespace MuMech.UI
                     if (decimals >= 0) ct.Append(v, decimals);
                     else if (decimals == MechJebStageStatsHelper.SI) ct.AppendSI(v);
                     else if (h.TimeSeconds) ct.Append(v, 2).Append('s');
-                    else
-                    {
-                        long day = KSPUtil.dateTimeFormatter.Day, year = KSPUtil.dateTimeFormatter.Year;
-                        ct.AppendDHMS(v, 1, (int)(day / 3600), (int)(year / day));
-                    }
+                    else ct.AppendDHMS(v, 1);
                     int length = ct.Length + (unit?.Length ?? 0);
                     if (modern && !string.IsNullOrEmpty(unit)) ct.Append("<alpha=#80>").Append(unit);
                     else ct.Append(unit);

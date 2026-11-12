@@ -407,10 +407,7 @@ namespace MuMech.UI
         {
             string f = item.Format;
             if (f == ValueInfoItem.TIME)
-            {
-                long day = KSPUtil.dateTimeFormatter.Day, year = KSPUtil.dateTimeFormatter.Year;
-                ct.AppendDHMS(d, item.TimeDecimalPlaces, (int)(day / 3600), (int)(year / day));
-            }
+                ct.AppendDHMS(d, item.TimeDecimalPlaces);
             else if (f == ValueInfoItem.ANGLE) ct.AppendDMS(d);
             else if (f == ValueInfoItem.ANGLE_NS) ct.AppendDMS(d).Append(d > 0 ? " N" : " S");
             else if (f == ValueInfoItem.ANGLE_EW) ct.AppendDMS(d).Append(d > 0 ? " E" : " W");
