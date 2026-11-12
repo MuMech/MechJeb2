@@ -15,6 +15,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCulture("")]
 [assembly: InternalsVisibleTo("MechJebLibTest")]
 [assembly: InternalsVisibleTo("MechJeb2.UI")] // the optional uGUI front end (ports read window state)
+[assembly: InternalsVisibleTo("MechJebKos")] // the optional kOS addon (drives the maneuver planner's operations)
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from

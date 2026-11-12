@@ -71,6 +71,28 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         public bool IsUnrestartableDeadEngine;
         public bool Ullage;
 
+        // ModuleEngines throttle response and ignition state
+        public float ThrottleResponseRate;
+        public float ThrottleIgniteLevelMult;
+        public float ThrottleStartupMult;
+        public float ThrottleStartedMult;
+        public float ThrottleShutdownMult;
+        public bool ThrottleInstant;
+        public bool ThrottleUseAlternate;
+        public bool IndependentThrottle;
+        public float IndependentThrottlePercentage;
+        public float CurrentThrottle;
+        public bool EngineIgnited;
+        public bool Flameout;
+
+        // ModuleEnginesRF throttle response and ignition state, left at RealFuels' declared defaults on other engines
+        public bool PressureFed;
+        public float ThrottlePressureFedStartupMult;
+        public float ThrottleDownMult;
+        public float ThrottleClamp;
+        public bool UseThrottleCurve;
+        public bool Ignited;
+
         public readonly DoubleInterpolant ThrustCurve = DoubleInterpolant.Rent();
         public readonly DoubleInterpolant ThrottleIspCurve = DoubleInterpolant.Rent();
         public readonly DoubleInterpolant ThrottleIspCurveAtmStrength = DoubleInterpolant.Rent();
@@ -80,7 +102,10 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         public readonly DoubleInterpolant ATMCurveIsp = DoubleInterpolant.Rent();
         public readonly DoubleInterpolant AtmosphereCurve = DoubleInterpolant.Rent();
 
-        private double _throttle    => Part.Vessel.MainThrottle;
+        // ModuleEnginesRF's remapping of the requested throttle to the output throttle, only used if UseThrottleCurve
+        public readonly DoubleInterpolant ThrottleCurve = DoubleInterpolant.Rent();
+
+        private double _throttle   => Part.Vessel.MainThrottle;
         private double _atmPressure => Part.Vessel.ATMPressure;
         private double _atmDensity  => Part.Vessel.ATMDensity;
         private double _machNumber  => Part.Vessel.MachNumber;
@@ -199,6 +224,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             ATMCurve.Clear();
             ATMCurveIsp.Clear();
             AtmosphereCurve.Clear();
+            ThrottleCurve.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -473,6 +499,29 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             sb.AppendLine(Invariant(
                 $"  ModuleResiduals={ModuleResiduals:G17} ModuleSpoolupTime={ModuleSpoolupTime:G17} AutoCutoff={AutoCutoff} IsModuleEnginesRf={IsModuleEnginesRf} Ullage={Ullage}"));
 
+            // the throttle response fields, only where they differ from the KSP and RealFuels declared defaults
+            var throttleFields = new List<string>();
+            AddField(throttleFields, "ThrottleResponseRate", ThrottleResponseRate, -1f);
+            AddField(throttleFields, "ThrottleIgniteLevelMult", ThrottleIgniteLevelMult, 1f);
+            AddField(throttleFields, "ThrottleStartupMult", ThrottleStartupMult, 1f);
+            AddField(throttleFields, "ThrottleStartedMult", ThrottleStartedMult, 1f);
+            AddField(throttleFields, "ThrottleShutdownMult", ThrottleShutdownMult, 100f);
+            AddField(throttleFields, "ThrottleInstant", ThrottleInstant, false);
+            AddField(throttleFields, "ThrottleUseAlternate", ThrottleUseAlternate, false);
+            AddField(throttleFields, "IndependentThrottle", IndependentThrottle, false);
+            AddField(throttleFields, "IndependentThrottlePercentage", IndependentThrottlePercentage, 0f);
+            AddField(throttleFields, "CurrentThrottle", CurrentThrottle, 0f);
+            AddField(throttleFields, "EngineIgnited", EngineIgnited, false);
+            AddField(throttleFields, "Flameout", Flameout, false);
+            AddField(throttleFields, "PressureFed", PressureFed, false);
+            AddField(throttleFields, "ThrottlePressureFedStartupMult", ThrottlePressureFedStartupMult, 5f);
+            AddField(throttleFields, "ThrottleDownMult", ThrottleDownMult, 100f);
+            AddField(throttleFields, "ThrottleClamp", ThrottleClamp, 0.005f);
+            AddField(throttleFields, "UseThrottleCurve", UseThrottleCurve, false);
+            AddField(throttleFields, "Ignited", Ignited, false);
+            if (throttleFields.Count > 0)
+                sb.AppendLine("  " + string.Join(" ", throttleFields));
+
             void AppendCurve(string name, DoubleInterpolant curve)
             {
                 // empty curves are the default and very common, so omit them to keep the dump readable
@@ -488,6 +537,9 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             AppendCurve("VelCurveIsp", VelCurveIsp);
             AppendCurve("ATMCurve", ATMCurve);
             AppendCurve("ATMCurveIsp", ATMCurveIsp);
+            // engines without a throttleCurve hold a placeholder, so only dump the ones that use it
+            if (UseThrottleCurve)
+                AppendCurve("ThrottleCurve", ThrottleCurve);
 
             sb.Append("  ThrustTransformMultipliers:");
             foreach (double m in ThrustTransformMultipliers)

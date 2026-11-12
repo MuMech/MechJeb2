@@ -4,6 +4,7 @@
  */
 
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
@@ -29,6 +30,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             private static readonly FieldContext _pfDecoupled = Assembly("ProceduralFairings").Class("Keramzit.ProceduralFairingDecoupler").Field("decoupled");
             private static readonly FieldContext _rfPredictedMaximumResiduals = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("predictedMaximumResiduals");
+            private static readonly FieldContext _rfIgnited = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("ignited", BindingFlags.NonPublic | BindingFlags.Instance);
 
             private static readonly bool _isProcFairingsLoadedCorrectly;
             private static readonly bool _isRealFuelsLoadedCorrectly;
@@ -37,7 +39,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             static SimVesselUpdater()
             {
                 _isProcFairingsLoadedCorrectly = IsLoadedProceduralFairing && _pfDecoupled.IsValid;
-                _isRealFuelsLoadedCorrectly = IsLoadedRealFuels && _rfPredictedMaximumResiduals.IsValid;
+                _isRealFuelsLoadedCorrectly = IsLoadedRealFuels && _rfPredictedMaximumResiduals.IsValid && _rfIgnited.IsValid;
             }
 
             public SimVesselUpdater(SimVesselManager manager)
@@ -166,11 +168,20 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.MultIsp = kspEngine.multIsp;
                 engine.FlowMultiplier = kspEngine.flowMultiplier;
                 engine.MultFlow = kspEngine.multFlow;
-                engine.NoPropellants = kspEngine is { flameout: true, statusL2: "No propellants" };
+                engine.IndependentThrottle = kspEngine.independentThrottle;
+                engine.IndependentThrottlePercentage = kspEngine.independentThrottlePercentage;
+                engine.CurrentThrottle = kspEngine.currentThrottle;
+                engine.EngineIgnited = kspEngine.EngineIgnited;
+                engine.Flameout = kspEngine.flameout;
+                engine.NoPropellants = engine.Flameout && kspEngine.statusL2 == "No propellants";
                 engine.ModuleResiduals = 0;
+                engine.Ignited = false;
 
                 if (engine.IsModuleEnginesRf && _isRealFuelsLoadedCorrectly)
+                {
                     engine.ModuleResiduals = _rfPredictedMaximumResiduals.GetValue<double>(kspEngine);
+                    engine.Ignited = _rfIgnited.GetValue<bool>(kspEngine);
+                }
 
                 part.EngineResiduals = Max(part.EngineResiduals, engine.ModuleResiduals);
             }

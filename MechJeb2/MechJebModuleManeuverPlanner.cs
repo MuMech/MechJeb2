@@ -87,11 +87,17 @@ namespace MuMech
         /// The orbit and universal time the next maneuver is computed from: after the last node when there is one, or, when
         /// changing the last node, after the node before it.
         /// </summary>
-        internal void GetOrbitAndUT(out Orbit o, out double ut)
+        internal void GetOrbitAndUT(out Orbit o, out double ut) => GetOrbitAndUT(_createNode, out o, out ut);
+
+        /// <summary>
+        /// GetOrbitAndUT for a given mode rather than the window's: after the last node to create new ones (<paramref name="createNode"/>),
+        /// after the node before it to change the last one.
+        /// </summary>
+        internal void GetOrbitAndUT(bool createNode, out Orbit o, out double ut)
         {
             ut = VesselState.Time;
             o = Orbit;
-            ManeuverNode from = PlannerNodeFromEnd(_createNode ? 0 : 1);
+            ManeuverNode from = PlannerNodeFromEnd(createNode ? 0 : 1);
             if (from != null)
             {
                 ut = from.UT;
@@ -102,21 +108,32 @@ namespace MuMech
         /// <summary>The Create node / Create and execute buttons.</summary>
         internal void CreateNodes(bool execute, Orbit o, double ut)
         {
-            List<ManeuverParameters> nodeList = CurrentOperation.MakeNodes(o, ut, Core.Target);
-
             // the operation has an error to show: leave the nodes alone, and don't execute the ones that were already there
-            if (nodeList == null)
+            if (PlaceNodes(CurrentOperation, o, ut, !_createNode) == null)
                 return;
-
-            if (!_createNode)
-                LastPlannerNode().RemoveSelf();
-            for (int i = 0; i < nodeList.Count; i++)
-            {
-                Vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
-            }
 
             if (execute && Core.Node != null)
                 Core.Node.ExecuteOneNode(this);
+        }
+
+        /// <summary>
+        /// Make <paramref name="op"/>'s nodes from orbit <paramref name="o"/> at <paramref name="ut"/> (see GetOrbitAndUT), and place
+        /// them, after removing the last planner node when <paramref name="replaceLast"/>. Null, with the nodes left alone, when the
+        /// operation fails: its GetErrorMessage says why.
+        /// </summary>
+        internal List<ManeuverNode> PlaceNodes(Operation op, Orbit o, double ut, bool replaceLast)
+        {
+            List<ManeuverParameters> nodeList = op.MakeNodes(o, ut, Core.Target);
+            if (nodeList == null)
+                return null;
+
+            if (replaceLast)
+                LastPlannerNode()?.RemoveSelf();
+
+            var placed = new List<ManeuverNode>(nodeList.Count);
+            for (int i = 0; i < nodeList.Count; i++)
+                placed.Add(Vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT));
+            return placed;
         }
 
         public List<ManeuverNode> GetManeuverNodes()

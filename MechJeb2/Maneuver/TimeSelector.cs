@@ -28,6 +28,18 @@ namespace MuMech
 
         public TimeReference TimeReference => _allowedTimeRef[_currentTimeRef];
 
+        /// <summary>The references this selector offers, in the order of TimeRefNames.</summary>
+        internal TimeReference[] AllowedTimeReferences => _allowedTimeRef;
+
+        /// <summary>Select <paramref name="timeReference"/>; false, leaving the selection alone, when this selector doesn't offer it.</summary>
+        internal bool TrySetTimeReference(TimeReference timeReference)
+        {
+            int index = Array.IndexOf(_allowedTimeRef, timeReference);
+            if (index < 0) return false;
+            _currentTimeRef = index;
+            return true;
+        }
+
         // Input parameters
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableTime LeadTime = 0;

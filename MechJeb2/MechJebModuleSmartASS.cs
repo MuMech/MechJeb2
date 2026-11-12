@@ -140,24 +140,27 @@ namespace MuMech
         /// </summary>
         internal bool OtherUsersControlAttitude { get; private set; }
 
-        // with autoDisableSmartASS, SmartASS steps aside as soon as another module takes the attitude controller, so it doesn't
-        // suddenly turn on when that autopilot finishes
-        private bool CheckOtherUsers()
+        /// <summary>
+        /// True while another module (not SmartASS) uses the attitude controller, as of now rather than the last tick, and without
+        /// CheckOtherUsers' auto-disable.
+        /// </summary>
+        internal bool AttitudeHeldByOthers()
         {
             if (!Core.Attitude.Enabled)
                 return false;
 
-            bool other = false;
-            foreach (var u in Core.Attitude.Users)
-            {
+            foreach (object u in Core.Attitude.Users)
                 if (!Equals(u))
-                {
-                    other = true;
-                    break;
-                }
-            }
+                    return true;
 
-            if (!other)
+            return false;
+        }
+
+        // with autoDisableSmartASS, SmartASS steps aside as soon as another module takes the attitude controller, so it doesn't
+        // suddenly turn on when that autopilot finishes
+        private bool CheckOtherUsers()
+        {
+            if (!AttitudeHeldByOthers())
                 return false;
 
             if (autoDisableSmartASS)

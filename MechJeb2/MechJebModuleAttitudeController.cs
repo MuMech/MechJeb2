@@ -65,6 +65,19 @@ namespace MuMech
             Controller.OnStart();
         }
 
+        /// <summary>The controllers, indexed as ActiveController; the active one is Controller.</summary>
+        internal IReadOnlyList<BaseAttitudeController> Controllers => _controllers;
+
+        /// <summary>The controller of type T, active or not, so its settings can be changed before it is made active.</summary>
+        internal T GetController<T>() where T : BaseAttitudeController
+        {
+            foreach (BaseAttitudeController controller in _controllers)
+                if (controller is T t)
+                    return t;
+
+            throw new InvalidOperationException($"No attitude controller of type {typeof(T).Name}.");
+        }
+
         protected override void OnModuleEnabled()
         {
             _timeCount = 50;
