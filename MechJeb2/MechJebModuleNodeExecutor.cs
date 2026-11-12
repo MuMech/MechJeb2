@@ -680,19 +680,15 @@ namespace MuMech
             }
 
             //print("******** Found total spoolup time " + spoolupTime);
+            // a burn shorter than half the spool-up gets a share of it in proportion, so the lead grows smoothly up to the whole
+            // spool-up time
             if (spoolupTime > 0 && burnTime > 0)
             {
                 if (burnTime < spoolupTime * 0.5d)
-                {
-                    spoolupTime = burnTime / (spoolupTime * 0.5d);
-                    burnTime += spoolupTime;
-                    halfBurnTime += spoolupTime;
-                }
-                else
-                {
-                    burnTime += spoolupTime;
-                    halfBurnTime += spoolupTime;
-                }
+                    spoolupTime *= burnTime / (spoolupTime * 0.5d);
+
+                burnTime += spoolupTime;
+                halfBurnTime += spoolupTime;
             }
 
             return burnTime;
