@@ -41,7 +41,10 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             Core.Node.AutowarpInhibited = false;
-            Core.Node.Abort(); //make sure we turn off node executor if we get disabled suddenly
+            // stop the node executor it runs if it gets disabled suddenly; a node executor it does not run, the warp and the
+            // attitude users are left alone
+            if (Core.Node.Users.Contains(this))
+                Core.Node.Abort();
         }
 
         //The earliest time for the middle of a burn of this size: the node executor centers a burn on its node, and only starts it
