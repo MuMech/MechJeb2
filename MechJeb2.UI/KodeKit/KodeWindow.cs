@@ -97,6 +97,10 @@ namespace KodeKit
 
         public void OnPointerDown(PointerEventData e)
         {
+            // like Unity's Button: the left button only, and nothing while the button is disabled (a right drag turns the camera)
+            if (e.button != PointerEventData.InputButton.Left) return;
+            Selectable button = GetComponent<Selectable>();
+            if (button != null && !button.IsInteractable()) return;
             held = true;
             next = Time.unscaledTime + Interval;
             Action?.Invoke();
@@ -109,6 +113,12 @@ namespace KodeKit
         void Update()
         {
             if (!held || Time.unscaledTime < next) return;
+            Selectable button = GetComponent<Selectable>();
+            if (button != null && !button.IsInteractable())
+            {
+                held = false;
+                return;
+            }
             next = Time.unscaledTime + Interval;
             Action?.Invoke();
         }
