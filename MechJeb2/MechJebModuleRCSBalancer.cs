@@ -216,9 +216,11 @@ namespace MuMech
                 m.Restore();
         }
 
-        // What ModuleRCS.FixedUpdate asks of a module before it fires, fuel aside.
+        // What ModuleRCS.FixedUpdate asks of a module before it fires, and whether it got propellant the last time it fired. A module
+        // throttled to 0 asks for no propellant, which stock reads as a flameout, so only a module with some throttle counts as dry.
         private static bool CanFire(ModuleRCS pm) =>
-            pm.isEnabled && pm.moduleIsEnabled && pm.rcsEnabled && !pm.isJustForShow && (!pm.part.ShieldedFromAirstream || pm.shieldedCanThrust);
+            pm.isEnabled && pm.moduleIsEnabled && pm.rcsEnabled && !pm.isJustForShow && (!pm.part.ShieldedFromAirstream || pm.shieldedCanThrust) &&
+            !(pm.flameout && pm.flowMult > 0);
 
         private bool ThrustersChanged()
         {
