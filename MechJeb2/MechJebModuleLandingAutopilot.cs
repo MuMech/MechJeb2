@@ -167,6 +167,9 @@ namespace MuMech
             LandAtTarget = false;
             Users.Add(controller);
 
+            // the predicted landing site gives the ground altitude the chutes are armed above
+            _predictor.Users.Add(this);
+
             _deployedGears = false;
             _stageToDrop = JettisonBeforeEntry && MainBody.atmosphere && NextStageDropsParts();
 
@@ -735,6 +738,9 @@ namespace MuMech
 
         private const int DATA_SET_SIZE = 40;
 
+        // kPa in one atm, the conversion ModuleParachute uses
+        private const double KPA_PER_ATM = 101.325;
+
         public double Multiplier { get; private set; }
 
         public int MultiplierDataAmount => _regression.DataSetSize;
@@ -875,16 +881,18 @@ namespace MuMech
             {
                 // TODO is there benefit in running an initial simulation to calculate the height at which the ratio between vertical and horizontal velocity would be the best for being able to deply the chutes to control the landing site?
 
-                // At what ASL height does the reference body have this pressure?
-                _maxSemiDeployHeight = _body.AltitudeForPressure(minSemiDeployPressure);
+                // At what ASL height does the reference body have this pressure? minAirPressureToOpen is in atm, as ModuleParachute compares it.
+                _maxSemiDeployHeight = _body.AltitudeForPressure(minSemiDeployPressure * KPA_PER_ATM);
 
                 // We have to have semi deployed by the time we fully deploy.
                 _minSemiDeployHeight = maxFullDeployHeight;
 
-                _maxMultiplier = _maxSemiDeployHeight / _minSemiDeployHeight;
+                // A thin atmosphere reaches the opening pressure below the deploy altitude, where the chutes open on altitude anyway:
+                // the multiplier stays at least 1, as AddResult keeps it.
+                _maxMultiplier = Math.Max(1, _maxSemiDeployHeight / _minSemiDeployHeight);
 
                 // Set the inital multiplier to be the mid point.
-                Multiplier = _maxMultiplier / 2;
+                Multiplier = Math.Max(1, _maxMultiplier / 2);
             }
         }
     }
