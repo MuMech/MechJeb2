@@ -20,8 +20,8 @@ namespace MuMech.UI
         /// A "(N/A)" label while unavailable, otherwise a header and three live lines "X: +1.23 m/s  [L/J]".
         /// <paramref name="compute"/> fills the three values and runs only while <paramref name="available"/>.
         /// </summary>
-        static void ThreeAxes(KodeWindow w, UIObject parent, string naKey, string headerKey, string[] prefixes, string[] suffixes, string template,
-            Func<bool> available, Action<double[]> compute)
+        static void ThreeAxes(KodeWindow w, UIObject parent, List<Action> refresh, string naKey, string headerKey, string[] prefixes, string[] suffixes,
+            string template, Func<bool> available, Action<double[]> compute)
         {
             UIText na = KodeWindow.Label(parent, naKey);
             w.Visible(na.gameObject, () => !available());
@@ -35,22 +35,35 @@ namespace MuMech.UI
                 chars[i] = new CharText(KodeWindow.LiveLabel(panel, prefixes[i] + template + suffixes[i], false).tmpText);
 
             var values = new double[3];
-            w.AddSync(() =>
+
+            void Fill()
             {
-                if (!available()) return;
                 compute(values);
                 for (int i = 0; i < 3; i++)
                 {
                     chars[i].Clear().Append(prefixes[i]).PadPositive(values[i], 2).Append(suffixes[i]);
                     chars[i].Commit();
                 }
+            }
+
+            // the values follow the window's refresh rate, and are written at once when the lines appear
+            bool filled = false;
+            w.AddSync(() =>
+            {
+                bool shown = available();
+                if (shown && !filled) Fill();
+                filled = shown;
+            });
+            refresh.Add(() =>
+            {
+                if (filled) Fill();
             });
         }
 
-        static void DockingVelocity(KodeWindow w, UIObject p, MechJebModuleInfoItems items)
+        static void DockingVelocity(KodeWindow w, UIObject p, List<Action> refresh, MechJebModuleInfoItems items)
         {
             MechJebCore core = items.Core;
-            ThreeAxes(w, p, "#MechJeb_InfoItems_velocityNA", "#MechJeb_InfoItems_velocity", //"Target-relative velocity: (N/A)" "Target-relative velocity:"
+            ThreeAxes(w, p, refresh, "#MechJeb_InfoItems_velocityNA", "#MechJeb_InfoItems_velocity", //"Target-relative velocity: (N/A)" "Target-relative velocity:"
                 new[] { "X: ", "Y: ", "Z: " }, new[] { " m/s  [L/J]", " m/s  [I/K]", " m/s  [H/N]" }, "-9999.99",
                 () => core.vessel != null && core.Target != null && core.Target.NormalTargetExists,
                 v =>
@@ -63,10 +76,10 @@ namespace MuMech.UI
                 });
         }
 
-        static void DockingAngularVelocity(KodeWindow w, UIObject p, MechJebModuleInfoItems items)
+        static void DockingAngularVelocity(KodeWindow w, UIObject p, List<Action> refresh, MechJebModuleInfoItems items)
         {
             MechJebCore core = items.Core;
-            ThreeAxes(w, p, "#MechJeb_InfoItems_label2", "#MechJeb_InfoItems_label3", //"Target-relative Angular velocity: (N/A)" "Target-relative angular velocity:"
+            ThreeAxes(w, p, refresh, "#MechJeb_InfoItems_label2", "#MechJeb_InfoItems_label3", //"Target-relative Angular velocity: (N/A)" "Target-relative angular velocity:"
                 new[] { "P: ", "Y: ", "R: " }, new[] { " °/s", " °/s", " °/s" }, "-9999.99",
                 () => core.vessel != null && core.vessel.ReferenceTransform != null && core.Target != null && core.Target.Target is Vessel,
                 v =>
@@ -80,10 +93,10 @@ namespace MuMech.UI
                 });
         }
 
-        static void DockingPosition(KodeWindow w, UIObject p, MechJebModuleInfoItems items)
+        static void DockingPosition(KodeWindow w, UIObject p, List<Action> refresh, MechJebModuleInfoItems items)
         {
             MechJebCore core = items.Core;
-            ThreeAxes(w, p, "#MechJeb_InfoItems_label4", "#MechJeb_InfoItems_label5", //"Separation from target: (N/A)" "Separation from target:"
+            ThreeAxes(w, p, refresh, "#MechJeb_InfoItems_label4", "#MechJeb_InfoItems_label5", //"Separation from target: (N/A)" "Separation from target:"
                 new[] { "X: ", "Y: ", "Z: " }, new[] { " m  [L/J]", " m  [I/K]", " m  [H/N]" }, "-99999.99",
                 () => core.vessel != null && core.Target != null && core.Target.NormalTargetExists,
                 v =>
@@ -98,7 +111,7 @@ namespace MuMech.UI
 
         // ---- phase angles: one row per body, the list depends on where the vessel is ----
 
-        static void PhaseAngles(KodeWindow w, UIObject parent, MechJebModuleInfoItems items, bool planets)
+        static void PhaseAngles(KodeWindow w, UIObject parent, List<Action> refresh, MechJebModuleInfoItems items, bool planets)
         {
             Layout panel = KodeWindow.Panel(parent);
             UIText title = KodeWindow.Label(panel, planets ? "#MechJeb_InfoItems_label6" : "#MechJeb_InfoItems_label7", true); //"Planet phase angles" "Moon phase angles"
@@ -106,7 +119,7 @@ namespace MuMech.UI
 
             var rows = new LabelValueRows(panel, "-360.00°");
             MechJebCore core = items.Core;
-            w.AddSync(() =>
+            refresh.Add(() =>
             {
                 if (!rows.CanBuild) return;
                 rows.Begin();
@@ -197,7 +210,7 @@ namespace MuMech.UI
         }
 
         // "Torque sources": names on the left, the largest component-wise torque of each source on the right
-        static void TorqueCompare(KodeWindow w, UIObject parent, VesselState vs)
+        static void TorqueCompare(KodeWindow w, UIObject parent, List<Action> refresh, VesselState vs)
         {
             Layout panel = KodeWindow.Panel(parent);
             KodeWindow.Label(panel, "Torque sources");
@@ -212,7 +225,7 @@ namespace MuMech.UI
                 chars[i] = new CharText(KodeWindow.LiveLabel(values, "[ -99999.999, -99999.999, -99999.999 ]", false).tmpText);
             }
 
-            w.AddSync(() =>
+            refresh.Add(() =>
             {
                 Vector6 diff = vs.DifferentialThrottleTorque;
                 Vector3d diffTorque = Vector3d.Max(diff.Positive, diff.Negative);
@@ -250,13 +263,13 @@ namespace MuMech.UI
         }
 
         // "(power:f0,f1,...) (power:...)": the thrusters of every RCS part, scaled to 0-9
-        static void RcsThrusterStates(KodeWindow w, UIObject parent, MechJebModuleRCSBalancer b)
+        static void RcsThrusterStates(KodeWindow w, UIObject parent, List<Action> refresh, MechJebModuleRCSBalancer b)
         {
             Layout panel = KodeWindow.Panel(parent);
             KodeWindow.Label(panel, "#MechJeb_RCSThrusterStates_Label1"); //"RCS thrusters states (scaled to 0-9)"
             CharText states = InfoText.WrappedChars(panel, out _);
             MechJebCore core = b.Core;
-            w.AddSync(() =>
+            refresh.Add(() =>
             {
                 states.Clear();
                 Vessel vessel = core.vessel;
@@ -290,12 +303,12 @@ namespace MuMech.UI
             });
         }
 
-        static void RcsPartThrottles(KodeWindow w, UIObject parent, MechJebModuleRCSBalancer b)
+        static void RcsPartThrottles(KodeWindow w, UIObject parent, List<Action> refresh, MechJebModuleRCSBalancer b)
         {
             Layout panel = KodeWindow.Panel(parent);
             CharText throttles = InfoText.WrappedChars(panel, out _);
             MechJebCore core = b.Core;
-            w.AddSync(() =>
+            refresh.Add(() =>
             {
                 throttles.Clear();
                 Vessel vessel = core.vessel;
