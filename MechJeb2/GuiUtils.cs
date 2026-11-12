@@ -180,16 +180,19 @@ namespace MuMech
         private static void Split(double angle, out bool negative, out double degrees, out double minutes, out double seconds)
         {
             negative = angle < 0;
-            angle = Math.Abs(angle);
-            degrees = (int)angle;
-            angle -= degrees;
-            minutes = (int)(60 * angle);
-            angle -= minutes / 60;
-            seconds = Math.Round(3600 * angle);
+            // rounded to the arc second before it is split, so the seconds never read 60
+            double totalSeconds = Math.Round(3600 * Math.Abs(angle));
+            degrees = Math.Floor(totalSeconds / 3600);
+            minutes = Math.Floor(totalSeconds % 3600 / 60);
+            seconds = totalSeconds % 60;
         }
 
-        private static double Join(bool negative, double degrees, double minutes, double seconds) =>
-            (negative ? -1 : 1) * (degrees + minutes / 60.0 + seconds / 3600.0);
+        // A minus typed in a field flips the hemisphere, as it does in a decimal angle: -5° 30' N is 5° 30' S.
+        private static double Join(bool negative, double degrees, double minutes, double seconds)
+        {
+            negative ^= degrees < 0 || minutes < 0 || seconds < 0;
+            return (negative ? -1 : 1) * (Math.Abs(degrees) + Math.Abs(minutes) / 60.0 + Math.Abs(seconds) / 3600.0);
+        }
 
         private double FieldValue => Join(Negative, Degrees, Minutes, Seconds);
 
