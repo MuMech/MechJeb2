@@ -133,7 +133,14 @@ namespace MuMech
             // Import landing sites from users createded .cfg
             foreach (UrlDir.UrlConfig mjConf in GameDatabase.Instance.GetConfigs("MechJeb2Landing"))
             {
-                foreach (ConfigNode site in mjConf.config.GetNode("LandingSites").GetNodes("Site"))
+                ConfigNode sites = mjConf.config.GetNode("LandingSites");
+                if (sites == null)
+                {
+                    Print("Ignore a MechJeb2Landing config without a LandingSites node: " + mjConf.url);
+                    continue;
+                }
+
+                foreach (ConfigNode site in sites.GetNodes("Site"))
                 {
                     Print("site " + site);
                     string launchSiteName = site.GetValue("name");
@@ -152,7 +159,8 @@ namespace MuMech
                     string bodyName = site.GetValue("body");
                     CelestialBody body = bodyName != null ? FlightGlobals.Bodies.Find(b => b.bodyName == bodyName) : Planetarium.fetch.Home;
 
-                    if (LandingSites.All(p => p.Name != launchSiteName))
+                    // the same name can be a site on two bodies
+                    if (LandingSites.All(p => p.Name != launchSiteName || p.Body != body))
                     {
                         Print("Adding " + launchSiteName);
                         LandingSites.Add(new LandingSite { Name = launchSiteName, Latitude = latitude, Longitude = longitude, Body = body });
