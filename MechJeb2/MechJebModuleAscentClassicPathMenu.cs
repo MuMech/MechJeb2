@@ -18,6 +18,7 @@ namespace MuMech
 
         private MechJebModuleAscentClassicAutopilot _path;
         private double _lastMaxAtmosphereAltitude = -1;
+        private double _lastPathEndAltitude = -1;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -26,15 +27,18 @@ namespace MuMech
             _path = Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         }
 
-        // redraw the atmosphere picture when the body's atmosphere changed (shared with the new UI)
+        // redraw the atmosphere picture when the body's atmosphere or the picture's height (the turn end altitude) changed
+        // (shared with the new UI)
         internal void UpdateAtmoTextureIfNeeded()
         {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (_lastMaxAtmosphereAltitude != MainBody.RealMaxAtmosphereAltitude())
+            double endAltitude = PathEndAltitude;
+            // ReSharper disable CompareOfFloatsByEqualityOperator
+            if (_lastMaxAtmosphereAltitude != MainBody.RealMaxAtmosphereAltitude() || _lastPathEndAltitude != endAltitude)
+            // ReSharper restore CompareOfFloatsByEqualityOperator
             {
                 _lastMaxAtmosphereAltitude = MainBody.RealMaxAtmosphereAltitude();
-                UpdateAtmoTexture(PathTexture, MainBody,
-                    AscentSettings.AutoPath ? AscentSettings.AutoTurnEndAltitude : AscentSettings.TurnEndAltitude);
+                _lastPathEndAltitude       = endAltitude;
+                UpdateAtmoTexture(PathTexture, MainBody, endAltitude);
             }
         }
 
