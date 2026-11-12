@@ -206,7 +206,9 @@ namespace MuMech
         {
             double r = GetGroundRadius();
 
-            if (!Vessel.VesselOffGround() || Orbit.PeA > 0 || Orbit.ApR < r + VerticalAltitude)
+            // an ellipse that never rises above the final descent height has nothing to plan; ApR is negative on a hyperbola, which always
+            // rises again
+            if (!Vessel.VesselOffGround() || Orbit.PeA > 0 || (Orbit.eccentricity < 1 && Orbit.ApR < r + VerticalAltitude))
             {
                 Reset();
                 return;

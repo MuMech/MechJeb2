@@ -251,8 +251,9 @@ namespace MuMech
             // orbitLandingPosition is the point where our current orbit intersects the planet
             double endRadius = MainBody.Radius + DecelerationEndAltitude() - 100;
 
-            // Seems we are already landed ?
-            if (endRadius > Orbit.ApR || Vessel.LandedOrSplashed)
+            // Seems we are already landed ? (an ellipse that never rises above the end radius; ApR is negative on a hyperbola, which
+            // always rises again)
+            if ((Orbit.eccentricity < 1 && endRadius > Orbit.ApR) || Vessel.LandedOrSplashed)
             {
                 StopLanding();
                 return Vector3d.zero;
