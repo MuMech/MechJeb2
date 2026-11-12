@@ -110,6 +110,8 @@ namespace MuMech.UI
         /// <summary>SolarPanelDeployButton / AntennaDeployButton: auto-deploy toggle + "Toggle ... (currently ...)" button.</summary>
         static void DeployButton(KodeWindow w, UIObject parent, MechJebModuleDeployableController c, string autoKey)
         {
+            // a part's blacklist can leave the core without the controller
+            if (c == null) return;
             w.Toggle(parent, autoKey, () => c.AutoDeploy, v => c.AutoDeploy = v);
             UIButton b = KodeWindow.Button(parent, c.CurrentButtonText ?? " ", c.ToggleDeploy, true);
             string shown = c.CurrentButtonText;

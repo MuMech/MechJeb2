@@ -127,6 +127,8 @@ namespace MuMech.UI
         /// <summary>[switch] Auto-deploy ..., and the "Toggle ... (currently ...)" button under it (beside it, the window would double in width).</summary>
         static void DeployRow(KodeWindow w, UIObject parent, MechJebModuleDeployableController c, string autoKey)
         {
+            // a part's blacklist can leave the core without the controller
+            if (c == null) return;
             w.SwitchRow(parent, autoKey, () => c.AutoDeploy, v => c.AutoDeploy = v);
             UIButton b = KodeWindow.Button(parent, c.CurrentButtonText ?? " ", c.ToggleDeploy, true);
             string shown = c.CurrentButtonText;
