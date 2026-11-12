@@ -81,7 +81,7 @@ namespace MuMech
 
         private readonly Queue _tasks = Queue.Synchronized(new Queue());
         private readonly AutoResetEvent _workEvent = new AutoResetEvent(false);
-        private bool _stopRunning;
+        private volatile bool _stopRunning;
         private Thread _t;
         private bool _isWorking;
 
@@ -142,9 +142,11 @@ namespace MuMech
             {
                 if (_t != null)
                 {
+                    // the thread checks the flag between tasks: wait for the solve in progress, and abort only one that hangs
                     _stopRunning = true;
                     _workEvent.Set();
-                    _t.Abort();
+                    if (!_t.Join(1000))
+                        _t.Abort();
                     _t = null;
                 }
             }
@@ -287,7 +289,7 @@ namespace MuMech
                             throttles = _solver.Run(task.Thrusters, ((Vector3d)task.Direction).ToV3(), ((Vector3d)task.Rotation).ToV3(),
                                 task.TuningParams);
                         }
-                        catch (Exception e)
+                        catch (Exception e) when (!(e is ThreadAbortException))
                         {
                             ErrorString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
                         }
@@ -308,7 +310,7 @@ namespace MuMech
                 {
                     // Dequeue() failed due to the queue being cleared.
                 }
-                catch (Exception e)
+                catch (Exception e) when (!(e is ThreadAbortException))
                 {
                     ErrorString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
                 }
