@@ -51,10 +51,16 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_SurfaceTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = true)] //Surface TWR
-        public double SurfaceTWR() =>
-            HighLogic.LoadedSceneIsEditor
-                ? MaxAcceleration() / 9.81
-                : VesselState.ThrustAvailable / (VesselState.Mass * MainBody.GeeASL * 9.81);
+        public double SurfaceTWR()
+        {
+            if (!HighLogic.LoadedSceneIsEditor)
+                return VesselState.ThrustAvailable / (VesselState.Mass * MainBody.GeeASL * 9.81);
+
+            // at sea level on the body the stage stats' TWR is for
+            CelestialBody body = FlightGlobals.Bodies[TWRBody >= 0 && TWRBody < FlightGlobals.Bodies.Count ? TWRBody : FlightGlobals.GetHomeBodyIndex()];
+            double atmospheres = body.atmosphere ? body.GetPressure(0) * PhysicsGlobals.KpaToAtmospheres : 0;
+            return EditorLastStageThrust(false, atmospheres) / (VesselMass() * body.GeeASL * 9.81);
+        }
 
         [ValueInfoItem("#MechJeb_LocalTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)] //Local TWR
         public double LocalTWR() => VesselState.ThrustAvailable / (VesselState.Mass * VesselState.GravityForce.magnitude);
@@ -306,8 +312,9 @@ namespace MuMech
         }
 
         // Thrust of the engines in the editor's last stage, in kN: at full throttle, or at minimum (throttle-locked engines
-        // can't throttle down). A loop: these items are drawn every frame.
-        private static double EditorLastStageThrust(bool minimum)
+        // can't throttle down). Only the active mode of a multi-mode engine counts. In vacuum, or at `atmospheres` of pressure
+        // for a rocket, whose thrust scales with its Isp; a jet keeps its rated thrust. A loop: these items are drawn every frame.
+        private static double EditorLastStageThrust(bool minimum, double atmospheres = 0)
         {
             double thrust = 0;
             foreach (Part part in VesselExtensions.EditorParts)
@@ -315,9 +322,16 @@ namespace MuMech
                 if (part.inverseStage != StageManager.LastStage) continue;
                 for (int i = 0; i < part.Modules.Count; i++)
                 {
-                    if (!(part.Modules[i] is ModuleEngines e)) continue;
+                    if (!(part.Modules[i] is ModuleEngines e) || !e.isEnabled) continue;
                     float full = e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust);
-                    thrust += minimum && !e.throttleLocked ? e.minThrust : full;
+                    double engineThrust = minimum && !e.throttleLocked ? e.minThrust : full;
+                    if (atmospheres > 0 && !e.atmChangeFlow)
+                    {
+                        float vacuumIsp = e.atmosphereCurve.Evaluate(0);
+                        engineThrust *= vacuumIsp > 0 ? e.atmosphereCurve.Evaluate((float)atmospheres) / vacuumIsp : 0;
+                    }
+
+                    thrust += engineThrust;
                 }
             }
 
