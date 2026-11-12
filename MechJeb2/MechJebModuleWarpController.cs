@@ -44,8 +44,18 @@ namespace MuMech
         {
             WarpPaused = true;
 
-            if (activateSASOnWarp && TimeWarp.CurrentRateIndex == 0)
-                Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+            if (TimeWarp.CurrentRateIndex == 0)
+                RestoreSAS();
+        }
+
+        // the player's SAS setting from before MechJeb turned SAS on for a rails warp, given back when the warp is back at 1x
+        private bool? _sasBeforeWarp;
+
+        private void RestoreSAS()
+        {
+            if (_sasBeforeWarp is bool sas)
+                Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, sas);
+            _sasBeforeWarp = null;
         }
 
         internal void ResumeWarp()
@@ -81,12 +91,15 @@ namespace MuMech
                 {
                     // SAS changes only with a rate change that happens: a paused warp leaves it as it is
                     if (activateSASOnWarp && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
+                    {
+                        _sasBeforeWarp ??= Part.vessel.ActionGroups[KSPActionGroup.SAS];
                         Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
+                    }
 
                     TimeWarp.SetRate(rateIndex, instant);
 
-                    if (activateSASOnWarp && rateIndex == 0)
-                        Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+                    if (rateIndex == 0)
+                        RestoreSAS();
                 }
             }
         }
@@ -277,7 +290,12 @@ namespace MuMech
         {
             warpToUT = 0.0;
             if (TimeWarp.CurrentRateIndex == 0)
+            {
+                // the player may have stopped the warp: SAS goes back to their setting all the same
+                RestoreSAS();
                 return false; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kraken)
+            }
+
             SetTimeWarpRate(0, instant);
             return true;
         }
