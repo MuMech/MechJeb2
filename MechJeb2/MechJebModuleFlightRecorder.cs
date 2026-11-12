@@ -146,6 +146,9 @@ namespace MuMech
         public readonly double[] Maximums;
         public readonly double[] Minimums;
 
+        // false until a record sets Minimums and Maximums: after a Mark, and after a load that keeps the saved mark
+        private bool _extremesSet;
+
         private readonly bool _paused = false;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL), ValueInfoItem("#MechJeb_MarkUT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
@@ -247,11 +250,7 @@ namespace MuMech
             MarkBodyIndex = FlightGlobals.Bodies.IndexOf(MainBody);
             MaxDragGees = 0;
             TimeSinceMark = 0;
-            for (int t = 0; t < Maximums.Length; t++)
-            {
-                Minimums[t] = double.MaxValue;
-                Maximums[t] = double.MinValue;
-            }
+            _extremesSet = false;
 
             // a lowered HistorySize applies from here
             if (History.Length > MaxHistorySize)
@@ -359,9 +358,11 @@ namespace MuMech
             for (int t = 0; t < _typeCount; t++)
             {
                 double current = History[idx][(RecordType)t];
-                Minimums[t] = Math.Min(Minimums[t], current);
-                Maximums[t] = Math.Max(Maximums[t], current);
+                Minimums[t] = _extremesSet ? Math.Min(Minimums[t], current) : current;
+                Maximums[t] = _extremesSet ? Math.Max(Maximums[t], current) : current;
             }
+
+            _extremesSet = true;
         }
 
         public void DumpCsv()
