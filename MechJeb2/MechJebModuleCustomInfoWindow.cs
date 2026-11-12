@@ -219,7 +219,19 @@ namespace MuMech
     {
         public readonly List<InfoItem> registry = new List<InfoItem>();
         public MechJebModuleCustomInfoWindow editedWindow;
-        internal int selectedItemIndex = -1;
+        private int _selectedItemIndex = -1;
+        private MechJebModuleCustomInfoWindow _selectedItemWindow;
+
+        // the selected item of the edited window: a selection made in another window is none in this one
+        internal int selectedItemIndex
+        {
+            get => _selectedItemWindow == editedWindow ? _selectedItemIndex : -1;
+            set
+            {
+                _selectedItemIndex = value;
+                _selectedItemWindow = editedWindow;
+            }
+        }
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public InfoItem.Category itemCategory = InfoItem.Category.Orbit;
@@ -544,6 +556,7 @@ namespace MuMech
         {
             if (editedWindow == null || selectedItemIndex < 0 || selectedItemIndex >= editedWindow.items.Count) return;
             editedWindow.items.RemoveAt(selectedItemIndex);
+            selectedItemIndex = -1;
             editedWindow.Dirty = true;
         }
 
