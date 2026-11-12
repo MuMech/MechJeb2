@@ -134,15 +134,25 @@ namespace MuMech
             _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
             Core.Thrust.Users.Add(this);
             Core.Attitude.Users.Add(this);
+            _inControl = true;
             TransitionTo(States.INITIAL_WARP);
         }
 
+        // whether the executor has taken the warp, throttle and attitude for a node (Init): only then does it give them back, so
+        // an Abort while idle, or an enable that never reached a node, leaves the player's throttle and attitude alone
+        private bool _inControl;
+
         public void Abort()
         {
-            Core.Warp.MinimumWarp();
-            Core.Thrust.ThrustOff();
-            Core.Attitude.AttitudeDeactivate();
+            if (_inControl)
+            {
+                Core.Warp.MinimumWarp();
+                Core.Thrust.ThrustOff();
+                Core.Attitude.AttitudeDeactivate();
+            }
+
             Users.Clear();
+            _inControl = false;
             _direction = Vector3d.zero;
             _dvLeft = 0;
             State = States.IDLE;
@@ -157,8 +167,13 @@ namespace MuMech
 
         protected override void OnModuleDisabled()
         {
-            Core.Attitude.AttitudeDeactivate();
-            Core.Thrust.ThrustOff();
+            if (_inControl)
+            {
+                Core.Attitude.AttitudeDeactivate();
+                Core.Thrust.ThrustOff();
+            }
+
+            _inControl = false;
             Core.Thrust.Users.Remove(this);
             State = States.IDLE;
             _dvLeft = 0;
