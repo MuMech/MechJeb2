@@ -99,6 +99,13 @@ namespace MuMech
                     break;
 
                 case WarpTarget.AtmosphericEntry:
+                    // no atmosphere to enter, or already in it: the next crossing would be the datum radius, or the way out
+                    if (!MainBody.atmosphere || VesselState.AltitudeASL < MainBody.RealMaxAtmosphereAltitude())
+                    {
+                        valid = false;
+                        break;
+                    }
+
                     try
                     {
                         targetUT = Vessel.orbit.NextTimeOfRadius(VesselState.Time,
