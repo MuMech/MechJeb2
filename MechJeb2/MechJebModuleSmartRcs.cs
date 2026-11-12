@@ -35,6 +35,10 @@ namespace MuMech
         {
             base.OnFixedUpdate();
 
+            // a lost target, or another module, cleared the RCS controller's users: SmartRcs no longer holds anything, so it shows OFF
+            if (target != Target.OFF && !Core.RCS.Users.Contains(this))
+                target = Target.OFF;
+
             RcsUsedByOtherModule = CheckOtherUsers();
         }
 

@@ -350,7 +350,19 @@ namespace MuMech
         {
             base.OnFixedUpdate();
 
+            // A lost target or node, or the end of another autopilot, clears every attitude user: SmartASS no longer steers, so it
+            // shows OFF instead of a target nothing holds
+            if (target != Target.OFF && !Core.Attitude.Users.Contains(this))
+                target = Target.OFF;
+
+            bool otherUsersBefore = OtherUsersControlAttitude;
             OtherUsersControlAttitude = CheckOtherUsers();
+
+            // the other autopilot left the attitude controller to SmartASS (auto-disable off): steer to SmartASS's own target again,
+            // not to the one that autopilot left
+            if (otherUsersBefore && !OtherUsersControlAttitude && target != Target.OFF)
+                Engage(false);
+
             if (!OtherUsersControlAttitude)
                 ApplySurfaceState();
 
