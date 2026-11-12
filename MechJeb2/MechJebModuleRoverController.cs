@@ -235,13 +235,17 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             if (Core.Attitude.Users.Contains(this))
-            {
-                //				line.enabled = false;
-                Core.Attitude.AttitudeDeactivate();
-                Core.Attitude.Users.Remove(this);
-            }
+                ReleaseAttitude();
 
             base.OnModuleDisabled();
+        }
+
+        // the rover leaves the attitude controller; SmartASS or a script that also steers through it keeps it
+        private void ReleaseAttitude()
+        {
+            Core.Attitude.Users.Remove(this);
+            if (Core.Attitude.Users.Count == 0)
+                Core.Attitude.AttitudeDeactivate();
         }
 
         private float  Square(float number)  => number * number;
@@ -556,10 +560,7 @@ namespace MuMech
             }
 
             if (!StabilityControl && Core.Attitude.Users.Contains(this))
-            {
-                Core.Attitude.AttitudeDeactivate();
-                Core.Attitude.Users.Remove(this);
-            }
+                ReleaseAttitude();
         }
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
