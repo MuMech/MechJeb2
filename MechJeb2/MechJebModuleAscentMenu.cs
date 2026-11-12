@@ -117,7 +117,8 @@ namespace MuMech
             Core.LaunchCountdown.Abort();
         }
 
-        private DateTime _lastRefresh = DateTime.MinValue;
+        // Time.unscaledTime: the local clock can step back (a daylight saving change) and stop the refresh
+        private float _lastRefresh = float.NegativeInfinity;
         internal string vgo, heading, tgo, pitch, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
 
         // the severity that goes with autopilotStatus, which MechJeb2.UI turns into a colour
@@ -132,8 +133,8 @@ namespace MuMech
 
         internal void UpdateStrings()
         {
-            DateTime now = DateTime.Now;
-            if (now <= _lastRefresh + RefreshInterval) return;
+            float now = Time.unscaledTime;
+            if (now <= _lastRefresh + RefreshInterval.TotalSeconds) return;
 
             _lastRefresh = now;
             Profiler.BeginSample("MJ.GUIWindow.UpdateStrings.StringOps");
