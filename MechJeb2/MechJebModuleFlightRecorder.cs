@@ -126,21 +126,6 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly double Precision = 0.2;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool Downrange = true;
-
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool RealAtmo = false;
-
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool Stages = false;
-
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public int HSize = 4;
-
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public int VSize = 2;
-
         private static readonly int _typeCount = Enum.GetValues(typeof(RecordType)).Length;
 
         public readonly double[] Maximums;
@@ -148,8 +133,6 @@ namespace MuMech
 
         // false until a record sets Minimums and Maximums: after a Mark, and after a load that keeps the saved mark
         private bool _extremesSet;
-
-        private readonly bool _paused = false;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL), ValueInfoItem("#MechJeb_MarkUT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
         //Mark UT
@@ -300,9 +283,6 @@ namespace MuMech
                 (1 - Vector3d.Dot(VesselState.OrbitalVelocity.normalized, VesselState.Forward));
 
             MaxDragGees = Math.Max(MaxDragGees, VesselState.DragAcceleration / 9.81);
-
-            if (_paused)
-                return;
 
             //int oldHistoryIdx = historyIdx;
 

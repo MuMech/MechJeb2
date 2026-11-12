@@ -10,7 +10,6 @@ using KSP.Localization;
 using UnityEngine;
 using UnityEngine.Profiling;
 using static MechJebLib.Utils.Statics;
-using Object = UnityEngine.Object;
 
 namespace MuMech
 {
@@ -109,50 +108,13 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public Color text = new Color(1, 1, 1, 1);
 
-        public Texture2D background;
-
-
-        private float refreshInterval = 0.1f;
-        private float lastRefresh = float.NegativeInfinity;
-
+        // values refresh this many times a second (the view's own timer)
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt refreshRate = 10;
-
-        public void UpdateRefreshRate() => refreshInterval = (float)(1d / refreshRate);
-
-        public override void OnDestroy()
-        {
-            if (background)
-            {
-                Object.Destroy(background);
-            }
-
-            base.OnDestroy();
-        }
 
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             //Do nothing: custom info windows will be saved in MechJebModuleCustomWindowEditor.OnSave
-        }
-
-        public virtual void UpdateWindowItems()
-        {
-            float now = Time.realtimeSinceStartup;
-            if (now - lastRefresh < refreshInterval) return;
-            foreach (InfoItem item in items)
-                if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
-                    item.UpdateItem();
-            lastRefresh = now;
-        }
-
-        public void Init()
-        {
-            if (!background)
-            {
-                background = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-                background.SetPixel(0, 0, backgroundColor);
-                background.Apply();
-            }
         }
 
         public string ToSharingString()
@@ -339,8 +301,6 @@ namespace MuMech
                     window.isOverlay = loadedOverlay;
                 if (windowNode.HasValue("LockedConfig") && bool.TryParse(windowNode.GetValue("LockedConfig"), out bool loadedLocked))
                     window.windowLocked = loadedLocked;
-
-                window.UpdateRefreshRate();
 
                 bool useOldConfig = true;
                 if (windowNode.HasValue("enabledEditor"))
@@ -536,7 +496,7 @@ namespace MuMech
         {
             if (editedWindow == null) return;
 
-            editedWindow.OnDestroy(); // frees the window's background texture
+            editedWindow.OnDestroy();
             Core.RemoveComputerModule(editedWindow);
             editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
             Dirty = true; // the windows are saved by this module: the next save drops the removed one
@@ -588,10 +548,7 @@ namespace MuMech
         internal void SetBackgroundColor(Color c)
         {
             if (editedWindow == null || editedWindow.backgroundColor == c) return;
-            editedWindow.Init();
             editedWindow.backgroundColor = c;
-            editedWindow.background.SetPixel(0, 0, c);
-            editedWindow.background.Apply();
             editedWindow.Dirty = true;
         }
 
