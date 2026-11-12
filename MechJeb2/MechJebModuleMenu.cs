@@ -615,7 +615,7 @@ namespace MuMech
                 {
                     if (windowSide == WindowSide.RIGHT || windowSide == WindowSide.LEFT)
                     {
-                        windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.width, 0) / GuiUtils.Scale;
+                        windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.height, 0) / GuiUtils.Scale;
                     }
                     else
                     {
