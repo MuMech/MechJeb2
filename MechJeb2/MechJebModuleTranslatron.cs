@@ -40,16 +40,17 @@ namespace MuMech
             MechJebModuleThrustController.TMode oldMode = Core.Thrust.Tmode;
             Core.Thrust.Tmode = newMode;
             if (Core.Thrust.Tmode != oldMode)
-            {
                 Core.Thrust.TransSpdAct = Convert.ToInt16(trans_spd);
-                if (Core.Thrust.Tmode == MechJebModuleThrustController.TMode.OFF)
-                {
-                    Core.Thrust.Users.Remove(this);
-                }
-                else
-                {
-                    Core.Thrust.Users.Add(this);
-                }
+
+            // Membership follows the mode picked, also when it was already set: another autopilot's ThrustOff sets OFF without
+            // removing the Translatron, and OFF then still releases the throttle
+            if (Core.Thrust.Tmode == MechJebModuleThrustController.TMode.OFF)
+            {
+                Core.Thrust.Users.Remove(this);
+            }
+            else
+            {
+                Core.Thrust.Users.Add(this);
             }
         }
 
@@ -128,6 +129,11 @@ namespace MuMech
             {
                 Core.Attitude.Users.Remove(this);
             }
+
+            // With no mode and no abort the Translatron has nothing to drive: leave the throttle to the player when another
+            // autopilot's ThrustOff turned the mode off
+            if (abort == AbortStage.OFF && Core.Thrust.Tmode == MechJebModuleThrustController.TMode.OFF && Core.Thrust.Users.Contains(this))
+                Core.Thrust.Users.Remove(this);
 
             if (abort != AbortStage.OFF)
             {
