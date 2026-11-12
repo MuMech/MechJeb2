@@ -398,19 +398,18 @@ namespace MuMech
 
         // The part loop in VesselState could expose this, but it gets disabled when the RCS action group is disabled.
         // This method is also useful when the RCS AG is off.
+        // Walks the parts itself: FindPartModulesImplementing builds a new list on each call, and the ullage check asks every tick.
         public static bool hasEnabledRCSModules(this Vessel vessel)
         {
-            List<ModuleRCS> rcsModules = vessel.FindPartModulesImplementing<ModuleRCS>();
-
-            for (int m = 0; m < rcsModules.Count; m++)
+            List<Part> parts = vessel.parts;
+            for (int p = 0; p < parts.Count; p++)
             {
-                ModuleRCS rcs = rcsModules[m];
-
-                if (rcs == null)
-                    continue;
-
-                if (rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
-                    return true;
+                PartModuleList modules = parts[p].Modules;
+                for (int m = 0; m < modules.Count; m++)
+                {
+                    if (modules[m] is ModuleRCS rcs && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
+                        return true;
+                }
             }
 
             return false;
