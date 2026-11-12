@@ -71,7 +71,10 @@ namespace MuMech
         [UsedImplicitly]
         public MechJebCore MasterMechJeb => vessel.GetMasterMechJeb();
 
-        // Allow other mods to kill MJ ability to control vessel (RemoteTech, RO...)
+        // Lets other mods (RemoteTech, RP-1...) take the flight controls from MechJeb: while it is set, no module's Drive runs, so
+        // MechJeb neither steers, throttles nor translates, and the throttle stays where it was. It cuts only that: the modules'
+        // OnFixedUpdate and OnUpdate still run, so autostaging, time warp, deployables and the SAS and RCS action groups
+        // that an engaged autopilot toggles go on.
         [UsedImplicitly]
         public bool DeactivateControl
         {
