@@ -220,15 +220,18 @@ namespace MuMech
                 Core.Staging.Users.Remove(autopilot);
         }
 
-        public override void OnStart(PartModule.StartState state)
+        /// <summary>
+        ///     Applies the RO defaults once per install with RO. The core calls this after its settings reload, which would
+        ///     otherwise put the saved values back over them, and saves at once when it returns true.
+        /// </summary>
+        public bool ApplyRODefaultsIfNeeded()
         {
-            base.OnStart(state);
+            if (!ForceResetROSettings || !ReflectionUtils.IsLoadedRealismOverhaul)
+                return false;
 
-            if (ForceResetROSettings && ReflectionUtils.IsLoadedRealismOverhaul)
-            {
-                ApplyRODefaults();
-                ForceResetROSettings = false;
-            }
+            ApplyRODefaults();
+            ForceResetROSettings = false;
+            return true;
         }
 
         private void ApplyRODefaults()
