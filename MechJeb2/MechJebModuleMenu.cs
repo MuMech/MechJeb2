@@ -267,8 +267,12 @@ namespace MuMech
             SetupMainToolbarButton();
 
             _iconNameCounts.Clear();
-            foreach (DisplayModule module in Core.GetDisplayModules(DisplayOrder.instance).Where(m => m.ShowInMenu && !m.TechLocked))
+            List<DisplayModule> modules = Core.GetDisplayModules(DisplayOrder.instance);
+            for (int i = 0; i < modules.Count; i++)
             {
+                DisplayModule module = modules[i];
+                if (!module.ShowInMenu || module.TechLocked) continue;
+
                 string name = GetCleanName(module.IconName());
                 _iconNameCounts.TryGetValue(name, out int occurrence);
                 _iconNameCounts[name] = occurrence + 1;
@@ -461,9 +465,9 @@ namespace MuMech
                 menuButton.ToolTip = "MechJeb2";
                 menuButton.TexturePath = "MechJeb2/Icons/MJ2";
                 menuButton.OnClick += b => ShowHideMasterWindow();
+                // nothing hides it, and the wrapper writes the property through reflection: once is enough
+                menuButton.Visible = true;
             }
-
-            menuButton.Visible = true;
         }
 
         private static readonly Dictionary<string, string> _cleanNames = new Dictionary<string, string>();
