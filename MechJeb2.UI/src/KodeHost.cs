@@ -232,17 +232,25 @@ namespace MuMech.UI
         {
             if (settings == null) return;
             ApplyLayout();
-            Theme t = ThemeFor((MechJebModuleSettings.UiSkinType)settings.UiSkin, settings.UiCompact, settings.UiOpacity);
-            string key = t.Name + "|" + Mathf.Clamp(settings.UiOpacity, 0.3f, 1f).ToString("F2");
-            if (key == themeKey) return;
-            bool opacityOnly = Theme.Current != null && t.Name == themeName;
-            themeKey = key;
-            themeName = t.Name;
-            if (opacityOnly) SetOpacity(t.Window.Tint.a);
-            else Theme.Set(t);
+            // every settings change comes here (a slider drag sends one per step): a theme is built only for another skin or
+            // spacing, and an opacity change alone goes to the windows' backgrounds
+            var skin = (MechJebModuleSettings.UiSkinType)settings.UiSkin;
+            bool compact = settings.UiCompact;
+            float opacity = Mathf.Clamp(settings.UiOpacity, 0.3f, 1f);
+            bool sameTheme = Theme.Current != null && skin == themeSkin && compact == themeCompact;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (sameTheme && opacity == themeOpacity) return;
+            themeSkin = skin;
+            themeCompact = compact;
+            themeOpacity = opacity;
+            // ThemeFor puts the opacity in the window tint's alpha, for every skin
+            if (sameTheme) SetOpacity(opacity);
+            else Theme.Set(ThemeFor(skin, compact, opacity));
         }
 
-        string themeName;
+        MechJebModuleSettings.UiSkinType themeSkin;
+        bool themeCompact;
+        float themeOpacity = -1;
 
         /// <summary>
         /// The opacity slider: only the window backgrounds' alpha changes, so it is written to them and to the themes they
@@ -297,16 +305,17 @@ namespace MuMech.UI
             return compact ? Theme.Compact(t) : t;
         }
 
-        string themeKey;
-
         static TMP_FontAsset arialMetric;
+        static bool arialMetricSearched;
 
         /// <summary>KSP's LiberationSans SDF, with KSP's NotoSans as fallback for the symbols it lacks (Δ, Σ...).</summary>
         static TMP_FontAsset ArialMetricFont
         {
             get
             {
-                if (arialMetric != null) return arialMetric;
+                // the fonts are all loaded before the first window: a font that is missing stays missing, so it is searched once
+                if (arialMetric != null || arialMetricSearched) return arialMetric;
+                arialMetricSearched = true;
                 arialMetric = Resources.FindObjectsOfTypeAll<TMP_FontAsset>().FirstOrDefault(f => f.name == "LiberationSans SDF");
                 TMP_FontAsset noto = UISkinManager.TMPFont;
                 if (arialMetric != null && noto != null && arialMetric.fallbackFontAssets != null && !arialMetric.fallbackFontAssets.Contains(noto))
