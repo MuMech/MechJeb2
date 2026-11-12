@@ -32,13 +32,13 @@ namespace MuMech.UI
             if (HasVessel) menu.UpdateAtmoTextureIfNeeded();
         }
 
-        /// <summary>A "value.ToSI(digits) + suffix" text, formatted only when the value changes.</summary>
+        /// <summary>A "value.ToSI(digits) + suffix" text, formatted only when the value changes at the shown precision.</summary>
         sealed class SiText
         {
             readonly Func<double> value;
             readonly int digits;
             readonly string suffix;
-            double last = double.NaN;
+            double lastKey = double.NaN;
             string text;
 
             public SiText(Func<double> value, int digits, string suffix)
@@ -51,13 +51,25 @@ namespace MuMech.UI
             public string Get()
             {
                 double v = HasValue ? value() : 0;
-                if (text == null || !v.Equals(last))
+                double key = Shown(v);
+                if (text == null || !key.Equals(lastKey))
                 {
-                    last = v;
+                    lastKey = key;
                     text = v.ToSI(digits) + suffix;
                 }
 
                 return text;
+            }
+
+            // the value in units of ToSI's last shown digit (an airless body's turn start follows the terrain every frame)
+            double Shown(double v)
+            {
+                if (v == 0 || double.IsNaN(v) || double.IsInfinity(v)) return v;
+                int exponent = (int)Math.Floor(Math.Log10(Math.Abs(v)));
+                int siExponent = 3 * (int)Math.Floor(exponent / 3.0);
+                int decimals = Math.Max(0, digits - (exponent - siExponent + 1));
+                double step = Math.Pow(10, siExponent - decimals);
+                return Math.Round(v / step) * step;
             }
 
             public Func<bool> Available;
