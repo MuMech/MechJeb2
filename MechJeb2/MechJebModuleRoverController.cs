@@ -149,6 +149,34 @@ namespace MuMech
 
         public void OnVesselModified(Vessel v) => _wheelbasesDirty = true;
 
+        // the share of the charge left in the storage that can flow, NaN without any
+        private double EnergyLeft()
+        {
+            Vessel.GetConnectedResourceTotals(PartResourceLibrary.ElectricityHashcode, out double amount, out double maxAmount);
+            return amount / maxAmount;
+        }
+
+        // breakable panels that are neither broken nor retracted, only when isBreakable is set; the extended panels otherwise
+        private bool AnySolarPanel(bool breakableNotStowed)
+        {
+            List<Part> parts = Vessel.parts;
+            for (int i = 0; i < parts.Count; i++)
+            {
+                PartModuleList modules = parts[i].Modules;
+                for (int m = 0; m < modules.Count; m++)
+                {
+                    if (!(modules[m] is ModuleDeployableSolarPanel panel)) continue;
+                    if (breakableNotStowed
+                            ? panel.isBreakable && panel.deployState != ModuleDeployablePart.DeployState.BROKEN &&
+                            panel.deployState != ModuleDeployablePart.DeployState.RETRACTED
+                            : panel.deployState == ModuleDeployablePart.DeployState.EXTENDED)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         private void RebuildWheelbases()
         {
             _wheelbasesDirty = false;
@@ -433,22 +461,17 @@ namespace MuMech
 
             if (BrakeOnEnergyDepletion)
             {
-                List<Part> batteries = Vessel.Parts.FindAll(p =>
-                    p.Resources.Contains(PartResourceLibrary.ElectricityHashcode) &&
-                    p.Resources.Get(PartResourceLibrary.ElectricityHashcode).flowState);
-                double energyLeft = batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).amount) /
-                    batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).maxAmount);
-                bool openSolars =
-                    Vessel.mainBody.atmosphere && // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
-                    Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p =>
-                        p.isBreakable && p.deployState != ModuleDeployablePart.DeployState.BROKEN &&
-                        p.deployState != ModuleDeployablePart.DeployState.RETRACTED).Count > 0;
+                double energyLeft = EnergyLeft();
+                // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
+                bool openSolars = Vessel.mainBody.atmosphere && AnySolarPanel(true);
 
                 if (openSolars && energyLeft > 0.99)
                 {
-                    Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable &&
-                        p.deployState == ModuleDeployablePart.DeployState
-                           .EXTENDED).ForEach(p => p.Retract());
+                    foreach (ModuleDeployableSolarPanel panel in Vessel.GetModules<ModuleDeployableSolarPanel>())
+                    {
+                        if (panel.isBreakable && panel.deployState == ModuleDeployablePart.DeployState.EXTENDED)
+                            panel.Retract();
+                    }
                 }
 
                 if (energyLeft < 0.05 && Math.Sign(s.wheelThrottle) + Math.Sign(curSpeed) != 0)
@@ -463,9 +486,7 @@ namespace MuMech
                     brake = true;
                 }
 
-                if (curSpeed < 0.1 && energyLeft < 0.05 && !waitingForDaylight &&
-                    Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>()
-                       .FindAll(p => p.deployState == ModuleDeployablePart.DeployState.EXTENDED).Count > 0)
+                if (curSpeed < 0.1 && energyLeft < 0.05 && !waitingForDaylight && AnySolarPanel(false))
                 {
                     waitingForDaylight = true;
                 }
@@ -532,16 +553,11 @@ namespace MuMech
         {
             if (WarpToDaylight && waitingForDaylight && Vessel.isActiveVessel)
             {
-                List<Part> batteries = Vessel.Parts.FindAll(p =>
-                    p.Resources.Contains(PartResourceLibrary.ElectricityHashcode) &&
-                    p.Resources.Get(PartResourceLibrary.ElectricityHashcode).flowState);
-                double energyLeft = batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).amount) /
-                    batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).maxAmount);
+                double energyLeft = EnergyLeft();
 
                 if (waitingForDaylight)
                 {
-                    if (Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>()
-                           .FindAll(p => p.deployState == ModuleDeployablePart.DeployState.EXTENDED).Count == 0)
+                    if (!AnySolarPanel(false))
                     {
                         waitingForDaylight = false;
                     }
