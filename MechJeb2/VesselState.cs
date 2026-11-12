@@ -1379,7 +1379,7 @@ namespace MuMech
                 foreach (Propellant propellant in e.propellants)
                 {
                     // maxFuelFlow is in tonnes per second: units per second need the mixture density (as the comment above says)
-                    double maxreq = e.maxFuelFlow * e.mixtureDensityRecip * propellant.ratio;
+                    double maxreq = e.maxFuelFlow * e.multFlow * e.mixtureDensityRecip * propellant.ratio;
                     AddResource(propellant.id, propellant.currentRequirement, maxreq);
                 }
 
@@ -1387,8 +1387,9 @@ namespace MuMech
 
                 float thrustLimiter = e.thrustPercentage / 100f;
 
-                double maxThrust = e.maxFuelFlow * e.flowMultiplier * isp * e.g;
-                double minThrust = e.minFuelFlow * e.flowMultiplier * isp * e.g;
+                // multFlow and multIsp are 1 in stock; mods (TestFlight's failures) lower them, and stock applies them
+                double maxThrust = e.maxFuelFlow * e.flowMultiplier * e.multFlow * isp * e.multIsp * e.g;
+                double minThrust = e.minFuelFlow * e.flowMultiplier * e.multFlow * isp * e.multIsp * e.g;
 
                 // RealFuels engines reports as operational even when they are shutdown
                 // REMOVED: this definitively screws up the 1kN thruster in RO/RF and sets minThrust/maxThrust
