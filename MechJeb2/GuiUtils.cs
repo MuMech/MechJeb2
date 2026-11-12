@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.Utils;
@@ -716,40 +717,45 @@ namespace MuMech
             double years = seconds / KSPUtil.dateTimeFormatter.Year;
             if (Math.Abs(years) >= 1000) return years.ToSI() + "a";
 
-            string ret = "";
+            StringBuilder ret = _dhmsBuilder ??= new StringBuilder();
+            ret.Clear();
             bool showSecondsDecimals = decimalPlaces > 0;
 
             try
             {
-                string[] units = { "y", "d", "h", "m", "s" };
-                long[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
-
                 bool negative = seconds < 0;
                 seconds = Math.Abs(seconds);
                 // round to the decimals shown before splitting into units: 239.97 s is "4m 00.0s", not "3m 60.0s"
                 if (showSecondsDecimals)
                     seconds = (double)Math.Round((decimal)seconds, Math.Min(decimalPlaces, 9), MidpointRounding.AwayFromZero);
                 // no "-00.0s" for a value that rounds to zero
-                if (negative && (showSecondsDecimals ? seconds > 0 : seconds >= 1)) ret += "-";
+                if (negative && (showSecondsDecimals ? seconds > 0 : seconds >= 1)) ret.Append('-');
 
-                for (int i = 0; i < units.Length; i++)
+                for (int i = 0; i < DHMS_UNITS.Length; i++)
                 {
-                    long n = (long)(seconds / intervals[i]);
+                    long interval = i == 0 ? KSPUtil.dateTimeFormatter.Year : i == 1 ? KSPUtil.dateTimeFormatter.Day : DHMS_SECONDS[i];
+                    long n = (long)(seconds / interval);
                     bool first = ret.Length < 2;
                     // the seconds always show when nothing else did, after a "-" too ("-00.5s", not "-")
-                    if (!first || n != 0 || i == units.Length - 1)
+                    if (!first || n != 0 || i == DHMS_UNITS.Length - 1)
                     {
-                        if (!first) ret += " ";
+                        if (!first) ret.Append(' ');
 
-                        if (showSecondsDecimals && seconds < 60 && i == units.Length - 1)
-                            ret += seconds.ToString("00." + new string('0', decimalPlaces));
-                        else if (first) ret += n.ToString();
-                        else ret += n.ToString(i == 1 ? "000" : "00");
+                        if (showSecondsDecimals && seconds < 60 && i == DHMS_UNITS.Length - 1)
+                            ret.Append(seconds.ToString(SecondsFormat(decimalPlaces)));
+                        else if (first) ret.Append(n);
+                        else
+                        {
+                            // zero padded to two digits, three for the days
+                            if (i == 1 && n < 100) ret.Append('0');
+                            if (n < 10) ret.Append('0');
+                            ret.Append(n);
+                        }
 
-                        ret += units[i];
+                        ret.Append(DHMS_UNITS[i]);
                     }
 
-                    seconds -= n * intervals[i];
+                    seconds -= n * interval;
                 }
             }
             catch (Exception)
@@ -757,7 +763,27 @@ namespace MuMech
                 return "NaN";
             }
 
-            return ret;
+            return ret.ToString();
+        }
+
+        // TimeToDHMS's units; the year and day lengths come from KSP's calendar at each call
+        private static readonly char[] DHMS_UNITS = { 'y', 'd', 'h', 'm', 's' };
+        private static readonly long[] DHMS_SECONDS = { 0, 0, 3600, 60, 1 };
+
+        [ThreadStatic]
+        private static StringBuilder _dhmsBuilder;
+
+        private static readonly List<string> _secondsFormats = new List<string>();
+
+        // "00.0", "00.00"...: one string per number of decimals, made once
+        private static string SecondsFormat(int decimalPlaces)
+        {
+            lock (_secondsFormats)
+            {
+                while (_secondsFormats.Count <= decimalPlaces)
+                    _secondsFormats.Add("00." + new string('0', _secondsFormats.Count));
+                return _secondsFormats[decimalPlaces];
+            }
         }
 
         public static bool TryParseDHMS(string s, out double seconds)
