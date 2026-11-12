@@ -35,6 +35,10 @@ namespace MuMech
         private Transform _lastReferenceTransform;
 
         public bool RCSAuto = false;
+
+        // RCS auto turns the RCS group off only when it turned it on itself: the player, the node executor's RCS burn, the ullage
+        // or the spin-up may need it on
+        private bool _rcsAutoTurnedOn;
         private readonly bool _attitudeRCSControl = true;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -487,9 +491,12 @@ namespace MuMech
                 }
                 else
                 {
-                    if (RCSAuto)
+                    if (RCSAuto && _rcsAutoTurnedOn)
                         if (_attitudeRCSControl && Core.RCS.Users.Count == 0)
+                        {
                             Part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+                            _rcsAutoTurnedOn = false;
+                        }
                 }
             }
             else if (absErr.x > 1.0 || absErr.y > 1.0 || absErr.z > 1.0)
@@ -497,8 +504,11 @@ namespace MuMech
                 _timeCount = 0;
                 if (RCSAuto && (absErr.x > 3.0 || absErr.y > 3.0 || absErr.z > 3.0) &&
                     Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.UNSTABLE_IGNITION)
-                    if (_attitudeRCSControl)
+                    if (_attitudeRCSControl && !Part.vessel.ActionGroups[KSPActionGroup.RCS])
+                    {
                         Part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                        _rcsAutoTurnedOn = true;
+                    }
             }
         } // end of SetFlightCtrlState
     }
