@@ -414,6 +414,20 @@ namespace MuMech
 
         public void ReloadAllComputerModules()
         {
+            // Disengage everything first, through each module's own disable path, which releases the throttle, the attitude, the
+            // warp and what it set on parts: the new modules start idle and would not
+            foreach (ComputerModule module in GetComputerModules<ComputerModule>())
+            {
+                try
+                {
+                    module.Users.Clear();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception while disabled for a reload: " + e);
+                }
+            }
+
             //Dispose of all the existing computer modules
             foreach (ComputerModule module in _unorderedComputerModules) module.OnDestroy();
             _unorderedComputerModules.Clear();
@@ -429,7 +443,7 @@ namespace MuMech
 
             //Start fresh
             OnLoad(null);
-            OnStart(HighLogic.LoadedSceneIsEditor ? StartState.Editor : StartState.Flying);
+            OnStart(part.GetModuleStartState());
         }
 
         public override void OnStart(StartState state)
