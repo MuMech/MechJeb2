@@ -132,8 +132,13 @@ namespace MuMech
         // on the pressure, and deploys it fully on this.
         private bool BelowDeployAltitude(double altATGL, double altASL) => altATGL < para.deployAltitude || altASL < para.deployAltitude;
 
-        private bool ShouldSemiDeploy(double altATGL, double altASL, double pressure) =>
-            pressure * ATM_PER_KPA >= para.minAirPressureToOpen || BelowDeployAltitude(altATGL, altASL);
+        // Stock opens an armed chute only in a deploy-safe state its automateSafeDeploy allows (SAFE by default). SAFE is this heat test;
+        // RISKY depends on the chute's own temperature, which the simulation does not follow, so it counts as unsafe here.
+        private bool SafeToOpen(double shockTemp) =>
+            para.automateSafeDeploy >= (int)ModuleParachute.deploymentSafeStates.UNSAFE || shockTemp * para.machHeatMult <= para.chuteMaxTemp * para.safeMult;
+
+        private bool ShouldSemiDeploy(double altATGL, double altASL, double pressure, double shockTemp) =>
+            (pressure * ATM_PER_KPA >= para.minAirPressureToOpen || BelowDeployAltitude(altATGL, altASL)) && SafeToOpen(shockTemp);
 
         // Consider activating, semi deploying or deploying a parachute, but do not actually make any changes. returns true if the state has changed
         public override bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
@@ -151,7 +156,7 @@ namespace MuMech
 
                     break;
                 case ModuleParachute.deploymentStates.ACTIVE:
-                    if (ShouldSemiDeploy(altATGL, altASL, pressure))
+                    if (ShouldSemiDeploy(altATGL, altASL, pressure, shockTemp))
                     {
                         stateChanged = true;
                     }
@@ -183,7 +188,7 @@ namespace MuMech
                         //activatedAGL = altATGL;
                         //activatedASL = altASL;
                         // Immediately check to see if the parachute should be semi deployed, rather than waiting for another iteration.
-                        if (ShouldSemiDeploy(altATGL, altASL, pressure))
+                        if (ShouldSemiDeploy(altATGL, altASL, pressure, shockTemp))
                         {
                             state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                             openningTime = time;
@@ -195,7 +200,7 @@ namespace MuMech
 
                     break;
                 case ModuleParachute.deploymentStates.ACTIVE:
-                    if (ShouldSemiDeploy(altATGL, altASL, pressure))
+                    if (ShouldSemiDeploy(altATGL, altASL, pressure, shockTemp))
                     {
                         state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                         openningTime = time;
