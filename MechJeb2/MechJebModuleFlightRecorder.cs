@@ -214,8 +214,7 @@ namespace MuMech
 
         [ValueInfoItem("#MechJeb_DistanceFromMark", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")] //Distance from mark
         public double DistanceFromMark() =>
-            Vector3d.Distance(VesselState.CoM,
-                MarkCelestialBody.GetWorldSurfacePosition(MarkLatitude, MarkLongitude, MarkAltitude) - MarkCelestialBody.position);
+            Vector3d.Distance(VesselState.CoM, MarkCelestialBody.GetWorldSurfacePosition(MarkLatitude, MarkLongitude, MarkAltitude));
 
         [UsedImplicitly, ValueInfoItem("#MechJeb_DownrangeDistance", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
         //Downrange distance
