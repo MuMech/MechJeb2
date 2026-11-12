@@ -245,6 +245,8 @@ namespace MuMech
             Core.Attitude.AttitudeDeactivate();
             _predictor.Users.Remove(this);
             _predictor.descentSpeedPolicy = null;
+            _predictor.maxOrbits = MechJebModuleLandingPredictions.MAX_ORBITS_FREE;
+            _predictor.noSkipToFreefall = true;
             Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
             if (Core.Landing.RCSAdjustment)

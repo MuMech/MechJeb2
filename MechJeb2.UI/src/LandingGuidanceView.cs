@@ -14,37 +14,21 @@ namespace MuMech.UI
     /// <summary>
     /// MechJebModuleLandingGuidance ("Landing Guidance") in KodeKit, row for row with its WindowGUI, including the
     /// landing prediction block of DrawGUITogglePredictions (LandingPredictionsBlock, shared with the custom windows).
-    /// The pieces of WindowGUI that pushed settings into the predictor every frame run in BeforeSync.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleLandingGuidance))]
     public class LandingGuidanceView : KodeView
     {
         readonly MechJebModuleLandingGuidance guidance;
-        MechJebModuleLandingPredictions predictor;
 
         public LandingGuidanceView(MechJebModuleLandingGuidance guidance) : base(guidance) => this.guidance = guidance;
 
         protected override float MinWidth => 200;
 
         MechJebCore Core => guidance.Core;
-        MechJebModuleLandingPredictions Predictor => predictor ??= Core.GetComputerModule<MechJebModuleLandingPredictions>();
         CelestialBody Body => Core.vessel != null ? Core.vessel.mainBody : null;
         bool LandedOrSplashed => Core.vessel != null && Core.vessel.LandedOrSplashed;
         // a point on this body to land at: a vessel in flight or a target on another body has none
         bool HasPositionTarget => Core.Target != null && Core.Target.SurfaceTargetExists(Body);
-        // WindowGUI pushed these into the predictor each frame while the window was drawn
-        protected override void BeforeSync()
-        {
-            MechJebModuleLandingPredictions p = Predictor;
-            MechJebModuleLandingAutopilot landing = Core.Landing;
-            if (landing == null || p == null) return;
-
-            p.maxOrbits = landing.Enabled ? 0.5 : 4;
-            p.noSkipToFreefall = !landing.Enabled;
-            p.deployChutes = landing.DeployChutes;
-            p.limitChutesStage = landing.LimitChutesStage;
-        }
-
         // names of the landing sites of the current body, cached until the body or the list changes, and where they are in
         // the list: the KSC sites move once the game knows its buildings, so the position is read when a site is set
         string[] siteNames = new string[0];
