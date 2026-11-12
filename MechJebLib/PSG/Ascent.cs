@@ -74,7 +74,7 @@ namespace MechJebLib.PSG
                 p.Unguided = false;
 
             var psg = NewOptimizer(_problem, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MAX_ENERGY);
-            Solution solution = _guesser.InitialGuess(bootPhases, _problem.Terminal.IncT(), _problem.Terminal.TargetOrbitalEnergy(), CancelToken);
+            Solution solution = _guesser.InitialGuess(bootPhases, CancelToken);
             psg.TranscribePreviousBootSolution(solution);
             Solution? solution2 = psg.Run();
 
@@ -153,7 +153,7 @@ namespace MechJebLib.PSG
 
             PrintDebug("*** PHASE 1: DOING INITIAL ALL-GUIDED ROCKET ***");
             var psg = NewOptimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_TIME);
-            Solution? solution = _guesser.InitialGuess(bootPhases, _problem.Terminal.IncT(), _problem.Terminal.TargetOrbitalEnergy(), CancelToken);
+            Solution? solution = _guesser.InitialGuess(bootPhases, CancelToken);
             psg.TranscribePreviousBootSolution(solution);
             solution = psg.Run();
 
