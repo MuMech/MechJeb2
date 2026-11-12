@@ -276,6 +276,10 @@ namespace MuMech
 
         public override void OnUpdate()
         {
+            // the pick ends in the map drawing, which runs for the active vessel only: a pick left on another vessel ends here
+            if (pickingPositionTarget && Vessel != null && !Vessel.isActiveVessel)
+                StopPickPositionTargetOnMap();
+
             if (MapView.MapIsEnabled && pickingPositionTarget)
             {
                 if (!GuiUtils.MouseIsOverWindow(Core) && GuiUtils.GetMouseCoordinates(MainBody) != null)
