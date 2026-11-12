@@ -42,11 +42,36 @@ namespace MuMech
         [UsedImplicitly]
         protected bool IsDeployable(ModuleDeployablePart sa) => sa.Events["Extend"].active || sa.Events["Retract"].active;
 
+        // the parts an auto-deploy left folded because they were shielded (a fairing, a closed bay): extended once they are not
+        private readonly List<ModuleDeployablePart> _shieldedAtDeploy = new List<ModuleDeployablePart>();
+
         public void ExtendAll()
         {
+            _shieldedAtDeploy.Clear();
             foreach (ModuleDeployablePart mdp in CachedPartModules)
-                if (!(mdp is null) && IsDeployable(mdp) && !mdp.part.ShieldedFromAirstream)
+            {
+                if (mdp is null || !IsDeployable(mdp)) continue;
+                if (mdp.part.ShieldedFromAirstream)
+                    _shieldedAtDeploy.Add(mdp);
+                else
                     mdp.Extend();
+            }
+        }
+
+        // only the parts ExtendAll skipped: a panel the player retracts by hand afterwards stays retracted
+        private void ExtendUnshielded()
+        {
+            for (int i = _shieldedAtDeploy.Count - 1; i >= 0; i--)
+            {
+                ModuleDeployablePart mdp = _shieldedAtDeploy[i];
+                if (mdp == null || mdp.vessel != Vessel)
+                    _shieldedAtDeploy.RemoveAt(i);
+                else if (!mdp.part.ShieldedFromAirstream)
+                {
+                    _shieldedAtDeploy.RemoveAt(i);
+                    if (IsDeployable(mdp)) mdp.Extend();
+                }
+            }
         }
 
         public void RetractAll()
@@ -146,7 +171,11 @@ namespace MuMech
                     case true when !PrevShouldDeploy || AutoDeploy != PrevAutoDeploy:
                         ExtendAll();
                         break;
+                    case true:
+                        ExtendUnshielded();
+                        break;
                     case false when PrevShouldDeploy || AutoDeploy != PrevAutoDeploy:
+                        _shieldedAtDeploy.Clear();
                         RetractAll();
                         break;
                 }
