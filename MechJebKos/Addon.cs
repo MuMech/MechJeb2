@@ -48,6 +48,8 @@ namespace MuMech.MechJebKos
             var warpController = new WarpControllerBinding(() => _core);
             var warpHelper = new WarpHelperBinding(() => _core);
             var maneuverPlanner = new ManeuverPlannerBinding(() => _core, shared);
+            var attitude = new AttitudeBinding(() => _core, shared);
+            var smartASS = new SmartASSBinding(() => _core, attitude);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() => _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
@@ -81,6 +83,10 @@ namespace MuMech.MechJebKos
                 "The high-level warp helper (warp to periapsis, node, SoI, ...)."));
             AddSuffix("MANEUVERPLANNER", new NoArgsSuffix<ManeuverPlannerBinding>(() => maneuverPlanner,
                 "The maneuver planner's operations (circularize, Hohmann transfer, interplanetary transfer, ...)."));
+            AddSuffix("ATTITUDE", new NoArgsSuffix<AttitudeBinding>(() => attitude,
+                "The attitude controller, driven directly (point in any reference frame), and its controllers' settings."));
+            AddSuffix("SMARTASS", new NoArgsSuffix<SmartASSBinding>(() => smartASS,
+                "SmartASS, as in its window (prograde, surface heading/pitch/roll, ...)."));
         }
     }
 }
