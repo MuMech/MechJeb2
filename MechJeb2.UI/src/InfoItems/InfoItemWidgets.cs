@@ -70,6 +70,7 @@ namespace MuMech.UI
                 case ToggleInfoItem t:
                     UnityEngine.UI.Toggle toggle = w.Toggle(parent, item.localizedName, () => t.Value, x => t.Value = x);
                     Tooltip(KodeWindow.LabelOf(toggle).gameObject, item);
+                    ApplyColor(KodeWindow.LabelOf(toggle));
                     break;
                 case EditableInfoItem e:
                     AddEditable(parent, e);
@@ -77,6 +78,7 @@ namespace MuMech.UI
                 case ActionInfoItem a:
                     UIButton b = KodeWindow.Button(parent, item.localizedName, a.Invoke, true);
                     Tooltip(b.gameObject, item);
+                    ApplyColor(b.GetComponentInChildren<TMP_Text>(), true);
                     break;
                 case GeneralInfoItem g:
                     if (GeneralItemBuilders.TryBuild(w, parent, g, refresh))
@@ -164,6 +166,7 @@ namespace MuMech.UI
             Layout row = KodeWindow.Row(parent);
             UIText label = KodeWindow.Label(row, e.localizedName, true);
             Tooltip(label.gameObject, e);
+            ApplyColor(label.tmpText);
             Func<bool> valid = ed is EditableDoubleMult m ? (Func<bool>)(() => m.IsParsed) : null;
             EditFields.Field(w, row, () => ed.Text, s => ed.Text = s, e.width, valid);
             if (!string.IsNullOrEmpty(e.rightLabel)) KodeWindow.Label(row, e.rightLabel);
@@ -321,7 +324,7 @@ namespace MuMech.UI
         /// <summary>Cut-off values show their whole text on hover; off for an overlay, which must not catch the pointer.</summary>
         public bool ValueTooltips = true;
 
-        void ApplyColor(TMP_Text t)
+        void ApplyColor(TMP_Text t, bool button = false)
         {
             if (TextColor == null) return;
             Color? shown = null;
@@ -332,7 +335,15 @@ namespace MuMech.UI
                 Color? c = TextColor();
                 if (c == shown) return;
                 shown = c;
-                t.color = c ?? Theme.Current.Text;
+                if (c.HasValue)
+                {
+                    t.color = c.Value;
+                    return;
+                }
+
+                // no colour of its own any more: the one the theme gives this text
+                Theme th = KodeWindow.ThemeOf(t.gameObject);
+                t.color = button ? th.Button.TextColor : th.Text;
             });
         }
 
