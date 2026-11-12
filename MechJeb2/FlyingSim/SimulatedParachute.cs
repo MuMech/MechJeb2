@@ -34,6 +34,7 @@ namespace MuMech
         // stock's minAirPressureToOpen is in atm, and the simulation's pressure in kPa
         private const double ATM_PER_KPA = 0.00986923;
 
+        // whether the landing autopilot arms this chute; one armed already opens as stock opens it either way
         private bool willDeploy;
 
         private static readonly Pool<SimulatedParachute> pool = new Pool<SimulatedParachute>(Create, Reset);
@@ -127,32 +128,37 @@ namespace MuMech
             return base.Drag(vesselVelocity, dragFactor, mach);
         }
 
+        // Stock's ShouldDeploy: below the deploy altitude above sea level or above the ground. It semi deploys an armed chute on this or
+        // on the pressure, and deploys it fully on this.
+        private bool BelowDeployAltitude(double altATGL, double altASL) => altATGL < para.deployAltitude || altASL < para.deployAltitude;
+
+        private bool ShouldSemiDeploy(double altATGL, double altASL, double pressure) =>
+            pressure * ATM_PER_KPA >= para.minAirPressureToOpen || BelowDeployAltitude(altATGL, altASL);
+
         // Consider activating, semi deploying or deploying a parachute, but do not actually make any changes. returns true if the state has changed
         public override bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
             double semiDeployMultiplier)
         {
-            if (!willDeploy)
-                return false;
-
             bool stateChanged = false;
             switch (state)
             {
                 case ModuleParachute.deploymentStates.STOWED:
-                    if (altATGL < semiDeployMultiplier * para.deployAltitude && shockTemp * para.machHeatMult < para.chuteMaxTemp * para.safeMult)
+                    if (willDeploy && altATGL < semiDeployMultiplier * para.deployAltitude &&
+                        shockTemp * para.machHeatMult < para.chuteMaxTemp * para.safeMult)
                     {
                         stateChanged = true;
                     }
 
                     break;
                 case ModuleParachute.deploymentStates.ACTIVE:
-                    if (pressure * ATM_PER_KPA >= para.minAirPressureToOpen)
+                    if (ShouldSemiDeploy(altATGL, altASL, pressure))
                     {
                         stateChanged = true;
                     }
 
                     break;
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
-                    if (altATGL < para.deployAltitude && time - openningTime >= semiDeployDuration)
+                    if (BelowDeployAltitude(altATGL, altASL) && time - openningTime >= semiDeployDuration)
                     {
                         stateChanged = true;
                     }
@@ -167,18 +173,17 @@ namespace MuMech
         public override bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
             double semiDeployMultiplier)
         {
-            if (!willDeploy)
-                return false;
             switch (state)
             {
                 case ModuleParachute.deploymentStates.STOWED:
-                    if (altATGL < semiDeployMultiplier * para.deployAltitude && shockTemp * para.machHeatMult < para.chuteMaxTemp * para.safeMult)
+                    if (willDeploy && altATGL < semiDeployMultiplier * para.deployAltitude &&
+                        shockTemp * para.machHeatMult < para.chuteMaxTemp * para.safeMult)
                     {
                         state = ModuleParachute.deploymentStates.ACTIVE;
                         //activatedAGL = altATGL;
                         //activatedASL = altASL;
                         // Immediately check to see if the parachute should be semi deployed, rather than waiting for another iteration.
-                        if (pressure * ATM_PER_KPA >= para.minAirPressureToOpen)
+                        if (ShouldSemiDeploy(altATGL, altASL, pressure))
                         {
                             state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                             openningTime = time;
@@ -190,7 +195,7 @@ namespace MuMech
 
                     break;
                 case ModuleParachute.deploymentStates.ACTIVE:
-                    if (pressure * ATM_PER_KPA >= para.minAirPressureToOpen)
+                    if (ShouldSemiDeploy(altATGL, altASL, pressure))
                     {
                         state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                         openningTime = time;
@@ -201,7 +206,7 @@ namespace MuMech
 
                     break;
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
-                    if (altATGL < para.deployAltitude && time - openningTime >= semiDeployDuration)
+                    if (BelowDeployAltitude(altATGL, altASL) && time - openningTime >= semiDeployDuration)
                     {
                         state = ModuleParachute.deploymentStates.DEPLOYED;
                         openningTime = time;
