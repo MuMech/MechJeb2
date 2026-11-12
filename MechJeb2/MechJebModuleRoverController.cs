@@ -490,6 +490,7 @@ namespace MuMech
                 if (curSpeed < 0.1 && energyLeft < 0.05 && !waitingForDaylight && AnySolarPanel(false))
                 {
                     waitingForDaylight = true;
+                    _daylightWarpRan = _daylightWarpStopped = false;
                 }
             }
 
@@ -550,30 +551,38 @@ namespace MuMech
             }
         }
 
+        // the daylight warp has raised the rate, and the player has stopped it since
+        private bool _daylightWarpRan, _daylightWarpStopped;
+
+        // every end of the wait for daylight takes the warp back to 1x if this vessel is the one warping
+        private void EndDaylightWait()
+        {
+            waitingForDaylight = false;
+            _daylightWarpRan = _daylightWarpStopped = false;
+            if (Vessel.isActiveVessel)
+                Core.Warp.MinimumWarp();
+        }
+
         public override void OnUpdate()
         {
             if (WarpToDaylight && waitingForDaylight && Vessel.isActiveVessel)
             {
                 double energyLeft = EnergyLeft();
 
-                if (waitingForDaylight)
-                {
-                    if (!AnySolarPanel(false))
-                    {
-                        waitingForDaylight = false;
-                    }
+                // the player stopped the warp while it ran: the rover waits on without raising it again
+                if (TimeWarp.CurrentRateIndex > 0)
+                    _daylightWarpRan = true;
+                else if (_daylightWarpRan)
+                    _daylightWarpStopped = true;
 
+                if (!AnySolarPanel(false) || energyLeft > 0.99)
+                    EndDaylightWait();
+                else if (!_daylightWarpStopped)
                     Core.Warp.WarpRegularAtRate(energyLeft < 0.9 ? 1000 : 50);
-                    if (energyLeft > 0.99)
-                    {
-                        waitingForDaylight = false;
-                        Core.Warp.MinimumWarp();
-                    }
-                }
             }
             else if (!WarpToDaylight && waitingForDaylight)
             {
-                waitingForDaylight = false;
+                EndDaylightWait();
             }
 
             if (!StabilityControl && Core.Attitude.Users.Contains(this))
