@@ -675,9 +675,11 @@ namespace MuMech
 
                 // Right now, for simplicity, we're ignoring throttle limits for
                 // all but the current stage. This is wrong, but hopefully it's
-                // close enough for now.
+                // close enough for now. The current stage is every segment of the
+                // simulation's last KSP stage: a segment ends inside a stage when
+                // the number of running engines changes.
                 // TODO: Be smarter about throttle limits on future stages.
-                if (mjPhase == stats.VacStats.Count - 1)
+                if (s.KSPStage == stats.VacStats[stats.VacStats.Count - 1].KSPStage)
                 {
                     stageAvgAccel *= Core.Thrust.ThrottleFixedLimit;
                 }
