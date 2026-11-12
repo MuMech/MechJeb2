@@ -259,6 +259,10 @@ namespace MuMech
         // how many modules of this pass had each icon name: custom windows can share a title, and each gets its own button
         private readonly Dictionary<string, int> _iconNameCounts = new Dictionary<string, int>();
 
+        // the button keys of this pass, and the keys of buttons whose module is gone (a deleted custom window) or renamed
+        private readonly HashSet<string> _buttonKeys = new HashSet<string>();
+        private readonly List<string> _staleButtonKeys = new List<string>();
+
         public void SetupToolBarButtons()
         {
             if (!ToolbarManager.ToolbarAvailable)
@@ -267,6 +271,7 @@ namespace MuMech
             SetupMainToolbarButton();
 
             _iconNameCounts.Clear();
+            _buttonKeys.Clear();
             List<DisplayModule> modules = Core.GetDisplayModules(DisplayOrder.instance);
             for (int i = 0; i < modules.Count; i++)
             {
@@ -274,10 +279,12 @@ namespace MuMech
                 if (!module.ShowInMenu || module.TechLocked) continue;
 
                 string name = GetCleanName(module.IconName());
+                if (name.Length == 0) continue; // a custom window whose title is being typed
                 _iconNameCounts.TryGetValue(name, out int occurrence);
                 _iconNameCounts[name] = occurrence + 1;
                 // the first module with a name keeps the plain id, the next ones get a numbered one
                 string key = occurrence == 0 ? name : name + "_" + occurrence;
+                _buttonKeys.Add(key);
 
                 if (!toolbarButtons.TryGetValue(key, out Button button))
                 {
@@ -332,6 +339,19 @@ namespace MuMech
                 button.SetVisible(module.ShowInCurrentScene);
                 button.SetTexture(module.IsActive() ? button.texturePathActive : button.texturePath);
             }
+
+            // a custom window's key is its title: the buttons of a deleted window, and of each title it had while it was typed, go
+            foreach (KeyValuePair<string, Button> pair in toolbarButtons)
+                if (!_buttonKeys.Contains(pair.Key))
+                    _staleButtonKeys.Add(pair.Key);
+            for (int i = 0; i < _staleButtonKeys.Count; i++)
+            {
+                string key = _staleButtonKeys[i];
+                toolbarButtons[key].button?.Destroy();
+                toolbarButtons.Remove(key);
+            }
+
+            _staleButtonKeys.Clear();
 
             // create toolbar buttons for features
             if (featureButtons.Count == 0)
