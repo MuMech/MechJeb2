@@ -135,7 +135,7 @@ namespace MuMech.AttitudeControllers
 
         private void SetPIDParameters()
         {
-            Vector3d invTf = (TfAutoTune ? _tfV : _defaultTfV).InvertNoNaN();
+            Vector3d invTf = _tfV.InvertNoNaN();
 
             _pid.Kd = KdFactor * invTf;
 
