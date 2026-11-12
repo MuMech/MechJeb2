@@ -91,8 +91,17 @@ namespace MuMech
         /// <summary>Move the node by `orbits` periods of its orbit. A hyperbolic orbit has no period, so the node stays.</summary>
         internal void ShiftNodeOrbits(int orbits)
         {
-            if (node.patch.eccentricity < 1)
+            if (node.patch.eccentricity < 1 && OnNodePatch(node.UT + orbits * node.patch.period))
                 ShiftNode(orbits * node.patch.period);
+        }
+
+        // whether UT is still on the node's patch: a time computed from the patch's orbit past its sphere of influence change is a
+        // point of an orbit the vessel no longer follows then
+        private bool OnNodePatch(double UT)
+        {
+            Orbit o = node.patch;
+            return o.patchEndTransition == Orbit.PatchTransitionType.FINAL || o.patchEndTransition == Orbit.PatchTransitionType.MANEUVER ||
+                   UT <= o.EndUT;
         }
 
         private void MoveNode(double UT)
@@ -145,7 +154,8 @@ namespace MuMech
                     break;
             }
 
-            MoveNode(UT);
+            if (OnNodePatch(UT))
+                MoveNode(UT);
         }
 
         private static readonly string[] relativityModeStrings = { "0", "1", "2", "3", "4" };
