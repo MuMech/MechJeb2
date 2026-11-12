@@ -21,8 +21,11 @@ namespace MuMech
             double radius = 0)
         {
             Vector3d up = body.GetSurfaceNVector(latitude, longitude);
-            double height = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) *
-                QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
+            // a body without terrain (Jool, the Sun) has none: the marker sits on its radius
+            double height = body.pqsController == null
+                ? body.Radius
+                : body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) *
+                    QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
             if (height < body.Radius) { height = body.Radius; }
 
             Vector3d center = body.position + height * up;

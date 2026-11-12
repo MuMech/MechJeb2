@@ -820,6 +820,16 @@ namespace MuMech
             Ray mouseRay = PlanetariumCamera.Camera.ScreenPointToRay(Input.mousePosition);
             mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
             Vector3d relOrigin = mouseRay.origin - body.position;
+
+            // a body without terrain (Jool, the Sun): the sphere of its radius, where stock's TerrainAltitude is 0
+            if (body.pqsController == null)
+            {
+                if (!PQS.LineSphereIntersection(relOrigin, mouseRay.direction, body.Radius, out Vector3d relSpherePosition))
+                    return null;
+                Vector3d spherePoint = body.position + relSpherePosition;
+                return new Coordinates(body.GetLatitude(spherePoint), Clamp180(body.GetLongitude(spherePoint)));
+            }
+
             double curRadius = body.pqsController.radiusMax;
             double lastRadius = 0;
             int loops = 0;
