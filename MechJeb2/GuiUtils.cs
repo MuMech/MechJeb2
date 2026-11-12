@@ -470,6 +470,9 @@ namespace MuMech
         public static GUISkin CompactSkin;
         public static GUISkin TransparentSkin;
 
+        // the scaled size follows the screen: a resolution change in flight (Alt+Enter, a resized window) recomputes it
+        static GuiUtils() => GameEvents.onScreenResolutionModified.Add((width, height) => SetGUIScale(Scale));
+
         public static void SetGUIScale(double s)
         {
             Scale = Mathf.Clamp((float)s, 0.2f, 5f);
