@@ -225,7 +225,10 @@ namespace MuMech
 
         private Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
         {
-            double lim = Clamp(Core.PSGSimulation.LimitQa, 0, 10000);
+            double lim = Core.PSGSimulation.QAlphaLimit;
+            if (lim <= 0)
+                return desiredThrustVector;
+
             AscentSettings.LimitingAoA = VesselState.DynamicPressure * Vector3.Angle(VesselState.SurfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
             if (AscentSettings.LimitingAoA)
             {
