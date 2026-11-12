@@ -116,9 +116,11 @@ namespace MuMech.UI
             KodeWindow.Label(rate, "Update Interval", true);
             EditFields.Field(w, rate, () => window.refreshRate.Text, s =>
             {
+                int old = window.refreshRate;
                 window.refreshRate.Text = s;
                 if (window.refreshRate < 1) window.refreshRate.Val = 1;
                 window.UpdateRefreshRate();
+                if (window.refreshRate != old) window.Dirty = true;
             }, 60);
             KodeWindow.Label(rate, "Hz");
             w.Visible(rate.gameObject, () => GuiUtils.ShowAdvancedWindowSettings);

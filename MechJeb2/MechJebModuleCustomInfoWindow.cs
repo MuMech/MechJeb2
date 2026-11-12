@@ -515,6 +515,7 @@ namespace MuMech
             editedWindow.OnDestroy(); // frees the window's background texture
             Core.RemoveComputerModule(editedWindow);
             editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
+            Dirty = true; // the windows are saved by this module: the next save drops the removed one
         }
 
         // ---- editing actions, shared by WindowGUI and MechJeb2.UI's editor ----
@@ -523,6 +524,7 @@ namespace MuMech
         {
             if (editedWindow == null) return;
             editedWindow.items.Add(item.ForWindow());
+            editedWindow.Dirty = true;
         }
 
         /// <summary>The selected item when it is a header, so the editor can show its text field.</summary>
@@ -542,6 +544,7 @@ namespace MuMech
         {
             if (editedWindow == null || selectedItemIndex < 0 || selectedItemIndex >= editedWindow.items.Count) return;
             editedWindow.items.RemoveAt(selectedItemIndex);
+            editedWindow.Dirty = true;
         }
 
         /// <summary>Move the selected item up (-1) or down (+1) in the edited window.</summary>
@@ -554,6 +557,7 @@ namespace MuMech
             editedWindow.items.RemoveAt(selectedItemIndex);
             editedWindow.items.Insert(to, item);
             selectedItemIndex = to;
+            editedWindow.Dirty = true;
         }
 
         internal void SetBackgroundColor(Color c)
