@@ -25,10 +25,21 @@ namespace MuMech
             angle += angularDelta;
         }
 
+        // The longitude is shown on the map as a position target on this body. Showing the operation makes one only when there is no
+        // target; a nudge, which moves the longitude, makes one in place of any other target, so the longitude it moves is shown.
+        private void ShowPositionTarget(Orbit o, MechJebModuleTargetController targetController)
+        {
+            ITargetable t = targetController.Target;
+            bool shown = t is PositionTarget && !(t is DirectionTarget) && targetController.targetBody == o.referenceBody ||
+                         t is Vessel v && v != null && v.LandedOrSplashed && v.mainBody == o.referenceBody;
+            if (!shown)
+                targetController.SetPositionTarget(o.referenceBody, 0, targetController.targetLongitude);
+        }
+
         // what DoParametersGUI does besides drawing, for the new UI
         internal override void ViewUpdate(Orbit o, double UT, MechJebModuleTargetController targetController)
         {
-            if (!targetController.PositionTargetExists)
+            if (targetController.Target == null)
             {
                 targetController.SetPositionTarget(o.referenceBody, targetLatitude, targetLongitude);
             }
@@ -40,6 +51,7 @@ namespace MuMech
         // the ◄ / ► buttons
         internal void MoveTargetLongitude(double distance, Orbit o, MechJebModuleTargetController targetController)
         {
+            ShowPositionTarget(o, targetController);
             double asl = o.referenceBody.TerrainAltitude(targetController.targetLatitude, targetController.targetLongitude);
             MoveByMeter(ref targetController.targetLongitude, distance, asl, o);
         }
