@@ -16,6 +16,34 @@ namespace MuMech.UI
         /// <summary>A static text that wraps to the window width instead of widening the window.</summary>
         public static UIText Wrapped(UIObject parent, string textOrKey) => KodeWindow.Paragraph(parent, textOrKey);
 
+        /// <summary>
+        /// The target's name, read again only when the target or its vessel's name changes: a docking port localizes its name
+        /// on every call.
+        /// </summary>
+        public sealed class TargetName
+        {
+            ITargetable shownTarget;
+            string shownVesselName;
+            string name;
+
+            public string Get(MechJebModuleTargetController t)
+            {
+                ITargetable target = t.Target;
+                // a port that left its vessel has none (the controller names it "")
+                string vesselName = target is PartModule pm
+                    ? pm != null && pm.vessel != null ? pm.vessel.vesselName : null
+                    : target?.GetVessel()?.vesselName;
+                if (name == null || !ReferenceEquals(target, shownTarget) || !ReferenceEquals(vesselName, shownVesselName))
+                {
+                    shownTarget = target;
+                    shownVesselName = vesselName;
+                    name = t.Name ?? "";
+                }
+
+                return name;
+            }
+        }
+
         /// <summary>The rendezvous windows' state: 0 = no target, 1 = target in another sphere of influence, 2 = usable target.</summary>
         public static int RendezvousMode(MechJebCore core, Orbit orbit)
         {

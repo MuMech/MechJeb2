@@ -24,6 +24,8 @@ namespace MuMech.UI
 
         int NodeCount => guidance.Vessel.patchedConicSolver != null ? guidance.Vessel.patchedConicSolver.maneuverNodes.Count : 0;
 
+        readonly GuidanceUi.TargetName targetName = new GuidanceUi.TargetName();
+
         // the readouts below all use it; the search marches a whole orbit, so it runs five times a second, and at once for
         // another target or when the approach it found has passed (time warp)
         double closestApproachTime;
@@ -67,7 +69,7 @@ namespace MuMech.UI
             w.Visible(ground.gameObject, () => Mode() == 2 && guidance.OnTheGround);
 
             //Information readouts:
-            GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label3", "Kerbin Station Alpha Mk2", ct => ct.Append(Core.Target.Name), on); //"Rendezvous target"
+            GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label3", "Kerbin Station Alpha Mk2", ct => ct.Append(targetName.Get(Core.Target)), on); //"Rendezvous target"
             GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label4", "-1.23 Mm x 123 Gm", ct => //"Target orbit"
                 ct.AppendSI(Core.Target.TargetOrbit.PeA, 3).Append("m x ").AppendSI(Core.Target.TargetOrbit.ApA, 3).Append('m'), on);
             GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label5", "-1.23 Mm x 123 Gm", ct => //"Current orbit"
