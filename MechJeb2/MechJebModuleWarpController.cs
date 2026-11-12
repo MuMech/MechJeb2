@@ -64,9 +64,6 @@ namespace MuMech
 
             if (rateIndex != TimeWarp.CurrentRateIndex)
             {
-                if (activateSASOnWarp && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
-                    Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-
                 lastAskedIndex = rateIndex;
                 // Pausing stops MJ from raising the warp. Slowing down is always allowed, so autopilots that need to
                 // stop warping (node executor, landing) still work.
@@ -82,11 +79,15 @@ namespace MuMech
                 }
                 else
                 {
-                    TimeWarp.SetRate(rateIndex, instant);
-                }
+                    // SAS changes only with a rate change that happens: a paused warp leaves it as it is
+                    if (activateSASOnWarp && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
+                        Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
-                if (activateSASOnWarp && rateIndex == 0)
-                    Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+                    TimeWarp.SetRate(rateIndex, instant);
+
+                    if (activateSASOnWarp && rateIndex == 0)
+                        Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+                }
             }
         }
 
