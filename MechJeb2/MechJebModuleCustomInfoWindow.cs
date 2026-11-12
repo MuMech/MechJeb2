@@ -389,8 +389,12 @@ namespace MuMech
                     ConfigNode[] itemNodes = itemCollection.GetNodes("InfoItem");
                     foreach (ConfigNode itemNode in itemNodes)
                     {
-                        InfoItem match = InfoItem.Find(registry, itemNode.GetValue("id"));
+                        string id = itemNode.GetValue("id");
+                        InfoItem match = InfoItem.Find(registry, id);
                         if (match != null) window.items.Add(match);
+                        // an item of a module this game no longer has (a removed mod, a blacklisted module): the next save
+                        // writes the window without it
+                        else Print($"custom window \"{window.title}\": no info item \"{id}\" in this game, it is dropped from the window");
                     }
                 }
 
