@@ -1365,6 +1365,10 @@ namespace MuMech
 
         private const string LOCK_ID = "MechJeb_noclick";
 
+        // What a pointer over a window locks in flight: the clicks that would go through to the scene, not the keyboard's flight
+        // controls (staging, throttle, warp, quicksave...). A text field locks the keyboard itself while it has the focus.
+        private const ControlTypes HOVER_LOCK = ControlTypes.ALLBUTCAMERAS & ~ControlTypes.KEYBOARDINPUT;
+
         private void LockControl()
         {
             if (HighLogic.LoadedSceneIsEditor)
@@ -1373,7 +1377,7 @@ namespace MuMech
             }
             else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
             {
-                InputLockManager.SetControlLock(ControlTypes.ALLBUTCAMERAS, LOCK_ID);
+                InputLockManager.SetControlLock(HOVER_LOCK, LOCK_ID);
             }
 
             _weLockedInputs = true;

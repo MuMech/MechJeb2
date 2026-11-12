@@ -281,12 +281,15 @@ namespace KodeKit
 
         public string LockId => lockId;
 
+        // the clicks that would go through to the scene, not the keyboard's flight controls; a focused EditField locks the keyboard
+        const ControlTypes HoverLock = ControlTypes.ALLBUTCAMERAS & ~ControlTypes.KEYBOARDINPUT;
+
         void Lock()
         {
             if (HighLogic.LoadedSceneIsEditor)
                 EditorLogic.fetch?.Lock(true, true, true, lockId);
             else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
-                InputLockManager.SetControlLock(ControlTypes.ALLBUTCAMERAS, lockId);
+                InputLockManager.SetControlLock(HoverLock, lockId);
             Locked = true;
         }
 
