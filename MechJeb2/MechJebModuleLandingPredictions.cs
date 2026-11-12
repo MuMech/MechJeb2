@@ -324,7 +324,8 @@ namespace MuMech
                     readyResults.Enqueue(newResult);
                 }
 
-                if (newResult.MultiplierHasError)
+                // which kind of run this was is decided by the simulation's input, as in the catch below
+                if (sim.InputMultiplierHasError)
                 {
                     //see how long the simulation took
                     errorStopwatch.Stop();
