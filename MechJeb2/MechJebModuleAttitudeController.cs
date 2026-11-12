@@ -284,6 +284,10 @@ namespace MuMech
         public void AttitudeTo(QuaternionD attitude, AttitudeReference reference, object controller, bool axisCtrlPitch = true,
             bool axisCtrlYaw = true, bool axisCtrlRoll = true)
         {
+            // KILL ROT belongs to SmartASS's KILL ROT target, and its re-aim passes no user: any other request ends it
+            if (controller != null && !(controller is MechJebModuleSmartASS smartASS && smartASS.target == MechJebModuleSmartASS.Target.KILLROT))
+                AttitudeKillRot = false;
+
             Users.Add(controller);
             AttitudeReference = reference;
             AttitudeTarget = attitude;
