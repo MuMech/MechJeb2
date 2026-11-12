@@ -137,8 +137,8 @@ namespace MuMech.UI
         void Move(bool latitude, double meters)
         {
             double alt = TargetAsl();
-            if (latitude) guidance.MoveByMeter(ref Core.Target.targetLatitude, meters, alt);
-            else guidance.MoveByMeter(ref Core.Target.targetLongitude, meters, alt);
+            if (latitude) guidance.MoveByMeter(ref Core.Target.targetLatitude, meters, alt, false);
+            else guidance.MoveByMeter(ref Core.Target.targetLongitude, meters, alt, true);
         }
 
         // ---- the autopilot block ----

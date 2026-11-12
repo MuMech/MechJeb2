@@ -146,7 +146,7 @@ namespace MuMech
         public override string ToString() => GuiUtils.TimeToDHMS(Val);
     }
 
-    public class EditableAngle
+    public class EditableAngle : IPersistenceLoad
     {
         [UsedImplicitly, Persistent]
         public readonly EditableDouble Degrees;
@@ -160,20 +160,52 @@ namespace MuMech
         [UsedImplicitly, Persistent]
         public bool Negative;
 
+        // The fields show the angle to the nearest arc second, which is 9 m on a 3.2x Kerbin and 31 m on Earth. The angle keeps
+        // its exact value while the fields still show what it was rounded to; once the player edits them, the fields are the angle.
+        [UsedImplicitly, Persistent]
+        public double Exact;
+
+        private double _rounded;
+
         public EditableAngle(double angle)
         {
-            angle = Clamp180(angle);
-
-            Negative = angle < 0;
-            angle = Math.Abs(angle);
-            Degrees = new EditableDouble((int)angle);
-            angle -= Degrees.Val;
-            Minutes = new EditableDouble((int)(60 * angle));
-            angle -= Minutes.Val / 60;
-            Seconds = new EditableDouble(Math.Round(3600 * angle));
+            Exact = Clamp180(angle);
+            Split(Exact, out Negative, out double degrees, out double minutes, out double seconds);
+            Degrees = new EditableDouble(degrees);
+            Minutes = new EditableDouble(minutes);
+            Seconds = new EditableDouble(seconds);
+            _rounded = FieldValue;
         }
 
-        public static implicit operator double(EditableAngle x) => (x.Negative ? -1 : 1) * (x.Degrees + x.Minutes / 60.0 + x.Seconds / 3600.0);
+        private static void Split(double angle, out bool negative, out double degrees, out double minutes, out double seconds)
+        {
+            negative = angle < 0;
+            angle = Math.Abs(angle);
+            degrees = (int)angle;
+            angle -= degrees;
+            minutes = (int)(60 * angle);
+            angle -= minutes / 60;
+            seconds = Math.Round(3600 * angle);
+        }
+
+        private static double Join(bool negative, double degrees, double minutes, double seconds) =>
+            (negative ? -1 : 1) * (degrees + minutes / 60.0 + seconds / 3600.0);
+
+        private double FieldValue => Join(Negative, Degrees, Minutes, Seconds);
+
+        // the loaded fields keep the saved exact angle only if they are its rounding; a config saved without it gets the fields
+        public void PersistenceLoad()
+        {
+            Split(Exact, out bool negative, out double degrees, out double minutes, out double seconds);
+            _rounded = Join(negative, degrees, minutes, seconds);
+        }
+
+        public static implicit operator double(EditableAngle x)
+        {
+            double fields = x.FieldValue;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            return fields == x._rounded ? x.Exact : fields;
+        }
 
         public static implicit operator EditableAngle(double x) => new EditableAngle(x);
 

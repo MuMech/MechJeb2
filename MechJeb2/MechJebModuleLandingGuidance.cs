@@ -91,11 +91,16 @@ namespace MuMech
             return true;
         }
 
-        internal void MoveByMeter(ref EditableAngle angle, double distance, double alt)
+        // a step in longitude is divided by cos(latitude): the parallels shrink towards the poles
+        internal void MoveByMeter(ref EditableAngle angle, double distance, double alt, bool longitude)
         {
-            double angularDelta = distance * UtilMath.Rad2Deg / (alt + MainBody.Radius);
-            angle += angularDelta;
+            double radius = alt + MainBody.Radius;
+            if (longitude) radius *= ParallelScale(Core.Target.targetLatitude);
+            angle += distance * UtilMath.Rad2Deg / radius;
         }
+
+        // cos(latitude), kept from 0 so a step near a pole stays finite
+        internal static double ParallelScale(double latitude) => Math.Max(Math.Cos(latitude * UtilMath.Deg2Rad), 0.01);
 
         public void SetAndLandTargetKSC()
         {
