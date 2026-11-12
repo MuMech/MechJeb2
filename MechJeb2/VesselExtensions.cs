@@ -234,11 +234,10 @@ namespace MuMech
             bool finalPatch = patch.patchEndTransition == Orbit.PatchTransitionType.FINAL;
 
 
+            // KSP gives a solver only to the active vessel, and only once patched conics are unlocked: a vessel without one
+            // has no maneuver nodes. Adding one would give it conics that stock withholds, and one KSP never removes.
             if (vessel.patchedConicSolver == null)
-            {
-                vessel.patchedConicSolver = vessel.gameObject.AddComponent<PatchedConicSolver>();
-                vessel.patchedConicSolver.Load(vessel.flightPlanNode);
-            }
+                return finalPatch ? null : patch.nextPatch;
 
             //See if any maneuver nodes occur during this patch. If there is one
             //return the patch that follows it
