@@ -28,6 +28,11 @@ namespace MechJebLibBindings.FuelFlowSimulation
             private static readonly FieldContext _rfSpoolUpTime = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("effectiveSpoolUpTime");
             private static readonly FieldContext _rfAutoCutoff = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("autoCutoff");
             private static readonly FieldContext _rfUllage = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("ullage");
+            private static readonly FieldContext _rfPressureFed = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("pressureFed");
+            private static readonly FieldContext _rfThrottlePressureFedStartupMult = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("throttlePressureFedStartupMult");
+            private static readonly FieldContext _rfThrottleDownMult = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("throttleDownMult");
+            private static readonly FieldContext _rfThrottleClamp = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("throttleClamp");
+            private static readonly FieldContext _rfThrottleCurve = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("throttleCurve");
             private static readonly FieldContext _rp0ControllableMass = Assembly("RP-0").Class("RP0.ProceduralAvionics.ModuleProceduralAvionics").Field("controllableMass");
             private static readonly FieldContext _rp0MassLimit = Assembly("RP-0").Class("RP0.ModuleAvionics").Field("massLimit");
 
@@ -57,7 +62,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 _crewMassDelegate = Versioning.version_major == 1 && Versioning.version_minor < 11 ? (CrewMass)CrewMassOld : CrewMassNew;
 
                 _isRealFuelsLoadedCorrectly = IsLoadedRealFuels && _rfModuleEnginesRf.IsValid && _rfSpoolUpTime.IsValid &&
-                    _rfAutoCutoff.IsValid && _rfUllage.IsValid;
+                    _rfAutoCutoff.IsValid && _rfUllage.IsValid && _rfPressureFed.IsValid && _rfThrottlePressureFedStartupMult.IsValid &&
+                    _rfThrottleDownMult.IsValid && _rfThrottleClamp.IsValid && _rfThrottleCurve.IsValid;
                 _isRP0LoadedCorrectly = IsLoadedRP0 && _rp0ControllableMass.IsValid && _rp0MassLimit.IsValid;
             }
 
@@ -252,6 +258,13 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.ATMCurve.LoadFromFloatCurve(kspEngine.atmCurve);
                 engine.ATMCurveIsp.LoadFromFloatCurve(kspEngine.atmCurveIsp);
                 engine.AtmosphereCurve.LoadFromFloatCurve(kspEngine.atmosphereCurve);
+                engine.ThrottleResponseRate = kspEngine.throttleResponseRate;
+                engine.ThrottleIgniteLevelMult = kspEngine.throttleIgniteLevelMult;
+                engine.ThrottleStartupMult = kspEngine.throttleStartupMult;
+                engine.ThrottleStartedMult = kspEngine.throttleStartedMult;
+                engine.ThrottleShutdownMult = kspEngine.throttleShutdownMult;
+                engine.ThrottleInstant = kspEngine.throttleInstant;
+                engine.ThrottleUseAlternate = kspEngine.throttleUseAlternate;
 
                 engine.ThrustTransformMultipliers.Clear();
                 foreach (double multiplier in kspEngine.thrustTransformMultipliers)
@@ -273,6 +286,15 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.ModuleSpoolupTime = 0;
                 engine.IsModuleEnginesRf = false;
 
+                // RealFuels' declared defaults, which also match the stock throttle response (its clamp is hardcoded at 0.005
+                // and its throttleShutdownMult defaults to 100).  the placeholder curve keeps Evaluate from throwing.
+                engine.PressureFed = false;
+                engine.ThrottlePressureFedStartupMult = 5f;
+                engine.ThrottleDownMult = 100f;
+                engine.ThrottleClamp = 0.005f;
+                engine.UseThrottleCurve = false;
+                engine.ThrottleCurve.LoadFromFloatCurve(null);
+
                 if (_isRealFuelsLoadedCorrectly)
                 {
                     engine.IsModuleEnginesRf = _rfModuleEnginesRf.IsInstance(kspEngine);
@@ -282,6 +304,16 @@ namespace MechJebLibBindings.FuelFlowSimulation
                         engine.ModuleSpoolupTime = _rfSpoolUpTime.GetValue<float>(kspEngine);
                         engine.AutoCutoff = _rfAutoCutoff.GetValue<bool>(kspEngine);
                         engine.Ullage = _rfUllage.GetValue<bool>(kspEngine);
+                        engine.PressureFed = _rfPressureFed.GetValue<bool>(kspEngine);
+                        engine.ThrottlePressureFedStartupMult = _rfThrottlePressureFedStartupMult.GetValue<float>(kspEngine);
+                        engine.ThrottleDownMult = _rfThrottleDownMult.GetValue<float>(kspEngine);
+                        engine.ThrottleClamp = _rfThrottleClamp.GetValue<float>(kspEngine);
+
+                        // RealFuels creates an empty throttleCurve in OnAwake when the config has none, and only uses it if it
+                        // has a key at or after zero.  GetValue throws on a null, so read the field directly.
+                        var throttleCurve = _rfThrottleCurve.FieldInfo()?.GetValue(kspEngine) as FloatCurve;
+                        engine.UseThrottleCurve = throttleCurve != null && throttleCurve.maxTime >= 0f;
+                        engine.ThrottleCurve.LoadFromFloatCurve(throttleCurve);
                     }
                 }
 

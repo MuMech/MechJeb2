@@ -44,6 +44,13 @@ namespace MechJebLib.FuelFlowSimulation
             if (val != def) fields.Add(Invariant($"{name}={val:G17}"));
         }
 
+        protected static void AddField(List<string> fields, string name, float val, float def)
+        {
+            // G9 so the floats round-trip into test fixtures, as in the module dumps
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (val != def) fields.Add(Invariant($"{name}={val:G9}"));
+        }
+
         protected static void AddField(List<string> fields, string name, int val, int def)
         {
             if (val != def) fields.Add(Invariant($"{name}={val}"));
