@@ -1065,8 +1065,8 @@ namespace MuMech
             double clampedLongitude = Clamp180(longitude);
             double latitudeAbs = Math.Abs(latitude);
             double longitudeAbs = Math.Abs(clampedLongitude);
-            return latitudeAbs.ToString("F" + precision) + "° " + (latitude > 0 ? "N" : "S") + (newline ? "\n" : ", ")
-                + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
+            return latitudeAbs.ToString("F" + precision) + "° " + (latitude >= 0 ? "N" : "S") + (newline ? "\n" : ", ")
+                + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude >= 0 ? "E" : "W");
         }
 
         public string ToStringDecimal(bool newline = false, int precision = 3) => ToStringDecimal(Latitude, Longitude, newline, precision);
@@ -1074,17 +1074,19 @@ namespace MuMech
         public static string ToStringDMS(double latitude, double longitude, bool newline = false)
         {
             double clampedLongitude = Clamp180(longitude);
-            return AngleToDMS(latitude) + (latitude > 0 ? " N" : " S") + (newline ? "\n" : ", ")
-                + AngleToDMS(clampedLongitude) + (clampedLongitude > 0 ? " E" : " W");
+            return AngleToDMS(latitude) + (latitude >= 0 ? " N" : " S") + (newline ? "\n" : ", ")
+                + AngleToDMS(clampedLongitude) + (clampedLongitude >= 0 ? " E" : " W");
         }
 
         public string ToStringDMS(bool newline = false) => ToStringDMS(Latitude, Longitude, newline);
 
         public static string AngleToDMS(double angle)
         {
-            int degrees = (int)Math.Floor(Math.Abs(angle));
-            int minutes = (int)Math.Floor(60 * (Math.Abs(angle) - degrees));
-            int seconds = (int)Math.Floor(3600 * (Math.Abs(angle) - degrees - minutes / 60.0));
+            // rounded to the arc second first, then split in whole numbers: flooring each floating remainder read one second low
+            long totalSeconds = (long)Math.Round(3600 * Math.Abs(angle));
+            long degrees = totalSeconds / 3600;
+            long minutes = totalSeconds % 3600 / 60;
+            long seconds = totalSeconds % 60;
 
             return $"{degrees:0}° {minutes:00}' {seconds:00}\"";
         }
