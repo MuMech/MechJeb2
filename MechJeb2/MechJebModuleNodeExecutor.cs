@@ -107,6 +107,7 @@ namespace MuMech
 
         public void ExecuteOneNode(object controller)
         {
+            if (!HasNodeToExecute()) return;
             Users.Add(controller);
             Mode = Modes.ONE_NODE;
             Init();
@@ -114,9 +115,17 @@ namespace MuMech
 
         public void ExecuteAllNodes(object controller)
         {
+            if (!HasNodeToExecute()) return;
             Users.Add(controller);
             Mode = Modes.ALL_NODES;
             Init();
+        }
+
+        // the landing predictions' aerobrake node is no burn: it goes first, and the executor starts only on a node of the player's
+        private bool HasNodeToExecute()
+        {
+            Core.GetComputerModule<MechJebModuleLandingPredictions>()?.RemoveAerobrakeNode();
+            return Vessel.patchedConicSolver != null && Vessel.patchedConicSolver.maneuverNodes.Count > 0;
         }
 
         private void Init()
