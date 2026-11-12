@@ -124,6 +124,11 @@ namespace MuMech
         private double[] _diffBoundL = new double[0];
         private double[] _diffBoundU = new double[0];
 
+        // The solver, its solution and its report, reused with the buffers above: created again only when the engine count changes
+        private alglib.minqpstate _diffState;
+        private double[] _diffX = new double[0];
+        private readonly alglib.minqpreport _diffReport = new alglib.minqpreport();
+
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool ElectricThrottle;
 
@@ -1065,12 +1070,15 @@ namespace MuMech
             }
 
 
-            if (_diffB.Length != n)
+            if (_diffB.Length != n || _diffState == null)
             {
                 _diffA = new double[n, n];
                 _diffB = new double[n];
                 _diffBoundL = new double[n];
                 _diffBoundU = new double[n];
+                _diffX = new double[n];
+                alglib.minqpcreate(n, out _diffState);
+                alglib.minqpsetalgodensegenipm(_diffState, 0.0);
             }
 
             double[,] a = _diffA;
@@ -1093,15 +1101,15 @@ namespace MuMech
                 boundU[i] = mainThrottle;
             }
 
-            alglib.minqpcreate(n, out alglib.minqpstate state);
+            alglib.minqpstate state = _diffState;
             alglib.minqpsetquadraticterm(state, a, false);
             alglib.minqpsetlinearterm(state, b);
             alglib.minqpsetbc(state, boundL, boundU);
-            alglib.minqpsetalgodensegenipm(state, 0.0);
             //var t1 = stopwatch.ElapsedMilliseconds;
             alglib.minqpoptimize(state);
             //var t2 = stopwatch.ElapsedMilliseconds;
-            alglib.minqpresults(state, out double[] x, out alglib.minqpreport _);
+            alglib.minqpresultsbuf(state, ref _diffX, _diffReport);
+            double[] x = _diffX;
             //var t3 = stopwatch.ElapsedMilliseconds;
             //UnityEngine.Debug.LogFormat("[DiffThrottle] t1: {0}, t2: {1}, t3: {2}", t1, t2 - t1, t3 - t2);
 
