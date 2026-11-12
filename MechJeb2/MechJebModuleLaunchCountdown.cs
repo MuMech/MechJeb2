@@ -18,6 +18,11 @@ namespace MuMech
         private double _launchTime;
         private double _lastTMinus = 999;
 
+        private enum LaunchKind { PLANE_OF_TARGET, TARGET_LAN, LAN }
+
+        // what the countdown counts down to, to time it again when an autopilot is engaged after T-0
+        private LaunchKind _launchKind;
+
         public bool Active { get; private set; }
 
         public double TMinus => _launchTime - VesselState.Time;
@@ -37,6 +42,7 @@ namespace MuMech
         public double StartToPlaneOfTarget()
         {
             AscentSettings.LaunchingToPlane = true;
+            _launchKind                     = LaunchKind.PLANE_OF_TARGET;
 
             Orbit targetOrbit = Core.Target.TargetOrbit;
             TargetLan = targetOrbit.LAN;
@@ -55,6 +61,7 @@ namespace MuMech
         public double StartToTargetLan()
         {
             AscentSettings.LaunchingToMatchLan = true;
+            _launchKind                        = LaunchKind.TARGET_LAN;
             TargetLan = Core.Target.TargetOrbit.LAN;
             return Start(TimeToPlane(TargetLan - AscentSettings.LaunchLANDifference));
         }
@@ -63,6 +70,7 @@ namespace MuMech
         public double StartToLan()
         {
             AscentSettings.LaunchingToLan = true;
+            _launchKind                   = LaunchKind.LAN;
             return Start(TimeToPlane(Core.PSGSimulation.LAN));
         }
 
@@ -115,6 +123,29 @@ namespace MuMech
                 : Localizer.Format("#MechJeb_Ascent_status6")); //"Awaiting liftoff"
             Core.Attitude.SetAxisControl(false, false, false);
             return true;
+        }
+
+        // The countdown only runs while an autopilot is engaged. One started with none engaged and engaged after T-0 counts down
+        // to the next launch of the same kind, rather than launch at once, off the window it was timed for.
+        protected override void OnModuleEnabled()
+        {
+            if (!Active || TMinus >= 0)
+                return;
+
+            switch (_launchKind)
+            {
+                case LaunchKind.PLANE_OF_TARGET:
+                    if (Core.Target.TargetOrbit != null) StartToPlaneOfTarget();
+                    else Abort();
+                    break;
+                case LaunchKind.TARGET_LAN:
+                    if (Core.Target.TargetOrbit != null) StartToTargetLan();
+                    else Abort();
+                    break;
+                case LaunchKind.LAN:
+                    StartToLan();
+                    break;
+            }
         }
 
         public override void OnFixedUpdate()
