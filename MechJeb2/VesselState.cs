@@ -48,6 +48,8 @@ namespace MuMech
         public static ReflectionUtils.DelegateContext<DoubleVesselDelegate> FARVesselDynPres;
         public static ReflectionUtils.DelegateContext<CalculateVesselAeroForcesDelegate> FARCalculateVesselAeroForces;
 
+        // FAR is loaded and every FARAPI method MechJeb calls was found: the FAR values are read only then, so a FAR whose API
+        // changed leaves MechJeb on the stock values instead of throwing every tick
         public static bool IsFARCorrectlyInitialized;
 
         // A convenient debug message to display in the UI
@@ -687,7 +689,7 @@ namespace MuMech
 
         private double GetDynamicPressure()
         {
-            if (ReflectionUtils.IsLoadedFAR)
+            if (IsFARCorrectlyInitialized)
             {
                 return FARVesselDynPres.Call(Vessel) * 1000;
             }
@@ -868,7 +870,7 @@ namespace MuMech
             PureDragVector = Vector3d.zero;
             PureLiftVector = Vector3d.zero;
 
-            if (ReflectionUtils.IsLoadedFAR)
+            if (IsFARCorrectlyInitialized)
             {
                 DragCoefficient = FARVesselDragCoeff.Call(Vessel);
                 AreaDrag = FARVesselRefArea.Call(Vessel) * DragCoefficient * PhysicsGlobals.DragMultiplier;
@@ -904,7 +906,7 @@ namespace MuMech
                 //if (p.dynamicPressurekPa > 0 && PhysicsGlobals.DragMultiplier > 0)
                 //    dragCoef += p.simDragScalar / (p.dynamicPressurekPa * PhysicsGlobals.DragMultiplier);
 
-                if (!ReflectionUtils.IsLoadedFAR)
+                if (!IsFARCorrectlyInitialized)
                 {
                     DragCoefficient += p.DragCubes.DragCoeff;
                     AreaDrag += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
@@ -1148,7 +1150,7 @@ namespace MuMech
 
             Vector3d liftDir = -Vector3d.Cross(Vessel.transform.right, -SurfaceVelocity.normalized);
 
-            if (ReflectionUtils.IsLoadedFAR && !Vessel.packed && SurfaceVelocity != Vector3d.zero)
+            if (IsFARCorrectlyInitialized && !Vessel.packed && SurfaceVelocity != Vector3d.zero)
             {
                 CalculateVesselAeroForcesWithCache(Vessel, out Vector3 farForce, SurfaceVelocity, AltitudeASL);
 
@@ -1244,7 +1246,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TerminalVelocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")] //Terminal velocity
         public double TerminalVelocity()
         {
-            if (ReflectionUtils.IsLoadedFAR)
+            if (IsFARCorrectlyInitialized)
                 return FARVesselTermVelEst.Call(Vessel);
 
             if (AltitudeASL > MainBody.RealMaxAtmosphereAltitude())
