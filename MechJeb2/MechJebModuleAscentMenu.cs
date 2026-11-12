@@ -200,7 +200,14 @@ namespace MuMech
             if (mjPhase < Core.StageStats.VacStats.Count)
                 stageDeltaV = Core.StageStats.VacStats[mjPhase].DeltaV;
 
-            double excessDV = stageDeltaV - solution.DV(t, psgPhase);
+            // a coast during a stage splits it into two burns of the same MJ phase, so subtract every burn of this stage up to and
+            // including this one to show what is left after it
+            double usedDV = 0;
+            for (int i = 0; i <= psgPhase; i++)
+                if (!solution.CoastPhase(i) && solution.MJPhase(i) == mjPhase)
+                    usedDV += solution.DV(t, i);
+
+            double excessDV = stageDeltaV - usedDV;
 
             // eliminate some of the noise
             if (Math.Abs(excessDV) < 2.5) excessDV = 0;
