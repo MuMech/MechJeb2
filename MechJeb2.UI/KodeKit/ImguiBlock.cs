@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using KodeUI;
 using KSP.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace KodeKit
@@ -50,7 +51,24 @@ namespace KodeKit
             size = cell.gameObject.AddComponent<LayoutElement>();
             size.flexibleWidth = 1;
             size.preferredHeight = layout ? 22 : 0;
+            if (layout)
+            {
+                // the IMGUI controls read the mouse themselves, and uGUI would pass a press on the empty cell through to the
+                // window's body drag: a dragged slider would move the window too. An invisible graphic takes the press and a
+                // sink takes the drag.
+                Image catcher = cell.gameObject.AddComponent<Image>();
+                catcher.color = new Color(0, 0, 0, 0);
+                cell.gameObject.AddComponent<DragSink>();
+            }
             ImguiBlockHost.Register(this);
+        }
+
+        /// <summary>Takes the drag events of an ImguiBlock's cell so they don't reach the window's drag handle.</summary>
+        sealed class DragSink : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+        {
+            public void OnBeginDrag(PointerEventData e) { }
+            public void OnDrag(PointerEventData e) { }
+            public void OnEndDrag(PointerEventData e) { }
         }
 
         internal bool Alive => placeholder != null;
