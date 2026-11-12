@@ -124,7 +124,8 @@ namespace MuMech
 
             if (TMinus < 3 * VesselState.DeltaT || (TMinus > 10.0 && _lastTMinus < 1.0))
             {
-                if (!WaitingForGuidance)
+                // StageManager stages the active vessel, so T-0 holds while the player is on another one
+                if (!WaitingForGuidance && Vessel.isActiveVessel)
                 {
                     if (VesselState.ThrustAvailable < 10E-4) // only stage if we have no engines active
                         StageManager.ActivateNextStage();
