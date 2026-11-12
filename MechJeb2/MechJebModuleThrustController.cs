@@ -247,13 +247,19 @@ namespace MuMech
         // Call this function to set the throttle for a burn with dV delta-V remaining.
         // timeConstant controls how quickly we throttle down toward the end of the burn.
         // This function is nice because it will correctly handle engine spool-up/spool-down times.
-        public void ThrustForDv(double dV, double timeConstant)
+        public void ThrustForDv(double dV, double timeConstant) => ThrustForDv(dV, timeConstant, VesselState.Forward);
+
+        // The same, for a burn along axis (a unit vector): the thrust counts along that axis, so a burn that aims the engines'
+        // thrust (INERTIAL_COT) throttles on that thrust, not on its part along the control forward.
+        public void ThrustForDv(double dV, double timeConstant, Vector3d axis)
         {
             timeConstant += VesselState.MaxEngineResponseTime;
-            double spooldownDv = VesselState.CurrentThrustAcceleration * VesselState.MaxEngineResponseTime;
+            double currentAcceleration = Vector3d.Dot(VesselState.ThrustVectorLastFrame, axis) / VesselState.Mass;
+            double maxAcceleration = Vector3d.Dot(VesselState.ThrustVectorMaxThrottle, axis) / VesselState.Mass;
+            double spooldownDv = currentAcceleration * VesselState.MaxEngineResponseTime;
             double desiredAcceleration = (dV - spooldownDv) / timeConstant;
 
-            TargetThrottle = Mathf.Clamp((float)(desiredAcceleration / VesselState.MaxThrustAcceleration), 0.01f, 1.00f);
+            TargetThrottle = Mathf.Clamp((float)(desiredAcceleration / maxAcceleration), 0.01f, 1.00f);
         }
 
         /* the current throttle limit, this may include transient condition such as limiting to zero due to unstable propellants in RF */

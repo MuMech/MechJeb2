@@ -380,7 +380,7 @@ namespace MuMech
             if (!RCSOnly)
             {
                 double timeConstant = _dvLeft > 10 || VesselState.MinThrustAcceleration > 0.25 * VesselState.MaxThrustAcceleration ? 0.5 : 2;
-                Core.Thrust.ThrustForDv(_dvLeft, timeConstant);
+                Core.Thrust.ThrustForDv(_dvLeft, timeConstant, BurnAxis());
             }
         }
 
@@ -485,6 +485,10 @@ namespace MuMech
         private Vector3d BurnAxis() =>
             RCSOnly || Core.Thrust.DifferentialThrottle || VesselState.ThrustForward.sqrMagnitude < 0.5 ? VesselState.Forward : VesselState.ThrustForward;
 
+        // The engines' full-throttle acceleration along the burn axis. MaxThrustAcceleration is its part along the control forward,
+        // about 0 on a control point at right angles to the engines.
+        private double BurnAxisThrustAcceleration() => Vector3d.Dot(VesselState.ThrustVectorMaxThrottle, BurnAxis()) / VesselState.Mass;
+
         // This handles safely getting the current burning node in Principia without grabbing any subsequent node after
         // principia cleans it up for us.
         private ManeuverNode SafeCurrentPrincipiaNode()
@@ -514,7 +518,7 @@ namespace MuMech
             if (ReflectionUtils.IsLoadedPrincipia && SafeCurrentPrincipiaNode() == null)
                 return _direction;
 
-            double accel = RCSOnly ? RcsForwardThrust() / VesselState.Mass : VesselState.MaxThrustAcceleration;
+            double accel = RCSOnly ? RcsForwardThrust() / VesselState.Mass : BurnAxisThrustAcceleration();
             if (!ReflectionUtils.IsLoadedPrincipia && _dvLeft < accel)
                 return _direction;
 
