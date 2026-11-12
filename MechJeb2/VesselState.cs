@@ -1049,8 +1049,10 @@ namespace MuMech
                                     {
                                         provider.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
-                                        TorqueOthers.Add(pos);
-                                        TorqueOthers.Add(neg);
+                                        // Stock has two conventions: reaction wheels and gimbals give two magnitudes, control
+                                        // surfaces two signed torques. As magnitudes per side, both count once.
+                                        TorqueOthers.Add(pos.Abs());
+                                        TorqueOthers.Add(-neg.Abs());
                                     }
                                     catch (Exception e)
                                     {
