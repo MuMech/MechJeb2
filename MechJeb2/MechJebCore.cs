@@ -30,6 +30,9 @@ namespace MuMech
 
         private static List<Type> _moduleRegistry;
 
+        // every module has passed UnlockCheck: Update stops asking until a module is added or reloaded
+        private bool _allUnlockChecked;
+
         private bool _ready;
 
         public MechJebModuleGuidanceController Guidance;
@@ -386,6 +389,8 @@ namespace MuMech
 
         private void ClearModulesCache()
         {
+            // a module added or loaded again has not been checked against the tech tree
+            _allUnlockChecked = false;
             _sortedModules.Clear();
             _sortedDisplayModules.Clear();
         }
@@ -703,8 +708,9 @@ namespace MuMech
 
             Profiler.EndSample();
 
-            if (ResearchAndDevelopment.Instance != null && _unorderedComputerModules.Any(a => !a.UnlockChecked))
+            if (ResearchAndDevelopment.Instance != null && !_allUnlockChecked)
             {
+                bool allChecked = true;
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
                     try
@@ -715,7 +721,11 @@ namespace MuMech
                     {
                         Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in UnlockCheck: " + e);
                     }
+
+                    allChecked &= module.UnlockChecked;
                 }
+
+                _allUnlockChecked = allChecked;
             }
 
             Profiler.BeginSample("OnMenuUpdate");
