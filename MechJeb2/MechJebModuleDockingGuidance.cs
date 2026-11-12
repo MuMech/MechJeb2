@@ -11,8 +11,6 @@ namespace MuMech
     {
         public MechJebModuleDockingGuidance(MechJebCore core) : base(core) { }
 
-        private MechJebModuleDockingAutopilot autopilot;
-
         private static readonly char[] DockingNodeTypeSeparator = { ',' };
 
         // KSP changes a docking-port target back to its parent vessel while the
@@ -20,8 +18,6 @@ namespace MuMech
         // choice locally so that cycling does not jump back to the first port.
         internal ModuleDockingNode selectedTargetPort;
         private Vessel selectedTargetVessel;
-
-        public override void OnStart(PartModule.StartState state) => autopilot = Core.GetComputerModule<MechJebModuleDockingAutopilot>();
 
         internal enum PortSelectorState { Hidden, Unavailable, Ready }
 
@@ -176,11 +172,6 @@ namespace MuMech
                 return portName;
 
             return port.part?.partInfo?.title ?? port.part?.name ?? "?";
-        }
-
-        protected override void OnModuleDisabled()
-        {
-            if (autopilot != null) autopilot.Users.Remove(this);
         }
 
         public override string GetName() => Localizer.Format("#MechJeb_Docking_title"); //"Docking Autopilot"
