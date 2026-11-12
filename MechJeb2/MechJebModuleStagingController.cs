@@ -352,8 +352,11 @@ namespace MuMech
                 return;
             }
 
-            // only release launch clamps if we're at nearly full thrust and no failed engines
-            if ((VesselState.ThrustCurrent / VesselState.ThrustAvailable < ClampAutoStageThrustPct || AnyFailedEngines(_allModuleEngines)) &&
+            // only release launch clamps if we're at nearly full thrust and no failed engines. The thrust is the whole thrust, not its
+            // part along the control forward, and no thrust at all holds the clamps
+            double maxThrust = VesselState.ThrustVectorMaxThrottle.magnitude;
+            bool lowThrust = maxThrust <= 0 || VesselState.ThrustVectorLastFrame.magnitude / maxThrust < ClampAutoStageThrustPct;
+            if ((lowThrust || AnyFailedEngines(_allModuleEngines)) &&
                 InverseStageReleasesClamps(Vessel.currentStage - 1))
             {
                 // continually reset the PIDs while we have launch clamps to avoid integral windup
