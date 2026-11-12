@@ -74,14 +74,29 @@ namespace MuMech
 
         public double FlightPathAngle(double altitude, double velocity)
         {
-            double turnEnd = AscentSettings.AutoPath ? AscentSettings.AutoTurnEndAltitude : AscentSettings.TurnEndAltitude;
-
             if (IsVerticalAscent(altitude, velocity)) return 90.0;
+
+            return TurnAngle(altitude, _actualTurnStart);
+        }
+
+        /// <summary>
+        ///     The planned path for the Ascent Path Editor's picture: vertical up to the turn start altitude, then the turn from
+        ///     there. Unlike FlightPathAngle it neither reads nor moves the turn start of a flight in progress.
+        /// </summary>
+        public double PlannedFlightPathAngle(double altitude)
+        {
+            double turnStart = VerticalAscentEnd();
+            return altitude < turnStart ? 90.0 : TurnAngle(altitude, turnStart);
+        }
+
+        private double TurnAngle(double altitude, double turnStart)
+        {
+            double turnEnd = AscentSettings.AutoPath ? AscentSettings.AutoTurnEndAltitude : AscentSettings.TurnEndAltitude;
 
             if (altitude > turnEnd) return AscentSettings.TurnEndAngle;
 
             // below the altitude the turn started at (falling back, or a different altitude reference) Pow of a negative base is NaN
-            double turnFraction = altitude > _actualTurnStart ? (altitude - _actualTurnStart) / (turnEnd - _actualTurnStart) : 0;
+            double turnFraction = altitude > turnStart ? (altitude - turnStart) / (turnEnd - turnStart) : 0;
 
             return Mathf.Clamp((float)(90.0 - Math.Pow(turnFraction, AscentSettings.TurnShapeExponent) * (90.0 - AscentSettings.TurnEndAngle)),
                 0.01F, 89.99F);
