@@ -131,7 +131,8 @@ namespace MuMech
         private void Init()
         {
             _direction = Vector3d.zero;
-            _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            _node = Vessel.patchedConicSolver.maneuverNodes[0];
+            _dvLeft = _node.GetBurnVector(Orbit).magnitude;
             Core.Thrust.Users.Add(this);
             Core.Attitude.Users.Add(this);
             _inControl = true;
@@ -187,6 +188,7 @@ namespace MuMech
         public States State = States.IDLE;
 
         private double _dvLeft; // for Principia
+        private ManeuverNode _node; // the node being executed (stock: Principia replaces its nodes)
         private Vector3d _direction; // de-rotated world vector
         private Vector3d _worldDirection => Planetarium.fetch.rotation * _direction;
         private double _ignitionUT;
@@ -256,6 +258,19 @@ namespace MuMech
             {
                 Abort();
                 return;
+            }
+
+            // The player deleted the node being executed: the first node is now a later one. Executing all nodes, start over on it,
+            // with its own wait and alignment; executing one node, that node is gone, so stop.
+            if (!ReflectionUtils.IsLoadedPrincipia && Vessel.patchedConicSolver.maneuverNodes[0] != _node)
+            {
+                if (Mode != Modes.ALL_NODES)
+                {
+                    Abort();
+                    return;
+                }
+
+                Init();
             }
 
             // keep the dV used for the ignition time current while warping and aligning, not just in LEAD and BURN
