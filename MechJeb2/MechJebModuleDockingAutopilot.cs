@@ -52,6 +52,13 @@ namespace MuMech
 
         public bool drawBoundingBox;
 
+        // The drawn boxes, in each vessel's axes. They are computed again every interval, and at once when a vessel or its part count changes.
+        private const float BOX_REFRESH_INTERVAL = 1;
+        private float boxesTime = float.NegativeInfinity;
+        private Vessel boxesVessel, boxesTarget;
+        private int boxesVesselParts, boxesTargetParts;
+        private Box3d vesselBox, targetBox;
+
         public enum DockingStep
         {
             INIT, WRONG_SIDE_BACKING_UP, WRONG_SIDE_LATERAL, WRONG_SIDE_SWITCHSIDE, BACKING_UP, MOVING_TO_START, DOCKING, OFF, LEAVING_TARGET
@@ -711,15 +718,30 @@ namespace MuMech
             Enabled = false;
         }
 
+        // GL only draws in the Repaint event, and OnGUI runs once per event.
         private void DrawBoundingBox()
         {
-            if (drawBoundingBox && Vessel == FlightGlobals.ActiveVessel)
+            if (drawBoundingBox && Vessel == FlightGlobals.ActiveVessel && Event.current.type == EventType.Repaint)
             {
-                GLUtils.DrawBoundingBox(Vessel.mainBody, Vessel, Vessel.GetBoundingBox(), Color.green);
-
                 Vessel targetVessel = Core.Target.Target?.GetVessel();
+                if (Time.unscaledTime >= boxesTime + BOX_REFRESH_INTERVAL || Vessel != boxesVessel || targetVessel != boxesTarget ||
+                    Vessel.parts.Count != boxesVesselParts || (targetVessel != null && targetVessel.parts.Count != boxesTargetParts))
+                {
+                    boxesTime = Time.unscaledTime;
+                    boxesVessel = Vessel;
+                    boxesTarget = targetVessel;
+                    vesselBox = Vessel.GetBoundingBox();
+                    boxesVesselParts = Vessel.parts.Count;
+                    if (targetVessel != null)
+                    {
+                        targetBox = targetVessel.GetBoundingBox();
+                        boxesTargetParts = targetVessel.parts.Count;
+                    }
+                }
+
+                GLUtils.DrawBoundingBox(Vessel.mainBody, Vessel, vesselBox, Color.green);
                 if (targetVessel != null)
-                    GLUtils.DrawBoundingBox(targetVessel.mainBody, targetVessel, targetVessel.GetBoundingBox(), Color.blue);
+                    GLUtils.DrawBoundingBox(targetVessel.mainBody, targetVessel, targetBox, Color.blue);
 
                 if (dockingStep != DockingStep.OFF && dockingStep != DockingStep.INIT && Core.Target.Target != null)
                 {

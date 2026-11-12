@@ -7,6 +7,7 @@ namespace MuMech
     /// <summary>
     ///     The launch sequence the ascent autopilots share: the countdown, warping to it, staging at T-0 and the prelaunch hold.
     ///     An engaged autopilot adds itself to Users, so a countdown started while no autopilot is engaged doesn't run until one is.
+    ///     The countdown owns the launch mode (the three Launching* flags of the ascent settings): only Abort ends it, not a window.
     /// </summary>
     public class MechJebModuleLaunchCountdown : ComputerModule
     {
@@ -60,7 +61,15 @@ namespace MuMech
             return Start(TimeToPlane(Core.PSGSimulation.LAN));
         }
 
-        public void Abort() => Active = false;
+        /// <summary>
+        ///     Stops the countdown and ends the launch to plane or LAN, whose flags the PSG guidance keeps flying to after T-0.
+        ///     Disengaging an ascent autopilot calls it, so a countdown never outlives the launch it was started for.
+        /// </summary>
+        public void Abort()
+        {
+            Active = false;
+            AscentSettings.LaunchingToPlane = AscentSettings.LaunchingToMatchLan = AscentSettings.LaunchingToLan = false;
+        }
 
         /// <summary>
         ///     One tick of an autopilot's prelaunch: hold the vessel until T-10 (when there is a countdown), then get the solar panels

@@ -60,11 +60,9 @@ namespace MuMech
             _settingsMenu.Enabled = _lastSettingsMenuEnabled;
         }
 
+        // a closed window leaves the launch mode alone: the countdown and the guidance still fly it
         protected override void OnModuleDisabled()
         {
-            _launchingToPlane = false;
-            _launchingToMatchLan = false;
-            _launchingToLan = false;
             _lastPSGSettingsEnabled = _psgSettingsMenu.Enabled;
             _lastSettingsMenuEnabled = _settingsMenu.Enabled;
             _psgSettingsMenu.Enabled = false;
@@ -110,9 +108,12 @@ namespace MuMech
 
         internal void LaunchToLan() => Core.LaunchCountdown.StartToLan();
 
+        // Abort cancels the launch, not only its timer: an autopilot left engaged would launch at once from a landed vessel, or
+        // after T-0 without the plane. Disengaging ends the countdown too.
         internal void AbortTimedLaunch()
         {
-            _launchingToPlane = _launchingToMatchLan = _launchingToLan = false;
+            if (Core.Ascent is { Enabled: true } autopilot)
+                autopilot.Users.Clear();
             Core.LaunchCountdown.Abort();
         }
 
@@ -199,7 +200,14 @@ namespace MuMech
             if (mjPhase < Core.StageStats.VacStats.Count)
                 stageDeltaV = Core.StageStats.VacStats[mjPhase].DeltaV;
 
-            double excessDV = stageDeltaV - solution.DV(t, psgPhase);
+            // a coast during a stage splits it into two burns of the same MJ phase, so subtract every burn of this stage up to and
+            // including this one to show what is left after it
+            double usedDV = 0;
+            for (int i = 0; i <= psgPhase; i++)
+                if (!solution.CoastPhase(i) && solution.MJPhase(i) == mjPhase)
+                    usedDV += solution.DV(t, i);
+
+            double excessDV = stageDeltaV - usedDV;
 
             // eliminate some of the noise
             if (Math.Abs(excessDV) < 2.5) excessDV = 0;

@@ -19,6 +19,9 @@ namespace MechJebLib.PSG.Terminal
 
         double IncT();
 
+        // the radius of the circular orbit the AscentGuesser aims for: the target periapsis, or the burnout radius of an FPA target
+        double GuessRadius();
+
         ITerminal GetFPA();
 
         bool IsFPA();
