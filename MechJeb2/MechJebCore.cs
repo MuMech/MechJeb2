@@ -304,6 +304,11 @@ namespace MuMech
         private bool _wasMasterAndFocus;
         private static Vessel _lastFocus;
 
+        // the core that last loaded the settings files for _lastFocus
+        private static MechJebCore _lastFocusMaster;
+
+        private bool _wasNotMasterInEditor;
+
         public bool someModuleAreLocked; // True if any module was locked by the R&D system
 
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one.
@@ -547,10 +552,15 @@ namespace MuMech
 
             if (!_wasMasterAndFocus && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel))
             {
-                if (HighLogic.LoadedSceneIsFlight && _lastFocus != null && _lastFocus.loaded && _lastFocus.GetMasterMechJeb() != null)
+                // The previous focus's master saves its settings before this core loads them. When this core is that master but
+                // another core loaded them (the master changed on the focused vessel), this core still holds what it loaded at
+                // scene start: it reloads the files without writing over them.
+                MechJebCore lastFocusMaster =
+                    HighLogic.LoadedSceneIsFlight && _lastFocus != null && _lastFocus.loaded ? _lastFocus.GetMasterMechJeb() : null;
+                if (lastFocusMaster != null && (lastFocusMaster != this || _lastFocusMaster == this))
                 {
                     Print("Focus changed! Forcing " + _lastFocus.vesselName + " to save");
-                    _lastFocus.GetMasterMechJeb().OnSave(null);
+                    lastFocusMaster.OnSave(null);
                 }
 
                 // Clear the modules cache
@@ -560,6 +570,7 @@ namespace MuMech
 
                 _wasMasterAndFocus = true;
                 _lastFocus = vessel;
+                _lastFocusMaster = this;
             }
 
             if (vessel == null)
@@ -636,12 +647,25 @@ namespace MuMech
 
         public void Update()
         {
-            if (this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
+            bool isMaster = this == vessel.GetMasterMechJeb();
+            if (HighLogic.LoadedSceneIsEditor && !isMaster)
+                _wasNotMasterInEditor = true;
+
+            if (!isMaster || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
             {
                 return;
             }
 
             Profiler.BeginSample("MechJebCore.Update");
+
+            // A core that becomes master in the editor (the master's part was removed) loads the settings files, which the
+            // previous master kept up to date, rather than saving over them what it loaded when its part was placed
+            if (_wasNotMasterInEditor && HighLogic.LoadedSceneIsEditor)
+            {
+                _wasNotMasterInEditor = false;
+                ClearModulesCache();
+                OnLoad(null);
+            }
 
             //periodically save settings in case we quit unexpectedly
             Profiler.BeginSample("MechJebCore.Update.OnSave");
