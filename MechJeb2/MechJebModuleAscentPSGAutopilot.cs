@@ -98,7 +98,7 @@ namespace MuMech
 
             if (Countdown.Active)
             {
-                if (Countdown.TMinus <= AscentSettings.WarpCountDown)
+                if (Countdown.TMinus <= Math.Max(AscentSettings.WarpCountDown, 0))
                 {
                     Core.PSGSimulation.Users.Add(this);
                     Core.Guidance.AssertStart(false);
@@ -152,6 +152,8 @@ namespace MuMech
 
         private double _pitchStartTime;
 
+        private const double MIN_PITCH_RATE = 0.1; // degrees per second
+
         private void DriveVerticalAscent()
         {
             //during the vertical ascent we just thrust straight up at max throttle
@@ -180,7 +182,8 @@ namespace MuMech
         private void DrivePitchProgram()
         {
             double dt = VesselState.MET - _pitchStartTime;
-            double theta = dt * AscentSettings.PitchRate;
+            // a rate of 0 or less would hold the pitch at 90 and never hand over to guidance in an atmosphere
+            double theta = dt * Math.Max(AscentSettings.PitchRate, MIN_PITCH_RATE);
             // not below the horizon while waiting for guidance (no solution yet, or none at all)
             double pitch = Math.Max(90 - theta, 0);
 

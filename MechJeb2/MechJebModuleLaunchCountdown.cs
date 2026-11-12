@@ -166,7 +166,7 @@ namespace MuMech
             else
             {
                 if (Core.Node.Autowarp)
-                    Core.Warp.WarpToUT(_launchTime - AscentSettings.WarpCountDown);
+                    Core.Warp.WarpToUT(_launchTime - System.Math.Max(AscentSettings.WarpCountDown, 0)); // never past T-0
             }
 
             _lastTMinus = TMinus;
