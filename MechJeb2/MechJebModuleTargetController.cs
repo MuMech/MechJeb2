@@ -226,14 +226,10 @@ namespace MuMech
             if (TargetPartGone)
                 Unset();
 
-            //Restore the saved target when we are made active vessel
-            if (!wasActiveVessel && Vessel.isActiveVessel)
-            {
-                if (Target != null && Target.GetVessel() != null)
-                {
-                    Vessel.targetObject = Target;
-                }
-            }
+            // Restore the saved target when we are made active vessel: the switch cleared KSP's target, and KSP brings back only what it
+            // saved and can find again, never a position or a direction
+            if (!wasActiveVessel && Vessel.isActiveVessel && Target != null && !(Target is UnityEngine.Object restored && restored == null))
+                Set(Target);
 
             //notice when the user switches targets
             if (Target != Vessel.targetObject)
