@@ -364,9 +364,11 @@ namespace MuMech
             Stage();
         }
 
+        // The fairing conditions protect the payload from the air, so they apply only on a body with an atmosphere. The
+        // no-active-engines rule in OnFixedUpdate runs before them and stages a fairing whatever they say.
         private bool WaitingForFairing()
         {
-            if (!HasFairing(Vessel.currentStage - 1))
+            if (!HasFairing(Vessel.currentStage - 1) || !MainBody.atmosphere)
             {
                 return false;
             }
