@@ -142,7 +142,7 @@ namespace MuMech.UI
 
             // VisibleSectionsGUIElements
             LayoutPanel top = KodeWindow.Box(r);
-            UIButton disengage = KodeWindow.Button(top, "#MechJeb_Ascent_button1", () => menu._autopilot.Users.Remove(menu), true); //Disengage autopilot
+            UIButton disengage = KodeWindow.Button(top, "#MechJeb_Ascent_button1", () => menu._autopilot.Users.Clear(), true); //Disengage autopilot: whoever engaged it (a kOS script too)
             w.Visible(disengage.gameObject, () => menu._autopilot.Enabled);
             UIButton engage = KodeWindow.Button(top, "#MechJeb_Ascent_button2", () => menu._autopilot.Users.Add(menu), true); //Engage autopilot
             w.Visible(engage.gameObject, () => !menu._autopilot.Enabled);

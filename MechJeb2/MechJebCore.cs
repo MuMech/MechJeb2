@@ -251,7 +251,7 @@ namespace MuMech
                 return;
 
             if (autopilot.Enabled)
-                autopilot.Users.Remove(ascentMenu);
+                autopilot.Users.Clear(); // whoever engaged it, as the window's Disengage
             else
                 autopilot.Users.Add(ascentMenu);
         }

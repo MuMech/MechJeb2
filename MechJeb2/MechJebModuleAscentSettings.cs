@@ -255,7 +255,7 @@ namespace MuMech
         {
             foreach (AscentType type in _values)
                 if (type != AscentType)
-                    GetAscentModule(type).Enabled = false;
+                    GetAscentModule(type).Users.Clear(); // no user is left to keep it engaged later
         }
 
         public override void OnStart(PartModule.StartState state)
