@@ -1156,7 +1156,11 @@ namespace MuMech
             if (CoLWeightSum > 0)
                 CoL /= CoLWeightSum;
 
-            Vector3d liftDir = -Vector3d.Cross(Vessel.transform.right, -SurfaceVelocity.normalized);
+            // The lift axis: perpendicular to the velocity and to the right axis of the control point, the frame of the angle of
+            // attack and sideslip above. The cross product is cos(sideslip) long, so it is normalized; zero at 90 degrees of sideslip.
+            Vector3d liftDir = -Vector3d.Cross(Vessel.ReferenceTransform.right, -SurfaceVelocity.normalized);
+            double liftDirLength = liftDir.magnitude;
+            liftDir = liftDirLength > 1e-9 ? liftDir / liftDirLength : Vector3d.zero;
 
             if (IsFARCorrectlyInitialized && !Vessel.packed && SurfaceVelocity != Vector3d.zero)
             {
