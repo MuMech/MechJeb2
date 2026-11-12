@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -202,6 +203,7 @@ namespace MuMech
             Users.Add(this);
 
             GameEvents.onProtoVesselSave.Add(OnProtoVesselSave);
+            GameEvents.onProtoVesselSave.Add(SaveThrustLimits);
 
             base.OnStart(state);
         }
@@ -567,7 +569,26 @@ namespace MuMech
             DisableDifferentialThrottle();
             GameEvents.onProtoVesselSave.Remove(OnProtoVesselSave);
             RestoreRcsRotation();
+            GameEvents.onProtoVesselSave.Remove(SaveThrustLimits);
             base.OnDestroy();
+        }
+
+        // thrustPercentage is persistent: a save while the differential throttle holds it writes the engines' own limits instead, or a
+        // load would take the last solution for them. KSP snapshots the parts when it builds the ProtoVessel from the live vessel, then
+        // fires this with no node. The dictionary is keyed by engine, so any vessel's snapshot is patched.
+        private void SaveThrustLimits(GameEvents.FromToAction<ProtoVessel, ConfigNode> data)
+        {
+            if (_thrustLimitsBeforeDifferentialThrottle.Count == 0 || data.from == null || data.to != null)
+                return;
+
+            foreach (ProtoPartSnapshot part in data.from.protoPartSnapshots)
+            foreach (ProtoPartModuleSnapshot module in part.modules)
+            {
+                if (!(module.moduleRef is ModuleEngines engine) || module.moduleValues == null ||
+                    !_thrustLimitsBeforeDifferentialThrottle.TryGetValue(engine, out float limit))
+                    continue;
+                module.moduleValues.SetValue("thrustPercentage", limit.ToString(CultureInfo.InvariantCulture));
+            }
         }
 
         //A throttle setting that throttles down when the dynamic pressure exceed a set value
