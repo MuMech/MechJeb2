@@ -44,6 +44,12 @@ namespace MuMech
             if (Vessel != null)
             {
                 Vessel.targetObject = Target;
+
+                // KSP keeps the active vessel's target in FlightGlobals too, and the navball, the orbit targeter and kOS's TARGET read
+                // it there: targetObject alone leaves KSP's old target in place, and KSP dropping that one later clears ours with it.
+                // The override, as kOS's own SET TARGET: a focused kOS terminal holds a TARGETING input lock.
+                if (Vessel.isActiveVessel && FlightGlobals.fetch != null)
+                    FlightGlobals.fetch.SetVesselTarget(t, true);
             }
         }
 
@@ -53,7 +59,10 @@ namespace MuMech
             targetLatitude = latitude;
             targetLongitude = longitude;
 
-            Set(new PositionTarget(Coordinates.ToStringDMS(latitude, longitude, true)));
+            // placed now, not at the next FixedUpdate: until then it would sit at the world origin
+            var target = new PositionTarget(Coordinates.ToStringDMS(latitude, longitude, true));
+            target.Update(body, latitude, longitude);
+            Set(target);
         }
 
         [ValueInfoItem("#MechJeb_Targetcoordinates", InfoItem.Category.Target)] //Target coordinates
