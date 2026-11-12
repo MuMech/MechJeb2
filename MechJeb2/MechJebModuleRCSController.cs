@@ -57,8 +57,12 @@ namespace MuMech
             pid = new PIDControllerV2(Kp, Ki, 1, -1);
         }
 
+        // the RCS group as it was when the controller was engaged, given back when it disengages
+        private bool rcsGroupWasOn;
+
         protected override void OnModuleEnabled()
         {
+            rcsGroupWasOn = Vessel != null && Vessel.ActionGroups[KSPActionGroup.RCS];
             setPIDParameters();
             pid.Reset();
             lastAct = Vector3d.zero;
@@ -113,7 +117,8 @@ namespace MuMech
 
         protected override void OnModuleDisabled()
         {
-            Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+            if (!rcsGroupWasOn)
+                Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
             base.OnModuleDisabled();
         }
 
