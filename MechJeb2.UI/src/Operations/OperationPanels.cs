@@ -15,18 +15,18 @@ namespace MuMech.UI
         static readonly Dictionary<Type, Action<OpContext>> builders = new Dictionary<Type, Action<OpContext>>
         {
             { typeof(OperationApoapsis), Apoapsis },
-            { typeof(OperationCircularize), c => OpUi.TimeSelectorRows(c.W, c.Panel, OperationCircularize._timeSelector) },
+            { typeof(OperationCircularize), c => OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing) },
             { typeof(OperationCourseCorrection), CourseCorrection },
             { typeof(OperationEccentricity), Eccentricity },
             { typeof(OperationEllipticize), Ellipticize },
             { typeof(OperationInclination), Inclination },
-            { typeof(OperationKillRelVel), c => OpUi.TimeSelectorRows(c.W, c.Panel, OperationKillRelVel._timeSelector) },
+            { typeof(OperationKillRelVel), c => OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing) },
             { typeof(OperationLambert), Lambert },
             { typeof(OperationLan), Lan },
             { typeof(OperationLongitude), Longitude },
             { typeof(OperationMoonReturn), MoonReturn },
             { typeof(OperationPeriapsis), Periapsis },
-            { typeof(OperationPlane), c => OpUi.TimeSelectorRows(c.W, c.Panel, OperationPlane._timeSelector) },
+            { typeof(OperationPlane), c => OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing) },
             { typeof(OperationResonantOrbit), ResonantOrbit },
             { typeof(OperationSemiMajor), SemiMajor },
             { typeof(OperationStationaryOrbit), Stationary },
@@ -46,28 +46,28 @@ namespace MuMech.UI
         {
             var op = (OperationApoapsis)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Ap_label1", () => op.NewApA, "km"); //New apoapsis:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationApoapsis._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Periapsis(OpContext c)
         {
             var op = (OperationPeriapsis)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Pe_label", () => op.NewPeA, "km"); //New periapsis:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationPeriapsis._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void SemiMajor(OpContext c)
         {
             var op = (OperationSemiMajor)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Sa_label", () => op.NewSma, "km"); //New Semi-Major Axis:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationSemiMajor._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Eccentricity(OpContext c)
         {
             var op = (OperationEccentricity)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "New eccentricity:", () => op.NewEcc);
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationEccentricity._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Ellipticize(OpContext c)
@@ -75,21 +75,21 @@ namespace MuMech.UI
             var op = (OperationEllipticize)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_both_label1", () => op.NewPeA, "km"); //New periapsis:
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_both_label2", () => op.NewApA, "km"); //New apoapsis:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationEllipticize._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Inclination(OpContext c)
         {
             var op = (OperationInclination)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_inclination_label", () => op.NewInc, "°"); //New inclination:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationInclination._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Lambert(OpContext c)
         {
             var op = (OperationLambert)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_intercept_label", () => op.InterceptInterval, stacked: true); //Time after burn to intercept target:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationLambert._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         // the angle being edited is the target controller's, shared with the other windows
@@ -99,14 +99,14 @@ namespace MuMech.UI
 
         static void Lan(OpContext c)
         {
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationLan._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
             KodeWindow.Label(c.Panel, "#MechJeb_AN_label"); //New Longitude of Ascending Node:
             OpUi.AngleRow(c.W, c.Panel, () => TargetLongitude(c), EditableAngle.Direction.EW);
         }
 
         static void Longitude(OpContext c)
         {
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationLongitude._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
             KodeWindow.Label(c.Panel, "#MechJeb_la_label"); //New Surface Longitude after one orbit:
             OpUi.AngleRow(c.W, c.Panel, () => TargetLongitude(c), EditableAngle.Direction.EW);
         }
@@ -126,7 +126,7 @@ namespace MuMech.UI
             Layout celestial = KodeWindow.Panel(c.Panel);
             OpUi.LabeledField(c.W, celestial, "#MechJeb_approach_label1", () => op.Periapsis, "km", true); //Approximate final periapsis
             OpUi.ToggledField(c.W, celestial, "Inclination", () => op.InclinationFlag, v => op.InclinationFlag = v, () => op.Inclination, "°");
-            OpUi.TimeSelectorRows(c.W, celestial, OperationCourseCorrection._timeSelector);
+            OpUi.TimeSelectorRows(c.W, celestial, c.Op.Timing);
             c.W.Visible(celestial.gameObject, () => c.TargetIsCelestial);
 
             Layout other = KodeWindow.Panel(c.Panel);
@@ -253,7 +253,7 @@ namespace MuMech.UI
             w.Visible(plan.gameObject, () => op.PlanCaptureAvailable(c.TargetIsCelestial));
 
             w.Toggle(c.Panel, "#MechJeb_Hohm_simpleTransfer", () => op.Coplanar, v => op.Coplanar = v); //Coplanar only
-            OpUi.TimeSelectorRows(w, c.Panel, OperationGeneric._timeSelector);
+            OpUi.TimeSelectorRows(w, c.Panel, c.Op.Timing);
         }
     }
 }

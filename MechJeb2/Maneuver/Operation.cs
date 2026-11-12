@@ -143,5 +143,8 @@ namespace MuMech
         /// the new UI calls this for the selected operation instead of DoParametersGUI.
         /// </summary>
         internal virtual void ViewUpdate(Orbit o, double universalTime, MechJebModuleTargetController target) { }
+
+        /// <summary>When the burn is scheduled, for an operation that lets the user choose; null for one that computes it itself.</summary>
+        internal virtual TimeSelector? Timing => null;
     }
 }

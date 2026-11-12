@@ -197,6 +197,22 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            SyncWithVesselTarget();
+
+            //Update targets that need updating:
+            if (Target is DirectionTarget) ((DirectionTarget)Target).Update(targetDirection);
+            else if (Target is PositionTarget) ((PositionTarget)Target).Update(targetBody, targetLatitude, targetLongitude);
+
+            wasActiveVessel = Vessel.isActiveVessel;
+        }
+
+        /// <summary>
+        /// Take up the stock target (Vessel.targetObject): every physics tick, and also from kOS before it plans, since a script's
+        /// SET TARGET changes the stock target at once and this module's FixedUpdate may come after the script in the same tick.
+        /// Running it twice in a tick is harmless; wasActiveVessel is left to OnFixedUpdate so the restore below still happens there.
+        /// </summary>
+        internal void SyncWithVesselTarget()
+        {
             // drop a part target that left its vessel, and the stock target with it: KSP's own FlightGlobals.UpdateInformation throws on it too
             if (TargetPartGone)
                 Unset();
@@ -230,12 +246,6 @@ namespace MuMech
             // .23 temp fix until I understand better what's going on
             if (targetBody == null)
                 targetBody = Vessel.mainBody;
-
-            //Update targets that need updating:
-            if (Target is DirectionTarget) ((DirectionTarget)Target).Update(targetDirection);
-            else if (Target is PositionTarget) ((PositionTarget)Target).Update(targetBody, targetLatitude, targetLongitude);
-
-            wasActiveVessel = Vessel.isActiveVessel;
         }
 
         public override void OnUpdate()
