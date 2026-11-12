@@ -1344,11 +1344,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
         }
 
-        // FIXME: this is also testing a pretty extreme elliptical orbit that this rocket technically can't reach,
-        // which stresses out the discretization, so some tolerances are lower here.  Should probably use a rocket
-        // with more burntime and less snappy upper stage for insertion.
+        // This started off as a test of the Fischer-Burmeister constraint that collapses the first burn in
+        // a burn-coast-burn with zero coast--but a better initial guess turned up a more optimal
+        // solution, so it is now a test of the AscentGuesser.
         [Fact]
-        public void HighlyEllipticalCoastWithinStageDegenerate()
+        public void HighlyEllipticalCoastWithinStage()
         {
             var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
             var v0 = new V3(0, 407.862893197274, 0);
@@ -1393,14 +1393,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(3, false).ShouldEqual(1);
             solution.IndexForKSPStage(3, true).ShouldEqual(2);
 
-            solution.Vgo(0).ShouldEqual(10266.9402237592, 1e-3);
+            solution.Vgo(0).ShouldEqual(9949.1675404048201, 1e-3);
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
-            solution.Tgo(solution.T0, 1).ShouldEqual(0, 1e-2);
-            solution.Tgo(solution.T0, 2).ShouldEqual(0, 1e-2);
-            solution.Tgo(solution.T0, 3).ShouldBePositive();
+            solution.Tgo(solution.T0, 1).ShouldEqual(176.13643532153222, 1e-2);
+            solution.Tgo(solution.T0, 2).ShouldEqual(449.99999999922886, 1e-2);
+            solution.Tgo(solution.T0, 3).ShouldEqual(13.03613615732877, 1e-2);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.61100702736340085, 0.71818297961799227, 0.33299192227374319), 1e-2);
+            solution.U(0).normalized.ShouldEqual(new V3(0.38075918032302986, 0.9006976112150552, 0.20920387126252593), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);

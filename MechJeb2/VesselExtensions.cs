@@ -342,8 +342,8 @@ namespace MuMech
         // From FAR with ferram4 authorisation
         public static MechJebModuleDockingAutopilot.Box3d GetBoundingBox(this Vessel vessel, bool debug = false)
         {
-            var minBounds = new Vector3();
-            var maxBounds = new Vector3();
+            var minBounds = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+            var maxBounds = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
 
             if (debug)
             {
@@ -354,36 +354,28 @@ namespace MuMech
             {
                 Part p = vessel.parts[i];
                 PartExtensions.Vector3Pair partBox = p.GetBoundingBox();
+                bool hasMesh = partBox.P2.x <= partBox.P1.x;
 
                 if (debug)
                 {
-                    MonoBehaviour.print("[GetBoundingBox] " + p.name + " " + (partBox.P1 - partBox.P2).magnitude.ToString("F3"));
+                    MonoBehaviour.print("[GetBoundingBox] " + p.name + " " + (hasMesh ? (partBox.P1 - partBox.P2).magnitude.ToString("F3") : "no mesh"));
                 }
 
-                maxBounds.x = Mathf.Max(maxBounds.x, partBox.P1.x);
-                minBounds.x = Mathf.Min(minBounds.x, partBox.P2.x);
-                maxBounds.y = Mathf.Max(maxBounds.y, partBox.P1.y);
-                minBounds.y = Mathf.Min(minBounds.y, partBox.P2.y);
-                maxBounds.z = Mathf.Max(maxBounds.z, partBox.P1.z);
-                minBounds.z = Mathf.Min(minBounds.z, partBox.P2.z);
+                if (!hasMesh)
+                    continue;
 
-                //foreach (var sympart in p.symmetryCounterparts)
-                //{
-                //    partBox = sympart.GetBoundingBox();
-
-                //    maxBounds.x = Mathf.Max(maxBounds.x, partBox.p1.x);
-                //    minBounds.x = Mathf.Min(minBounds.x, partBox.p2.x);
-                //    maxBounds.y = Mathf.Max(maxBounds.y, partBox.p1.y);
-                //    minBounds.y = Mathf.Min(minBounds.y, partBox.p2.y);
-                //    maxBounds.z = Mathf.Max(maxBounds.z, partBox.p1.z);
-                //    minBounds.z = Mathf.Min(minBounds.z, partBox.p2.z);
-                //}
+                maxBounds = Vector3.Max(maxBounds, partBox.P1);
+                minBounds = Vector3.Min(minBounds, partBox.P2);
             }
 
             if (debug)
             {
                 MonoBehaviour.print("[GetBoundingBox] End " + vessel.vesselName);
             }
+
+            // No part has a mesh: a zero box at the vessel's origin.
+            if (minBounds.x > maxBounds.x)
+                minBounds = maxBounds = Vector3.zero;
 
             var box = new MechJebModuleDockingAutopilot.Box3d();
 

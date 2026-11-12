@@ -87,7 +87,6 @@ namespace MuMech.UI
             ControllerToggle(w, controller, "#MechJeb_AttitudeAdjust_checkbox3", 1); //KosAttitudeController
             ControllerToggle(w, controller, "#MechJeb_AttitudeAdjust_checkbox4", 2); //HybridController
             ControllerToggle(w, controller, "BetterController", 3);
-            ControllerToggle(w, controller, "LQRController", 4);
 
             // the active controller's settings, indented by 20; one panel per controller, built once, the active one shown
             Layout indent = KodeWindow.Row(controller);
@@ -170,7 +169,7 @@ namespace MuMech.UI
             w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox17", () => arrows.debugArrow2Active, v => arrows.debugArrow2Active = v); //Debug2 (light blue)
         }
 
-        static readonly string[] controllerNames = { "MJ", "kOS", "Hybrid", "Better", "LQR" };
+        static readonly string[] controllerNames = { "MJ", "kOS", "Hybrid", "Better" };
 
         // modern layout: the controller as one choice, switches, and the numbers as an X, Y, Z grid
         void BuildModern(KodeWindow w)

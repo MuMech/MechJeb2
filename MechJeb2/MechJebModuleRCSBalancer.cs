@@ -12,9 +12,27 @@ namespace MuMech
 {
     public class MechJebModuleRCSBalancer : ComputerModule
     {
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL)), ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)]
-        //Smart RCS translation
-        public bool smartTranslation;
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL), name = "smartTranslation")]
+        private bool _smartTranslation;
+
+        // Smart RCS translation. The balancer is its own user while it is on, so the setting works the same from the RCS
+        // Balancer window and from a custom window's item, with the Balancer window open or closed. The lower-case name is the
+        // item id that saved custom windows hold. A loaded value bypasses the setter: OnStart and OnLoad set the user from it.
+        [ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)] //Smart RCS translation
+        public bool smartTranslation
+        {
+            get => _smartTranslation;
+            set
+            {
+                if (value == _smartTranslation) return;
+
+                _smartTranslation = value;
+                ResetThrusterForces();
+
+                if (value) Users.Add(this);
+                else Users.Remove(this);
+            }
+        }
 
         // Overdrive
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL)), EditableInfoItem("#MechJeb_RCSBalancerOverdrive", InfoItem.Category.Thrust, rightLabel = "%")]
@@ -145,6 +163,43 @@ namespace MuMech
             ResetThrusterForces();
 
             base.OnModuleDisabled();
+        }
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            base.OnStart(state);
+
+            if (_smartTranslation)
+                Users.Add(this);
+        }
+
+        // a reload (a vessel switch, or a type file shared by vessels of one name) writes the field: the user follows it
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+
+            if (_smartTranslation)
+            {
+                Users.Add(this);
+            }
+            else if (Users.Contains(this))
+            {
+                Users.Remove(this);
+                ResetThrusterForces();
+            }
+        }
+
+        // the tuning values the solver was last given: an edit, from the RCS Balancer window or a custom window's item, reaches
+        // it on the next tick
+        private double _solverOverdrive, _solverOverdriveScale, _solverFactorTorque, _solverFactorTranslate, _solverFactorWaste;
+
+        public override void OnFixedUpdate()
+        {
+            base.OnFixedUpdate();
+
+            if (overdrive != _solverOverdrive || overdriveScale != _solverOverdriveScale || tuningParamFactorTorque != _solverFactorTorque ||
+                tuningParamFactorTranslate != _solverFactorTranslate || tuningParamFactorWaste != _solverFactorWaste)
+                UpdateTuningParameters();
         }
 
         public override void OnDestroy()
@@ -413,6 +468,12 @@ namespace MuMech
 
         public void UpdateTuningParameters()
         {
+            _solverOverdrive       = overdrive;
+            _solverOverdriveScale  = overdriveScale;
+            _solverFactorTorque    = tuningParamFactorTorque;
+            _solverFactorTranslate = tuningParamFactorTranslate;
+            _solverFactorWaste     = tuningParamFactorWaste;
+
             double wasteThreshold = overdrive * overdriveScale;
             var tuningParams = new RCSSolverTuningParams(wasteThreshold, tuningParamFactorTorque, tuningParamFactorTranslate,
                 tuningParamFactorWaste);
@@ -421,18 +482,10 @@ namespace MuMech
 
         public double GetCalculationTime() => solverThread.CalculationTime;
 
+        // the balancer only runs while smart translation is on: that setting is its one user
         public override void Drive(FlightCtrlState s)
         {
-            if (smartTranslation)
-            {
-                AdjustRCSThrottles(s);
-            }
-            else
-            {
-                // The info item can turn smart translation off without disabling us.
-                ResetThrusterForces();
-            }
-
+            AdjustRCSThrottles(s);
             base.Drive(s);
         }
     }

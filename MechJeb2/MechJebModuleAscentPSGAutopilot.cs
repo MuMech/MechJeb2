@@ -63,7 +63,7 @@ namespace MuMech
                 _limitsSaved                 = false;
             }
 
-            AscentSettings.LaunchingToPlane = AscentSettings.LaunchingToMatchLan = AscentSettings.LaunchingToLan = false;
+            Countdown.Abort();
 
             Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
 
