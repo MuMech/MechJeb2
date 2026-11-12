@@ -405,6 +405,13 @@ namespace MuMech
                 }
             }
 
+            // Brake on Energy Depletion stops the rover to charge, with breakable panels out in an atmosphere or the charge nearly gone:
+            // the speed control below drives to 0 then
+            double energyLeft = BrakeOnEnergyDepletion ? EnergyLeft() : double.NaN;
+            // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
+            bool openSolars = BrakeOnEnergyDepletion && Vessel.mainBody.atmosphere && AnySolarPanel(true);
+            bool stopToCharge = openSolars || energyLeft < 0.03;
+
             // Brake if there is no controler (Pilot eject from seat)
             if (BrakeOnEject && Vessel.GetReferenceTransformPart() == null)
             {
@@ -413,7 +420,7 @@ namespace MuMech
             }
             else if (ControlSpeed)
             {
-                double target = WaypointIndex == -1 ? speed.Val : tgtSpeed;
+                double target = stopToCharge ? 0 : WaypointIndex == -1 ? speed.Val : tgtSpeed;
                 // Heading control slows for a turn as waypoints do: above the turn speed the steering is cut back, and on low gravity the
                 // wheels bounce and stop steering, so a rover on the Mun kept its speed and hardly turned (#1824)
                 if (WaypointIndex == -1 && ControlHeading && target > turnSpeed)
@@ -461,10 +468,6 @@ namespace MuMech
 
             if (BrakeOnEnergyDepletion)
             {
-                double energyLeft = EnergyLeft();
-                // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
-                bool openSolars = Vessel.mainBody.atmosphere && AnySolarPanel(true);
-
                 if (openSolars && energyLeft > 0.99)
                 {
                     foreach (ModuleDeployableSolarPanel panel in Vessel.GetModules<ModuleDeployableSolarPanel>())
@@ -478,8 +481,6 @@ namespace MuMech
                 {
                     s.wheelThrottle = 0;
                 } // save remaining energy by not using it for acceleration
-
-                if (openSolars || energyLeft < 0.03) { tgtSpeed = 0; }
 
                 if (curSpeed < brakeSpeedLimit && (energyLeft < 0.05 || openSolars))
                 {
