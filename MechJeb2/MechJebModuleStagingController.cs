@@ -458,9 +458,13 @@ namespace MuMech
             return false;
         }
 
+        // An empty stage list (a failed stats run) is unknown, not zero: infinity, which keeps hot staging waiting.
         private double LastNonZeroDVStageBurnTime()
         {
             _stats.RequestUpdate();
+            if (_vacStats.Count == 0)
+                return double.PositiveInfinity;
+
             int kspStage = -1;
             int mjPhase;
             double dt = 0f;
