@@ -19,7 +19,6 @@ namespace MuMech
 
         private double warpIncreaseAttemptTime;
 
-        private int lastAskedIndex;
         private float _lastPausedMessageTime = float.NegativeInfinity;
 
         public double warpToUT   { get; private set; }
@@ -58,14 +57,9 @@ namespace MuMech
             _sasBeforeWarp = null;
         }
 
-        internal void ResumeWarp()
-        {
-            if (!WarpPaused)
-                return;
-
-            WarpPaused = false;
-            SetTimeWarpRate(lastAskedIndex, false);
-        }
+        // The autopilots that warp ask again every tick, and raise the warp from there: no rate is restored here, since the one
+        // asked before the pause may belong to a warp that has ended since.
+        internal void ResumeWarp() => WarpPaused = false;
 
         // Turn SAS on during regular warp for compatibility with PersistentRotation
         private void SetTimeWarpRate(int rateIndex, bool instant)
@@ -74,7 +68,6 @@ namespace MuMech
 
             if (rateIndex != TimeWarp.CurrentRateIndex)
             {
-                lastAskedIndex = rateIndex;
                 // Pausing stops MJ from raising the warp. Slowing down is always allowed, so autopilots that need to
                 // stop warping (node executor, landing) still work.
                 if (WarpPaused && rateIndex >= TimeWarp.CurrentRateIndex)
