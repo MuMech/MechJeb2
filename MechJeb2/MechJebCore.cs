@@ -558,6 +558,10 @@ namespace MuMech
 
                 OnLoad(null); // Force Global reload
 
+                // after the reload, which would put the saved values back over them, and saved at once so it happens once
+                if (AscentSettings.ApplyRODefaultsIfNeeded())
+                    OnSave(null);
+
                 _wasMasterAndFocus = true;
                 _lastFocus = vessel;
             }
