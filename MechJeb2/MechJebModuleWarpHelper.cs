@@ -65,11 +65,12 @@ namespace MuMech
                 case WarpTarget.PhaseAngleT:
                     if (Core.Target.NormalTargetExists)
                     {
-                        Orbit reference;
+                        Orbit reference = null;
                         if (Core.Target.TargetOrbit.referenceBody == Orbit.referenceBody)
                             reference = Orbit; // we orbit arround the same body
-                        else
-                            reference = Orbit.referenceBody.orbit; // null when we orbit the Sun and the target does not
+                        else if (Core.Target.TargetOrbit.referenceBody == Orbit.referenceBody.referenceBody)
+                            reference = Orbit.referenceBody.orbit; // the target orbits our body's parent; null when we orbit the Sun
+                        // any other target (one around a moon of our body, say) has no phase angle with us
                         if (reference == null)
                         {
                             valid = false;
