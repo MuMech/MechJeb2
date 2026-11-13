@@ -1119,6 +1119,26 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertMainsailBurn(segments[0], 0, 43.7, ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude);
         }
 
+        // in flight, an engine of the current stage that KSP has fired and that is not ignited now was shut down: it stays off,
+        // and the stage burns on the other engine alone.  an engine of that stage which is merely not operational (flamed out
+        // with its tank dry, say) is lit again and burns as soon as it can draw its propellants.
+        [Theory]
+        [InlineData(true, 1)]
+        [InlineData(false, 2)]
+        public void ShutDownEngineOfTheCurrentStageStaysOff(bool shutDown, int engines)
+        {
+            SimVessel v = SimVesselFixtures.CantedMainsailPair(0);
+            var engine2 = (SimModuleEngines)v.Parts.Find(p => p.PersistentId == 4).Modules[0];
+            engine2.IsOperational = false;
+            engine2.IsShutdown    = shutDown;
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertMainsailBurn(segments[0], 0, 0.5 + 4 + ROCKOMAX64_PROPELLANT + 2 * MAINSAIL_MASS, ROCKOMAX64_PROPELLANT,
+                MAINSAIL_VACUUM_ISP, 1, engines: engines);
+        }
+
         private static SimModuleEngines FirstEngine(SimVessel v) => (SimModuleEngines)v.Parts.Find(p => p.IsEngine).Modules[0];
 
         // the mass of the resources in the part

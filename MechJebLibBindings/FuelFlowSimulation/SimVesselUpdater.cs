@@ -173,6 +173,10 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.CurrentThrottle = kspEngine.currentThrottle;
                 engine.EngineIgnited = kspEngine.EngineIgnited;
                 engine.Flameout = kspEngine.flameout;
+                // in flight KSP has already fired the current stage: an engine of it that is not ignited was shut down
+                // (or never lit, with its staging turned off), and stays off
+                engine.IsShutdown = !HighLogic.LoadedSceneIsEditor && part.InverseStage >= _vessel.CurrentStage &&
+                                    !engine.EngineIgnited;
                 engine.NoPropellants = engine.Flameout && kspEngine.statusL2 == "No propellants";
                 engine.ModuleResiduals = 0;
                 engine.Ignited = false;
