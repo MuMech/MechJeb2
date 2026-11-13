@@ -344,7 +344,27 @@ namespace MuMech
             _controlledModule.Enabled = false;
         }
 
-        public bool RecursiveUser(object user) => RecursiveUser(user, new HashSet<UserPool>());
+        // reused by every call: the menu asks every frame, for each of its entries
+        [ThreadStatic]
+        private static HashSet<UserPool> _visited;
+
+        public bool RecursiveUser(object user)
+        {
+            if (Contains(user))
+                return true;
+
+            _visited ??= new HashSet<UserPool>();
+            _visited.Clear();
+            try
+            {
+                return RecursiveUser(user, _visited);
+            }
+            finally
+            {
+                // the pools hold their modules: don't keep them past the call
+                _visited.Clear();
+            }
+        }
 
         // visited stops the recursion if two modules use each other
         private bool RecursiveUser(object user, HashSet<UserPool> visited)
