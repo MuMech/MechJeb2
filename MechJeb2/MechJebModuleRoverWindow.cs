@@ -76,22 +76,6 @@ namespace MuMech
             }
         }
 
-        public override void OnUpdate()
-        {
-            if (autopilot != null)
-            {
-                if (autopilot.ControlHeading || autopilot.ControlSpeed || autopilot.StabilityControl || autopilot.BrakeOnEnergyDepletion ||
-                    autopilot.BrakeOnEject)
-                {
-                    autopilot.Users.Add(this);
-                }
-                else
-                {
-                    autopilot.Users.Remove(this);
-                }
-            }
-        }
-
         protected override void OnModuleDisabled()
         {
             Core.GetComputerModule<MechJebModuleWaypointWindow>().Enabled = false;
