@@ -78,11 +78,17 @@ namespace KodeKit
             Color dotColor = Color.white;
             Image dot = dots != null ? Dot(Button, () => dotColor) : null;
 
+            // a locked selector is dimmed: the field look has no disabled state of its own
+            CanvasGroup dim = Button.gameObject.AddComponent<CanvasGroup>();
             string shown = null;
             w.AddSync(() =>
             {
                 bool on = IsEnabled;
-                if (Button.interactable != on) Button.interactable = on;
+                if (Button.interactable != on)
+                {
+                    Button.interactable = on;
+                    dim.alpha = on ? 1 : LockedAlpha;
+                }
                 if (!on && IsOpen) Close();
 
                 string[] e = this.entries();
@@ -143,11 +149,16 @@ namespace KodeKit
                 int n = this.entries().Length;
                 if (n > 0) this.set((Mathf.Clamp(this.get(), 0, n - 1) + 1) % n);
             });
+            CanvasGroup dimArrows = arrows.gameObject.AddComponent<CanvasGroup>();
             bool useArrows = !UseArrowSelector();
             w.AddSync(() =>
             {
                 bool on = IsEnabled;
-                if (previous.interactable != on) previous.interactable = next.interactable = on;
+                if (previous.interactable != on)
+                {
+                    previous.interactable = next.interactable = on;
+                    dimArrows.alpha = on ? 1 : LockedAlpha;
+                }
 
                 bool a = UseArrowSelector();
                 if (a == useArrows) return;
@@ -170,6 +181,9 @@ namespace KodeKit
         public Func<bool> Enabled;
 
         bool IsEnabled => Enabled == null || Enabled();
+
+        /// <summary>The opacity of a control that is shown but locked.</summary>
+        public const float LockedAlpha = 0.45f;
 
         /// <summary>When set and true, combos show as [&lt;] entry [&gt;] arrow selectors instead (checked every frame).</summary>
         public static Func<bool> UseArrowSelector;

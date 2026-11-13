@@ -2,6 +2,7 @@ using KodeKit;
 using KodeUI;
 using KSP.Localization;
 using TMPro;
+using UnityEngine;
 
 namespace MuMech.UI
 {
@@ -41,12 +42,17 @@ namespace MuMech.UI
             return warpingText;
         }
 
-        void LockWhileWarping(KodeWindow w, TMP_InputField field) =>
+        void LockWhileWarping(KodeWindow w, TMP_InputField field)
+        {
+            CanvasGroup dim = field.gameObject.AddComponent<CanvasGroup>();
             w.AddSync(() =>
             {
                 bool on = !helper.warping;
-                if (field.interactable != on) field.interactable = on;
+                if (field.interactable == on) return;
+                field.interactable = on;
+                dim.alpha = on ? 1 : ComboBox.LockedAlpha;
             });
+        }
 
         protected override void BuildContents(KodeWindow w)
         {
