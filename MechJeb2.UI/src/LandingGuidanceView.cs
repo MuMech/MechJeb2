@@ -201,6 +201,10 @@ namespace MuMech.UI
                 Core.Target.SetPositionTarget(Body, Core.Target.targetLatitude, Core.Target.targetLongitude), flexible);
             w.Visible(enter.gameObject, () => !HasPositionTarget);
             KodeWindow.Button(r, "#MechJeb_LandingGuidance_button2", () => Core.Target.PickPositionTargetOnMap(), flexible); //Pick target on map
+            // Clear target, except while the landing autopilot flies to it
+            UIButton clear = KodeWindow.Button(r, "#MechJeb_LandingGuidance_buttonClear", () => Core.Target.Unset(), flexible); //Clear target
+            w.Visible(clear.gameObject, () => HasPositionTarget);
+            GuidanceUi.Enable(w, clear, () => Core.Landing == null || !Core.Landing.Enabled);
         }
 
         /// <summary>The landing sites list and its "Set" button (shown when there are sites).</summary>
