@@ -180,12 +180,20 @@ namespace MuMech
 
         private ScreenMessage _preventingUnstableIgnitionsMessage;
 
+        private MechJebModuleHoverslamAutopilot _hoverslamAutopilot;
+
+        // The landing autopilot and the hoverslam brake towards the ground, where the dynamic pressure limit, a setting for the ascent,
+        // would cut the thrust they need to stop.
+        private bool BrakingToLand =>
+            (Core.Landing != null && Core.Landing.Enabled) || (_hoverslamAutopilot != null && _hoverslamAutopilot.Enabled);
+
         public override void OnStart(PartModule.StartState state)
         {
             _preventingUnstableIgnitionsMessage =
                 new ScreenMessage(Localizer.Format("#MechJeb_Ascent_srcmsg1"), 2f,
                     ScreenMessageStyle.UPPER_CENTER); //"<color=orange>[MechJeb]: Killing throttle to prevent unstable ignition</color>"
             _pid = new PIDController(0.05, 0.000001, 0.05);
+            _hoverslamAutopilot = Core.GetComputerModule<MechJebModuleHoverslamAutopilot>();
             // Permanent self-pin: keep this module always Enabled so its throttle limiters and
             // auto-RCS-ullaging run every tick as an always-on safety service, even when no autopilot
             // is driving the throttle (e.g. the player is flying manually). Active throttle control is
@@ -395,7 +403,7 @@ namespace MuMech
                 }
             }
 
-            if (LimitDynamicPressure)
+            if (LimitDynamicPressure && !BrakingToLand)
             {
                 float limit = MaximumDynamicPressureThrottle();
                 if (limit < ThrottleLimit)
