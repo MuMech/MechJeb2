@@ -244,6 +244,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             ModuleSpoolupTime = 0;
             AutoCutoff = false;
             NoPropellants = false;
+            IsShutdown = false;
             IsModuleEnginesRf = false;
             IsUnrestartableDeadEngine = false;
             Ullage = false;
