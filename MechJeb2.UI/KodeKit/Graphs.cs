@@ -74,7 +74,6 @@ namespace KodeKit
         public readonly RectTransform Plot;
         public readonly List<LineSeriesGraphic> Series = new List<LineSeriesGraphic>();
         public readonly LineSeriesGraphic Stages;
-        readonly List<UIText> yLabels = new List<UIText>();
         readonly CharText[] yChars;
         readonly RectTransform[] yCells;
         readonly RectTransform yColumn;
@@ -126,7 +125,6 @@ namespace KodeKit
                 cell.pivot = new Vector2(1, 0.5f);
                 cell.sizeDelta = new Vector2(66, LabelHeight);
                 t.tmpText.alignment = TextAlignmentOptions.Right;
-                yLabels.Add(t);
                 yChars[i] = new CharText(t.tmpText);
                 yCells[i] = cell;
             }
@@ -173,46 +171,76 @@ namespace KodeKit
             Labels(yMin, yMax);
         }
 
-        static readonly int[] stepMultiples = { 1, 2, 5, 10, 20, 50 };
+        static readonly int[] stepMultiples = { 1, 2, 5 };
         double labelledMin = double.NaN, labelledMax = double.NaN;
+        float labelledHeight = -1;
 
-        // A label at each whole multiple of the step in the range, where the step is the smallest 1, 2 or 5 × 10^n
-        // that gives no more labels than there are cells. The cells left over are hidden.
+        // A label at each whole multiple of the step in the range. The cells left over are hidden. A range with no
+        // extent, or one that is not a number, has one label: its lower limit.
         void Labels(double yMin, double yMax)
         {
-            if (yMin.Equals(labelledMin) && yMax.Equals(labelledMax)) return;
+            float height = yColumn.rect.height > 0 ? yColumn.rect.height : builtHeight;
+            if (yMin.Equals(labelledMin) && yMax.Equals(labelledMax) && height == labelledHeight) return;
             labelledMin = yMin;
             labelledMax = yMax;
+            labelledHeight = height;
 
-            double range = yMax - yMin, step = 0, first = 0;
-            int count = 0;
-            if (range > 0 && !double.IsInfinity(range))
-            {
-                double magnitude = Math.Pow(10, Math.Floor(Math.Log10(range / yChars.Length)));
-                foreach (int multiple in stepMultiples)
-                {
-                    step = magnitude * multiple;
-                    // the tolerance keeps a limit that is a multiple of the step, short of it by a rounding error
-                    first = Math.Ceiling(yMin / step - 1e-6);
-                    double ticks = Math.Floor(yMax / step + 1e-6) - first + 1;
-                    count = ticks <= yChars.Length ? (int)Math.Max(ticks, 0) : 0;
-                    if (ticks <= yChars.Length) break;
-                }
-            }
+            double range = yMax - yMin;
+            bool ticked = Ticks(yMin, yMax, yChars.Length, out double step, out double first, out int count, out int sigFigs);
+            if (!ticked) count = Math.Min(1, yChars.Length);
 
-            float height = yColumn.rect.height > 0 ? yColumn.rect.height : builtHeight;
             for (int i = 0; i < yChars.Length; i++)
             {
                 GameObject cell = yCells[i].gameObject;
                 if (cell.activeSelf != i < count) cell.SetActive(i < count);
                 if (i >= count) continue;
 
-                double v = (first + i) * step;
+                double v = ticked ? (first + i) * step : yMin;
                 // centred on its tick, an end label would stick out over the rows around the plot
-                float y = Mathf.Clamp((float)((v - yMin) / range) * height, LabelHeight / 2, height - LabelHeight / 2);
-                yCells[i].anchoredPosition = new Vector2(-4, y);
-                yChars[i].Clear().AppendSI(v, 3).Commit();
+                float y = ticked ? (float)((v - yMin) / range) * height : 0;
+                yCells[i].anchoredPosition = new Vector2(-4, Mathf.Clamp(y, LabelHeight / 2, height - LabelHeight / 2));
+                yChars[i].Clear().AppendSI(v, sigFigs).Commit();
             }
+        }
+
+        /// <summary>
+        /// The round values of a range: count of them, from first × step up, one step apart. The step is the smallest
+        /// 1, 2 or 5 × 10^n that gives no more than cells values. sigFigs is how many significant figures tell two
+        /// neighbours apart, 3 at least. False, with no value, when the range has no extent or
+        /// is not a number.
+        /// </summary>
+        internal static bool Ticks(double yMin, double yMax, int cells, out double step, out double first, out int count, out int sigFigs)
+        {
+            step = first = 0;
+            count = 0;
+            sigFigs = 3;
+            double range = yMax - yMin;
+            if (cells < 1 || !(range > 0) || double.IsInfinity(range)) return false;
+
+            double ticks = 0;
+            int exponent = (int)Math.Floor(Math.Log10(range / cells));
+            for (bool found = false;; exponent++)
+            {
+                double magnitude = Math.Pow(10, exponent);
+                foreach (int multiple in stepMultiples)
+                {
+                    step = magnitude * multiple;
+                    // the tolerance keeps a limit that is a multiple of the step, short of it by a rounding error:
+                    // that error grows with how far the range is from zero, in steps
+                    double tolerance = Math.Max(1e-6, 1e-12 * Math.Max(Math.Abs(yMin), Math.Abs(yMax)) / step);
+                    first = Math.Ceiling(yMin / step - tolerance);
+                    ticks = Math.Floor(yMax / step + tolerance) - first + 1;
+                    found = ticks <= cells;
+                    if (found) break;
+                }
+                if (found) break;
+            }
+
+            count = (int)Math.Max(ticks, 0);
+            // the figures that reach from the largest value's first one down to the step's
+            double largest = Math.Max(Math.Abs(first), Math.Abs(first + count - 1)) * step;
+            if (largest > 0) sigFigs = Mathf.Clamp((int)Math.Floor(Math.Log10(largest) + 1e-9) - exponent + 1, 3, 15);
+            return true;
         }
 
         void Apply(LineSeriesGraphic s, double yMin, double yMax)
