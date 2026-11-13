@@ -180,6 +180,18 @@ namespace MuMech
             errorStopwatch.Reset();
 
             ClearResults();
+            RemoveAerobrakeNode();
+        }
+
+        // The aerobrake node shows what the atmosphere will do, not a burn, but it is a real maneuver node, and the node executor burns
+        // the first node there is: it goes when the predictions stop and when the node executor starts, and none is made while the
+        // executor runs.
+        public void RemoveAerobrakeNode()
+        {
+            if (aerobrakeNode != null && Vessel != null && Vessel.patchedConicSolver != null &&
+                Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
+                aerobrakeNode.RemoveSelf();
+            aerobrakeNode = null;
         }
 
         // a result from before the predictor was disabled says nothing about the vessel when it is enabled again
@@ -464,7 +476,7 @@ namespace MuMech
 
         protected void MaintainAerobrakeNode()
         {
-            if (makeAerobrakeNodes)
+            if (makeAerobrakeNodes && !Core.Node.Enabled)
             {
                 //Remove node after finishing aerobraking:
                 if (aerobrakeNode != null && Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
@@ -523,7 +535,7 @@ namespace MuMech
             }
             else
             {
-                //Remove aerobrake node when it is turned off:
+                //Remove aerobrake node when it is turned off or the node executor runs:
                 if (aerobrakeNode != null && Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                 {
                     aerobrakeNode.RemoveSelf();
