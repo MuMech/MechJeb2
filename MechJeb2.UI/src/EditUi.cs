@@ -6,7 +6,7 @@ using TMPro;
 namespace MuMech.UI
 {
     /// <summary>
-    /// Text fields on MechJeb's editables (GuiUtils.SimpleTextField and the rows around it). Here rather than in KodeKit
+    /// Text fields on MechJeb's editables, and the rows around them. Here rather than in KodeKit
     /// because IEditable is a MechJeb type. A field's text turns red while it does not parse (EditableDoubleMult only:
     /// the other editables have no such state).
     /// </summary>
@@ -35,7 +35,7 @@ namespace MuMech.UI
                 edited?.Invoke();
             }, width, () => !(ed() is EditableDoubleMult m) || m.IsParsed);
 
-        /// <summary>GuiUtils.SimpleTextBox: label [field] unit. <paramref name="stacked"/> puts a long label on its own line.</summary>
+        /// <summary>label [field] unit. <paramref name="stacked"/> puts a long label on its own line.</summary>
         public static Layout Row<T>(KodeWindow w, UIObject parent, string label, Func<T> ed, string unit = null, float width = 100, bool stacked = false,
             Action edited = null) where T : class, IEditable
         {

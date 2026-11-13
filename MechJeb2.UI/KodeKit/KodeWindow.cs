@@ -962,7 +962,7 @@ namespace KodeKit
             return toggle;
         }
 
-        /// <summary>GuiUtils.ArrowSelector: [&lt;] label [&gt;]</summary>
+        /// <summary>[&lt;] label [&gt;]: steps through <paramref name="count"/> entries, wrapping around.</summary>
         public void ArrowSelector(UIObject parent, Func<int> get, Action<int> set, int count, Func<string> label) =>
             ArrowSelector(parent, get, set, () => count, label);
 

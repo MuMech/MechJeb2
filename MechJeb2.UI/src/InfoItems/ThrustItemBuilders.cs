@@ -11,7 +11,7 @@ namespace MuMech.UI
     /// </summary>
     public static partial class GeneralItemBuilders
     {
-        // GuiUtils.ToggledTextBox with a toggle label coloured by the limiter state
+        // [x] label [field] unit, with a toggle label coloured by the limiter state
         static void ToggledField(KodeWindow w, UIObject parent, string key, Func<bool> get, Action<bool> set, EditableDoubleMult ed, string unit, float width,
             Func<KodeWindow.Tone> tone, string tooltipKey = null)
         {

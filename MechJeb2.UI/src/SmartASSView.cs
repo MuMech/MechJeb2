@@ -9,7 +9,7 @@ using static MuMech.MechJebModuleSmartASS;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleSmartASSWindow in KodeKit, row for row with its WindowGUI. MechJebModuleSmartASS keeps the state and the Engage logic;
+    /// MechJebModuleSmartASSWindow in KodeKit. MechJebModuleSmartASS keeps the state and the Engage logic;
     /// the "other autopilot is using the attitude controller" check and the per-frame side effects are shared methods on the module.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleSmartASSWindow))]

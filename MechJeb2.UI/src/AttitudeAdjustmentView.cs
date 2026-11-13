@@ -7,7 +7,7 @@ using UnityEngine;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleAttitudeAdjustment in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleAttitudeAdjustment in KodeKit.
     /// The active controller's own settings are built natively (AttitudeControllerPanels), one panel per controller.
     /// The window is grouped in collapsible sections (new UI only): Controller, Numbers, Debug arrows.
     /// </summary>

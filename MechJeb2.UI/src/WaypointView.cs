@@ -12,7 +12,7 @@ namespace MuMech.UI
     /// <summary>
     /// MechJebModuleWaypointWindow ("Waypoints") in KodeKit: three pages (waypoints, settings, routes) built once, shown by the
     /// module's page. The module keeps the state and the actions (both UIs call them); the lists are pooled rows in a ScrollView.
-    /// The red map marker of the selected waypoint is a GL draw, so it still goes through an ImguiBlock (it needs an OnGUI repaint).
+    /// The module draws the red map marker of the selected waypoint itself, through MechJebCore's post-draw queue.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleWaypointWindow))]
     public class WaypointView : KodeView
@@ -161,12 +161,6 @@ namespace MuMech.UI
             RoverUi.DynButton(w, buttons, () => Alt ? "Bottom" : "Down", () => m.MoveDown(Alt), 57);
             KodeWindow.Button(buttons, "Routes", m.ShowRoutesPage, true);
             KodeWindow.Button(buttons, "Settings", m.ShowSettingsPage, true);
-
-            // the map marker of the selected waypoint is drawn by GL in OnGUI: no GUILayout, no room
-            ImguiBlock.DrawOnly(page, () =>
-            {
-                if (Event.current.type == EventType.Repaint) m.DrawSelectedMarker();
-            });
         }
 
         /// <summary>Runs an action on the selected waypoint, if there is one.</summary>

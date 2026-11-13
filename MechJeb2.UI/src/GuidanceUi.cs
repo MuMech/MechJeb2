@@ -67,7 +67,7 @@ namespace MuMech.UI
             return main;
         }
 
-        /// <summary>A wrapping text in the theme's warning colour (GuiUtils.YellowLabel).</summary>
+        /// <summary>A wrapping text in the theme's warning colour.</summary>
         public static UIText Warning(KodeWindow w, UIObject parent, string textOrKey)
         {
             UIText t = Wrapped(parent, textOrKey);
@@ -95,12 +95,12 @@ namespace MuMech.UI
             return t;
         }
 
-        /// <summary>GuiUtils.SimpleLabel: a label on the left, a live value on the right.</summary>
+        /// <summary>A label on the left, a live value on the right.</summary>
         public static UIText Pair(KodeWindow w, UIObject parent, string key, string template, Action<CharText> fill, Func<bool> active = null)
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, key, true);
-            // GuiUtils.SimpleLabel: the value flush right (the cell is as wide as the template, often wider than the value)
+            // the value flush right (the cell is as wide as the template, often wider than the value)
             UIText value = Live(w, row, template, false, fill, active);
             value.tmpText.alignment = TextAlignmentOptions.Right;
             return value;

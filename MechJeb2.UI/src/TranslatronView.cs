@@ -7,7 +7,7 @@ using static MechJebLib.Utils.Statics;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleTranslatron ("Translatron") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleTranslatron ("Translatron") in KodeKit.
     /// While an other module drives the throttle controller the window only shows the red "auto" button.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleTranslatronWindow))]

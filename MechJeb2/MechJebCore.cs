@@ -466,6 +466,7 @@ namespace MuMech
             GameEvents.onVesselWasModified.Add(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Add(OnVesselStandardModification);
             GameEvents.onGameSceneLoadRequested.Add(OnGameSceneLoadRequested);
+            Camera.onPostRender += OnCameraPostRender;
 
             _lastSettingsSaveTime = Time.time;
 
@@ -644,6 +645,14 @@ namespace MuMech
             bool isMaster = this == vessel.GetMasterMechJeb();
             if (HighLogic.LoadedSceneIsEditor && !isMaster)
                 _wasNotMasterInEditor = true;
+
+            // the windows' click-through lock, while this core's windows are shown; released as soon as they aren't
+            bool windowsShown = ShowGui && isMaster && _ready &&
+                (HighLogic.LoadedSceneIsEditor || (FlightGlobals.ready && vessel == FlightGlobals.ActiveVessel && part.State != PartStates.DEAD));
+            if (windowsShown)
+                PreventClickthrough();
+            else if (_weLockedInputs)
+                UnlockControl();
 
             if (!isMaster || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
             {
@@ -825,13 +834,6 @@ namespace MuMech
 
         public override void OnLoad(ConfigNode sfsNode)
         {
-            if (GuiUtils.Skin == null)
-            {
-                //GuiUtils.skin = new GUISkin();
-                // ReSharper disable once ObjectCreationAsStatement
-                new GameObject("zombieGUILoader", typeof(ZombieGUILoader));
-            }
-
             try
             {
                 bool generateDefaultWindows = false;
@@ -1157,6 +1159,7 @@ namespace MuMech
             GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
             GameEvents.onGameSceneLoadRequested.Remove(OnGameSceneLoadRequested);
+            Camera.onPostRender -= OnCameraPostRender;
         }
 
         // The last save of a scene. KSP sets the next scene's flags before it destroys this one, so the save in OnDestroy does
@@ -1279,70 +1282,38 @@ namespace MuMech
             if (_weLockedInputs) UnlockControl();
         }
 
-        private void OnGUI()
+        /// <summary>
+        /// A GL drawing (map markers, trajectories, the docking boxes) run once per frame, after the camera the player sees
+        /// renders: the planetarium camera in the map view, the near flight camera otherwise. It draws over the scene and
+        /// under the UI.
+        /// </summary>
+        internal void AddToPostDrawQueue(Callback c) => _postDrawQueue.Add(c);
+
+        private void OnCameraPostRender(Camera cam)
         {
-            if (!ShowGui || this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
-            {
-                // we no longer draw, so nothing can release the lock for us
-                if (_weLockedInputs) UnlockControl();
+            if (_postDrawQueue.Count == 0 || !HighLogic.LoadedSceneIsFlight) return;
+            Camera shown = MapView.MapIsEnabled ? PlanetariumCamera.Camera : FlightCamera.fetch != null ? FlightCamera.fetch.mainCamera : null;
+            if (cam != shown) return;
+            // the windows' conditions (see Update): F2 hides the drawings with the windows
+            if (!ShowGui || !_ready || !FlightGlobals.ready || vessel != FlightGlobals.ActiveVessel || part.State == PartStates.DEAD ||
+                this != vessel.GetMasterMechJeb())
                 return;
-            }
 
-            Profiler.BeginSample("MechJebCore.OnGUI");
-
-            if (HighLogic.LoadedSceneIsEditor || (FlightGlobals.ready && vessel == FlightGlobals.ActiveVessel && part.State != PartStates.DEAD))
+            Profiler.BeginSample("MechJebCore.OnCameraPostRender");
+            for (int i = 0; i < _postDrawQueue.Count; i++)
             {
-                Matrix4x4 previousGuiMatrix = GUI.matrix;
-                GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(GuiUtils.Scale, GuiUtils.Scale, 1));
-
-                GuiUtils.ComboBox.DrawGUI();
-
-                GuiUtils.LoadSkin((GuiUtils.SkinType)Settings.SkinId);
-
-                GUI.skin = GuiUtils.Skin;
-
-                foreach (ComputerModule computerModule in GetComputerModules<DisplayModule>())
+                try
                 {
-                    var module = (DisplayModule)computerModule;
-                    Profiler.BeginSample(module.ProfilerName);
-                    try
-                    {
-                        if (module.Enabled && !MechJebUiHost.Owns(module)) module.DrawGUI(HighLogic.LoadedSceneIsEditor);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in DrawGUI: " + e);
-                    }
-
-                    Profiler.EndSample();
+                    _postDrawQueue[i]();
                 }
-
-                PreventClickthrough();
-                GUI.matrix = previousGuiMatrix;
-
-                // GL lines show only on Repaint; OnGUI also runs for Layout and every input event. The map callbacks read the
-                // mouse with Input, which holds for the whole frame, so they need no other event.
-                for (int i = 0; Event.current.type == EventType.Repaint && i < _postDrawQueue.Count; i++)
+                catch (Exception e)
                 {
-                    try
-                    {
-                        _postDrawQueue[i]();
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogException(e);
-                    }
+                    Debug.LogException(e);
                 }
-            }
-            else if (_weLockedInputs)
-            {
-                UnlockControl();
             }
 
             Profiler.EndSample();
         }
-
-        internal void AddToPostDrawQueue(Callback c) => _postDrawQueue.Add(c);
 
         // VAB/SPH description
         public override string GetInfo() => Localizer.Format("#MechJeb_MechJebInfo_VABSPH"); //"Attitude control by MechJeb™"

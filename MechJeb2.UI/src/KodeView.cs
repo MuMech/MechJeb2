@@ -35,7 +35,7 @@ namespace MuMech.UI
         /// <summary>Add the window's contents (called once).</summary>
         protected abstract void BuildContents(KodeWindow w);
 
-        /// <summary>Per-frame model work the IMGUI WindowGUI did before drawing (runs before the bindings).</summary>
+        /// <summary>Per-frame model work of the module (runs before the bindings).</summary>
         protected virtual void BeforeSync() { }
 
         /// <summary>The last Build's cost in ms: creating the window's contents, and the canvas update that lays it out (for tests).</summary>

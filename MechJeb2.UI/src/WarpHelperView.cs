@@ -7,7 +7,7 @@ using UnityEngine;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleWarpHelper ("Warp Helper") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleWarpHelper ("Warp Helper") in KodeKit.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleWarpHelperWindow))]
     public class WarpHelperView : KodeView

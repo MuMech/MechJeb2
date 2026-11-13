@@ -6,8 +6,9 @@ using Tone = KodeKit.KodeWindow.Tone;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleAscentSettingsMenu ("Ascent Settings") in KodeKit, row for row with its WindowGUI.
-    /// The thrust limiter rows are the ones of the Utilities window; the autostage settings still use their IMGUI method through ImguiBlock.
+    /// MechJebModuleAscentSettingsMenu ("Ascent Settings") in KodeKit.
+    /// The thrust limiter rows are the ones of the Utilities window; the autostage settings are the "Autostage settings"
+    /// info item's rows in the classic layout and ModernRows.AutostageSettings in the modern one.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleAscentSettingsMenu))]
     public class AscentSettingsView : KodeView

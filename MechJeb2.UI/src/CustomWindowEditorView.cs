@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleCustomWindowEditor ("Custom Window Editor") in KodeKit, row for row with its WindowGUI and DrawGUI's
+    /// MechJebModuleCustomWindowEditor ("Custom Window Editor") in KodeKit, with its
     /// colour picker. The item lists are rebuilt (the whole view) when the edited window, its items or the category change.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleCustomWindowEditor))]
@@ -55,7 +55,7 @@ namespace MuMech.UI
                 {
                     int index = i;
                     UIButton row = KodeWindow.ListRow(contentsList, items[i].ListName, () => ed.selectedItemIndex = index);
-                    // GuiUtils.YellowLabel; SetSelected looks its bar up by name, so only on a change (a new row is unselected)
+                    // in the warning colour; SetSelected looks its bar up by name, so only on a change (a new row is unselected)
                     bool shownSelected = false;
                     win.AddSync(() =>
                     {

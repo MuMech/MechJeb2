@@ -234,7 +234,7 @@ namespace MuMech.UI
 
         protected override void BeforeSync()
         {
-            // what DrawGUI did before drawing
+            // before the bindings
             menu.AdvanceAnimation();
 
             if (Time.unscaledTime >= nextCheck)

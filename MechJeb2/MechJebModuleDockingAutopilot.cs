@@ -718,10 +718,10 @@ namespace MuMech
             Enabled = false;
         }
 
-        // GL only draws in the Repaint event, and OnGUI runs once per event.
+        // In the core's post-draw queue: once per frame, after the flight camera renders.
         private void DrawBoundingBox()
         {
-            if (drawBoundingBox && Vessel == FlightGlobals.ActiveVessel && Event.current.type == EventType.Repaint)
+            if (drawBoundingBox && Vessel == FlightGlobals.ActiveVessel)
             {
                 Vessel targetVessel = Core.Target.Target?.GetVessel();
                 if (Time.unscaledTime >= boxesTime + BOX_REFRESH_INTERVAL || Vessel != boxesVessel || targetVessel != boxesTarget ||

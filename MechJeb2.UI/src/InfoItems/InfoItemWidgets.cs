@@ -11,7 +11,7 @@ using UnityEngine.UI;
 namespace MuMech.UI
 {
     /// <summary>
-    /// Builds the KodeKit widget of one InfoItem (what InfoItem.DrawItem draws in IMGUI), for custom info windows and
+    /// Builds the KodeKit widget of one InfoItem, for custom info windows and
     /// any other window that shows registry items. Values are refreshed by the owner through Refresh() at its rate.
     /// </summary>
     public class InfoItemWidgets
@@ -81,11 +81,9 @@ namespace MuMech.UI
                     ApplyColor(b.GetComponentInChildren<TMP_Text>(), true);
                     break;
                 case GeneralInfoItem g:
-                    if (GeneralItemBuilders.TryBuild(w, parent, g, refresh))
-                        break;
-                    // not ported: the IMGUI method inside the window, refreshed like MechJebModuleCustomInfoWindow does
-                    new ImguiBlock(parent, g.DrawItem);
-                    refresh.Add(g.UpdateItem);
+                    // another mod's item has no builder: its IMGUI method can't be shown, so its name only
+                    if (!GeneralItemBuilders.TryBuild(w, parent, g, refresh))
+                        KodeWindow.Label(parent, item.localizedName);
                     break;
                 default:
                     KodeWindow.Label(parent, item.localizedName);

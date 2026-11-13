@@ -8,7 +8,7 @@ using Tone = KodeKit.KodeWindow.Tone;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleAscentPSGSettingsMenu ("PSG Settings") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleAscentPSGSettingsMenu ("PSG Settings") in KodeKit.
     /// The per-stage table (FlightPlan.DrawStageGUI) is native: pooled retained rows with garbage-free text.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleAscentPSGSettingsMenu))]

@@ -12,9 +12,9 @@ using RecordType = MuMech.MechJebModuleFlightRecorder.RecordType;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleFlightRecorderGraph ("Flight Recorder") in KodeKit, row for row with its WindowGUI. The plot is a KodeKit LineGraph:
+    /// MechJebModuleFlightRecorderGraph ("Flight Recorder") in KodeKit. The plot is a KodeKit LineGraph:
     /// one decimated mesh per graph (rebuilt a few times a second, one per frame), a mesh for the stage markers, Y labels for the selected graph.
-    /// The model work of WindowGUI (scales, background texture, sizes) runs in BeforeSync through the module's shared methods.
+    /// The model work (scales, background texture, sizes) runs in BeforeSync through the module's shared methods.
     /// Differences: the Y labels are as many as the plot's height has room for, the plot size changes by rebuilding the view, and the
     /// graph is clipped to the plot instead of skipping the points outside it. In the modern layout the plot fills the
     /// window's width, and a drop-down in its corner picks the graph of the Y labels, not the column beside it.

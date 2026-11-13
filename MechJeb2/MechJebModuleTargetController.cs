@@ -274,58 +274,49 @@ namespace MuMech
             targetLongitude       = landed.longitude;
         }
 
+        // While picking a position on the map: the surface point under the pointer, and its coordinates and biome, which
+        // MechJeb2.UI shows next to the pointer. Null when the pointer isn't over the body or is over a window.
+        private Coordinates _pickCoordinates;
+        internal string PickLabel { get; private set; }
+
         public override void OnUpdate()
         {
-            // the pick ends in the map drawing, which runs for the active vessel only: a pick left on another vessel ends here
-            if (pickingPositionTarget && Vessel != null && !Vessel.isActiveVessel)
+            _pickCoordinates = null;
+            PickLabel        = null;
+
+            // a pick ends when the map closes, or when another vessel becomes the active one
+            if (pickingPositionTarget && (!MapView.MapIsEnabled || (Vessel != null && !Vessel.isActiveVessel)))
                 StopPickPositionTargetOnMap();
 
-            if (MapView.MapIsEnabled && pickingPositionTarget)
+            if (!pickingPositionTarget || Vessel == null || Vessel.GetMasterMechJeb() != Core)
+                return;
+
+            if (!GuiUtils.MouseIsOverWindow(Core))
+                _pickCoordinates = GuiUtils.GetMouseCoordinates(MainBody);
+            Cursor.visible = _pickCoordinates == null;
+            if (_pickCoordinates == null)
+                return;
+
+            if (Input.GetMouseButtonDown(0))
             {
-                if (!GuiUtils.MouseIsOverWindow(Core) && GuiUtils.GetMouseCoordinates(MainBody) != null)
-                    Cursor.visible = false;
-                else
-                    Cursor.visible = true;
+                SetPositionTarget(MainBody, _pickCoordinates.Latitude, _pickCoordinates.Longitude);
+                StopPickPositionTargetOnMap();
+                _pickCoordinates = null;
+                return;
             }
+
+            string biome = MainBody.GetExperimentBiomeSafe(_pickCoordinates.Latitude, _pickCoordinates.Longitude);
+            PickLabel = _pickCoordinates.ToStringDecimal() + "\n" + biome;
         }
 
         private void DoMapView()
         {
-            DoCoordinatePicking();
+            // the point under the pointer while picking
+            if (_pickCoordinates != null && MapView.MapIsEnabled)
+                GLUtils.DrawGroundMarker(MainBody, _pickCoordinates.Latitude, _pickCoordinates.Longitude, new Color(1.0f, 0.56f, 0.0f), true,
+                    60);
 
             DrawMapViewTarget();
-        }
-
-        private void DoCoordinatePicking()
-        {
-            if (pickingPositionTarget && !MapView.MapIsEnabled)
-                StopPickPositionTargetOnMap(); //stop picking on leaving map view
-
-            if (!pickingPositionTarget)
-                return;
-
-            if (MapView.MapIsEnabled && Vessel.isActiveVessel)
-            {
-                if (!GuiUtils.MouseIsOverWindow(Core))
-                {
-                    Coordinates mouseCoords = GuiUtils.GetMouseCoordinates(MainBody);
-
-                    if (mouseCoords != null)
-                    {
-                        GLUtils.DrawGroundMarker(MainBody, mouseCoords.Latitude, mouseCoords.Longitude, new Color(1.0f, 0.56f, 0.0f), true, 60);
-
-                        string biome = MainBody.GetExperimentBiomeSafe(mouseCoords.Latitude, mouseCoords.Longitude);
-                        GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50),
-                            mouseCoords.ToStringDecimal() + "\n" + biome);
-
-                        if (Input.GetMouseButtonDown(0))
-                        {
-                            SetPositionTarget(MainBody, mouseCoords.Latitude, mouseCoords.Longitude);
-                            StopPickPositionTargetOnMap();
-                        }
-                    }
-                }
-            }
         }
 
         private void DrawMapViewTarget()

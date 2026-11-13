@@ -4,7 +4,7 @@ using KodeUI;
 
 namespace MuMech.UI
 {
-    /// <summary>MechJebModuleRCSBalancerWindow ("RCS Balancer") in KodeKit, row for row with its WindowGUI.</summary>
+    /// <summary>MechJebModuleRCSBalancerWindow ("RCS Balancer") in KodeKit.</summary>
     [KodeViewFor(typeof(MechJebModuleRCSBalancerWindow))]
     public class RCSBalancerView : KodeView
     {

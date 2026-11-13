@@ -52,7 +52,7 @@ namespace MuMech.UI
             NodeUi.AutowarpToggle(w, main, Core, "#MechJeb_RZauto_checkbox1"); //"Auto-warp"
         }
 
-        // GuiUtils.SimpleTextBox(label, editable, unit): the editable object is read again on every access
+        // label [field] unit: the editable object is read again on every access
         static void ValueRow(KodeWindow w, UIObject parent, string key, System.Func<EditableDouble> ed, string unit) => EditUi.Row(w, parent, key, ed, unit);
     }
 }

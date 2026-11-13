@@ -7,9 +7,9 @@ using MechJebLibBindings;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleManeuverPlanner ("Maneuver Planner") in KodeKit, row for row with its WindowGUI. The module keeps the state
+    /// MechJebModuleManeuverPlanner ("Maneuver Planner") in KodeKit. The module keeps the state
     /// (selected operation, create/change mode) and the node creation; each Operation's parameter rows are built once into their own
-    /// panel by OperationPanels (an operation without a builder falls back to its DoParametersGUI through ImguiBlock),
+    /// panel by OperationPanels (another mod's operation, which has no builder, gets a note that its settings can't be shown),
     /// and the selected operation's panel is shown.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleManeuverPlanner))]
@@ -32,7 +32,7 @@ namespace MuMech.UI
                 () => planner.PlannerNodeCount() > 0 && (HasVessel && planner.Vessel.patchedConicSolver.maneuverNodes.Count > 1 || ReflectionUtils.IsLoadedPrincipia),
                 true); //Execute next node, Execute all nodes, Abort node execution
 
-        // what WindowGUI did before drawing: forced "create" mode without nodes, and the selected operation's drawing side effects
+        // before the bindings: forced "create" mode without nodes, and the selected operation's per-frame work
         protected override void BeforeSync()
         {
             if (planner.PlannerNodeCount() == 0) planner.CreateNodeMode = true;
@@ -230,25 +230,8 @@ namespace MuMech.UI
                 {
                     var ctx = new OpContext { W = w, Panel = panel, Op = op, Planner = planner };
                     if (OperationPanels.Build(ctx)) return;
-                    // another mod's operation, drawn by its IMGUI method: a throw is logged once, then the panel keeps drawing
-                    bool logged = false;
-                    new ImguiBlock(panel, () =>
-                    {
-                        if (!HasVessel) return;
-                        try
-                        {
-                            planner.GetOrbitAndUT(out Orbit o, out double ut);
-                            op.DoParametersGUI(o, ut, Core.Target);
-                        }
-                        catch (Exception e)
-                        {
-                            if (logged) return;
-                            logged = true;
-                            // named by its type: GetName belongs to the operation that just threw
-                            UnityEngine.Debug.LogError($"[MechJeb2.UI] the parameters of the {op.GetType().FullName} operation threw (logged once):");
-                            UnityEngine.Debug.LogException(e);
-                        }
-                    });
+                    // another mod's operation: its parameters are drawn by an IMGUI method this UI doesn't run
+                    KodeWindow.Paragraph(panel, "#MechJeb_NewUI_OpNoPanel"); //"This operation comes from another mod: its settings can't be shown here, it uses their current values"
                 });
             }
         }

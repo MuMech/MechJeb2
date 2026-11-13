@@ -7,7 +7,7 @@ using UnityEngine;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleNodeEditor ("Maneuver Node Editor") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleNodeEditor ("Maneuver Node Editor") in KodeKit.
     /// The module keeps the state (selected node, edited components, deltas, snap); both UIs use its helpers.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleNodeEditor))]
@@ -44,7 +44,7 @@ namespace MuMech.UI
             return modeLabels[m] ?? (modeLabels[m] = Localizer.Format("#MechJeb_NodeEd_Label9", ed.Vessel.patchedConicRenderer.relativityMode.ToString()));
         }
 
-        // the node choice WindowGUI made before drawing
+        // the node choice, made before the bindings
         protected override void BeforeSync()
         {
             List<ManeuverNode> nodes = Nodes;

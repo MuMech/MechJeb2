@@ -3,7 +3,7 @@ using KodeUI;
 
 namespace MuMech.UI
 {
-    /// <summary>MechJebModuleSmartRcs ("SmartRcs") in KodeKit, row for row with its WindowGUI.</summary>
+    /// <summary>MechJebModuleSmartRcs ("SmartRcs") in KodeKit.</summary>
     [KodeViewFor(typeof(MechJebModuleSmartRcsWindow))]
     internal class SmartRcsView : KodeView
     {

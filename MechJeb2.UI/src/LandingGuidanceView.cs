@@ -12,7 +12,7 @@ using static MuMech.MechJebModuleThrustController;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleLandingGuidance ("Landing Guidance") in KodeKit, row for row with its WindowGUI, including the
+    /// MechJebModuleLandingGuidance ("Landing Guidance") in KodeKit, including the
     /// landing prediction block of DrawGUITogglePredictions (LandingPredictionsBlock, shared with the custom windows).
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleLandingGuidance))]
@@ -122,7 +122,7 @@ namespace MuMech.UI
             return asl;
         }
 
-        /// <summary>EditableAngle.DrawEditGUI (d ° m ' s " N/S) followed by the 10 m step buttons, on one row.</summary>
+        /// <summary>An angle (d ° m ' s " N/S) followed by the 10 m step buttons, on one row.</summary>
         void AngleRow(KodeWindow w, UIObject parent, Func<EditableAngle> angle, EditableAngle.Direction direction, Sprites.Direction first, double firstDelta, Sprites.Direction second, double secondDelta,
             bool latitude)
         {

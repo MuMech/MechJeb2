@@ -20,8 +20,7 @@ namespace MuMech.UI
     }
 
     /// <summary>
-    /// The pieces the maneuver operations share, standing in for GuiUtils.SimpleTextBox / ToggledTextBox / TimeSelector.DoChooseTimeGUI
-    /// and EditableAngle.DrawEditGUI. They bind to getters (not to the editable itself) because Persistent loading and some
+    /// The pieces the maneuver operations share: label/field/unit rows, the burn time choice and angle fields. They bind to getters (not to the editable itself) because Persistent loading and some
     /// operations replace the editable objects.
     /// </summary>
     internal static class OpUi
@@ -35,12 +34,12 @@ namespace MuMech.UI
             return g;
         }
 
-        /// <summary>GuiUtils.SimpleTextBox: label [field] unit. <paramref name="stacked"/> puts a long label on its own line.</summary>
+        /// <summary>label [field] unit. <paramref name="stacked"/> puts a long label on its own line.</summary>
         public static void LabeledField(KodeWindow w, UIObject parent, string label, Func<EditableDoubleMult> ed, string unit = null, bool stacked = false,
             float width = 100, Action edited = null) =>
             EditUi.Row(w, parent, label, ed, unit, width, stacked, edited);
 
-        /// <summary>GuiUtils.ToggledTextBox: [x] label [field] unit</summary>
+        /// <summary>[x] label [field] unit</summary>
         public static void ToggledField(KodeWindow w, UIObject parent, string label, Func<bool> get, Action<bool> set, Func<EditableDoubleMult> ed, string unit,
             float width = 100)
         {
@@ -56,7 +55,7 @@ namespace MuMech.UI
             return i >= 0 && i < ts.TimeRefNames.Length && ts.TimeReference == r;
         }
 
-        /// <summary>TimeSelector.DoChooseTimeGUI: "Schedule the burn" [reference v] [of] [field]</summary>
+        /// <summary>A TimeSelector: "Schedule the burn" [reference v] [of] [field]</summary>
         public static void TimeSelectorRows(KodeWindow w, UIObject parent, TimeSelector ts)
         {
             KodeWindow.Label(parent, "#MechJeb_Maneu_STB"); //Schedule the burn
@@ -75,7 +74,7 @@ namespace MuMech.UI
             w.Visible(altitude.gameObject, () => Is(ts, TimeReference.ALTITUDE));
         }
 
-        /// <summary>EditableAngle.DrawEditGUI: [deg]° [min]' [sec]" [N/S/E/W]</summary>
+        /// <summary>An EditableAngle: [deg]° [min]' [sec]" [N/S/E/W]</summary>
         static readonly string[] northSouth = { "N", "S" }, eastWest = { "E", "W" };
 
         public static void AngleRow(KodeWindow w, UIObject parent, Func<EditableAngle> angle, EditableAngle.Direction direction, bool ownRow = true)

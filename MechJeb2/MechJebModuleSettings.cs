@@ -73,11 +73,13 @@ namespace MuMech
         /// <summary>Raised after skin, scale or menu settings change, so another UI can follow them.</summary>
         public static event Action<MechJebModuleSettings> Changed;
 
-        /// <summary>Push the settings to GuiUtils and notify listeners (used by kOS and by this window).</summary>
+        /// <summary>
+        /// Push the settings to GuiUtils and notify listeners (used by kOS and by this window). <paramref name="loadSkin"/> is
+        /// ignored: nothing draws with the IMGUI skins, and loading one needs IMGUI's OnGUI.
+        /// </summary>
         public void ApplySettings(bool loadSkin = false)
         {
             GuiUtils.SetGUIScale(UIScale.Val);
-            if (loadSkin) GuiUtils.LoadSkin((GuiUtils.SkinType)SkinId);
             GuiUtils.DontUseDropDownMenu = DontUseDropDownMenu;
             GuiUtils.ShowAdvancedWindowSettings = ShowAdvancedWindowSettings;
             Changed?.Invoke(this);

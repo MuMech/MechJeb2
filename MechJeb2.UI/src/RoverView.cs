@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleRoverWindow ("Rover Autopilot") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleRoverWindow ("Rover Autopilot") in KodeKit.
     /// The registry items it draws (toggles, editable fields, values) are rebuilt from the same InfoItems.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleRoverWindow))]
@@ -137,12 +137,12 @@ namespace MuMech.UI
             return b;
         }
 
-        // ---- registry items (the InfoItems the IMGUI windows draw with InfoItem.DrawItem) ----
+        // ---- registry items (InfoItems) ----
 
         static InfoItem Find(MechJebModuleCustomWindowEditor ed, string id) => ed?.registry.Find(i => i.id == id);
 
         /// <summary>
-        /// A ToggleInfoItem as InfoItem.DrawItem draws it (its key as the label, so it follows a language switch); the
+        /// A ToggleInfoItem (its key as the label, so it follows a language switch); the
         /// value is read through <paramref name="get"/>, or the item's compiled getter. Returns its row.
         /// </summary>
         public static GameObject ToggleRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Func<bool> get = null)
@@ -168,7 +168,7 @@ namespace MuMech.UI
             return row;
         }
 
-        /// <summary>An EditableInfoItem as GuiUtils.SimpleTextBox draws it: label, field, right label. Returns the row so buttons can be added.</summary>
+        /// <summary>An EditableInfoItem: label, field, right label. Returns the row so buttons can be added.</summary>
         public static Layout EditableRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id)
         {
             if (!(Find(ed, id) is EditableInfoItem item) || item.Editable == null) return null;
@@ -182,7 +182,7 @@ namespace MuMech.UI
             return row;
         }
 
-        /// <summary>A ValueInfoItem as ValueInfoItem.DrawItem draws it: label and the formatted value (garbage-free).</summary>
+        /// <summary>A ValueInfoItem: label and the formatted value (garbage-free).</summary>
         public static void ValueRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Func<double> get, string template)
         {
             if (!(Find(ed, id) is ValueInfoItem item)) return;

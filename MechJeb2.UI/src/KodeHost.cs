@@ -12,8 +12,8 @@ namespace MuMech.UI
 {
     /// <summary>
     /// Draws MechJeb's windows with KodeKit.
-    /// Registers as MechJeb's IMechJebUiHost: MechJebCore.OnGUI then skips the windows drawn here, and its
-    /// single click-through lock also covers them (KodeKit's own per-window locks are switched off).
+    /// Registers as MechJeb's IMechJebUiHost: MechJebCore's single click-through lock also covers the windows drawn here
+    /// (KodeKit's own per-window locks are switched off).
     /// </summary>
     [KSPAddon(KSPAddon.Startup.FlightAndEditor, false)]
     public class KodeHost : MonoBehaviour, IMechJebUiHost
@@ -74,8 +74,6 @@ namespace MuMech.UI
 
         // ---- IMechJebUiHost ----
 
-        public bool OwnsWindow(DisplayModule module) => module.Core == core && factories.ContainsKey(module.GetType());
-
         /// <summary>The live view of a module, if it has one (for tests and screenshots).</summary>
         public KodeView ViewOf(DisplayModule module) => views.TryGetValue(module, out KodeView v) ? v : null;
 
@@ -118,12 +116,18 @@ namespace MuMech.UI
                 if (language != null) DestroyViews();
                 language = lang;
             }
-            if (core == null) return;
+            if (core == null)
+            {
+                Tooltips.FollowPointer(null);
+                return;
+            }
 
-            ImguiBlockHost.Skin = GuiUtils.Skin; // unported IMGUI bodies hosted in views use MechJeb's skin
-            // MechJebCore.OnGUI's conditions
+            // the conditions MechJebCore.Update shows the windows under
             bool show = core.ShowGui &&
                 (HighLogic.LoadedSceneIsEditor || core.vessel == FlightGlobals.ActiveVessel && core.part.State != PartStates.DEAD);
+
+            // picking a target position on the map: its coordinates and biome next to the pointer
+            Tooltips.FollowPointer(show ? core.Target?.PickLabel : null);
 
             List<ComputerModule> modules = core.GetComputerModules<DisplayModule>();
 
