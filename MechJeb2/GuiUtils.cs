@@ -495,7 +495,7 @@ namespace MuMech
             GUI.skin = null;
             CompactSkin = Object.Instantiate(GUI.skin);
 
-            Skin.name = "KSP Compact";
+            CompactSkin.name = "KSP Compact";
 
             CompactSkin.label.margin = new RectOffset(1, 1, 1, 1);
             CompactSkin.label.padding = new RectOffset(0, 0, 2, 2);

@@ -23,16 +23,6 @@ namespace MuMech
             vessel.situation == Vessel.Situations.FLYING || vessel.situation == Vessel.Situations.ESCAPING ||
             vessel.situation == Vessel.Situations.ORBITING || vessel.situation == Vessel.Situations.SUB_ORBITAL;
 
-        public static List<ITargetable> GetTargetables(this Vessel vessel)
-        {
-            List<Part> parts;
-            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.fetch.ship.parts;
-            else if (vessel == null) return new List<ITargetable>();
-            else parts = vessel.Parts;
-
-            return parts.SelectMany(part => part.Modules.OfType<ITargetable>()).ToList();
-        }
-
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule
         {
             List<Part> parts;
@@ -156,7 +146,7 @@ namespace MuMech
         public static double MaxResourceAmount(this Vessel vessel, PartResourceDefinition definition)
         {
             if (definition == null) return 0;
-            List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts;
+            List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorParts : vessel.parts;
 
             double amount = 0;
             for (int i = 0; i < parts.Count; i++)
@@ -209,37 +199,6 @@ namespace MuMech
             }
 
             return referencePort;
-        }
-
-        public static bool HasElectricCharge(this Vessel vessel)
-        {
-            if (vessel == null)
-                return false;
-
-            List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts;
-            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(PartResourceLibrary.ElectricityHashcode);
-            if (definition == null) return false;
-
-            PartResource r;
-            if (vessel.GetReferenceTransformPart() != null)
-            {
-                r = vessel.GetReferenceTransformPart().Resources.Get(definition.id);
-                // check the command pod first since most have their batteries
-                if (r != null && r.amount > 0)
-                    return true;
-            }
-
-            for (int i = 0; i < parts.Count; i++)
-            {
-                Part p = parts[i];
-                r = p.Resources.Get(definition.id);
-                if (r != null && r.amount > 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         public static bool LiftedOff(this Vessel vessel) => vessel.situation != Vessel.Situations.PRELAUNCH;
