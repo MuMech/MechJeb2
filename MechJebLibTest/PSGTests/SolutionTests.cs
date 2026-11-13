@@ -1092,7 +1092,7 @@ namespace MechJebLibTest.PSGTests
 
         [Fact]
         [InvariantCulture]
-        public void TerminalString()
+        public void TerminalLines()
         {
             const double PE_R = 6.2e6;
             const double AP_R = 7.0e6;
@@ -1103,19 +1103,21 @@ namespace MechJebLibTest.PSGTests
             using Solution solution = EndingAt(rf, vf);
 
             // 90° past periapsis: r = 6575.8 km, v = 7813.6 m/s and the flight path angle is atan(ecc) = 3.47°
-            solution.TerminalString().ShouldEqual(string.Join(Environment.NewLine,
+            Assert.Equal(new[]
+            {
                 "Orbit: 200.0 km x 1.000 Mm",
                 "rT: 575.8 km vT: 7.814 km/s FPA: 3.5°",
                 "sma: 6.600 Mm ecc: 0.061 inc: 30.0°",
-                "lan: 45.0° argp: 60.0° ta: 90.0°"));
+                "lan: 45.0° argp: 60.0° ta: 90.0°"
+            }, solution.TerminalLines());
 
             // at periapsis with 1.5 times the escape energy the orbit is hyperbolic: sma = -r, ecc = 2, and the apoapsis is negative,
             // so it is printed as a radius rather than as an altitude
             const double R = 7e6;
             using Solution hyperbolic = EndingAt(new V3(R, 0, 0), new V3(0, Math.Sqrt(3 * MU / R), 0));
-            string terminal = hyperbolic.TerminalString();
-            terminal.ShouldStartWith("Orbit: 1.000 Mm x -21.00 Mm");
-            terminal.ShouldContain("sma: -7.000 Mm ecc: 2.000 inc: 0.0°");
+            string[] terminal = hyperbolic.TerminalLines();
+            terminal[0].ShouldEqual("Orbit: 1.000 Mm x -21.00 Mm");
+            terminal[2].ShouldEqual("sma: -7.000 Mm ecc: 2.000 inc: 0.0°");
         }
 
         // like BuggyTests.FourStagesNeedsTwo: the optimizer left the last stage unburned, so it is a zero-length phase and the
@@ -1213,7 +1215,7 @@ namespace MechJebLibTest.PSGTests
             }
 
             // the terminal string is in SI units
-            Assert.Throws<ArgumentException>(() => solution.TerminalString());
+            Assert.Throws<ArgumentException>(() => solution.TerminalLines());
 
             using Solution si = solution.DeNormalized();
 
