@@ -59,9 +59,13 @@ namespace MuMech
             foreach ((string site, string facilityName, string spawnPointName) in _kscSites)
             {
                 PSystemSetup.SpaceCenterFacility facility = PSystemSetup.Instance.GetSpaceCenterFacility(facilityName);
-                int index = LandingSites.FindIndex(x => x.Name == site);
+                if (facility?.hostBody == null)
+                    continue;
 
-                if (facility?.hostBody == null || index < 0 || !TryGetPosition(facility, spawnPointName, out double latitude, out double longitude))
+                // a user config can have a site of the same name on another body
+                int index = LandingSites.FindIndex(x => x.Name == site && x.Body == facility.hostBody);
+
+                if (index < 0 || !TryGetPosition(facility, spawnPointName, out double latitude, out double longitude))
                     continue;
 
                 LandingSites[index] = new LandingSite { Name = site, Latitude = latitude, Longitude = longitude, Body = facility.hostBody };
@@ -72,14 +76,15 @@ namespace MuMech
         private static readonly HashSet<LaunchSite> _launchSitesAdded = new HashSet<LaunchSite>();
 
         // KSP sets a launch site's spawn point when the site's city is placed, once its body's terrain has started: a session that
-        // loads straight into a flight around another body has them unset. A site is listed once its position is known.
+        // loads straight into a flight around another body has them unset. A site is listed once its position is known: set by
+        // KSP, or written by a mod that places its sites itself, which leaves latlonaltSet false.
         private static void AddLaunchSites()
         {
             foreach (LaunchSite site in PSystemSetup.Instance.LaunchSites)
             {
                 if (site.spawnPoints.Length == 0 || _launchSitesAdded.Contains(site)) continue;
                 LaunchSite.SpawnPoint point = site.spawnPoints[0];
-                if (!point.latlonaltSet) continue;
+                if (!point.latlonaltSet && point.latitude == 0 && point.longitude == 0) continue;
                 LandingSites.Add(new LandingSite { Name = point.name.Replace("_", " "), Latitude = point.latitude, Longitude = point.longitude, Body = site.Body });
                 _launchSitesAdded.Add(site);
             }
@@ -213,7 +218,7 @@ namespace MuMech
                     double latitude = SafeAsin(pos.y) * UtilMath.Rad2Deg;
                     double longitude = Math.Atan2(pos.z, pos.x) * UtilMath.Rad2Deg;
 
-                    if (body != null && LandingSites.All(p => p.Name != launchSiteName))
+                    if (body != null && LandingSites.All(p => p.Name != launchSiteName || p.Body != body))
                     {
                         LandingSites.Add(new LandingSite { Name = launchSiteName, Latitude = !double.IsNaN(latitude) ? latitude : 0, Longitude = !double.IsNaN(longitude) ? longitude : 0, Body = body });
                     }
@@ -247,7 +252,7 @@ namespace MuMech
                         if (!double.TryParse(lat, NumberStyles.Float, CultureInfo.InvariantCulture, out double latitude)) continue;
                         if (!double.TryParse(lon, NumberStyles.Float, CultureInfo.InvariantCulture, out double longitude)) continue;
 
-                        if (LandingSites.All(p => p.Name != launchSiteName))
+                        if (LandingSites.All(p => p.Name != launchSiteName || p.Body != Planetarium.fetch.Home))
                         {
                             LandingSites.Add(new LandingSite { Name = launchSiteName, Latitude = latitude, Longitude = longitude, Body = Planetarium.fetch.Home });
                         }
