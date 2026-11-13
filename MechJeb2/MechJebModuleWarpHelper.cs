@@ -63,7 +63,8 @@ namespace MuMech
                     break;
 
                 case WarpTarget.PhaseAngleT:
-                    if (Core.Target.NormalTargetExists)
+                    // the Sun is a target without an orbit
+                    if (Core.Target.NormalTargetExists && Core.Target.TargetOrbit != null)
                     {
                         Orbit reference = null;
                         if (Core.Target.TargetOrbit.referenceBody == Orbit.referenceBody)
@@ -124,7 +125,7 @@ namespace MuMech
                     {
                         targetUT = Core.GetComputerModule<MechJebModuleHoverslamSimulation>().IgnitionUT;
                         // NaN without a hoverslam solution
-                        if (double.IsNaN(targetUT) || double.IsInfinity(targetUT)) valid = false;
+                        if (!targetUT.IsFinite()) valid = false;
                     }
                     catch
                     {
@@ -165,7 +166,7 @@ namespace MuMech
                 }
 
                 // the solution is gone: a NaN target would neither warp nor ever end
-                if (double.IsNaN(targetUT) || double.IsInfinity(targetUT))
+                if (!targetUT.IsFinite())
                 {
                     Core.Warp.MinimumWarp(true);
                     warping = false;
