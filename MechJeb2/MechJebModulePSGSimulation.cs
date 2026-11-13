@@ -248,6 +248,10 @@ namespace MuMech
                 Debug.Log(_ascent.Exception);
         }
 
+        // A launch into a target's plane, or to its LAN, flies the LAN the countdown timed it for: the target can be cleared,
+        // destroyed or recovered since, or the player can target something else to look ahead, and the launch keeps its plane.
+        private double TargetLan() => Core.LaunchCountdown.TargetLan;
+
         private bool _optimizeStageFlag => !LogicalPlan?.AllFixedBurnTimes() ?? true;
 
         private void MarkReady()
@@ -270,9 +274,7 @@ namespace MuMech
             double attR = MainBody.Radius + BurnoutAltitude;
 
             bool lanflag = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan || _ascentSettings.LaunchingToLan;
-            double lan = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan
-                ? Core.Target.TargetOrbit.LAN
-                : (double)LAN;
+            double lan = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan ? TargetLan() : (double)LAN;
 
             bool attachAltFlag = !_optimizeStageFlag || BurnoutAltitudeFlag;
 
