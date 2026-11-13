@@ -392,7 +392,7 @@ namespace KodeKit
                 {
                     Color col = get();
                     col[ch] = n.x;
-                    Color.RGBToHSV(col, out h, out s, out v);
+                    // Sync takes the new saturation and value, and the hue unless the colour is grey or black
                     Push(col);
                 };
                 rgbaMarkers[c] = Marker(bar);

@@ -238,7 +238,8 @@ namespace MuMech.UI
             return null;
         }
 
-        public static int HoursPerDay => KSPUtil.dateTimeFormatter.Day / 3600;
-        public static int DaysPerYear => KSPUtil.dateTimeFormatter.Year / KSPUtil.dateTimeFormatter.Day;
+        /// <summary>GuiUtils.TimeToDHMS(seconds, decimalPlaces) without allocations, with the game's day and year lengths.</summary>
+        public static CharText AppendDHMS(this CharText ct, double seconds, int decimalPlaces) =>
+            ct.AppendDHMS(seconds, decimalPlaces, KSPUtil.dateTimeFormatter.Day, KSPUtil.dateTimeFormatter.Year);
     }
 }

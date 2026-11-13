@@ -26,6 +26,8 @@ namespace KodeKit
         readonly TMP_Text label;
         GameObject popup;
         RectTransform list;
+        // the entries array the open popup's rows were made from: a list that changes comes as a new array, which closes it
+        string[] popupEntries;
 
         public bool IsOpen => popup != null;
         public RectTransform PopupList => list;
@@ -36,6 +38,10 @@ namespace KodeKit
 
         static string Arrow(TMP_Text t) => t.font != null && t.font.HasCharacter('↓') ? "↓" : "v";
 
+        /// <param name="entries">
+        /// The entries, read every frame: the same array while the list is the same, a new array when it changes (an open popup
+        /// closes on a new array).
+        /// </param>
         /// <param name="dots">Each entry's colour, as a dot before its text in the button and the popup (the arrow selector shows the text alone).</param>
         public ComboBox(KodeWindow w, UIObject parent, Func<int> get, Action<int> set, Func<string[]> entries, bool flexible = true, Func<int, Color> dots = null)
         {
@@ -92,6 +98,7 @@ namespace KodeKit
                 if (!on && IsOpen) Close();
 
                 string[] e = this.entries();
+                if (IsOpen && e != popupEntries) Close();
                 int i = Mathf.Clamp(this.get(), 0, Math.Max(0, e.Length - 1));
                 string s = e.Length == 0 ? "" : e[i];
                 if (s == shown) return;
@@ -253,6 +260,7 @@ namespace KodeKit
             panel.gameObject.AddComponent<WindowBehaviour>(); // click-through lock while hovered
 
             string[] e = entries();
+            popupEntries = e;
             var rows = new UIButton[e.Length];
             string lastGroup = null;
             for (int i = 0; i < e.Length; i++)
@@ -353,14 +361,17 @@ namespace KodeKit
 
         void Select(int i)
         {
+            // the row picks the entry it shows, or nothing if the list changed since the popup opened
+            bool same = entries() == popupEntries;
             Close();
-            if (i != get()) set(i);
+            if (same && i != get()) set(i);
         }
 
         public void Close()
         {
             if (popup != null) UnityEngine.Object.Destroy(popup);
             popup = null;
+            popupEntries = null;
             list = null;
             Blocker = null;
             Scroll = null;

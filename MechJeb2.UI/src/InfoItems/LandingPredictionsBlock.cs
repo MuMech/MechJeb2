@@ -141,7 +141,7 @@ namespace MuMech.UI
                     .Append(p12.Pre).Append(res.DeltaVExpended, 1).Append("m/s")
                     .Append(p13.Pre);
                 if (Core.vessel.Landed) ct.Append("0.0s");
-                else ct.AppendDHMS(res.EndUT - Planetarium.GetUniversalTime(), 1, GuidanceUi.HoursPerDay, GuidanceUi.DaysPerYear);
+                else ct.AppendDHMS(res.EndUT - Planetarium.GetUniversalTime(), 1);
             }, isLanded);
 
             Layout aero = KodeWindow.Panel(on);
@@ -161,7 +161,7 @@ namespace MuMech.UI
             {
                 ReentrySimulation.Result res = Result;
                 ct.Append(p16.Pre).Append(res.MaxDragGees, 1).Append(p16.Post)
-                    .Append(p17.Pre).AppendDHMS(res.AeroBrakeUT - Planetarium.GetUniversalTime(), 1, GuidanceUi.HoursPerDay, GuidanceUi.DaysPerYear)
+                    .Append(p17.Pre).AppendDHMS(res.AeroBrakeUT - Planetarium.GetUniversalTime(), 1)
                     .Append(p17.Post);
             }, isAero);
 

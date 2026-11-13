@@ -58,6 +58,8 @@ namespace MuMech.UI
             KodeWindow.TitleBarOnly = () => settings != null && settings.UseTitlebarDragging;
             MechJebUiHost.Register(this);
             MechJebModuleSettings.Changed += OnSettingsChanged;
+            // the font is searched again in each scene when the last search found none
+            arialMetricSearched = false;
             Debug.Log("[MechJeb2.UI] KodeHost registered");
         }
 
@@ -105,6 +107,7 @@ namespace MuMech.UI
             if (s != settings)
             {
                 settings = s;
+                positionScale = GuiUtils.Scale;
                 ApplyTheme();
             }
             // a language switch: the views keep many texts made when they were built (tooltips, button captions, cached
@@ -206,7 +209,33 @@ namespace MuMech.UI
         {
             if (s != settings) return;
             ApplyTheme();
-            foreach (KodeView v in views.Values) v.ApplyScale();
+            if (GuiUtils.Scale.Equals(positionScale)) return;
+            KeepPositionsOnScreen(positionScale, GuiUtils.Scale);
+            positionScale = GuiUtils.Scale;
+            foreach (KodeView v in views.Values) v.Rescale();
+        }
+
+        // the UI scale the stored window positions are in units of (IMGUI units: screen pixels / scale)
+        float positionScale = 1;
+
+        /// <summary>
+        /// A UI scale change keeps every window of this UI where it is on screen: the stored positions, in IMGUI units, are
+        /// converted to the new scale's units for every ported module, in both scenes, whether its window is shown, hidden or
+        /// not built yet.
+        /// </summary>
+        void KeepPositionsOnScreen(float from, float to)
+        {
+            if (core == null) return;
+            float k = from / to;
+            foreach (ComputerModule cm in core.GetComputerModules<DisplayModule>())
+            {
+                var m = (DisplayModule)cm;
+                if (!factories.ContainsKey(m.GetType())) continue;
+                m.WindowVector = new Vector4(m.WindowVector.x * k, m.WindowVector.y * k, m.WindowVector.z, m.WindowVector.w);
+                m.WindowVectorEditor = new Vector4(m.WindowVectorEditor.x * k, m.WindowVectorEditor.y * k, m.WindowVectorEditor.z,
+                    m.WindowVectorEditor.w);
+                m.Dirty = true;
+            }
         }
 
         string layoutKey;
@@ -232,17 +261,28 @@ namespace MuMech.UI
         {
             if (settings == null) return;
             ApplyLayout();
-            Theme t = ThemeFor((MechJebModuleSettings.UiSkinType)settings.UiSkin, settings.UiCompact, settings.UiOpacity);
-            string key = t.Name + "|" + Mathf.Clamp(settings.UiOpacity, 0.3f, 1f).ToString("F2");
-            if (key == themeKey) return;
-            bool opacityOnly = Theme.Current != null && t.Name == themeName;
-            themeKey = key;
-            themeName = t.Name;
-            if (opacityOnly) SetOpacity(t.Window.Tint.a);
-            else Theme.Set(t);
+            // every settings change comes here (a slider drag sends one per step): a theme is built only for another skin or
+            // spacing, and an opacity change alone goes to the windows' backgrounds
+            var skin = (MechJebModuleSettings.UiSkinType)settings.UiSkin;
+            bool compact = settings.UiCompact;
+            float opacity = Mathf.Clamp(settings.UiOpacity, 0.3f, 1f);
+            bool sameTheme = themeApplied && Theme.Current != null && skin == themeSkin && compact == themeCompact;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (sameTheme && opacity == themeOpacity) return;
+            themeApplied = true;
+            themeSkin = skin;
+            themeCompact = compact;
+            themeOpacity = opacity;
+            // ThemeFor puts the opacity in the window tint's alpha, for every skin
+            if (sameTheme) SetOpacity(opacity);
+            else Theme.Set(ThemeFor(skin, compact, opacity));
         }
 
-        string themeName;
+        // what this host last applied: until then Theme.Current is another scene's theme, or KodeKit's default, and is replaced
+        bool themeApplied;
+        MechJebModuleSettings.UiSkinType themeSkin;
+        bool themeCompact;
+        float themeOpacity;
 
         /// <summary>
         /// The opacity slider: only the window backgrounds' alpha changes, so it is written to them and to the themes they
@@ -297,16 +337,17 @@ namespace MuMech.UI
             return compact ? Theme.Compact(t) : t;
         }
 
-        string themeKey;
-
         static TMP_FontAsset arialMetric;
+        static bool arialMetricSearched;
 
         /// <summary>KSP's LiberationSans SDF, with KSP's NotoSans as fallback for the symbols it lacks (Δ, Σ...).</summary>
         static TMP_FontAsset ArialMetricFont
         {
             get
             {
-                if (arialMetric != null) return arialMetric;
+                // a missing font is searched once per scene (KodeHost.Start clears the flag), not at each theme build
+                if (arialMetric != null || arialMetricSearched) return arialMetric;
+                arialMetricSearched = true;
                 arialMetric = Resources.FindObjectsOfTypeAll<TMP_FontAsset>().FirstOrDefault(f => f.name == "LiberationSans SDF");
                 TMP_FontAsset noto = UISkinManager.TMPFont;
                 if (arialMetric != null && noto != null && arialMetric.fallbackFontAssets != null && !arialMetric.fallbackFontAssets.Contains(noto))
