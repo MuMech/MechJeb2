@@ -100,7 +100,7 @@ namespace MuMech.UI
             {
                 if (HasNode) Core.Node.RCSOnly = v;
             });
-            w.Toggle(options, "Kill Rotation", () => HasNode && Core.Node.KillRollRotation, v =>
+            w.Toggle(options, "#MechJeb_SmartASS_button35", () => HasNode && Core.Node.KillRollRotation, v =>
             {
                 if (HasNode) Core.Node.KillRollRotation = v;
             });
@@ -200,7 +200,7 @@ namespace MuMech.UI
             {
                 if (HasNode) Core.Node.RCSOnly = v;
             });
-            w.SwitchRow(exec, "Kill Rotation", () => HasNode && Core.Node.KillRollRotation, v =>
+            w.SwitchRow(exec, "#MechJeb_SmartASS_button35", () => HasNode && Core.Node.KillRollRotation, v =>
             {
                 if (HasNode) Core.Node.KillRollRotation = v;
             });
@@ -230,6 +230,8 @@ namespace MuMech.UI
                 {
                     var ctx = new OpContext { W = w, Panel = panel, Op = op, Planner = planner };
                     if (OperationPanels.Build(ctx)) return;
+                    // another mod's operation, drawn by its IMGUI method: a throw is logged once, then the panel keeps drawing
+                    bool logged = false;
                     new ImguiBlock(panel, () =>
                     {
                         if (!HasVessel) return;
@@ -238,8 +240,13 @@ namespace MuMech.UI
                             planner.GetOrbitAndUT(out Orbit o, out double ut);
                             op.DoParametersGUI(o, ut, Core.Target);
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
+                            if (logged) return;
+                            logged = true;
+                            // named by its type: GetName belongs to the operation that just threw
+                            UnityEngine.Debug.LogError($"[MechJeb2.UI] the parameters of the {op.GetType().FullName} operation threw (logged once):");
+                            UnityEngine.Debug.LogException(e);
                         }
                     });
                 });

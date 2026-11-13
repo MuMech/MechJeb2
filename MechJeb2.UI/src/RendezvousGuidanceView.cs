@@ -1,6 +1,7 @@
 using KodeKit;
 using KodeUI;
 using KSP.Localization;
+using UnityEngine;
 
 namespace MuMech.UI
 {
@@ -23,12 +24,23 @@ namespace MuMech.UI
 
         int NodeCount => guidance.Vessel.patchedConicSolver != null ? guidance.Vessel.patchedConicSolver.maneuverNodes.Count : 0;
 
-        // computed once per frame, the readouts below all use it
+        readonly GuidanceUi.TargetName targetName = new GuidanceUi.TargetName();
+
+        // the readouts below all use it; the search marches a whole orbit, so it runs five times a second, and at once for
+        // another target or when the approach it found has passed (time warp)
         double closestApproachTime;
+        float nextClosestApproach;
+        Orbit closestApproachTarget;
 
         protected override void BeforeSync()
         {
-            if (Mode() == 2) closestApproachTime = guidance.Orbit.MinimumSeparationTime(Core.Target.TargetOrbit, guidance.VesselState.Time);
+            if (Mode() != 2) return;
+            Orbit target = Core.Target.TargetOrbit;
+            double now = guidance.VesselState.Time;
+            if (target == closestApproachTarget && Time.unscaledTime < nextClosestApproach && closestApproachTime >= now) return;
+            closestApproachTarget = target;
+            nextClosestApproach = Time.unscaledTime + 0.2f;
+            closestApproachTime = guidance.Orbit.MinimumSeparationTime(target, now);
         }
 
         // a burn that can't be computed says so, where it would otherwise only reach the log
@@ -57,7 +69,7 @@ namespace MuMech.UI
             w.Visible(ground.gameObject, () => Mode() == 2 && guidance.OnTheGround);
 
             //Information readouts:
-            GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label3", "Kerbin Station Alpha Mk2", ct => ct.Append(Core.Target.Name), on); //"Rendezvous target"
+            GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label3", "Kerbin Station Alpha Mk2", ct => ct.Append(targetName.Get(Core.Target)), on); //"Rendezvous target"
             GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label4", "-1.23 Mm x 123 Gm", ct => //"Target orbit"
                 ct.AppendSI(Core.Target.TargetOrbit.PeA, 3).Append("m x ").AppendSI(Core.Target.TargetOrbit.ApA, 3).Append('m'), on);
             GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label5", "-1.23 Mm x 123 Gm", ct => //"Current orbit"

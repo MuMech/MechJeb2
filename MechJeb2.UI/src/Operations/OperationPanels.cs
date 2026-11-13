@@ -115,7 +115,7 @@ namespace MuMech.UI
         {
             var op = (OperationMoonReturn)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_return_label1", () => op.Periapsis, "km", true); //Approximate final periapsis:
-            OpUi.ToggledField(c.W, c.Panel, "Inclination", () => op.InclinationFlag, v => op.InclinationFlag = v, () => op.Inclination, "°");
+            OpUi.ToggledField(c.W, c.Panel, "#MechJeb_Inclination", () => op.InclinationFlag, v => op.InclinationFlag = v, () => op.Inclination, "°");
             KodeWindow.Paragraph(c.Panel, "#MechJeb_return_label2"); //Schedule the burn at the next return window.
         }
 
@@ -125,7 +125,7 @@ namespace MuMech.UI
 
             Layout celestial = KodeWindow.Panel(c.Panel);
             OpUi.LabeledField(c.W, celestial, "#MechJeb_approach_label1", () => op.Periapsis, "km", true); //Approximate final periapsis
-            OpUi.ToggledField(c.W, celestial, "Inclination", () => op.InclinationFlag, v => op.InclinationFlag = v, () => op.Inclination, "°");
+            OpUi.ToggledField(c.W, celestial, "#MechJeb_Inclination", () => op.InclinationFlag, v => op.InclinationFlag = v, () => op.Inclination, "°");
             OpUi.TimeSelectorRows(c.W, celestial, c.Op.Timing);
             c.W.Visible(celestial.gameObject, () => c.TargetIsCelestial);
 

@@ -57,15 +57,16 @@ namespace MuMech.UI
                 MechJebModuleDockingAutopilot ap = Ap;
                 if (ap == null) return;
 
+                // the values are set in place: a custom window's field edits these objects
                 if (ap.overridenSafeDistance < 0)
-                    ap.overridenSafeDistance = 0;
+                    ap.overridenSafeDistance.Val = 0;
 
                 if (ap.overridenTargetSize < 10)
-                    ap.overridenTargetSize = 10;
+                    ap.overridenTargetSize.Val = 10;
 
                 // 0 means no limit, so a negative value must not fall to 0
                 if (ap.speedLimit < 0)
-                    ap.speedLimit = 0.1;
+                    ap.speedLimit.Val = 0.1;
 
                 if (ap.Enabled)
                 {

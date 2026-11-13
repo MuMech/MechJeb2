@@ -10,7 +10,7 @@ namespace MuMech.UI
     /// <summary>
     /// Native KodeKit versions of GeneralInfoItem methods (IMGUI draw methods registered as info items), by item id.
     /// Items without a builder are hosted with ImguiBlock. Builders take the refresh list for work done at the
-    /// window's refresh rate.
+    /// window's refresh rate: the value readouts that walk parts or bodies run there, not every frame.
     /// </summary>
     public static partial class GeneralItemBuilders
     {
@@ -33,11 +33,11 @@ namespace MuMech.UI
             },
 
             // MechJebModuleInfoItems
-            ["General:InfoItems.DockingGuidanceVelocity"] = (w, p, t, r) => DockingVelocity(w, p, (MechJebModuleInfoItems)t),
-            ["General:InfoItems.DockingGuidanceAngularVelocity"] = (w, p, t, r) => DockingAngularVelocity(w, p, (MechJebModuleInfoItems)t),
-            ["General:InfoItems.DockingGuidancePosition"] = (w, p, t, r) => DockingPosition(w, p, (MechJebModuleInfoItems)t),
-            ["General:InfoItems.AllPlanetPhaseAngles"] = (w, p, t, r) => PhaseAngles(w, p, (MechJebModuleInfoItems)t, true),
-            ["General:InfoItems.AllMoonPhaseAngles"] = (w, p, t, r) => PhaseAngles(w, p, (MechJebModuleInfoItems)t, false),
+            ["General:InfoItems.DockingGuidanceVelocity"] = (w, p, t, r) => DockingVelocity(w, p, r, (MechJebModuleInfoItems)t),
+            ["General:InfoItems.DockingGuidanceAngularVelocity"] = (w, p, t, r) => DockingAngularVelocity(w, p, r, (MechJebModuleInfoItems)t),
+            ["General:InfoItems.DockingGuidancePosition"] = (w, p, t, r) => DockingPosition(w, p, r, (MechJebModuleInfoItems)t),
+            ["General:InfoItems.AllPlanetPhaseAngles"] = (w, p, t, r) => PhaseAngles(w, p, r, (MechJebModuleInfoItems)t, true),
+            ["General:InfoItems.AllMoonPhaseAngles"] = (w, p, t, r) => PhaseAngles(w, p, r, (MechJebModuleInfoItems)t, false),
             ["General:InfoItems.LatLonClipbardCopy"] = (w, p, t, r) =>
             {
                 var items = (MechJebModuleInfoItems)t;
@@ -51,8 +51,8 @@ namespace MuMech.UI
 
             // MechJebModuleRCSBalancer, MechJebModuleRCSController
             ["General:RCSBalancer.RCSBalancerInfoItem"] = (w, p, t, r) => RcsBalancerInfo(w, p, (MechJebModuleRCSBalancer)t),
-            ["General:RCSBalancer.RCSThrusterStateInfoItem"] = (w, p, t, r) => RcsThrusterStates(w, p, (MechJebModuleRCSBalancer)t),
-            ["General:RCSBalancer.RCSPartThrottlesInfoItem"] = (w, p, t, r) => RcsPartThrottles(w, p, (MechJebModuleRCSBalancer)t),
+            ["General:RCSBalancer.RCSThrusterStateInfoItem"] = (w, p, t, r) => RcsThrusterStates(w, p, r, (MechJebModuleRCSBalancer)t),
+            ["General:RCSBalancer.RCSPartThrottlesInfoItem"] = (w, p, t, r) => RcsPartThrottles(w, p, r, (MechJebModuleRCSBalancer)t),
             ["General:RCSBalancer.ControlVectorInfoItem"] = (w, p, t, r) => ControlVector(w, p),
             ["General:RCSController.PIDGUI"] = (w, p, t, r) => RcsPid(w, p, (MechJebModuleRCSController)t),
 
@@ -88,7 +88,7 @@ namespace MuMech.UI
             ["General:VesselState.DebugString"] = (w, p, t, r) => VesselDebugString(w, p),
             ["General:VesselState.RCSTranslation"] = (w, p, t, r) => RcsVector(w, p, "#MechJeb_RCSTranslation", () => ((VesselState)t).RCSThrustAvailable), //"RCS Translation"
             ["General:VesselState.RCSTorque"] = (w, p, t, r) => RcsVector(w, p, "#MechJeb_RCSTorque", () => ((VesselState)t).RCSTorqueAvailable), //"RCS Torque"
-            ["General:VesselState.TorqueCompare"] = (w, p, t, r) => TorqueCompare(w, p, (VesselState)t),
+            ["General:VesselState.TorqueCompare"] = (w, p, t, r) => TorqueCompare(w, p, r, (VesselState)t),
         };
 
         public static bool Has(string id) => builders.ContainsKey(id);

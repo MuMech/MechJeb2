@@ -55,7 +55,15 @@ namespace MuMech.UI
                 {
                     int index = i;
                     UIButton row = KodeWindow.ListRow(contentsList, items[i].ListName, () => ed.selectedItemIndex = index);
-                    win.AddSync(() => KodeWindow.SetSelected(row, ed.selectedItemIndex == index)); // GuiUtils.YellowLabel
+                    // GuiUtils.YellowLabel; SetSelected looks its bar up by name, so only on a change (a new row is unselected)
+                    bool shownSelected = false;
+                    win.AddSync(() =>
+                    {
+                        bool selected = ed.selectedItemIndex == index;
+                        if (selected == shownSelected) return;
+                        shownSelected = selected;
+                        KodeWindow.SetSelected(row, selected);
+                    });
                     // a header's name follows its text as it is typed
                     string shownText = null;
                     win.AddSync(() =>
@@ -246,14 +254,16 @@ namespace MuMech.UI
             // the typed text stays until it is a width in range ("3" on the way to "320"); a nudge or the grip replaces it
             string typed = null;
             int seen = edited.FixedWidth;
+            string seenText = seen > 0 ? seen.ToString() : "";
             EditFields.Field(w, width, () =>
             {
                 if (edited.FixedWidth != seen)
                 {
                     seen = edited.FixedWidth;
+                    seenText = seen > 0 ? seen.ToString() : "";
                     typed = null;
                 }
-                return typed ?? (seen > 0 ? seen.ToString() : "");
+                return typed ?? seenText;
             }, s =>
             {
                 typed = s;

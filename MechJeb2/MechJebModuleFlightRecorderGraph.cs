@@ -95,6 +95,9 @@ namespace MuMech
 
         internal readonly graphState[] graphStates;
 
+        // the recorder's mark the scales were last reset for
+        internal double scaleMarkUT;
+
         // Which graphs the user has ticked, indexed by (int)RecordType. Persisted by name; see OnSave/OnLoad.
         internal readonly bool[] displayed;
 

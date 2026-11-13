@@ -21,6 +21,8 @@ namespace MuMech.UI
 
         int Mode() => GuidanceUi.RendezvousMode(Core, window.Orbit);
 
+        readonly GuidanceUi.TargetName targetName = new GuidanceUi.TargetName();
+
         protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
@@ -29,7 +31,7 @@ namespace MuMech.UI
             Layout main = GuidanceUi.RendezvousGate(w, r, Mode, "#MechJeb_RZauto_label1", "#MechJeb_RZauto_label2");
 
             // "Rendezvous target": name on the right
-            GuidanceUi.Pair(w, main, "#MechJeb_RZauto_label3", "Kerbin Station Alpha Mk2", ct => ct.Append(Core.Target.Name), () => Mode() == 2);
+            GuidanceUi.Pair(w, main, "#MechJeb_RZauto_label3", "Kerbin Station Alpha Mk2", ct => ct.Append(targetName.Get(Core.Target)), () => Mode() == 2);
 
             UIButton engage = KodeWindow.Button(main, "#MechJeb_RZauto_button1", () => Autopilot.Users.Add(window), ButtonRole.Primary); //"Engage autopilot"
             w.Visible(engage.gameObject, () => Autopilot != null && !Autopilot.Enabled);

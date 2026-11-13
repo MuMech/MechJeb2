@@ -140,12 +140,16 @@ namespace MuMech
         protected readonly bool
             variabledt = false; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.
 
-        public bool noSkipToFreefall = false;
+        // a prediction follows the vessel from where it is through up to MAX_ORBITS_FREE orbits; the landing autopilot sets its own
+        // values while it flies and puts these back when it stops
+        public const double MAX_ORBITS_FREE = 4;
+
+        public bool noSkipToFreefall = true;
 
         private readonly Queue readyResults = new Queue();
 
         private Random random;
-        public double maxOrbits = 1;
+        public double maxOrbits = MAX_ORBITS_FREE;
 
         private double lastSimTime;
         private double lastSimSteps;
