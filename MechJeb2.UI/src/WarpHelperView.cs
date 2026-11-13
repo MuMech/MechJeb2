@@ -1,6 +1,8 @@
 using KodeKit;
 using KodeUI;
 using KSP.Localization;
+using TMPro;
+using UnityEngine;
 
 namespace MuMech.UI
 {
@@ -40,18 +42,35 @@ namespace MuMech.UI
             return warpingText;
         }
 
+        void LockWhileWarping(KodeWindow w, TMP_InputField field)
+        {
+            CanvasGroup dim = field.gameObject.AddComponent<CanvasGroup>();
+            w.AddSync(() =>
+            {
+                bool on = !helper.warping;
+                if (field.interactable == on) return;
+                field.interactable = on;
+                dim.alpha = on ? 1 : ComboBox.LockedAlpha;
+            });
+        }
+
         protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
 
             Layout warpTo = KodeWindow.Row(r);
             KodeWindow.Label(warpTo, "#MechJeb_WarpHelper_label1"); //"Warp to: "
+            // a warp keeps the time it started with, so the target and what sets its time are fixed until the warp ends or is
+            // aborted (the lead time is read on every tick)
             new ComboBox(w, warpTo, () => (int)helper.warpTarget, i => helper.warpTarget = (MechJebModuleWarpHelper.WarpTarget)i,
-                () => MechJebModuleWarpHelper.warpTargetStrings);
+                () => MechJebModuleWarpHelper.warpTargetStrings)
+            {
+                Enabled = () => !helper.warping
+            };
 
             Layout time = KodeWindow.Row(r);
             KodeWindow.Label(time, "#MechJeb_WarpHelper_label2", true); //"Warp for: "
-            EditUi.Field(w, time, () => helper.timeOffset, 100);
+            LockWhileWarping(w, EditUi.Field(w, time, () => helper.timeOffset, 100));
             w.Visible(time.gameObject, () => helper.warpTarget == MechJebModuleWarpHelper.WarpTarget.Time);
 
             // I wonder if I should check for target that don't make sense
@@ -59,7 +78,7 @@ namespace MuMech.UI
             w.Visible(needTarget.gameObject, () => helper.warpTarget == MechJebModuleWarpHelper.WarpTarget.PhaseAngleT && !TargetExists());
             Layout phase = KodeWindow.Row(r);
             KodeWindow.Label(phase, "#MechJeb_WarpHelper_label4"); //"Phase Angle:"
-            EditUi.Field(w, phase, () => helper.phaseAngle, 60);
+            LockWhileWarping(w, EditUi.Field(w, phase, () => helper.phaseAngle, 60));
             KodeWindow.Label(phase, "°");
             w.Visible(phase.gameObject, () => helper.warpTarget == MechJebModuleWarpHelper.WarpTarget.PhaseAngleT && TargetExists());
 

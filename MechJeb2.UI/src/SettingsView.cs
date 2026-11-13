@@ -1,6 +1,7 @@
 using KodeKit;
 using KodeUI;
 using KSP.Localization;
+using TMPro;
 using UnityEngine;
 
 namespace MuMech.UI
@@ -45,11 +46,22 @@ namespace MuMech.UI
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 w.BindRole(b, () => settings.UIScale.Val == preset ? ButtonRole.Selected : ButtonRole.Normal);
             }
-            EditFields.Field(w, scale, () => settings.UIScale.Text, s =>
+            // the typed scale reaches the setting when the edit ends: applied per keystroke, "0.9" would shrink every window
+            // to the smallest scale at the "0"
+            var typedScale = new EditableDouble(settings.UIScale.Val);
+            bool scaleTyped = false;
+            TMP_InputField scaleField = EditFields.Field(w, scale, () => scaleTyped ? typedScale.Text : settings.UIScale.Text, s =>
             {
-                settings.UIScale.Text = s;
+                typedScale.Text = s;
+                scaleTyped = true;
+            }, 60, () => scaleTyped ? typedScale.IsParsed : settings.UIScale.IsParsed);
+            scaleField.onEndEdit.AddListener(_ =>
+            {
+                if (!scaleTyped) return;
+                scaleTyped = false;
+                settings.UIScale.Text = typedScale.Text;
                 Changed();
-            }, 60, () => settings.UIScale.IsParsed);
+            });
 
             w.Toggle(r, "#MechJeb_Settings_checkbox1", () => settings.DontUseDropDownMenu, v => //"Replace drop down menu with arrow selector"
             {

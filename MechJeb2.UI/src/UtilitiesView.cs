@@ -98,9 +98,12 @@ namespace MuMech.UI
             OpUi.DynamicParagraph(w, diffBar, DifferentialStatus());
             w.Visible(diffBar.gameObject, DifferentialFailed);
 
-            g = w.Group(r, "#MechJeb_NewUI_Deployment"); //Deployment
-            DeployRow(w, g, Core.Solarpanel, "#MechJeb_SolarPanelDeployButton"); //"Auto-deploy solar panels"
-            DeployRow(w, g, Core.AntennaControl, "#MechJeb_Autodeployantennas"); //"Auto-deploy antennas"
+            if (Core.Solarpanel != null || Core.AntennaControl != null)
+            {
+                g = w.Group(r, "#MechJeb_NewUI_Deployment"); //Deployment
+                DeployRow(w, g, Core.Solarpanel, "#MechJeb_SolarPanelDeployButton"); //"Auto-deploy solar panels"
+                DeployRow(w, g, Core.AntennaControl, "#MechJeb_Autodeployantennas"); //"Auto-deploy antennas"
+            }
 
             g = w.Group(r, "#MechJeb_NewUI_Autostage"); //Autostage
             Layout auto = KodeWindow.Row(g);
@@ -127,6 +130,8 @@ namespace MuMech.UI
         /// <summary>[switch] Auto-deploy ..., and the "Toggle ... (currently ...)" button under it (beside it, the window would double in width).</summary>
         static void DeployRow(KodeWindow w, UIObject parent, MechJebModuleDeployableController c, string autoKey)
         {
+            // a part's blacklist can leave the core without the controller
+            if (c == null) return;
             w.SwitchRow(parent, autoKey, () => c.AutoDeploy, v => c.AutoDeploy = v);
             UIButton b = KodeWindow.Button(parent, c.CurrentButtonText ?? " ", c.ToggleDeploy, true);
             string shown = c.CurrentButtonText;

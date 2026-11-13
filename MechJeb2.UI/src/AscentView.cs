@@ -176,7 +176,11 @@ namespace MuMech.UI
             w.Visible(noTracking.gameObject, () => HasVessel && !Core.vessel.patchedConicsUnlocked() && !psg);
 
             Layout type = KodeWindow.Row(r);
-            new ComboBox(w, type, () => (int)Settings.AscentType, i => Settings.AscentType = (AscentType)i, () => menu._ascentPathList);
+            // a change of type turns the engaged autopilot off, so the type is fixed while the ascent is engaged
+            new ComboBox(w, type, () => (int)Settings.AscentType, i => Settings.AscentType = (AscentType)i, () => menu._ascentPathList)
+            {
+                Enabled = () => !menu._autopilot.Enabled
+            };
 
             if (KodeWindow.ModernLayout)
             {
@@ -185,8 +189,10 @@ namespace MuMech.UI
             }
             else
             {
-                UnityEngine.UI.Toggle classicPath = w.Toggle(r, "#MechJeb_Ascent_checkbox10", () => menu._classicPathMenu.Enabled,
-                    v => menu._classicPathMenu.Enabled = v); //Edit ascent path
+                // looked up once: the menu's getter scans every module
+                MechJebModuleAscentClassicPathMenu pathMenu = menu._classicPathMenu;
+                UnityEngine.UI.Toggle classicPath = w.Toggle(r, "#MechJeb_Ascent_checkbox10", () => pathMenu.Enabled,
+                    v => pathMenu.Enabled = v); //Edit ascent path
                 w.Visible(KodeWindow.RowOf(classicPath), () => Settings.AscentType == AscentType.CLASSIC);
             }
 
@@ -217,14 +223,20 @@ namespace MuMech.UI
                 Psgs.BurnoutAltitude, "km", 100);
             AscentUi.ToggledBox(w, opt, "Arg Periapsis:", () => Psgs.ArgPFlag, v => Psgs.ArgPFlag = v, Psgs.ArgP, "°", 100);
 
-            bool ApLtPe() => Psgs.ApoapsisAltitude + BodyRadius >= 0 && Psgs.ApoapsisAltitude < Psgs.PeriapsisAltitude;
+            // as the PSG simulation reads them: a negative apoapsis asks for a hyperbola, a lower positive one for a circle
+            bool ApLtPe() => Psgs.ApoapsisAltitude >= 0 && Psgs.ApoapsisAltitude < Psgs.PeriapsisAltitude;
             UIText l3 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label3", Tone.Warn); //Ap < Pe: circularizing orbit
             w.Visible(l3.gameObject, ApLtPe);
             // IMGUI draws these three with OrangeLabel (green until dev fixed it), the one above yellow
             UIText high = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltHigh", Tone.Caution); //Attach > Ap: apoapsis insertion
-            w.Visible(high.gameObject, () => !ApLtPe() && Psgs.BurnoutAltitudeFlag && Psgs.BurnoutAltitude > Psgs.ApoapsisAltitude);
+            w.Visible(high.gameObject, () => Psgs.ApoapsisAltitude >= 0 && !ApLtPe() && Psgs.BurnoutAltitudeFlag &&
+                Psgs.BurnoutAltitude > Psgs.ApoapsisAltitude);
             UIText l4 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label4", Tone.Caution); //Hyperbolic target orbit (neg Ap)
-            w.Visible(l4.gameObject, () => Psgs.ApoapsisAltitude + BodyRadius < 0);
+            w.Visible(l4.gameObject, () => Psgs.ApoapsisAltitude < 0 && !TooShallow());
+            // a negative apoapsis is the hyperbola's apoapsis radius, which has to be under minus the periapsis radius
+            bool TooShallow() => Psgs.ApoapsisAltitude < 0 && Psgs.ApoapsisAltitude >= -(BodyRadius + Psgs.PeriapsisAltitude);
+            UIText shallow = AscentUi.ToneText(opt, "Neg Ap must be below -(Pe + radius)", Tone.Bad);
+            w.Visible(shallow.gameObject, TooShallow);
             UIText low = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltLow", Tone.Caution); //Attach < Pe: periapsis insertion
             w.Visible(low.gameObject, () => Psgs.BurnoutAltitudeFlag && Psgs.BurnoutAltitude < Psgs.PeriapsisAltitude);
 
@@ -268,10 +280,13 @@ namespace MuMech.UI
                 return;
             }
 
+            // looked up once: the menu's getters scan every module
+            MechJebModuleAscentSettingsMenu settingsMenu = menu._settingsMenu;
+            MechJebModuleAscentPSGSettingsMenu psgSettingsMenu = menu._psgSettingsMenu;
             LayoutPanel box = KodeWindow.Box(r);
             Layout row = KodeWindow.Row(box);
-            w.Toggle(row, "Ascent Settings", () => menu._settingsMenu.Enabled, v => menu._settingsMenu.Enabled = v);
-            UnityEngine.UI.Toggle psgSettings = w.Toggle(row, "PSG Settings", () => menu._psgSettingsMenu.Enabled, v => menu._psgSettingsMenu.Enabled = v);
+            w.Toggle(row, "Ascent Settings", () => settingsMenu.Enabled, v => settingsMenu.Enabled = v);
+            UnityEngine.UI.Toggle psgSettings = w.Toggle(row, "PSG Settings", () => psgSettingsMenu.Enabled, v => psgSettingsMenu.Enabled = v);
             w.Visible(KodeWindow.RowOf(psgSettings), () => psg);
         }
 
