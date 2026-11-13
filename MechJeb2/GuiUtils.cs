@@ -296,16 +296,6 @@ namespace MuMech
         }
     }
 
-    public class ZombieGUILoader : MonoBehaviour
-    {
-        private void OnGUI()
-        {
-            GuiUtils.CopyDefaultSkin();
-            if (GuiUtils.Skin == null) GuiUtils.Skin = GuiUtils.DefaultSkin;
-            Destroy(gameObject);
-        }
-    }
-
     public static class GuiUtils
     {
         private static GUIStyle _yellowOnHover;
@@ -833,23 +823,8 @@ namespace MuMech
         public static double FromToETA(Vector3 from, Vector3 to, double speed = 0) =>
             ArcDistance(from, to) / (speed > 0 ? speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
 
-        public static bool MouseIsOverWindow(MechJebCore core)
-        {
-            Vector2 mousePos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / Scale;
-
-            if (ComboBox.IsPopupActive && ComboBox.PopupRect.Contains(mousePos))
-                return true;
-
-            //try to check if the mouse is over any active DisplayModule
-            foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
-            {
-                // windows drawn by a MechJebUiHost report their own hover through the host
-                if (m.Enabled && m.ShowInCurrentScene && !m.IsOverlay && !MechJebUiHost.Owns(m) && m.WindowPos.Contains(mousePos))
-                    return true;
-            }
-
-            return MechJebUiHost.MouseOverHostWindow();
-        }
+        // MechJeb's windows are all drawn by the UI host, which reports its own hover
+        public static bool MouseIsOverWindow(MechJebCore core) => MechJebUiHost.MouseOverHostWindow();
 
         public static Coordinates GetMouseCoordinates(CelestialBody body)
         {

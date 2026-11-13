@@ -646,6 +646,14 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor && !isMaster)
                 _wasNotMasterInEditor = true;
 
+            // the windows' click-through lock, while this core's windows are shown; released as soon as they aren't
+            bool windowsShown = ShowGui && isMaster && _ready &&
+                (HighLogic.LoadedSceneIsEditor || (FlightGlobals.ready && vessel == FlightGlobals.ActiveVessel && part.State != PartStates.DEAD));
+            if (windowsShown)
+                PreventClickthrough();
+            else if (_weLockedInputs)
+                UnlockControl();
+
             if (!isMaster || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
             {
                 return;
@@ -826,13 +834,6 @@ namespace MuMech
 
         public override void OnLoad(ConfigNode sfsNode)
         {
-            if (GuiUtils.Skin == null)
-            {
-                //GuiUtils.skin = new GUISkin();
-                // ReSharper disable once ObjectCreationAsStatement
-                new GameObject("zombieGUILoader", typeof(ZombieGUILoader));
-            }
-
             try
             {
                 bool generateDefaultWindows = false;
@@ -1281,55 +1282,6 @@ namespace MuMech
             if (_weLockedInputs) UnlockControl();
         }
 
-        private void OnGUI()
-        {
-            if (!ShowGui || this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
-            {
-                // we no longer draw, so nothing can release the lock for us
-                if (_weLockedInputs) UnlockControl();
-                return;
-            }
-
-            Profiler.BeginSample("MechJebCore.OnGUI");
-
-            if (HighLogic.LoadedSceneIsEditor || (FlightGlobals.ready && vessel == FlightGlobals.ActiveVessel && part.State != PartStates.DEAD))
-            {
-                Matrix4x4 previousGuiMatrix = GUI.matrix;
-                GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(GuiUtils.Scale, GuiUtils.Scale, 1));
-
-                GuiUtils.ComboBox.DrawGUI();
-
-                GuiUtils.LoadSkin((GuiUtils.SkinType)Settings.SkinId);
-
-                GUI.skin = GuiUtils.Skin;
-
-                foreach (ComputerModule computerModule in GetComputerModules<DisplayModule>())
-                {
-                    var module = (DisplayModule)computerModule;
-                    Profiler.BeginSample(module.ProfilerName);
-                    try
-                    {
-                        if (module.Enabled && !MechJebUiHost.Owns(module)) module.DrawGUI(HighLogic.LoadedSceneIsEditor);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in DrawGUI: " + e);
-                    }
-
-                    Profiler.EndSample();
-                }
-
-                PreventClickthrough();
-                GUI.matrix = previousGuiMatrix;
-            }
-            else if (_weLockedInputs)
-            {
-                UnlockControl();
-            }
-
-            Profiler.EndSample();
-        }
-
         /// <summary>
         /// A GL drawing (map markers, trajectories, the docking boxes) run once per frame, after the camera the player sees
         /// renders: the planetarium camera in the map view, the near flight camera otherwise. It draws over the scene and
@@ -1342,7 +1294,7 @@ namespace MuMech
             if (_postDrawQueue.Count == 0 || !HighLogic.LoadedSceneIsFlight) return;
             Camera shown = MapView.MapIsEnabled ? PlanetariumCamera.Camera : FlightCamera.fetch != null ? FlightCamera.fetch.mainCamera : null;
             if (cam != shown) return;
-            // MechJebCore.OnGUI's conditions: F2 hides the drawings with the windows
+            // the windows' conditions (see Update): F2 hides the drawings with the windows
             if (!ShowGui || !_ready || !FlightGlobals.ready || vessel != FlightGlobals.ActiveVessel || part.State == PartStates.DEAD ||
                 this != vessel.GetMasterMechJeb())
                 return;
