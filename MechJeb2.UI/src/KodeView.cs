@@ -70,13 +70,13 @@ namespace MuMech.UI
         }
 
         /// <summary>
-        /// A UI scale change: the window grows or shrinks about its top-left corner and keeps its place on screen. The stored
-        /// position is in IMGUI units (screen / scale), so a shown window stores its place again in the new units; a hidden one
-        /// is placed from the stored position when it is shown.
+        /// A UI scale change, after KodeHost converted the stored positions to the new scale's units: the window grows or
+        /// shrinks about its top-left corner and keeps its place on screen. A shown window stores the place it has, which the
+        /// screen clamp may have moved; a hidden one is placed from the stored position when it is shown.
         /// </summary>
         public void Rescale()
         {
-            if (Window == null || Window.Behaviour.Scale.Equals(GuiUtils.Scale)) return;
+            if (Window == null) return;
             ApplyScale();
             if (Window.Root.gameObject.activeSelf) StorePosition();
         }

@@ -105,6 +105,7 @@ namespace MuMech.UI
             if (s != settings)
             {
                 settings = s;
+                positionScale = GuiUtils.Scale;
                 ApplyTheme();
             }
             // a language switch: the views keep many texts made when they were built (tooltips, button captions, cached
@@ -206,7 +207,33 @@ namespace MuMech.UI
         {
             if (s != settings) return;
             ApplyTheme();
+            if (GuiUtils.Scale.Equals(positionScale)) return;
+            KeepPositionsOnScreen(positionScale, GuiUtils.Scale);
+            positionScale = GuiUtils.Scale;
             foreach (KodeView v in views.Values) v.Rescale();
+        }
+
+        // the UI scale the stored window positions are in units of (IMGUI units: screen pixels / scale)
+        float positionScale = 1;
+
+        /// <summary>
+        /// A UI scale change keeps every window of this UI where it is on screen: the stored positions, in IMGUI units, are
+        /// converted to the new scale's units for every ported module, in both scenes, whether its window is shown, hidden or
+        /// not built yet.
+        /// </summary>
+        void KeepPositionsOnScreen(float from, float to)
+        {
+            if (core == null) return;
+            float k = from / to;
+            foreach (ComputerModule cm in core.GetComputerModules<DisplayModule>())
+            {
+                var m = (DisplayModule)cm;
+                if (!factories.ContainsKey(m.GetType())) continue;
+                m.WindowVector = new Vector4(m.WindowVector.x * k, m.WindowVector.y * k, m.WindowVector.z, m.WindowVector.w);
+                m.WindowVectorEditor = new Vector4(m.WindowVectorEditor.x * k, m.WindowVectorEditor.y * k, m.WindowVectorEditor.z,
+                    m.WindowVectorEditor.w);
+                m.Dirty = true;
+            }
         }
 
         string layoutKey;
