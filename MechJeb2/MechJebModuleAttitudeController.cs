@@ -161,20 +161,31 @@ namespace MuMech
         public void SetOmegaTarget(double pitch = double.NaN, double yaw = double.NaN, double roll = double.NaN) =>
             OmegaTarget = new Vector3d(pitch, roll, yaw);
 
+        // A frame that needs a target or a node can't be built without one. RELATIVE_VELOCITY needs the target's orbit, which a
+        // position or direction target and the Sun don't have.
+        private bool ReferenceAvailable(AttitudeReference reference)
+        {
+            switch (reference)
+            {
+                case AttitudeReference.TARGET:
+                case AttitudeReference.TARGET_ORIENTATION:
+                    return Core.Target.Target != null;
+                case AttitudeReference.RELATIVE_VELOCITY:
+                    return Core.Target.TargetOrbit != null;
+                case AttitudeReference.MANEUVER_NODE:
+                case AttitudeReference.MANEUVER_NODE_COT:
+                    return Vessel.patchedConicSolver.maneuverNodes.Count > 0;
+                default:
+                    return true;
+            }
+        }
+
         public QuaternionD AttitudeGetReferenceRotation(AttitudeReference reference)
         {
             Vector3 fwd, up;
             QuaternionD rotRef = QuaternionD.identity;
 
-            if (Core.Target.Target == null && (reference == AttitudeReference.TARGET || reference == AttitudeReference.TARGET_ORIENTATION ||
-                    reference == AttitudeReference.RELATIVE_VELOCITY))
-            {
-                AttitudeDeactivate();
-                return rotRef;
-            }
-
-            if ((reference == AttitudeReference.MANEUVER_NODE || reference == AttitudeReference.MANEUVER_NODE_COT) &&
-                Vessel.patchedConicSolver.maneuverNodes.Count == 0)
+            if (!ReferenceAvailable(reference))
             {
                 AttitudeDeactivate();
                 return rotRef;
@@ -274,7 +285,8 @@ namespace MuMech
 
             Vector3 dir = direction;
 
-            Vector3 up = !Enabled ? AttitudeWorldToReference(-Vessel.GetTransform().forward, reference) : AttitudeWorldToReference(AttitudeReferenceToWorld(AttitudeTarget * Vector3d.up, AttitudeReference), reference);
+            // the up of the current target keeps the roll, unless the current frame can no longer be built
+            Vector3 up = !Enabled || !ReferenceAvailable(AttitudeReference) ? AttitudeWorldToReference(-Vessel.GetTransform().forward, reference) : AttitudeWorldToReference(AttitudeReferenceToWorld(AttitudeTarget * Vector3d.up, AttitudeReference), reference);
             Vector3.OrthoNormalize(ref dir, ref up);
             AttitudeTo(QuaternionD.LookRotation(dir, up), reference, controller, axisCtrlRoll: killRollRotation);
             if (killRollRotation) { SetOmegaTarget(roll: 0); }
