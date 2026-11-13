@@ -376,6 +376,7 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             _ap = Core.GetComputerModule<MechJebModuleRoverController>();
+            Core.AddToPostDrawQueue(DrawSelectedMarker);
             if (HighLogic.LoadedSceneIsFlight && Vessel.isActiveVessel)
             {
                 _renderer = MechJebRouteRenderer.AttachToMapView(Core);
@@ -712,10 +713,13 @@ namespace MuMech
             }
         }
 
-        /// <summary>The red marker on the selected waypoint in the map view (a GL draw: needs an OnGUI repaint).</summary>
-        internal void DrawSelectedMarker()
+        /// <summary>
+        /// The red marker on the selected waypoint in the map view, while the window shows its waypoints page. A GL draw:
+        /// MechJebCore's post-draw queue runs it on the OnGUI repaint.
+        /// </summary>
+        private void DrawSelectedMarker()
         {
-            if (!MapView.MapIsEnabled || SelIndex < 0 || SelIndex >= _ap.Waypoints.Count) return;
+            if (!Enabled || _showPage != Pages.WAYPOINTS || !MapView.MapIsEnabled || SelIndex < 0 || SelIndex >= _ap.Waypoints.Count) return;
             MechJebWaypoint wp = _ap.Waypoints[SelIndex];
             GLUtils.DrawGroundMarker(MainBody, wp.Latitude, wp.Longitude, Color.red, true,
                 (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, MainBody.Radius / 100);
