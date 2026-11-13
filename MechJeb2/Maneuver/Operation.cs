@@ -66,11 +66,26 @@ namespace MuMech
                 // PlaceManeuverNode would move such a node to now, or the orbit after the last node would be the wrong one for it,
                 // and either way the dV was computed for another point of the orbit. A second of round-off is let through.
                 ManeuverParameters? past = nodes?.Find(n => n.UT < universalTime - 1);
-                if (past == null)
+                if (past != null)
+                {
+                    Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {past.UT}, before the start at {universalTime}");
+                    ErrorMessage = Localizer.Format("#MechJeb_Maneu_pastNodeError"); //The burn would be before the start of the orbit it is planned on.
+                    return null;
+                }
+
+                // An orbit that ends in an encounter or an escape is not the one the vessel is on later: PlaceManeuverNode would put
+                // the burn on the next patch, around another body. Only the first burn is on this orbit; the others follow it.
+                ManeuverParameters? first = null;
+                if (nodes != null)
+                    foreach (ManeuverParameters n in nodes)
+                        if (first == null || n.UT < first.UT)
+                            first = n;
+                bool ends = o.patchEndTransition == Orbit.PatchTransitionType.ENCOUNTER || o.patchEndTransition == Orbit.PatchTransitionType.ESCAPE;
+                if (first == null || !ends || first.UT < o.EndUT)
                     return nodes;
 
-                Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {past.UT}, before the start at {universalTime}");
-                ErrorMessage = Localizer.Format("#MechJeb_Maneu_pastNodeError"); //The burn would be before the start of the orbit it is planned on.
+                Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {first.UT}, after the end of its orbit at {o.EndUT} ({o.patchEndTransition})");
+                ErrorMessage = Localizer.Format("#MechJeb_Maneu_endedPatchError"); //The burn would be after this orbit ends at a change of sphere of influence; pick an earlier time, or plan from a node placed after the change.
                 return null;
             }
             catch (OperationException e)
