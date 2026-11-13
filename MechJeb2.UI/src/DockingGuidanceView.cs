@@ -9,7 +9,7 @@ using UnityEngine;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleDockingGuidance ("Docking Autopilot") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleDockingGuidance ("Docking Autopilot") in KodeKit.
     /// The target port selector's model and the docking-axis check are internal methods of the module, shared with IMGUI.
     /// The checks that walk the vessel's parts and targetables run five times a second, not every frame.
     /// </summary>

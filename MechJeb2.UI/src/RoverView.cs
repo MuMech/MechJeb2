@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleRoverWindow ("Rover Autopilot") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleRoverWindow ("Rover Autopilot") in KodeKit.
     /// The registry items it draws (toggles, editable fields, values) are rebuilt from the same InfoItems.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleRoverWindow))]

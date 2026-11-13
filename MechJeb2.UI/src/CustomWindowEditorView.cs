@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleCustomWindowEditor ("Custom Window Editor") in KodeKit, row for row with its WindowGUI and DrawGUI's
+    /// MechJebModuleCustomWindowEditor ("Custom Window Editor") in KodeKit, with its
     /// colour picker. The item lists are rebuilt (the whole view) when the edited window, its items or the category change.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleCustomWindowEditor))]

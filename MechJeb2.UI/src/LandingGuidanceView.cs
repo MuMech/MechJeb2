@@ -12,7 +12,7 @@ using static MuMech.MechJebModuleThrustController;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleLandingGuidance ("Landing Guidance") in KodeKit, row for row with its WindowGUI, including the
+    /// MechJebModuleLandingGuidance ("Landing Guidance") in KodeKit, including the
     /// landing prediction block of DrawGUITogglePredictions (LandingPredictionsBlock, shared with the custom windows).
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleLandingGuidance))]

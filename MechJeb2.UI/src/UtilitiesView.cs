@@ -7,7 +7,7 @@ using static MuMech.MechJebModuleThrustController;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleThrustWindow ("Utilities") in KodeKit, row for row with its WindowGUI. The limiter and autostage rows
+    /// MechJebModuleThrustWindow ("Utilities") in KodeKit. The limiter and autostage rows
     /// are the general info items' native builders (GeneralItemBuilders), shared with the custom windows.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleThrustWindow))]

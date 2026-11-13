@@ -7,7 +7,7 @@ using UnityEngine;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleSettings ("Settings") in KodeKit, row for row with its WindowGUI. Shown in flight and in the editor.
+    /// MechJebModuleSettings ("Settings") in KodeKit. Shown in flight and in the editor.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleSettings))]
     public class SettingsView : KodeView

@@ -8,7 +8,7 @@ using UnityEngine;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleAscentClassicPathMenu ("Ascent Path Editor") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleAscentClassicPathMenu ("Ascent Path Editor") in KodeKit.
     /// The path picture is native: the atmosphere texture in a RawImage with the planned path and the flown trajectory as line meshes,
     /// rebuilt only when the path parameters or the recorded history change.
     /// </summary>
@@ -26,7 +26,7 @@ namespace MuMech.UI
 
         bool HasVessel => Core.vessel != null && Core.vessel.mainBody != null;
 
-        // the atmosphere texture WindowGUI refreshed before drawing
+        // the atmosphere texture, refreshed before the bindings
         protected override void BeforeSync()
         {
             if (HasVessel) menu.UpdateAtmoTextureIfNeeded();

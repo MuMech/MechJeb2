@@ -7,7 +7,7 @@ using MechJebLibBindings;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleManeuverPlanner ("Maneuver Planner") in KodeKit, row for row with its WindowGUI. The module keeps the state
+    /// MechJebModuleManeuverPlanner ("Maneuver Planner") in KodeKit. The module keeps the state
     /// (selected operation, create/change mode) and the node creation; each Operation's parameter rows are built once into their own
     /// panel by OperationPanels (another mod's operation, which has no builder, gets a note that its settings can't be shown),
     /// and the selected operation's panel is shown.
@@ -32,7 +32,7 @@ namespace MuMech.UI
                 () => planner.PlannerNodeCount() > 0 && (HasVessel && planner.Vessel.patchedConicSolver.maneuverNodes.Count > 1 || ReflectionUtils.IsLoadedPrincipia),
                 true); //Execute next node, Execute all nodes, Abort node execution
 
-        // what WindowGUI did before drawing: forced "create" mode without nodes, and the selected operation's drawing side effects
+        // before the bindings: forced "create" mode without nodes, and the selected operation's per-frame work
         protected override void BeforeSync()
         {
             if (planner.PlannerNodeCount() == 0) planner.CreateNodeMode = true;

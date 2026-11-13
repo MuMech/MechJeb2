@@ -61,7 +61,7 @@ namespace MuMech.UI
     }
 
     /// <summary>
-    /// MechJebModuleAscentMenu ("Ascent Guidance") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleAscentMenu ("Ascent Guidance") in KodeKit.
     /// Both ascent types are built once; the rows that only apply to one of them are shown or hidden.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleAscentMenu))]
@@ -88,7 +88,7 @@ namespace MuMech.UI
         bool HasVessel => Core.vessel != null;
         double BodyRadius => HasVessel && Core.vessel.mainBody != null ? Core.vessel.mainBody.Radius : 0;
 
-        // what WindowGUI did before and while drawing
+        // the module's per-frame work, before the bindings
         protected override void BeforeSync()
         {
             menu.UpdateStrings();
