@@ -116,7 +116,7 @@ namespace MuMech.AttitudeControllers
             _targetOmega[1] = _rollRatePI.Update(_phiVector[1], 0, _maxOmega[1]);
             _targetOmega[2] = _yawRatePI.Update(_phiVector[2], 0, _maxOmega[2]);
 
-            if (UseControlRange && Math.Abs(_phiControlled) > RollControlRange)
+            if (UseControlRange && _phiControlled > RollControlRange)
             {
                 _targetOmega[1] = 0;
                 _rollRatePI.ResetI();
