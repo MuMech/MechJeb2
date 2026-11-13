@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -123,6 +124,11 @@ namespace MuMech
         private double[] _diffBoundL = new double[0];
         private double[] _diffBoundU = new double[0];
 
+        // The solver, its solution and its report, reused with the buffers above: created again only when the engine count changes
+        private alglib.minqpstate _diffState;
+        private double[] _diffX = new double[0];
+        private readonly alglib.minqpreport _diffReport = new alglib.minqpreport();
+
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool ElectricThrottle;
 
@@ -202,6 +208,7 @@ namespace MuMech
             Users.Add(this);
 
             GameEvents.onProtoVesselSave.Add(OnProtoVesselSave);
+            GameEvents.onProtoVesselSave.Add(SaveThrustLimits);
 
             base.OnStart(state);
         }
@@ -567,7 +574,26 @@ namespace MuMech
             DisableDifferentialThrottle();
             GameEvents.onProtoVesselSave.Remove(OnProtoVesselSave);
             RestoreRcsRotation();
+            GameEvents.onProtoVesselSave.Remove(SaveThrustLimits);
             base.OnDestroy();
+        }
+
+        // thrustPercentage is persistent: a save while the differential throttle holds it writes the engines' own limits instead, or a
+        // load would take the last solution for them. KSP snapshots the parts when it builds the ProtoVessel from the live vessel, then
+        // fires this with no node. The dictionary is keyed by engine, so any vessel's snapshot is patched.
+        private void SaveThrustLimits(GameEvents.FromToAction<ProtoVessel, ConfigNode> data)
+        {
+            if (_thrustLimitsBeforeDifferentialThrottle.Count == 0 || data.from == null || data.to != null)
+                return;
+
+            foreach (ProtoPartSnapshot part in data.from.protoPartSnapshots)
+            foreach (ProtoPartModuleSnapshot module in part.modules)
+            {
+                if (!(module.moduleRef is ModuleEngines engine) || module.moduleValues == null ||
+                    !_thrustLimitsBeforeDifferentialThrottle.TryGetValue(engine, out float limit))
+                    continue;
+                module.moduleValues.SetValue("thrustPercentage", limit.ToString(CultureInfo.InvariantCulture));
+            }
         }
 
         //A throttle setting that throttles down when the dynamic pressure exceed a set value
@@ -1044,12 +1070,15 @@ namespace MuMech
             }
 
 
-            if (_diffB.Length != n)
+            if (_diffB.Length != n || _diffState == null)
             {
                 _diffA = new double[n, n];
                 _diffB = new double[n];
                 _diffBoundL = new double[n];
                 _diffBoundU = new double[n];
+                _diffX = new double[n];
+                alglib.minqpcreate(n, out _diffState);
+                alglib.minqpsetalgodensegenipm(_diffState, 0.0);
             }
 
             double[,] a = _diffA;
@@ -1072,15 +1101,15 @@ namespace MuMech
                 boundU[i] = mainThrottle;
             }
 
-            alglib.minqpcreate(n, out alglib.minqpstate state);
+            alglib.minqpstate state = _diffState;
             alglib.minqpsetquadraticterm(state, a, false);
             alglib.minqpsetlinearterm(state, b);
             alglib.minqpsetbc(state, boundL, boundU);
-            alglib.minqpsetalgodensegenipm(state, 0.0);
             //var t1 = stopwatch.ElapsedMilliseconds;
             alglib.minqpoptimize(state);
             //var t2 = stopwatch.ElapsedMilliseconds;
-            alglib.minqpresults(state, out double[] x, out alglib.minqpreport _);
+            alglib.minqpresultsbuf(state, ref _diffX, _diffReport);
+            double[] x = _diffX;
             //var t3 = stopwatch.ElapsedMilliseconds;
             //UnityEngine.Debug.LogFormat("[DiffThrottle] t1: {0}, t2: {1}, t3: {2}", t1, t2 - t1, t3 - t2);
 
