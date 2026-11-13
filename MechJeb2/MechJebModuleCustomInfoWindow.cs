@@ -548,7 +548,8 @@ namespace MuMech
             editedWindow.OnDestroy();
             Core.RemoveComputerModule(editedWindow);
             editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
-            Dirty = true; // the windows are saved by this module: the next save drops the removed one
+            selectedItemIndex = -1; // lets go of the removed window
+            Dirty = true;           // the windows are saved by this module: the next save drops the removed one
         }
 
         // ---- editing actions, shared by WindowGUI and MechJeb2.UI's editor ----
