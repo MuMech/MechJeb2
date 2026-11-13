@@ -50,6 +50,7 @@ namespace MuMech
             public IButton button;
             public string texturePath;
             public string texturePathActive;
+            public string iconName;     // module buttons only: the icon name the textures and the tooltip were made from
             public Func<bool> isActive; // feature buttons only
 
             private bool? _visible;
@@ -256,12 +257,13 @@ namespace MuMech
                 mod.ShowHideWindow();
         }
 
-        // how many modules of this pass had each icon name: custom windows can share a title, and each gets its own button
-        private readonly Dictionary<string, int> _iconNameCounts = new Dictionary<string, int>();
-
-        // the button keys of this pass, and the keys of buttons whose module is gone (a deleted custom window) or renamed
+        // the button keys of this pass, and the keys of buttons whose module is gone (a deleted custom window)
         private readonly HashSet<string> _buttonKeys = new HashSet<string>();
         private readonly List<string> _staleButtonKeys = new List<string>();
+
+        // A module's button id. Custom windows can share a title and change it, so theirs is the window's saved id.
+        internal static string ButtonKey(DisplayModule module) =>
+            module is MechJebModuleCustomInfoWindow window ? window.id : GetCleanName(module.IconName());
 
         public void SetupToolBarButtons()
         {
@@ -270,7 +272,6 @@ namespace MuMech
 
             SetupMainToolbarButton();
 
-            _iconNameCounts.Clear();
             _buttonKeys.Clear();
             List<DisplayModule> modules = Core.GetDisplayModules(DisplayOrder.instance);
             for (int i = 0; i < modules.Count; i++)
@@ -278,47 +279,18 @@ namespace MuMech
                 DisplayModule module = modules[i];
                 if (!module.ShowInMenu || module.TechLocked) continue;
 
-                string name = GetCleanName(module.IconName());
-                if (name.Length == 0) continue; // a custom window whose title is being typed
-                _iconNameCounts.TryGetValue(name, out int occurrence);
-                _iconNameCounts[name] = occurrence + 1;
-                // the first module with a name keeps the plain id, the next ones get a numbered one
-                string key = occurrence == 0 ? name : name + "_" + occurrence;
+                string key = ButtonKey(module);
                 _buttonKeys.Add(key);
 
-                if (!toolbarButtons.TryGetValue(key, out Button button))
+                bool created = !toolbarButtons.TryGetValue(key, out Button button);
+                if (created)
                 {
                     Debug.Log("Create button for module " + module.GetName());
 
-                    string TexturePath = "MechJeb2/Icons/" + name;
-                    string TexturePathActive = TexturePath + "_active";
-
                     button = new Button();
                     button.button = ToolbarManager.Instance.add("MechJeb2", key);
-
-                    if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
-                    {
-                        button.texturePath = Qmark;
-                        Print("No icon for " + name);
-                    }
-                    else
-                    {
-                        button.texturePath = TexturePath;
-                    }
-
-                    if (GameDatabase.Instance.GetTexture(TexturePathActive, false) == null)
-                    {
-                        button.texturePathActive = TexturePath;
-                        //print("No icon for " + name + "_active");
-                    }
-                    else
-                    {
-                        button.texturePathActive = TexturePathActive;
-                    }
-
                     toolbarButtons[key] = button;
 
-                    button.button.ToolTip = "MechJeb " + module.GetName();
                     button.button.OnClick += b =>
                     {
                         MechJebCore mj = ActiveMasterMechJeb();
@@ -326,21 +298,44 @@ namespace MuMech
                             return;
 
                         // the module that made the button belongs to the vessel that was active then
-                        DisplayModule mod = mj.GetDisplayModules(DisplayOrder.instance)
-                           .Where(m => m.ShowInMenu && !m.TechLocked && GetCleanName(m.IconName()) == name)
-                           .Skip(occurrence).FirstOrDefault();
-                        if (mod != null)
+                        foreach (DisplayModule mod in mj.GetDisplayModules(DisplayOrder.instance))
                         {
+                            if (!mod.ShowInMenu || mod.TechLocked || ButtonKey(mod) != key) continue;
                             mod.Enabled = !mod.Enabled;
+                            break;
                         }
                     };
+                }
+
+                // the icon and the tooltip come from the icon name, which for a custom window is its title and can change
+                string iconName = module.IconName();
+                if (button.iconName != iconName)
+                {
+                    button.iconName = iconName;
+
+                    string name = GetCleanName(iconName);
+                    string texturePath = "MechJeb2/Icons/" + name;
+                    string texturePathActive = texturePath + "_active";
+
+                    if (GameDatabase.Instance.GetTexture(texturePath, false) == null)
+                    {
+                        button.texturePath = Qmark;
+                        if (created) Print("No icon for " + name);
+                    }
+                    else
+                    {
+                        button.texturePath = texturePath;
+                    }
+
+                    button.texturePathActive = GameDatabase.Instance.GetTexture(texturePathActive, false) == null ? texturePath : texturePathActive;
+
+                    button.button.ToolTip = "MechJeb " + module.GetName();
                 }
 
                 button.SetVisible(module.ShowInCurrentScene);
                 button.SetTexture(module.IsActive() ? button.texturePathActive : button.texturePath);
             }
 
-            // a custom window's key is its title: the buttons of a deleted window, and of each title it had while it was typed, go
             foreach (KeyValuePair<string, Button> pair in toolbarButtons)
                 if (!_buttonKeys.Contains(pair.Key))
                     _staleButtonKeys.Add(pair.Key);
@@ -494,7 +489,7 @@ namespace MuMech
         private static Regex _invalidChars;
 
         // Cached: it runs for every module on every update
-        private static string GetCleanName(string name)
+        internal static string GetCleanName(string name)
         {
             if (_cleanNames.TryGetValue(name, out string clean))
                 return clean;

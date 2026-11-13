@@ -18,6 +18,12 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public string title = Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_title"); //Custom Info Window
 
+        // names the window whatever its title: the id of its toolbar button
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public string id = NewId();
+
+        internal static string NewId() => "Window_" + Guid.NewGuid().ToString("N");
+
         [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.GLOBAL)]
         public List<InfoItem> items = new List<InfoItem>();
 
@@ -289,11 +295,18 @@ namespace MuMech
 
             //Load custom info windows, which are stored in our ConfigNode:
             ConfigNode[] windowNodes = global.GetNodes(typeof(MechJebModuleCustomInfoWindow).Name);
+            HashSet<string> usedIds = UsedButtonKeys(false);
             foreach (ConfigNode windowNode in windowNodes)
             {
                 var window = new MechJebModuleCustomInfoWindow(Core);
 
                 ConfigNode.LoadObjectFromConfig(window, windowNode);
+
+                // a window saved without an id takes it from its title; the copy of a window's node gets its own
+                if (string.IsNullOrEmpty(windowNode.GetValue("id")))
+                    window.id = IdFromTitle(window.title, usedIds);
+                else if (!usedIds.Add(window.id))
+                    usedIds.Add(window.id = MechJebModuleCustomInfoWindow.NewId());
 
                 // migrate the pre-rename keys, the old keys are dropped on the next save
                 // [ this should get deleted sometime after the 2.16 dev branch is released ]
@@ -482,6 +495,30 @@ namespace MuMech
             Profiler.EndSample();
         }
 
+        // the toolbar button ids in use: the other modules', and with customWindows the ids of this MechJeb's custom windows
+        private HashSet<string> UsedButtonKeys(bool customWindows)
+        {
+            var used = new HashSet<string>();
+            foreach (DisplayModule module in Core.GetComputerModules<DisplayModule>())
+                if (customWindows || !(module is MechJebModuleCustomInfoWindow))
+                    used.Add(MechJebModuleMenu.ButtonKey(module));
+            return used;
+        }
+
+        // An id made from the title, numbered when it is taken: each MechJeb of the game gives the same windows the same
+        // ids, with nothing saved yet. A title that leaves nothing a config file can hold gets a random id.
+        private static string IdFromTitle(string title, HashSet<string> used)
+        {
+            string name = MechJebModuleMenu.GetCleanName(title ?? "");
+            if (name.Length == 0 || MuUtils.SanitizeConfigText(name) != name)
+                name = MechJebModuleCustomInfoWindow.NewId();
+
+            string id = name;
+            for (int n = 1; !used.Add(id); n++)
+                id = name + "_" + n;
+            return id;
+        }
+
         internal void AddNewWindow()
         {
             editedWindow = new MechJebModuleCustomInfoWindow(Core);
@@ -586,20 +623,20 @@ namespace MuMech
             ShowInEditor = true;
         }
 
+        private static readonly int[] _defaultPresets = { 0, 1, 2, 3, 4, 5, 6, 7, 10, 12 };
+
         public void AddDefaultWindows()
         {
             Profiler.BeginSample("MechJebModuleCustomWindowEditor.AddDefaultWindows");
 
-            CreateWindowFromSharingString(CustomWindowPresets.presets[0].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[1].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[2].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[3].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[4].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[5].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[6].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[7].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[10].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[12].sharingString).Enabled = false;
+            // every MechJeb of the game makes these windows before the first save: their ids come from their titles
+            HashSet<string> usedIds = UsedButtonKeys(true);
+            foreach (int preset in _defaultPresets)
+            {
+                MechJebModuleCustomInfoWindow window = CreateWindowFromSharingString(CustomWindowPresets.presets[preset].sharingString);
+                window.Enabled = false;
+                window.id = IdFromTitle(window.title, usedIds);
+            }
 
             Profiler.EndSample();
         }
