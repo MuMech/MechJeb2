@@ -48,8 +48,7 @@ namespace MuMech
         // Stability Control
         public readonly bool StabilityControl;
 
-        [ToggleInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Rover), Persistent(pass = (int)Pass.LOCAL | (int)Pass.TYPE)]
-        // Limit Acceleration
+        // has no effect: nothing reads it, and no window shows it. Kept so that code setting it still compiles.
         public bool LimitAcceleration;
 
         // The controller is its own user while one of the switches that use it is on, so they work from the Rover window, a custom
@@ -150,6 +149,34 @@ namespace MuMech
 
         public void OnVesselModified(Vessel v) => _wheelbasesDirty = true;
 
+        // the share of the charge left in the storage that can flow, NaN without any
+        private double EnergyLeft()
+        {
+            Vessel.GetConnectedResourceTotals(PartResourceLibrary.ElectricityHashcode, out double amount, out double maxAmount);
+            return amount / maxAmount;
+        }
+
+        // breakable panels that are neither broken nor retracted, only when isBreakable is set; the extended panels otherwise
+        private bool AnySolarPanel(bool breakableNotStowed)
+        {
+            List<Part> parts = Vessel.parts;
+            for (int i = 0; i < parts.Count; i++)
+            {
+                PartModuleList modules = parts[i].Modules;
+                for (int m = 0; m < modules.Count; m++)
+                {
+                    if (!(modules[m] is ModuleDeployableSolarPanel panel)) continue;
+                    if (breakableNotStowed
+                            ? panel.isBreakable && panel.deployState != ModuleDeployablePart.DeployState.BROKEN &&
+                            panel.deployState != ModuleDeployablePart.DeployState.RETRACTED
+                            : panel.deployState == ModuleDeployablePart.DeployState.EXTENDED)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         private void RebuildWheelbases()
         {
             _wheelbasesDirty = false;
@@ -236,13 +263,17 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             if (Core.Attitude.Users.Contains(this))
-            {
-                //				line.enabled = false;
-                Core.Attitude.AttitudeDeactivate();
-                Core.Attitude.Users.Remove(this);
-            }
+                ReleaseAttitude();
 
             base.OnModuleDisabled();
+        }
+
+        // the rover leaves the attitude controller; SmartASS or a script that also steers through it keeps it
+        private void ReleaseAttitude()
+        {
+            Core.Attitude.Users.Remove(this);
+            if (Core.Attitude.Users.Count == 0)
+                Core.Attitude.AttitudeDeactivate();
         }
 
         private float  Square(float number)  => number * number;
@@ -374,6 +405,13 @@ namespace MuMech
                 }
             }
 
+            // Brake on Energy Depletion stops the rover to charge, with breakable panels out in an atmosphere or the charge nearly gone:
+            // the speed control below drives to 0 then
+            double energyLeft = BrakeOnEnergyDepletion ? EnergyLeft() : double.NaN;
+            // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
+            bool openSolars = BrakeOnEnergyDepletion && Vessel.mainBody.atmosphere && AnySolarPanel(true);
+            bool stopToCharge = openSolars || energyLeft < 0.03;
+
             // Brake if there is no controler (Pilot eject from seat)
             if (BrakeOnEject && Vessel.GetReferenceTransformPart() == null)
             {
@@ -382,7 +420,7 @@ namespace MuMech
             }
             else if (ControlSpeed)
             {
-                double target = WaypointIndex == -1 ? speed.Val : tgtSpeed;
+                double target = stopToCharge ? 0 : WaypointIndex == -1 ? speed.Val : tgtSpeed;
                 // Heading control slows for a turn as waypoints do: above the turn speed the steering is cut back, and on low gravity the
                 // wheels bounce and stop steering, so a rover on the Mun kept its speed and hardly turned (#1824)
                 if (WaypointIndex == -1 && ControlHeading && target > turnSpeed)
@@ -430,22 +468,13 @@ namespace MuMech
 
             if (BrakeOnEnergyDepletion)
             {
-                List<Part> batteries = Vessel.Parts.FindAll(p =>
-                    p.Resources.Contains(PartResourceLibrary.ElectricityHashcode) &&
-                    p.Resources.Get(PartResourceLibrary.ElectricityHashcode).flowState);
-                double energyLeft = batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).amount) /
-                    batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).maxAmount);
-                bool openSolars =
-                    Vessel.mainBody.atmosphere && // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
-                    Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p =>
-                        p.isBreakable && p.deployState != ModuleDeployablePart.DeployState.BROKEN &&
-                        p.deployState != ModuleDeployablePart.DeployState.RETRACTED).Count > 0;
-
                 if (openSolars && energyLeft > 0.99)
                 {
-                    Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable &&
-                        p.deployState == ModuleDeployablePart.DeployState
-                           .EXTENDED).ForEach(p => p.Retract());
+                    foreach (ModuleDeployableSolarPanel panel in Vessel.GetModules<ModuleDeployableSolarPanel>())
+                    {
+                        if (panel.isBreakable && panel.deployState == ModuleDeployablePart.DeployState.EXTENDED)
+                            panel.Retract();
+                    }
                 }
 
                 if (energyLeft < 0.05 && Math.Sign(s.wheelThrottle) + Math.Sign(curSpeed) != 0)
@@ -453,18 +482,15 @@ namespace MuMech
                     s.wheelThrottle = 0;
                 } // save remaining energy by not using it for acceleration
 
-                if (openSolars || energyLeft < 0.03) { tgtSpeed = 0; }
-
                 if (curSpeed < brakeSpeedLimit && (energyLeft < 0.05 || openSolars))
                 {
                     brake = true;
                 }
 
-                if (curSpeed < 0.1 && energyLeft < 0.05 && !waitingForDaylight &&
-                    Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>()
-                       .FindAll(p => p.deployState == ModuleDeployablePart.DeployState.EXTENDED).Count > 0)
+                if (curSpeed < 0.1 && energyLeft < 0.05 && !waitingForDaylight && AnySolarPanel(false))
                 {
                     waitingForDaylight = true;
+                    _daylightWarpRan = _daylightWarpStopped = false;
                 }
             }
 
@@ -525,42 +551,42 @@ namespace MuMech
             }
         }
 
+        // the daylight warp has raised the rate, and the player has stopped it since
+        private bool _daylightWarpRan, _daylightWarpStopped;
+
+        // every end of the wait for daylight takes the warp back to 1x if this vessel is the one warping
+        private void EndDaylightWait()
+        {
+            waitingForDaylight = false;
+            _daylightWarpRan = _daylightWarpStopped = false;
+            if (Vessel.isActiveVessel)
+                Core.Warp.MinimumWarp();
+        }
+
         public override void OnUpdate()
         {
             if (WarpToDaylight && waitingForDaylight && Vessel.isActiveVessel)
             {
-                List<Part> batteries = Vessel.Parts.FindAll(p =>
-                    p.Resources.Contains(PartResourceLibrary.ElectricityHashcode) &&
-                    p.Resources.Get(PartResourceLibrary.ElectricityHashcode).flowState);
-                double energyLeft = batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).amount) /
-                    batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).maxAmount);
+                double energyLeft = EnergyLeft();
 
-                if (waitingForDaylight)
-                {
-                    if (Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>()
-                           .FindAll(p => p.deployState == ModuleDeployablePart.DeployState.EXTENDED).Count == 0)
-                    {
-                        waitingForDaylight = false;
-                    }
+                // the player stopped the warp while it ran: the rover waits on without raising it again
+                if (TimeWarp.CurrentRateIndex > 0)
+                    _daylightWarpRan = true;
+                else if (_daylightWarpRan)
+                    _daylightWarpStopped = true;
 
+                if (!AnySolarPanel(false) || energyLeft > 0.99)
+                    EndDaylightWait();
+                else if (!_daylightWarpStopped)
                     Core.Warp.WarpRegularAtRate(energyLeft < 0.9 ? 1000 : 50);
-                    if (energyLeft > 0.99)
-                    {
-                        waitingForDaylight = false;
-                        Core.Warp.MinimumWarp();
-                    }
-                }
             }
             else if (!WarpToDaylight && waitingForDaylight)
             {
-                waitingForDaylight = false;
+                EndDaylightWait();
             }
 
             if (!StabilityControl && Core.Attitude.Users.Contains(this))
-            {
-                Core.Attitude.AttitudeDeactivate();
-                Core.Attitude.Users.Remove(this);
-            }
+                ReleaseAttitude();
         }
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)

@@ -217,18 +217,26 @@ namespace MuMech
             return cn;
         }
 
+        // the length along the surface of the route's own body: the waypoints' positions are placed on the active vessel's body,
+        // which is another one for a saved route of another body
         private void UpdateStats()
         {
-            float distance = 0;
-            if (Count > 1)
-            {
-                for (int i = 1; i < Count; i++)
-                {
-                    distance += Vector3.Distance(this[i - 1].Position, this[i].Position);
-                }
-            }
+            double distance = 0;
+            double radius = Body != null ? Body.Radius : 0;
+            for (int i = 1; i < Count; i++)
+                distance += radius * CentralAngle(this[i - 1].Latitude, this[i - 1].Longitude, this[i].Latitude, this[i].Longitude);
 
             _stats = $"{Count} waypoints over {distance.ToSI()}m";
+        }
+
+        // the angle in radians between two points given in degrees, by the haversine formula
+        private static double CentralAngle(double lat1, double lon1, double lat2, double lon2)
+        {
+            double phi1 = Deg2Rad(lat1), phi2 = Deg2Rad(lat2);
+            double sinDPhi = Math.Sin((phi2 - phi1) / 2);
+            double sinDLambda = Math.Sin(Deg2Rad(lon2 - lon1) / 2);
+            double h = sinDPhi * sinDPhi + Math.Cos(phi1) * Math.Cos(phi2) * sinDLambda * sinDLambda;
+            return 2 * SafeAsin(Math.Sqrt(Clamp(h, 0, 1)));
         }
 
         public MechJebWaypointRoute(string name = "", CelestialBody body = null, string mode = "Rover")
@@ -597,7 +605,22 @@ namespace MuMech
             return string.Format(CultureInfo.InvariantCulture, "{0} {1}° {2}' {3:F3}\"", ew, h, m, s);
         }
 
-        /// <summary>Parse a latitude or longitude as the edit fields show it; false (and 0) when the text is not a coordinate.</summary>
+        // the edit panel's five fields, from the waypoint it edits
+        private void RefreshEditFields(MechJebWaypoint wp)
+        {
+            _tmpRadius   = wp.Radius.ToString();
+            _tmpMinSpeed = wp.MinSpeed.ToString();
+            _tmpMaxSpeed = wp.MaxSpeed.ToString();
+            _tmpLat      = LatToString(wp.Latitude);
+            _tmpLon      = LonToString(wp.Longitude);
+        }
+
+        /// <summary>Parse a radius or a speed as the edit fields show it: a finite number, 0 or more.</summary>
+        internal static bool TryParseNonNegative(string text, out float value) =>
+            float.TryParse(text, out value) && !float.IsNaN(value) && !float.IsInfinity(value) && value >= 0;
+
+        /// <summary>Parse a latitude or longitude as the edit fields show it; false (and 0) when the text is not a coordinate. A longitude
+        /// is wrapped into ±180°; a latitude beyond ±90° is no coordinate.</summary>
         internal static bool TryParseCoord(string latLon, bool isLongitute, out double value)
         {
             value = 0;
@@ -635,6 +658,8 @@ namespace MuMech
 
             h = (h + m / 60 + s / 3600) * nsew;
             if (float.IsNaN(h) || float.IsInfinity(h)) return false;
+
+            if (!isLongitute && Math.Abs(h) > range) return false;
 
             // the loops below never end on a huge value
             h %= range * 2;
@@ -715,11 +740,7 @@ namespace MuMech
                 else
                 {
                     SelIndex = i;
-                    _tmpRadius = wp.Radius.ToString();
-                    _tmpMinSpeed = wp.MinSpeed.ToString();
-                    _tmpMaxSpeed = wp.MaxSpeed.ToString();
-                    _tmpLat = LatToString(wp.Latitude);
-                    _tmpLon = LonToString(wp.Longitude);
+                    RefreshEditFields(wp);
                 }
             }
         }
@@ -771,14 +792,14 @@ namespace MuMech
                 {
                     _waitingForPick = true;
                     if (MapView.MapIsEnabled)
-                    {
-                        Core.Target.Unset();
-                        Core.Target.PickPositionTargetOnMap();
-                    }
+                        StartMapPick();
                 }
                 else
                 {
                     _waitingForPick = false;
+                    if (Core.Target.pickingPositionTarget)
+                        Core.Target.StopPickPositionTargetOnMap();
+                    EndMapPick();
                 }
             }
         }
@@ -948,6 +969,43 @@ namespace MuMech
             }
         }
 
+        // A map pick carries its result in the vessel's target: the player's target is kept here while it runs and given back after
+        private bool _mapPickStarted;
+        private ITargetable _targetBeforePick;
+        private CelestialBody _targetBodyBeforePick;
+        private double _targetLatitudeBeforePick, _targetLongitudeBeforePick;
+
+        private void StartMapPick()
+        {
+            if (!_mapPickStarted)
+            {
+                _mapPickStarted              = true;
+                _targetBeforePick            = Core.Target.Target;
+                _targetBodyBeforePick        = Core.Target.targetBody;
+                _targetLatitudeBeforePick    = Core.Target.targetLatitude;
+                _targetLongitudeBeforePick   = Core.Target.targetLongitude;
+            }
+
+            Core.Target.Unset();
+            Core.Target.PickPositionTargetOnMap();
+        }
+
+        private void EndMapPick()
+        {
+            if (!_mapPickStarted) return;
+            _mapPickStarted = false;
+
+            ITargetable target = _targetBeforePick;
+            _targetBeforePick = null;
+
+            if (target is PositionTarget && _targetBodyBeforePick != null)
+                Core.Target.SetPositionTarget(_targetBodyBeforePick, _targetLatitudeBeforePick, _targetLongitudeBeforePick);
+            else if (target == null || (target is UnityEngine.Object obj && obj == null))
+                Core.Target.Unset();
+            else
+                Core.Target.Set(target);
+        }
+
         /// <summary>The click on the terrain or the map while "Add Waypoint" waits for a position (the IMGUI window ran this on Repaint).</summary>
         internal void ProcessWaypointPick(bool alt)
         {
@@ -957,31 +1015,33 @@ namespace MuMech
             {
                 if (!Core.Target.pickingPositionTarget)
                 {
-                    if (Core.Target.PositionTargetExists)
+                    // only a position this window's pick set: a vessel target, or one set before the pick, is no pick result
+                    if (_mapPickStarted && Core.Target.Target is PositionTarget)
                     {
                         if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                         {
                             InsertWaypoint(SelIndex, new MechJebWaypoint(Core.Target.targetLatitude, Core.Target.targetLongitude));
-                            _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
-                            _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
-                            _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
+                            RefreshEditFields(_ap.Waypoints[SelIndex]);
                         }
                         else
                         {
                             _ap.Waypoints.Add(new MechJebWaypoint(Core.Target.targetLatitude, Core.Target.targetLongitude));
                         }
 
-                        Core.Target.Unset();
+                        EndMapPick();
                         _waitingForPick = alt;
                     }
                     else
                     {
-                        Core.Target.PickPositionTargetOnMap();
+                        StartMapPick();
                     }
                 }
             }
             else
             {
+                // leaving the map view cancels its pick
+                EndMapPick();
+
                 if (!GuiUtils.MouseIsOverWindow(Core))
                 {
                     Coordinates mouseCoords = GetMouseFlightCoordinates();
@@ -992,9 +1052,7 @@ namespace MuMech
                             if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                             {
                                 InsertWaypoint(SelIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
-                                _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
-                                _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
-                                _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
+                                RefreshEditFields(_ap.Waypoints[SelIndex]);
                             }
                             else
                             {
@@ -1010,7 +1068,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (Vessel.isActiveVessel && (_renderer == null || _renderer.AP != _ap)) { MechJebRouteRenderer.AttachToMapView(Core); }
+            if (Vessel.isActiveVessel && (_renderer == null || _renderer.AP != _ap)) { _renderer = MechJebRouteRenderer.AttachToMapView(Core); }
 
             _ap.Waypoints.ForEach(wp => wp.Update());
             //			float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
@@ -1168,7 +1226,9 @@ namespace MuMech
             return true;
         }
 
-        private static Vector3 RaisePositionOverTerrain(Vector3 position, float heightOffset)
+        // A waypoint's position is already on the terrain (MechJebWaypoint caches its height): its own altitude saves the PQS query
+        // the map view would make for each vertex every frame
+        private static Vector3 RaisePositionOverTerrain(Vector3 position, float heightOffset, bool positionOnTerrain = false)
         {
             CelestialBody body = FlightGlobals.ActiveVessel.mainBody;
             if (!MapView.MapIsEnabled)
@@ -1176,8 +1236,9 @@ namespace MuMech
                     body.GetAltitude(position) + heightOffset);
             double lat = body.GetLatitude(position);
             double lon = body.GetLongitude(position);
+            double terrain = positionOnTerrain ? body.GetAltitude(position) : body.TerrainAltitude(lat, lon);
             return ScaledSpace.LocalToScaledSpace(body.position +
-                (body.Radius + heightOffset + body.TerrainAltitude(lat, lon)) *
+                (body.Radius + heightOffset + terrain) *
                 body.GetSurfaceNVector(lat, lon));
         }
 
@@ -1192,6 +1253,8 @@ namespace MuMech
                 if (_currPath != null) { _currPath.enabled = value; }
 
                 if (_nextPath != null) { _nextPath.enabled = value; }
+
+                if (_selWp != null) { _selWp.enabled = value; }
             }
         }
 
@@ -1267,8 +1330,8 @@ namespace MuMech
                     float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, AP.Waypoints[sel].Position) / 600f + 0.1f;
                     _selWp.startWidth = 0;
                     _selWp.endWidth = w * 10f;
-                    _selWp.SetPosition(0, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f));
-                    _selWp.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f + w * 15f));
+                    _selWp.SetPosition(0, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f, true));
+                    _selWp.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f + w * 15f, true));
                 }
 
                 if (AP.WaypointIndex > 0)
@@ -1279,7 +1342,7 @@ namespace MuMech
                     for (int i = 0; i < AP.WaypointIndex; i++)
                     {
                         //						Debug.Log("vert " + i.ToString());
-                        _pastPath.SetPosition(i, RaisePositionOverTerrain(AP.Waypoints[i].Position, targetHeight));
+                        _pastPath.SetPosition(i, RaisePositionOverTerrain(AP.Waypoints[i].Position, targetHeight, true));
                     }
 
                     _pastPath.SetPosition(AP.WaypointIndex, RaisePositionOverTerrain(AP.Vessel.CoM, targetHeight));
@@ -1296,7 +1359,7 @@ namespace MuMech
                     //					Debug.Log("drawing currPath");
                     _currPath.enabled = true;
                     _currPath.SetPosition(0, RaisePositionOverTerrain(AP.Vessel.CoM, targetHeight));
-                    _currPath.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex].Position, targetHeight));
+                    _currPath.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex].Position, targetHeight, true));
                     //					Debug.Log("currPath drawn");
                 }
                 else
@@ -1317,7 +1380,7 @@ namespace MuMech
                     for (int i = 0; i < nextCount - 1; i++)
                     {
                         //						Debug.Log("vert " + i.ToString() + " (" + (ap.WaypointIndex + 1 + i).ToString() + ")");
-                        _nextPath.SetPosition(i + 1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex + 1 + i].Position, targetHeight));
+                        _nextPath.SetPosition(i + 1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex + 1 + i].Position, targetHeight, true));
                     }
                     //					Debug.Log("nextPath drawn");
                 }
