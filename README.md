@@ -136,11 +136,13 @@ export KSPDIR="${XDG_DATA_HOME}/Steam/SteamApps/common/Kerbal Space Program"
 nuget restore
 ```
 
-3. Build the mod
+3. Build the mod: `make build` builds the five assemblies that go in `GameData/MechJeb2/Plugins`, the UI (`MechJeb2.UI.dll`) included
 
 ```sh
 make build
 ```
+
+The .NET SDK builds it too, as CI does: `dotnet build MechJeb2.sln -c Release -p:KspDir="$KSPDIR"`.
 
 4. (optional) Install the mod into your KSP directory
 
