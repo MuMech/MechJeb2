@@ -17,9 +17,7 @@ namespace MuMech
         {
             public double minimum;
             public double maximum;
-            public string[] labels;
-            public double[] labelsPos;
-            public int labelsActive;
+            public bool limitsRounded;
         }
 
         // One row per graph the user can tick, in on-screen order. NewRow breaks the checkbox row.
@@ -241,12 +239,10 @@ namespace MuMech
                     graphStates[t].minimum = recorder.Minimums[t] - Math.Abs(recorder.Minimums[t] * 0.2);
                 }
 
-                if (graphStates[t].labels == null)
+                if (!graphStates[t].limitsRounded)
                 {
                     change = true;
-                    // ScaleTicks is only a target: rounding the limits out to a whole step can give one more
-                    graphStates[t].labels = new string[2 * ScaleTicks];
-                    graphStates[t].labelsPos = new double[2 * ScaleTicks];
+                    graphStates[t].limitsRounded = true;
                 }
 
                 if (change)
@@ -258,19 +254,6 @@ namespace MuMech
 
                     minimum = Math.Floor(minimum / step) * step;
                     maximum = Math.Ceiling(maximum / step) * step;
-                    int digit = (int)Math.Max(-Math.Floor(Math.Log10(step)), 0);
-
-                    double currX = minimum;
-                    int i = 0;
-                    while (i < graphStates[t].labels.Length && currX <= maximum + 0.5 * step)
-                    {
-                        graphStates[t].labels[i] = currX.ToString("F" + digit);
-                        graphStates[t].labelsPos[i] = currX;
-                        currX += step;
-                        i++;
-                    }
-
-                    graphStates[t].labelsActive = i;
                     graphStates[t].minimum = minimum;
                     graphStates[t].maximum = maximum;
                 }
