@@ -12,7 +12,7 @@ namespace MuMech.UI
     /// <summary>
     /// MechJebModuleCustomInfoWindow (every custom info window: "Vessel Info", "Delta-V Stats", users' own...) in KodeKit.
     /// Built once from the window's item list; rebuilt when the list changes in the window editor. Values refresh at the
-    /// window's refresh rate like UpdateWindowItems.
+    /// window's refresh rate.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleCustomInfoWindow))]
     public class CustomInfoWindowView : KodeView
@@ -116,9 +116,10 @@ namespace MuMech.UI
             KodeWindow.Label(rate, "Update Interval", true);
             EditFields.Field(w, rate, () => window.refreshRate.Text, s =>
             {
+                int old = window.refreshRate;
                 window.refreshRate.Text = s;
                 if (window.refreshRate < 1) window.refreshRate.Val = 1;
-                window.UpdateRefreshRate();
+                if (window.refreshRate != old) window.Dirty = true;
             }, 60);
             KodeWindow.Label(rate, "Hz");
             w.Visible(rate.gameObject, () => GuiUtils.ShowAdvancedWindowSettings);
