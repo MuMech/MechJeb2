@@ -14,6 +14,15 @@ namespace MuMech
         public bool hasLiftModule;
         private double bodyLiftMultiplier;
 
+        // A part without drag cubes (struts and fuel lines say DRAG_CUBE { none = True }) gets its drag from its drag model, as
+        // FlightIntegrator.CalculateDragValue gives it, and no body lift. SetDrag does nothing for it, so the pooled DragCubeList
+        // would give the drag and lift of the part it last held.
+        private bool noCubes;
+        private Part.DragModel dragModel;
+        private float minimumDrag;
+        private float maximumDrag;
+        private Vector3 dragReferenceVector;
+
         private ReentrySimulation.SimCurves simCurves;
 
         protected QuaternionD vesselToPart;
@@ -108,6 +117,12 @@ namespace MuMech
             hasLiftModule = p.hasLiftModule;
             bodyLiftMultiplier = p.bodyLiftMultiplier * PhysicsGlobals.BodyLiftMultiplier;
 
+            noCubes = p.DragCubes.None;
+            dragModel = p.dragModel;
+            minimumDrag = p.minimum_drag;
+            maximumDrag = p.maximum_drag;
+            dragReferenceVector = p.dragReferenceVector;
+
             simCurves = _simCurves;
 
             //cubes = new DragCubeList();
@@ -137,6 +152,12 @@ namespace MuMech
                 return Vector3d.zero;
 
             Vector3d dragVectorDirLocal = -(vesselToPart * vesselVelocity).normalized;
+
+            // dragFactor holds the drag cube multiplier, which stock applies to the cubes only
+            if (noCubes)
+                return PhysicsGlobals.DragCubeMultiplier > 0
+                    ? -vesselVelocity.normalized * NoCubesDragValue(dragVectorDirLocal) * dragFactor / PhysicsGlobals.DragCubeMultiplier
+                    : Vector3d.zero;
 
             cubes.SetDrag(dragVectorDirLocal, mach);
 
@@ -193,9 +214,28 @@ namespace MuMech
             return drag;
         }
 
+        // FlightIntegrator.CalculateDragValue for a part without drag cubes. dragVectorDirLocal is in the part's
+        // frame: minus the velocity through the air, as stock's dragVectorDirLocal.
+        private double NoCubesDragValue(Vector3d dragVectorDirLocal)
+        {
+            switch (dragModel)
+            {
+                case Part.DragModel.CUBE:
+                case Part.DragModel.SPHERICAL:
+                    return maximumDrag;
+                case Part.DragModel.CYLINDRICAL:
+                    return Mathf.Lerp(minimumDrag, maximumDrag, Mathf.Abs(Vector3.Dot(dragReferenceVector, -(Vector3)dragVectorDirLocal)));
+                case Part.DragModel.CONIC:
+                    return Mathf.Lerp(minimumDrag, maximumDrag, Vector3.Angle(dragReferenceVector, -(Vector3)dragVectorDirLocal) / 180f);
+                default:
+                    // NONE, the model of the stock struts and fuel lines; DEFAULT reads the cubes, which hold nothing
+                    return 0;
+            }
+        }
+
         public virtual Vector3d Lift(Vector3d vesselVelocity, double liftFactor)
         {
-            if (shieldedFromAirstream || hasLiftModule)
+            if (shieldedFromAirstream || hasLiftModule || noCubes)
                 return Vector3d.zero;
 
             // direction of the lift in a vessel centric reference
