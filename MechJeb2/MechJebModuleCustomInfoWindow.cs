@@ -367,7 +367,8 @@ namespace MuMech
                         if (match != null) window.items.Add(match);
                         // an item of a module this game no longer has (a removed mod, a blacklisted module): the next save
                         // writes the window without it
-                        else Print($"custom window \"{window.title}\": no info item \"{id}\" in this game, it is dropped from the window");
+                        else if (_reported.Add(window.id + "/" + id))
+                            Print($"custom window \"{window.title}\": no info item \"{id}\" in this game, it is dropped from the window");
                     }
                 }
 
@@ -415,6 +416,9 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state) => editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
 
         private static readonly Dictionary<Type, List<Tuple<MemberInfo, Attribute>>> _cache = new Dictionary<Type, List<Tuple<MemberInfo, Attribute>>>();
+
+        // the skipped and dropped items already logged: every MechJeb part loads, several times a session
+        private static readonly HashSet<string> _reported = new HashSet<string>();
 
         private void RegisterInfoItems(object obj)
         {
@@ -488,7 +492,15 @@ namespace MuMech
                 }
                 catch (Exception e)
                 {
-                    Print($"cannot make the info item of {objType.Name}.{member.Name}, skipped: {e.Message}");
+                    // the item's stopwatch was left running
+                    _valueInfoItemStopwatch.Stop();
+                    _actionInfoItemStopwatch.Stop();
+                    _toggleInfoItemStopwatch.Stop();
+                    _generalInfoItemStopwatch.Stop();
+                    _editableInfoItemStopwatch.Stop();
+
+                    if (_reported.Add(objType.FullName + "." + member.Name))
+                        Print($"cannot make the info item of {objType.Name}.{member.Name}, skipped: {e.Message}");
                 }
             }
 
