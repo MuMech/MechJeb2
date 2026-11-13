@@ -225,6 +225,11 @@ namespace MuMech
                 //finished circularize
                 if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
                     return false;
+
+                // the node executor stopped with the node left (knocked off the burn, or aborted by the player): the
+                // ascent ends there and leaves the node to the player, rather than hold the throttle at 0
+                if (!Core.Node.Enabled)
+                    return false;
             }
             else
             {
