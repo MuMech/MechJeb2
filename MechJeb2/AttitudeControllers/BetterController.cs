@@ -240,7 +240,7 @@ namespace MuMech.AttitudeControllers
 
             // the roll control range gates roll on the pointing error of the axes that are controlled: with pitch and yaw left free their
             // error never closes, and roll would never be flown. With both controlled this is the angle between the two directions
-            double gateDistance = SafeAcos(Cos(_error[0] * Ac.AxisControl.x) * Cos(_error[2] * Ac.AxisControl.z));
+            double phiControlled = SafeAcos(Cos(_error[0] * Ac.AxisControl.x) * Cos(_error[2] * Ac.AxisControl.z));
 
             // see https://archive.is/NqoUm and the "Alt Hold Controller", the acceleration PID is not implemented, so we only
             // have the first two PIDs in the cascade.
@@ -295,7 +295,7 @@ namespace MuMech.AttitudeControllers
                         _targetOmega[i] = Clamp(_targetOmega[i], -maxOmega, maxOmega);
                     }
 
-                    if (UseControlRange && gateDistance * Mathf.Rad2Deg > RollControlRange)
+                    if (UseControlRange && phiControlled * Mathf.Rad2Deg > RollControlRange)
                     {
                         _targetOmega[1] = 0;
                         _posPID[1].Reset();

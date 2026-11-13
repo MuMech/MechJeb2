@@ -34,7 +34,7 @@ namespace MuMech.AttitudeControllers
 
         /* error */
         private double _phiTotal;
-        private double _gateDistance;
+        private double _phiControlled;
 
         /* error in pitch, roll, yaw */
         internal Vector3d _phiVector = Vector3d.zero;
@@ -79,7 +79,7 @@ namespace MuMech.AttitudeControllers
             _phiTotal = SafeAcos(Math.Cos(pitch) * Math.Cos(yaw));
 
             // the roll control range gates roll on the miss of the axes that are controlled: with pitch and yaw free it never closes
-            _gateDistance = SafeAcos(Math.Cos(pitch * Ac.AxisControl.x) * Math.Cos(yaw * Ac.AxisControl.z));
+            _phiControlled = SafeAcos(Math.Cos(pitch * Ac.AxisControl.x) * Math.Cos(yaw * Ac.AxisControl.z));
 
             // this is the initial direction of the great circle route of the requested transform
             // (pitch is latitude, yaw is -longitude, and we are "navigating" from 0,0)
@@ -116,7 +116,7 @@ namespace MuMech.AttitudeControllers
             _targetOmega[1] = _rollRatePI.Update(_phiVector[1], 0, _maxOmega[1]);
             _targetOmega[2] = _yawRatePI.Update(_phiVector[2], 0, _maxOmega[2]);
 
-            if (UseControlRange && Math.Abs(_gateDistance) > RollControlRange)
+            if (UseControlRange && Math.Abs(_phiControlled) > RollControlRange)
             {
                 _targetOmega[1] = 0;
                 _rollRatePI.ResetI();
