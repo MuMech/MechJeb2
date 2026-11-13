@@ -123,31 +123,37 @@ namespace MuMech
         // the severity that goes with autopilotStatus; WindowGUI turns it into a style (GUI.skin only exists inside OnGUI,
         // and MechJeb2.UI calls UpdateStrings outside it)
         internal AscentStatusLevel autopilotStatusLevel;
-        private TimeSpan _refreshInterval = TimeSpan.FromSeconds(0.1);
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt _refreshRate = 10;
 
+        // the persisted rate is the one source: a loaded value counts as much as an edited one
+        private TimeSpan RefreshInterval => TimeSpan.FromSeconds(1d / Math.Max(_refreshRate, 1));
+
         internal void UpdateStrings()
         {
             DateTime now = DateTime.Now;
-            if (now <= _lastRefresh + _refreshInterval) return;
+            if (now <= _lastRefresh + RefreshInterval) return;
 
             _lastRefresh = now;
             Profiler.BeginSample("MJ.GUIWindow.UpdateStrings.StringOps");
-            vgo = $"vgo: {Core.Guidance.Vgo:F1}";
-            heading = $"heading: {Core.Guidance.Heading:F1}";
-            tgo = $"tgo: {Core.Guidance.Tgo:F3}";
-            pitch = $"pitch: {Core.Guidance.Pitch:F1}";
-            label26 = $"{CachedLocalizer.Instance.MechJebAscentLabel26}{Core.Guidance.Status}";
-            label27 = $"{CachedLocalizer.Instance.MechJebAscentLabel27}{Core.PSGSimulation.SuccessfulConverges}";
-            label28 = $"{CachedLocalizer.Instance.MechJebAscentLabel28}{Core.PSGSimulation.LastLmStatus}";
-            n = $"n: {Core.PSGSimulation.LastLmIterations}({Core.PSGSimulation.MaxLmIterations})";
-            label29 = $"{CachedLocalizer.Instance.MechJebAscentLabel29} {GuiUtils.TimeToDHMS(Core.PSGSimulation.Staleness)}";
-            znorm = $"infeasibility: {Core.PSGSimulation.LastInfeasibility:G5}";
-            if (Core.PSGSimulation.LastFailureMessage != null)
-                label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}";
+            // the guidance rows are only shown for a PSG ascent, so the classic one builds no strings for them
+            if (_ascentSettings.AscentType == AscentType.PSG)
+            {
+                vgo = $"vgo: {Core.Guidance.Vgo:F1}";
+                heading = $"heading: {Core.Guidance.Heading:F1}";
+                tgo = $"tgo: {Core.Guidance.Tgo:F3}";
+                pitch = $"pitch: {Core.Guidance.Pitch:F1}";
+                label26 = $"{CachedLocalizer.Instance.MechJebAscentLabel26}{Core.Guidance.Status}";
+                label27 = $"{CachedLocalizer.Instance.MechJebAscentLabel27}{Core.PSGSimulation.SuccessfulConverges}";
+                label28 = $"{CachedLocalizer.Instance.MechJebAscentLabel28}{Core.PSGSimulation.LastLmStatus}";
+                n = $"n: {Core.PSGSimulation.LastLmIterations}({Core.PSGSimulation.MaxLmIterations})";
+                label29 = $"{CachedLocalizer.Instance.MechJebAscentLabel29} {GuiUtils.TimeToDHMS(Core.PSGSimulation.Staleness)}";
+                znorm = $"infeasibility: {Core.PSGSimulation.LastInfeasibility:G5}";
+                if (Core.PSGSimulation.LastFailureMessage != null)
+                    label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}";
+            }
 
             if (_launchingToPlane) launchTimer = CachedLocalizer.Instance.MechJebAscentMsg2; //Launching to target plane
             else if (_launchingToMatchLan) launchTimer = CachedLocalizer.Instance.MechJebAscentLaunchingToTargetLAN; //Launching to target LAN
@@ -181,10 +187,7 @@ namespace MuMech
         internal void RefreshRateChanged(int oldRate)
         {
             if (oldRate != _refreshRate)
-            {
                 _refreshRate = Math.Max(_refreshRate, 1);
-                _refreshInterval = TimeSpan.FromSeconds(1d / _refreshRate);
-            }
         }
 
         private string PhaseString(Solution solution, double t, int psgPhase)
