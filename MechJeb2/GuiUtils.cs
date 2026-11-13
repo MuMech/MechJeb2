@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.Utils;
@@ -39,6 +40,7 @@ namespace MuMech
             {
                 ValConfig = value;
                 TextConfig = (ValConfig / _multiplier).ToString();
+                Parsed = true; // the text is now the value's
             }
         }
 
@@ -123,6 +125,7 @@ namespace MuMech
             {
                 ValConfig = value;
                 TextConfig = GuiUtils.TimeToDHMS(ValConfig);
+                Parsed = true; // the text is now the value's
             }
         }
 
@@ -180,16 +183,19 @@ namespace MuMech
         private static void Split(double angle, out bool negative, out double degrees, out double minutes, out double seconds)
         {
             negative = angle < 0;
-            angle = Math.Abs(angle);
-            degrees = (int)angle;
-            angle -= degrees;
-            minutes = (int)(60 * angle);
-            angle -= minutes / 60;
-            seconds = Math.Round(3600 * angle);
+            // rounded to the arc second before it is split, so the seconds never read 60
+            double totalSeconds = Math.Round(3600 * Math.Abs(angle));
+            degrees = Math.Floor(totalSeconds / 3600);
+            minutes = Math.Floor(totalSeconds % 3600 / 60);
+            seconds = totalSeconds % 60;
         }
 
-        private static double Join(bool negative, double degrees, double minutes, double seconds) =>
-            (negative ? -1 : 1) * (degrees + minutes / 60.0 + seconds / 3600.0);
+        // A minus typed in a field flips the hemisphere, as it does in a decimal angle: -5° 30' N is 5° 30' S.
+        private static double Join(bool negative, double degrees, double minutes, double seconds)
+        {
+            negative ^= degrees < 0 || minutes < 0 || seconds < 0;
+            return (negative ? -1 : 1) * (Math.Abs(degrees) + Math.Abs(minutes) / 60.0 + Math.Abs(seconds) / 3600.0);
+        }
 
         private double FieldValue => Join(Negative, Degrees, Minutes, Seconds);
 
@@ -467,6 +473,9 @@ namespace MuMech
         public static GUISkin CompactSkin;
         public static GUISkin TransparentSkin;
 
+        // the scaled size follows the screen: a resolution change in flight (Alt+Enter, a resized window) recomputes it
+        static GuiUtils() => GameEvents.onScreenResolutionModified.Add((width, height) => SetGUIScale(Scale));
+
         public static void SetGUIScale(double s)
         {
             Scale = Mathf.Clamp((float)s, 0.2f, 5f);
@@ -486,7 +495,7 @@ namespace MuMech
             GUI.skin = null;
             CompactSkin = Object.Instantiate(GUI.skin);
 
-            Skin.name = "KSP Compact";
+            CompactSkin.name = "KSP Compact";
 
             CompactSkin.label.margin = new RectOffset(1, 1, 1, 1);
             CompactSkin.label.padding = new RectOffset(0, 0, 2, 2);
@@ -710,40 +719,45 @@ namespace MuMech
             double years = seconds / KSPUtil.dateTimeFormatter.Year;
             if (Math.Abs(years) >= 1000) return years.ToSI() + "a";
 
-            string ret = "";
+            StringBuilder ret = _dhmsBuilder ??= new StringBuilder();
+            ret.Clear();
             bool showSecondsDecimals = decimalPlaces > 0;
 
             try
             {
-                string[] units = { "y", "d", "h", "m", "s" };
-                long[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
-
                 bool negative = seconds < 0;
                 seconds = Math.Abs(seconds);
                 // round to the decimals shown before splitting into units: 239.97 s is "4m 00.0s", not "3m 60.0s"
                 if (showSecondsDecimals)
                     seconds = (double)Math.Round((decimal)seconds, Math.Min(decimalPlaces, 9), MidpointRounding.AwayFromZero);
                 // no "-00.0s" for a value that rounds to zero
-                if (negative && (showSecondsDecimals ? seconds > 0 : seconds >= 1)) ret += "-";
+                if (negative && (showSecondsDecimals ? seconds > 0 : seconds >= 1)) ret.Append('-');
 
-                for (int i = 0; i < units.Length; i++)
+                for (int i = 0; i < DHMS_UNITS.Length; i++)
                 {
-                    long n = (long)(seconds / intervals[i]);
+                    long interval = i == 0 ? KSPUtil.dateTimeFormatter.Year : i == 1 ? KSPUtil.dateTimeFormatter.Day : DHMS_SECONDS[i];
+                    long n = (long)(seconds / interval);
                     bool first = ret.Length < 2;
                     // the seconds always show when nothing else did, after a "-" too ("-00.5s", not "-")
-                    if (!first || n != 0 || i == units.Length - 1)
+                    if (!first || n != 0 || i == DHMS_UNITS.Length - 1)
                     {
-                        if (!first) ret += " ";
+                        if (!first) ret.Append(' ');
 
-                        if (showSecondsDecimals && seconds < 60 && i == units.Length - 1)
-                            ret += seconds.ToString("00." + new string('0', decimalPlaces));
-                        else if (first) ret += n.ToString();
-                        else ret += n.ToString(i == 1 ? "000" : "00");
+                        if (showSecondsDecimals && seconds < 60 && i == DHMS_UNITS.Length - 1)
+                            ret.Append(seconds.ToString(SecondsFormat(decimalPlaces)));
+                        else if (first) ret.Append(n);
+                        else
+                        {
+                            // zero padded to two digits, three for the days
+                            if (i == 1 && n < 100) ret.Append('0');
+                            if (n < 10) ret.Append('0');
+                            ret.Append(n);
+                        }
 
-                        ret += units[i];
+                        ret.Append(DHMS_UNITS[i]);
                     }
 
-                    seconds -= n * intervals[i];
+                    seconds -= n * interval;
                 }
             }
             catch (Exception)
@@ -751,7 +765,27 @@ namespace MuMech
                 return "NaN";
             }
 
-            return ret;
+            return ret.ToString();
+        }
+
+        // TimeToDHMS's units; the year and day lengths come from KSP's calendar at each call
+        private static readonly char[] DHMS_UNITS = { 'y', 'd', 'h', 'm', 's' };
+        private static readonly long[] DHMS_SECONDS = { 0, 0, 3600, 60, 1 };
+
+        [ThreadStatic]
+        private static StringBuilder _dhmsBuilder;
+
+        private static readonly List<string> _secondsFormats = new List<string>();
+
+        // "00.0", "00.00"...: one string per number of decimals, made once
+        private static string SecondsFormat(int decimalPlaces)
+        {
+            lock (_secondsFormats)
+            {
+                while (_secondsFormats.Count <= decimalPlaces)
+                    _secondsFormats.Add("00." + new string('0', _secondsFormats.Count));
+                return _secondsFormats[decimalPlaces];
+            }
         }
 
         public static bool TryParseDHMS(string s, out double seconds)
@@ -770,7 +804,8 @@ namespace MuMech
                 int unitPos = s.IndexOf(units[i]);
                 if (unitPos == -1) continue;
 
-                if (!double.TryParse(s.Substring(0, unitPos), out double value)) return false;
+                // as a plain number in the same field reads it: "1,5h" is an hour and a half
+                if (!NumberText.TryParseDouble(s.Substring(0, unitPos), out double value)) return false;
                 seconds += value * intervals[i];
                 s = s.Substring(unitPos + 1);
                 parsedSomething = true;
@@ -820,6 +855,16 @@ namespace MuMech
             Ray mouseRay = PlanetariumCamera.Camera.ScreenPointToRay(Input.mousePosition);
             mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
             Vector3d relOrigin = mouseRay.origin - body.position;
+
+            // a body without terrain (Jool, the Sun): the sphere of its radius, where stock's TerrainAltitude is 0
+            if (body.pqsController == null)
+            {
+                if (!PQS.LineSphereIntersection(relOrigin, mouseRay.direction, body.Radius, out Vector3d relSpherePosition))
+                    return null;
+                Vector3d spherePoint = body.position + relSpherePosition;
+                return new Coordinates(body.GetLatitude(spherePoint), Clamp180(body.GetLongitude(spherePoint)));
+            }
+
             double curRadius = body.pqsController.radiusMax;
             double lastRadius = 0;
             int loops = 0;
@@ -1052,8 +1097,8 @@ namespace MuMech
             double clampedLongitude = Clamp180(longitude);
             double latitudeAbs = Math.Abs(latitude);
             double longitudeAbs = Math.Abs(clampedLongitude);
-            return latitudeAbs.ToString("F" + precision) + "° " + (latitude > 0 ? "N" : "S") + (newline ? "\n" : ", ")
-                + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
+            return latitudeAbs.ToString("F" + precision) + "° " + (latitude >= 0 ? "N" : "S") + (newline ? "\n" : ", ")
+                + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude >= 0 ? "E" : "W");
         }
 
         public string ToStringDecimal(bool newline = false, int precision = 3) => ToStringDecimal(Latitude, Longitude, newline, precision);
@@ -1061,17 +1106,19 @@ namespace MuMech
         public static string ToStringDMS(double latitude, double longitude, bool newline = false)
         {
             double clampedLongitude = Clamp180(longitude);
-            return AngleToDMS(latitude) + (latitude > 0 ? " N" : " S") + (newline ? "\n" : ", ")
-                + AngleToDMS(clampedLongitude) + (clampedLongitude > 0 ? " E" : " W");
+            return AngleToDMS(latitude) + (latitude >= 0 ? " N" : " S") + (newline ? "\n" : ", ")
+                + AngleToDMS(clampedLongitude) + (clampedLongitude >= 0 ? " E" : " W");
         }
 
         public string ToStringDMS(bool newline = false) => ToStringDMS(Latitude, Longitude, newline);
 
         public static string AngleToDMS(double angle)
         {
-            int degrees = (int)Math.Floor(Math.Abs(angle));
-            int minutes = (int)Math.Floor(60 * (Math.Abs(angle) - degrees));
-            int seconds = (int)Math.Floor(3600 * (Math.Abs(angle) - degrees - minutes / 60.0));
+            // rounded to the arc second first, then split in whole numbers: flooring each floating remainder read one second low
+            long totalSeconds = (long)Math.Round(3600 * Math.Abs(angle));
+            long degrees = totalSeconds / 3600;
+            long minutes = totalSeconds % 3600 / 60;
+            long seconds = totalSeconds % 60;
 
             return $"{degrees:0}° {minutes:00}' {seconds:00}\"";
         }

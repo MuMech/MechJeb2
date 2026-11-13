@@ -21,8 +21,11 @@ namespace MuMech
             double radius = 0)
         {
             Vector3d up = body.GetSurfaceNVector(latitude, longitude);
-            double height = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) *
-                QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
+            // a body without terrain (Jool, the Sun) has none: the marker sits on its radius
+            double height = body.pqsController == null
+                ? body.Radius
+                : body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) *
+                    QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
             if (height < body.Radius) { height = body.Radius; }
 
             Vector3d center = body.position + height * up;
@@ -84,6 +87,20 @@ namespace MuMech
                     ? PlanetariumCamera.Camera.WorldToViewportPoint(ScaledSpace.LocalToScaledSpace(worldPosition))
                     : FlightCamera.fetch.mainCamera.WorldToViewportPoint(worldPosition);
             GL.Vertex3(screenPoint.x, screenPoint.y, 0);
+        }
+
+        // An edge in the flight camera's viewport, for GL.LINES in LoadOrtho. Drawn only when both ends are in front of the camera: a
+        // point behind it comes out mirrored, and its edge would cross the screen.
+        private static void GLViewportLine(Vector3d worldPosition1, Vector3d worldPosition2)
+        {
+            Camera camera = FlightCamera.fetch.mainCamera;
+            Vector3 viewportPoint1 = camera.WorldToViewportPoint(worldPosition1);
+            Vector3 viewportPoint2 = camera.WorldToViewportPoint(worldPosition2);
+            if (viewportPoint1.z <= 0 || viewportPoint2.z <= 0)
+                return;
+
+            GL.Vertex3(viewportPoint1.x, viewportPoint1.y, 0);
+            GL.Vertex3(viewportPoint2.x, viewportPoint2.y, 0);
         }
 
         private static void GLPixelLine(Vector3d worldPosition1, Vector3d worldPosition2, bool map)
@@ -169,8 +186,7 @@ namespace MuMech
                         if ((corner & axis) != 0)
                             continue;
 
-                        GLVertex(origin + rotation * Corner(min, max, corner));
-                        GLVertex(origin + rotation * Corner(min, max, corner | axis));
+                        GLViewportLine(origin + rotation * Corner(min, max, corner), origin + rotation * Corner(min, max, corner | axis));
                     }
             }
 
@@ -206,41 +222,18 @@ namespace MuMech
             GL.Begin(GL.LINES);
             GL.Color(c);
 
-            GLVertex(a1);
-            GLVertex(a2);
-
-            GLVertex(a2);
-            GLVertex(a3);
-
-            GLVertex(a3);
-            GLVertex(a4);
-
-            GLVertex(a4);
-            GLVertex(a1);
-
-            GLVertex(b1);
-            GLVertex(b2);
-
-            GLVertex(b2);
-            GLVertex(b3);
-
-            GLVertex(b3);
-            GLVertex(b4);
-
-            GLVertex(b4);
-            GLVertex(b1);
-
-            GLVertex(a1);
-            GLVertex(b1);
-
-            GLVertex(a2);
-            GLVertex(b2);
-
-            GLVertex(a3);
-            GLVertex(b3);
-
-            GLVertex(a4);
-            GLVertex(b4);
+            GLViewportLine(a1, a2);
+            GLViewportLine(a2, a3);
+            GLViewportLine(a3, a4);
+            GLViewportLine(a4, a1);
+            GLViewportLine(b1, b2);
+            GLViewportLine(b2, b3);
+            GLViewportLine(b3, b4);
+            GLViewportLine(b4, b1);
+            GLViewportLine(a1, b1);
+            GLViewportLine(a2, b2);
+            GLViewportLine(a3, b3);
+            GLViewportLine(a4, b4);
 
             GL.End();
             GL.PopMatrix();
