@@ -99,6 +99,9 @@ namespace MuMech
 
         internal double lastMaximumAltitude;
 
+        // KSP's physics tick at its default setting
+        private const double MIN_RECORD_INTERVAL = 0.02;
+
         internal int width = 512;
         internal int height = 256;
 
@@ -208,8 +211,8 @@ namespace MuMech
                 ? recorder.Maximums[(int)RecordType.DOWN_RANGE]
                 : recorder.Maximums[(int)RecordType.TIME_SINCE_MARK]);
 
-            // the time axis has one record per Precision seconds
-            double precision = recorder.Precision;
+            // the time axis has one record per Precision seconds, and the recorder makes at most one per physics tick
+            double precision = Math.Max(recorder.Precision, MIN_RECORD_INTERVAL);
             double maxXScaled = (downrange ? maxX : maxX / precision) / width;
             double autoScaleX = Math.Max(Math.Ceiling(Math.Log(maxXScaled, 2)), 0);
             double manualScaleX = downrange ? downrangeScale : timeScale;
