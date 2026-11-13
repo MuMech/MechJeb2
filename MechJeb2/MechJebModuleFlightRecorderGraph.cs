@@ -17,6 +17,7 @@ namespace MuMech
         {
             public double minimum;
             public double maximum;
+            public bool limitsRounded;
         }
 
         // One row per graph the user can tick, in on-screen order. NewRow breaks the checkbox row.
@@ -242,6 +243,12 @@ namespace MuMech
                     graphStates[t].minimum = recorder.Minimums[t] - Math.Abs(recorder.Minimums[t] * 0.2);
                 }
 
+                if (!graphStates[t].limitsRounded)
+                {
+                    change = true;
+                    graphStates[t].limitsRounded = true;
+                }
+
                 if (change)
                 {
                     double maximum = graphStates[t].maximum;
@@ -251,7 +258,6 @@ namespace MuMech
 
                     minimum = Math.Floor(minimum / step) * step;
                     maximum = Math.Ceiling(maximum / step) * step;
-
                     graphStates[t].minimum = minimum;
                     graphStates[t].maximum = maximum;
                 }

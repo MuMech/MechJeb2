@@ -91,8 +91,31 @@ namespace MuMech
         /// <summary>Move the node by `orbits` periods of its orbit. A hyperbolic orbit has no period, so the node stays.</summary>
         internal void ShiftNodeOrbits(int orbits)
         {
-            if (node.patch.eccentricity < 1)
+            if (node.patch.eccentricity < 1 && OnNodePatch(node.UT + orbits * node.patch.period))
                 ShiftNode(orbits * node.patch.period);
+        }
+
+        // whether UT is on the node's patch: a time computed from the patch's orbit before the patch starts, or past its sphere of
+        // influence change, is a point of an orbit the vessel does not follow then
+        private bool OnNodePatch(double UT)
+        {
+            Orbit o = node.patch;
+            if (o.patchStartTransition != Orbit.PatchTransitionType.INITIAL && UT < o.StartUT)
+                return false;
+
+            // KSP cuts the patch of a node after the first at the node (MANEUVER, EndUT = node.UT): where the patch ends without
+            // the node is solved again, on a copy
+            if (o.patchEndTransition == Orbit.PatchTransitionType.MANEUVER)
+            {
+                // the encounter search only looks between StartUT and EndUT, which KSP sets to one period before it solves a patch
+                var uncut = new Orbit(o) { StartUT = o.StartUT };
+                uncut.EndUT = uncut.eccentricity < 1 ? uncut.StartUT + uncut.period : uncut.period;
+                PatchedConics.CalculatePatch(uncut, new Orbit(), o.epoch, new PatchedConics.SolverParameters(),
+                    Vessel.patchedConicSolver.targetBody);
+                o = uncut;
+            }
+
+            return o.patchEndTransition == Orbit.PatchTransitionType.FINAL || UT <= o.EndUT;
         }
 
         private void MoveNode(double UT)
@@ -145,7 +168,8 @@ namespace MuMech
                     break;
             }
 
-            MoveNode(UT);
+            if (OnNodePatch(UT))
+                MoveNode(UT);
         }
 
         private static readonly string[] relativityModeStrings = { "0", "1", "2", "3", "4" };
