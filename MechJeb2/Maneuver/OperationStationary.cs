@@ -19,11 +19,6 @@ namespace MuMech
 
         public override string GetName() => Localizer.Format("#MechJeb_stationary_title"); //stationary orbit
 
-        private void MoveByMeter(ref EditableAngle angle, double distance, double alt, Orbit o)
-        {
-            double angularDelta = distance * UtilMath.Rad2Deg / (alt + o.referenceBody.Radius);
-            angle += angularDelta;
-        }
 
         // The longitude is shown on the map as a position target on this body. Showing the operation makes one only when there is no
         // target; a nudge, which moves the longitude, makes one in place of any other target, so the longitude it moves is shown.
@@ -53,7 +48,8 @@ namespace MuMech
         {
             ShowPositionTarget(o, targetController);
             double asl = o.referenceBody.TerrainAltitude(targetController.targetLatitude, targetController.targetLongitude);
-            MoveByMeter(ref targetController.targetLongitude, distance, asl, o);
+            double radius = (asl + o.referenceBody.Radius) * MechJebModuleLandingGuidance.ParallelScale(targetController.targetLatitude);
+            targetController.targetLongitude += distance * UtilMath.Rad2Deg / radius;
         }
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double ut, MechJebModuleTargetController target)
