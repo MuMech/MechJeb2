@@ -35,6 +35,10 @@ namespace MuMech
         private Transform _lastReferenceTransform;
 
         public bool RCSAuto = false;
+
+        // RCS auto turns the RCS group off only when it turned it on itself: the player, the node executor's RCS burn, the ullage
+        // or the spin-up may need it on
+        private bool _rcsAutoTurnedOn;
         private readonly bool _attitudeRCSControl = true;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -63,6 +67,13 @@ namespace MuMech
             ActiveController = Math.Max(0, Math.Min(i, _controllers.Count - 1));
             Controller = _controllers[ActiveController];
             Controller.OnStart();
+
+            // a controller switched to while the module flies starts from fresh state, as it would on enable
+            if (Enabled)
+            {
+                Controller.Reset();
+                Controller.OnModuleEnabled();
+            }
         }
 
         /// <summary>The controllers, indexed as ActiveController; the active one is Controller.</summary>
@@ -133,7 +144,7 @@ namespace MuMech
             _controllers.Add(new HybridController(this));
             _controllers.Add(new BetterController(this));
 
-            Controller = new BetterController(this);
+            Controller = _controllers[ActiveController];
         }
 
         protected override void OnModuleDisabled() => Controller.OnModuleDisabled();
@@ -143,6 +154,11 @@ namespace MuMech
             base.OnLoad(local, type, global);
 
             foreach (BaseAttitudeController attitudeController in _controllers) attitudeController.OnLoad(local, type, global);
+
+            // a load writes the saved index without switching to that controller: switch now when they differ
+            int loaded = Math.Max(0, Math.Min(ActiveController, _controllers.Count - 1));
+            if (Controller != _controllers[loaded])
+                SetActiveController(ActiveController);
         }
 
         public override void OnStart(PartModule.StartState state) => SetActiveController(ActiveController);
@@ -174,7 +190,7 @@ namespace MuMech
                     return Core.Target.TargetOrbit != null;
                 case AttitudeReference.MANEUVER_NODE:
                 case AttitudeReference.MANEUVER_NODE_COT:
-                    return Vessel.patchedConicSolver.maneuverNodes.Count > 0;
+                    return Vessel.patchedConicSolver != null && Vessel.patchedConicSolver.maneuverNodes.Count > 0;
                 default:
                     return true;
             }
@@ -203,10 +219,10 @@ namespace MuMech
                     rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.Forward);
                     break;
                 case AttitudeReference.ORBIT:
-                    rotRef = QuaternionD.LookRotation(VesselState.OrbitalVelocity.normalized, VesselState.Up);
+                    rotRef = Frame(reference, VesselState.OrbitalVelocity, VesselState.Up);
                     break;
                 case AttitudeReference.ORBIT_HORIZONTAL:
-                    rotRef = QuaternionD.LookRotation(Vector3d.Exclude(VesselState.Up, VesselState.OrbitalVelocity.normalized), VesselState.Up);
+                    rotRef = Frame(reference, Vector3d.Exclude(VesselState.Up, VesselState.OrbitalVelocity.normalized), VesselState.Up);
                     break;
                 case AttitudeReference.SURFACE_NORTH:
                     rotRef = VesselState.RotationSurface;
@@ -216,7 +232,7 @@ namespace MuMech
                     rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.Forward) * rotRef;
                     break;
                 case AttitudeReference.SURFACE_VELOCITY:
-                    rotRef = QuaternionD.LookRotation(VesselState.SurfaceVelocity.normalized, VesselState.Up);
+                    rotRef = Frame(reference, VesselState.SurfaceVelocity, VesselState.Up);
                     break;
                 case AttitudeReference.TARGET:
                     fwd = (Core.Target.Position - Vessel.GetTransform().position).normalized;
@@ -257,11 +273,44 @@ namespace MuMech
                     rotRef = QuaternionD.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SURFACE_HORIZONTAL:
-                    rotRef = QuaternionD.LookRotation(Vector3d.Exclude(VesselState.Up, VesselState.SurfaceVelocity.normalized), VesselState.Up);
+                    rotRef = Frame(reference, Vector3d.Exclude(VesselState.Up, VesselState.SurfaceVelocity.normalized), VesselState.Up);
                     break;
             }
 
             return rotRef;
+        }
+
+        // The last frame built for each reference, kept for the ticks when its directions define none
+        private readonly QuaternionD[] _lastFrames = InitialFrames();
+
+        private static QuaternionD[] InitialFrames()
+        {
+            var frames = new QuaternionD[Enum.GetValues(typeof(AttitudeReference)).Length];
+            for (int i = 0; i < frames.Length; i++)
+                frames[i] = QuaternionD.identity;
+            return frames;
+        }
+
+        // A frame looking along fwd with up as the roll hint. A zero fwd (before VesselState has run)
+        // defines no frame and keeps the last one. An up that is zero or along fwd gives no roll, so the last frame's up or right
+        // is the hint there.
+        private QuaternionD Frame(AttitudeReference reference, Vector3d fwd, Vector3d up)
+        {
+            int i = (int)reference;
+
+            if (fwd.sqrMagnitude < 1e-12)
+                return _lastFrames[i];
+
+            fwd = fwd.normalized;
+
+            if (Vector3d.Cross(fwd, up.normalized).sqrMagnitude < 1e-12)
+                up = _lastFrames[i] * Vector3d.up;
+
+            if (Vector3d.Cross(fwd, up).sqrMagnitude < 1e-12)
+                up = _lastFrames[i] * Vector3d.right;
+
+            _lastFrames[i] = QuaternionD.LookRotation(fwd, up);
+            return _lastFrames[i];
         }
 
         private Vector3d AttitudeWorldToReference(Vector3d vector, AttitudeReference reference) =>
@@ -272,6 +321,10 @@ namespace MuMech
         public void AttitudeTo(QuaternionD attitude, AttitudeReference reference, object controller, bool axisCtrlPitch = true,
             bool axisCtrlYaw = true, bool axisCtrlRoll = true)
         {
+            // KILL ROT belongs to SmartASS's KILL ROT target, and its re-aim passes no user: any other request ends it
+            if (controller != null && !(controller is MechJebModuleSmartASS smartASS && smartASS.target == MechJebModuleSmartASS.Target.KILLROT))
+                AttitudeKillRot = false;
+
             Users.Add(controller);
             AttitudeReference = reference;
             AttitudeTarget = attitude;
@@ -437,14 +490,15 @@ namespace MuMech
                     _lastReferenceTransform = Vessel.ReferenceTransform;
                 }
 
-            if (userCommandingPitch)
+            // input on pitch or yaw hands both axes to the player (below), so both controllers stop integrating
+            if (userCommandingPitch || userCommandingYaw)
+            {
                 Controller.Reset(0);
+                Controller.Reset(2);
+            }
 
             if (userCommandingRoll)
                 Controller.Reset(1);
-
-            if (userCommandingYaw)
-                Controller.Reset(2);
 
             if (!userCommandingRoll)
                 if (!double.IsNaN(act.y))
@@ -470,9 +524,12 @@ namespace MuMech
                 }
                 else
                 {
-                    if (RCSAuto)
+                    if (RCSAuto && _rcsAutoTurnedOn)
                         if (_attitudeRCSControl && Core.RCS.Users.Count == 0)
+                        {
                             Part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+                            _rcsAutoTurnedOn = false;
+                        }
                 }
             }
             else if (absErr.x > 1.0 || absErr.y > 1.0 || absErr.z > 1.0)
@@ -480,8 +537,11 @@ namespace MuMech
                 _timeCount = 0;
                 if (RCSAuto && (absErr.x > 3.0 || absErr.y > 3.0 || absErr.z > 3.0) &&
                     Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.UNSTABLE_IGNITION)
-                    if (_attitudeRCSControl)
+                    if (_attitudeRCSControl && !Part.vessel.ActionGroups[KSPActionGroup.RCS])
+                    {
                         Part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                        _rcsAutoTurnedOn = true;
+                    }
             }
         } // end of SetFlightCtrlState
     }

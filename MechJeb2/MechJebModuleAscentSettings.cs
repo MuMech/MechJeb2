@@ -258,6 +258,26 @@ namespace MuMech
                     GetAscentModule(type).Users.Clear(); // no user is left to keep it engaged later
         }
 
+        // A load writes AscentTypeInteger and _autostage without their setters: apply what the setters do
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            int oldAscentType = AscentTypeInteger;
+
+            base.OnLoad(local, type, global);
+
+            if (AscentTypeInteger != oldAscentType)
+                DisableAscentModules();
+
+            IAscentAutopilot autopilot = AscentAutopilot;
+            if (autopilot == null || !autopilot.Enabled)
+                return;
+
+            if (_autostage)
+                Core.Staging.Users.Add(autopilot);
+            else
+                Core.Staging.Users.Remove(autopilot);
+        }
+
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
