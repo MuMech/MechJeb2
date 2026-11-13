@@ -126,6 +126,15 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         protected override void Clear()
         {
             base.Clear();
+            G = 0;
+            Isp = 0;
+            Thrust = 0;
+            RcsEnabled = false;
+            _savedRcsEnabled = false;
+            ISPMult = 0;
+            ThrustPercentage = 0;
+            MaxFuelFlow = 0;
+            MassFlowRate = 0;
             Propellants.Clear();
             PropellantFlowModes.Clear();
             ResourceConsumptions.Clear();

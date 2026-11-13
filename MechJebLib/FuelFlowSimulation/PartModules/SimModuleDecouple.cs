@@ -30,6 +30,9 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         protected override void Clear()
         {
             base.Clear();
+            IsDecoupled = false;
+            IsOmniDecoupler = false;
+            Staged = false;
             AttachedPart = null;
         }
 

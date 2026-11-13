@@ -80,11 +80,15 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 foreach (Part kspPart in _kspVessel.Parts)
                 {
                     SimPart p = _partMapping[kspPart];
-                    if (!(kspPart.parent is null))
-                        p.Links.Add(_partMapping[kspPart.parent]);
+
+                    // a part that isn't one of the ship's parts (in the editor, one being dragged) is left out, rather than
+                    // throwing a KeyNotFoundException out of Build()
+                    if (!(kspPart.parent is null) && _partMapping.TryGetValue(kspPart.parent, out SimPart parent))
+                        p.Links.Add(parent);
 
                     foreach (Part child in kspPart.children)
-                        p.Links.Add(_partMapping[child]);
+                        if (_partMapping.TryGetValue(child, out SimPart simChild))
+                            p.Links.Add(simChild);
                 }
             }
 
@@ -96,7 +100,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                     foreach (Part pSet in kspPart.crossfeedPartSet.GetParts())
                     {
-                        p.CrossFeedPartSet.Add(_partMapping[pSet]);
+                        if (_partMapping.TryGetValue(pSet, out SimPart simSet))
+                            p.CrossFeedPartSet.Add(simSet);
                     }
                 }
             }
@@ -109,7 +114,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                     foreach (Part pSym in kspPart.symmetryCounterparts)
                     {
-                        p.SymmetryCounterParts.Add(_partMapping[pSym]);
+                        if (_partMapping.TryGetValue(pSym, out SimPart simSym))
+                            p.SymmetryCounterParts.Add(simSym);
                     }
                 }
             }
@@ -277,7 +283,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.Propellants.Clear();
                 foreach (Propellant p in kspEngine.propellants)
                     engine.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
-                        PartResourceLibrary.Instance.GetDefinition(p.id).density));
+                        PropellantDensity(p.id)));
 
                 part.IsThrottleLocked = kspEngine.throttleLocked;
                 part.IsEngine = true;
@@ -334,10 +340,14 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                 foreach (Propellant p in kspModuleRCS.propellants)
                     rcs.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
-                        PartResourceLibrary.Instance.GetDefinition(p.id).density));
+                        PropellantDensity(p.id)));
 
                 return rcs;
             }
+
+            // a propellant that isn't in the resource library (a mod's config error) counts for nothing, as in KSP's
+            // ModuleEngines.SetupPropellant, which logs it and leaves it out of the mixture
+            private static double PropellantDensity(int id) => PartResourceLibrary.Instance.GetDefinition(id)?.density ?? 0;
 
             private SimProceduralFairingDecoupler BuildProceduralFairingDecoupler(SimPart part) => SimProceduralFairingDecoupler.Borrow(part);
 

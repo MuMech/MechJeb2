@@ -200,8 +200,9 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                 decoupler.Staged = kspModuleDockingNode.staged;
 
-                if (!(kspModuleDockingNode.referenceNode.attachedPart is null))
-                    decoupler.AttachedPart = _partMapping[kspModuleDockingNode.referenceNode.attachedPart];
+                // null when nothing is attached, or the part isn't one of the ship's
+                Part? attached = kspModuleDockingNode.referenceNode?.attachedPart;
+                decoupler.AttachedPart = !(attached is null) && _partMapping.TryGetValue(attached, out SimPart simAttached) ? simAttached : null;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -230,8 +231,10 @@ namespace MechJebLibBindings.FuelFlowSimulation
                     attach = kspModuleDecouple.ExplosiveNode;
                 }
 
-                if (attach is { attachedPart: { } })
-                    decoupler.AttachedPart = _partMapping[attach.attachedPart];
+                // null when nothing is attached, or the part isn't one of the ship's (in the editor, one being dragged)
+                decoupler.AttachedPart = attach is { attachedPart: { } } && _partMapping.TryGetValue(attach.attachedPart, out SimPart simAttached)
+                    ? simAttached
+                    : null;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
