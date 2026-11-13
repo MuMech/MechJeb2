@@ -40,7 +40,11 @@ namespace KodeKit
         public ComboBox(KodeWindow w, UIObject parent, Func<int> get, Action<int> set, Func<string[]> entries, bool flexible = true, Func<int, Color> dots = null)
         {
             this.get = get;
-            this.set = w.Edits(set);
+            Action<int> edit = w.Edits(set);
+            this.set = i =>
+            {
+                if (IsEnabled) edit(i);
+            };
             this.entries = entries;
             this.dots = dots;
             Button = KodeWindow.Button(parent, "", Toggle, flexible);
@@ -77,6 +81,10 @@ namespace KodeKit
             string shown = null;
             w.AddSync(() =>
             {
+                bool on = IsEnabled;
+                if (Button.interactable != on) Button.interactable = on;
+                if (!on && IsOpen) Close();
+
                 string[] e = this.entries();
                 int i = Mathf.Clamp(this.get(), 0, Math.Max(0, e.Length - 1));
                 string s = e.Length == 0 ? "" : e[i];
@@ -97,7 +105,7 @@ namespace KodeKit
             Layout arrows = KodeWindow.Row(parent);
             if (!flexible) arrows.GetComponent<UnityEngine.UI.LayoutElement>().flexibleWidth = 0;
             arrows.transform.SetSiblingIndex(Button.transform.GetSiblingIndex() + 1);
-            KodeWindow.Button(arrows, "<", () =>
+            UIButton previous = KodeWindow.Button(arrows, "<", () =>
             {
                 int n = this.entries().Length;
                 if (n > 0) this.set((Mathf.Clamp(this.get(), 0, n - 1) - 1 + n) % n);
@@ -130,7 +138,7 @@ namespace KodeKit
                     if (this.entries() != fitted) FitWidest();
                 });
             }
-            KodeWindow.Button(arrows, ">", () =>
+            UIButton next = KodeWindow.Button(arrows, ">", () =>
             {
                 int n = this.entries().Length;
                 if (n > 0) this.set((Mathf.Clamp(this.get(), 0, n - 1) + 1) % n);
@@ -138,6 +146,9 @@ namespace KodeKit
             bool useArrows = !UseArrowSelector();
             w.AddSync(() =>
             {
+                bool on = IsEnabled;
+                if (previous.interactable != on) previous.interactable = next.interactable = on;
+
                 bool a = UseArrowSelector();
                 if (a == useArrows) return;
                 useArrows = a;
@@ -151,6 +162,14 @@ namespace KodeKit
         /// long list (the planner's operations) reads as a few short ones.
         /// </summary>
         public Func<int, string> Group;
+
+        /// <summary>
+        /// When set and false, the selection is fixed: the button and the arrows are greyed out, and an open list closes
+        /// (checked every frame).
+        /// </summary>
+        public Func<bool> Enabled;
+
+        bool IsEnabled => Enabled == null || Enabled();
 
         /// <summary>When set and true, combos show as [&lt;] entry [&gt;] arrow selectors instead (checked every frame).</summary>
         public static Func<bool> UseArrowSelector;

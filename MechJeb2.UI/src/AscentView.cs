@@ -176,11 +176,10 @@ namespace MuMech.UI
 
             Layout type = KodeWindow.Row(r);
             // a change of type turns the engaged autopilot off, so the type is fixed while the ascent is engaged
-            var typeCombo = new ComboBox(w, type, () => (int)Settings.AscentType, i =>
+            new ComboBox(w, type, () => (int)Settings.AscentType, i => Settings.AscentType = (AscentType)i, () => menu._ascentPathList)
             {
-                if (!menu._autopilot.Enabled) Settings.AscentType = (AscentType)i;
-            }, () => menu._ascentPathList);
-            GuidanceUi.Enable(w, typeCombo.Button, () => !menu._autopilot.Enabled);
+                Enabled = () => !menu._autopilot.Enabled
+            };
 
             if (KodeWindow.ModernLayout)
             {
