@@ -254,10 +254,17 @@ namespace MuMech
         public void ThrustForDv(double dV, double timeConstant, Vector3d axis)
         {
             timeConstant += VesselState.MaxEngineResponseTime;
-            double currentAcceleration = Vector3d.Dot(VesselState.ThrustVectorLastFrame, axis) / VesselState.Mass;
-            double maxAcceleration = Vector3d.Dot(VesselState.ThrustVectorMaxThrottle, axis) / VesselState.Mass;
-            double spooldownDv = currentAcceleration * VesselState.MaxEngineResponseTime;
+            double maxAcceleration = VesselState.MaxThrustAccelerationAlong(axis);
+            double spooldownDv = VesselState.CurrentThrustAccelerationAlong(axis) * VesselState.MaxEngineResponseTime;
             double desiredAcceleration = (dV - spooldownDv) / timeConstant;
+
+            // with no thrust along the axis there is no ratio to take: full throttle while dV is wanted, as a ratio over a tiny
+            // positive thrust gives, and never NaN or a throttle stuck at the floor from a tiny negative one
+            if (maxAcceleration <= 0)
+            {
+                TargetThrottle = desiredAcceleration > 0 ? 1.00f : 0.01f;
+                return;
+            }
 
             TargetThrottle = Mathf.Clamp((float)(desiredAcceleration / maxAcceleration), 0.01f, 1.00f);
         }

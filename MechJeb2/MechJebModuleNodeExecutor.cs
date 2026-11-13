@@ -132,6 +132,7 @@ namespace MuMech
         {
             _direction = Vector3d.zero;
             _node = Vessel.patchedConicSolver.maneuverNodes[0];
+            _nodeUT = _node.UT;
             _dvLeft = _node.GetBurnVector(Orbit).magnitude;
             Core.Thrust.Users.Add(this);
             Core.Attitude.Users.Add(this);
@@ -152,8 +153,9 @@ namespace MuMech
                 Core.Attitude.AttitudeDeactivate();
             }
 
-            Users.Clear();
+            // before Users.Clear, which disables the module at once: OnModuleDisabled has nothing left to give back
             _inControl = false;
+            Users.Clear();
             _direction = Vector3d.zero;
             _dvLeft = 0;
             State = States.IDLE;
@@ -189,6 +191,7 @@ namespace MuMech
 
         private double _dvLeft; // for Principia
         private ManeuverNode _node; // the node being executed (stock: Principia replaces its nodes)
+        private double _nodeUT; // its UT, kept current while it is there
         private Vector3d _direction; // de-rotated world vector
         private Vector3d _worldDirection => Planetarium.fetch.rotation * _direction;
         private double _ignitionUT;
@@ -252,19 +255,19 @@ namespace MuMech
                 return;
             }
 
-            // Principia removes the node during its burn, and the burn goes on along the stored direction; before the burn there is
-            // nothing to burn without a node
-            if (ReflectionUtils.IsLoadedPrincipia && !_hasNodes && State != States.BURN)
+            // Principia removes the node once its burn time comes, and the burn goes on along the stored direction, even if it
+            // starts late; a node gone before its time was deleted, and there is nothing to burn
+            if (ReflectionUtils.IsLoadedPrincipia && !_hasNodes && State != States.BURN && VesselState.Time < _nodeUT)
             {
                 Abort();
                 return;
             }
 
-            // The player deleted the node being executed: the first node is now a later one. Executing all nodes, start over on it,
-            // with its own wait and alignment; executing one node, that node is gone, so stop.
+            // The first node is no longer the one being executed: a node was added before it, or it was deleted. Start over on the
+            // new first node, with its own wait and alignment, except when executing one node whose node is gone.
             if (!ReflectionUtils.IsLoadedPrincipia && Vessel.patchedConicSolver.maneuverNodes[0] != _node)
             {
-                if (Mode != Modes.ALL_NODES)
+                if (Mode != Modes.ALL_NODES && !Vessel.patchedConicSolver.maneuverNodes.Contains(_node))
                 {
                     Abort();
                     return;
@@ -273,9 +276,16 @@ namespace MuMech
                 Init();
             }
 
-            // keep the dV used for the ignition time current while warping and aligning, not just in LEAD and BURN
+            // keep the dV used for the ignition time current while warping and aligning, not just in LEAD and BURN. Under Principia
+            // the node holds the burn's dV until LEAD, where ullage starts to count against it, so a node deleted or changed
+            // before then is followed: a later node is burnt with its own dV.
             if (!ReflectionUtils.IsLoadedPrincipia)
                 UpdateDvLeft();
+            else if (_hasNodes && (State == States.INITIAL_WARP || State == States.ALIGNING || State == States.WARPING))
+            {
+                _nodeUT = Vessel.patchedConicSolver.maneuverNodes[0].UT;
+                _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            }
 
             _direction = NextDirection();
 
@@ -417,8 +427,11 @@ namespace MuMech
 
             if (!RCSOnly)
             {
-                double timeConstant = _dvLeft > 10 || VesselState.MinThrustAcceleration > 0.25 * VesselState.MaxThrustAcceleration ? 0.5 : 2;
-                Core.Thrust.ThrustForDv(_dvLeft, timeConstant, BurnAxis());
+                Vector3d axis = BurnAxis();
+                double timeConstant = _dvLeft > 10 || VesselState.MinThrustAccelerationAlong(axis) > 0.25 * VesselState.MaxThrustAccelerationAlong(axis)
+                    ? 0.5
+                    : 2;
+                Core.Thrust.ThrustForDv(_dvLeft, timeConstant, axis);
             }
         }
 
@@ -523,10 +536,6 @@ namespace MuMech
         private Vector3d BurnAxis() =>
             RCSOnly || Core.Thrust.DifferentialThrottle || VesselState.ThrustForward.sqrMagnitude < 0.5 ? VesselState.Forward : VesselState.ThrustForward;
 
-        // The engines' full-throttle acceleration along the burn axis. MaxThrustAcceleration is its part along the control forward,
-        // about 0 on a control point at right angles to the engines.
-        private double BurnAxisThrustAcceleration() => Vector3d.Dot(VesselState.ThrustVectorMaxThrottle, BurnAxis()) / VesselState.Mass;
-
         // This handles safely getting the current burning node in Principia without grabbing any subsequent node after
         // principia cleans it up for us.
         private ManeuverNode SafeCurrentPrincipiaNode()
@@ -556,7 +565,7 @@ namespace MuMech
             if (ReflectionUtils.IsLoadedPrincipia && SafeCurrentPrincipiaNode() == null)
                 return _direction;
 
-            double accel = RCSOnly ? RcsForwardThrust() / VesselState.Mass : BurnAxisThrustAcceleration();
+            double accel = RCSOnly ? RcsForwardThrust() / VesselState.Mass : VesselState.MaxThrustAccelerationAlong(BurnAxis());
             if (!ReflectionUtils.IsLoadedPrincipia && _dvLeft < accel)
                 return _direction;
 
@@ -705,12 +714,12 @@ namespace MuMech
             }
 
             //print("******** Found total spoolup time " + spoolupTime);
-            // a burn shorter than half the spool-up gets a share of it in proportion, so the lead grows smoothly up to the whole
-            // spool-up time
+            // a burn shorter than half the spool-up time gets twice its burn time as spool-up, so the lead grows smoothly up to the
+            // whole spool-up time
             if (spoolupTime > 0 && burnTime > 0)
             {
                 if (burnTime < spoolupTime * 0.5d)
-                    spoolupTime *= burnTime / (spoolupTime * 0.5d);
+                    spoolupTime = 2 * burnTime;
 
                 burnTime += spoolupTime;
                 halfBurnTime += spoolupTime;

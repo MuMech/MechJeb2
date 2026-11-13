@@ -439,6 +439,11 @@ namespace MuMech
         public double MinThrustAcceleration     => ThrustMinimum / Mass;
         public double CurrentThrustAcceleration => ThrustCurrent / Mass;
 
+        // The same, along axis (a unit vector): for a burn that aims the engines' thrust rather than the control forward
+        public double MaxThrustAccelerationAlong(Vector3d axis)     => Vector3d.Dot(ThrustVectorMaxThrottle, axis) / Mass;
+        public double MinThrustAccelerationAlong(Vector3d axis)     => Vector3d.Dot(ThrustVectorMinThrottle, axis) / Mass;
+        public double CurrentThrustAccelerationAlong(Vector3d axis) => Vector3d.Dot(ThrustVectorLastFrame, axis) / Mass;
+
         public double LimitedMaxThrustAcceleration
         {
             get
