@@ -131,17 +131,30 @@ namespace MuMech
         private void Init()
         {
             _direction = Vector3d.zero;
-            _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            _node = Vessel.patchedConicSolver.maneuverNodes[0];
+            _nodeUT = _node.UT;
+            _dvLeft = _node.GetBurnVector(Orbit).magnitude;
             Core.Thrust.Users.Add(this);
             Core.Attitude.Users.Add(this);
+            _inControl = true;
             TransitionTo(States.INITIAL_WARP);
         }
 
+        // whether the executor has taken the warp, throttle and attitude for a node (Init): only then does it give them back, so
+        // an Abort while idle, or an enable that never reached a node, leaves the player's throttle and attitude alone
+        private bool _inControl;
+
         public void Abort()
         {
-            Core.Warp.MinimumWarp();
-            Core.Thrust.ThrustOff();
-            Core.Attitude.AttitudeDeactivate();
+            if (_inControl)
+            {
+                Core.Warp.MinimumWarp();
+                Core.Thrust.ThrustOff();
+                Core.Attitude.AttitudeDeactivate();
+            }
+
+            // before Users.Clear, which disables the module at once: OnModuleDisabled has nothing left to give back
+            _inControl = false;
             Users.Clear();
             _direction = Vector3d.zero;
             _dvLeft = 0;
@@ -157,8 +170,13 @@ namespace MuMech
 
         protected override void OnModuleDisabled()
         {
-            Core.Attitude.AttitudeDeactivate();
-            Core.Thrust.ThrustOff();
+            if (_inControl)
+            {
+                Core.Attitude.AttitudeDeactivate();
+                Core.Thrust.ThrustOff();
+            }
+
+            _inControl = false;
             Core.Thrust.Users.Remove(this);
             State = States.IDLE;
             _dvLeft = 0;
@@ -172,6 +190,8 @@ namespace MuMech
         public States State = States.IDLE;
 
         private double _dvLeft; // for Principia
+        private ManeuverNode _node; // the node being executed (stock: Principia replaces its nodes)
+        private double _nodeUT; // its UT, kept current while it is there
         private Vector3d _direction; // de-rotated world vector
         private Vector3d _worldDirection => Planetarium.fetch.rotation * _direction;
         private double _ignitionUT;
@@ -235,9 +255,37 @@ namespace MuMech
                 return;
             }
 
-            // keep the dV used for the ignition time current while warping and aligning, not just in LEAD and BURN
+            // Principia removes the node once its burn time comes, and the burn goes on along the stored direction, even if it
+            // starts late; a node gone before its time was deleted, and there is nothing to burn
+            if (ReflectionUtils.IsLoadedPrincipia && !_hasNodes && State != States.BURN && VesselState.Time < _nodeUT)
+            {
+                Abort();
+                return;
+            }
+
+            // The first node is no longer the one being executed: a node was added before it, or it was deleted. Start over on the
+            // new first node, with its own wait and alignment, except when executing one node whose node is gone.
+            if (!ReflectionUtils.IsLoadedPrincipia && Vessel.patchedConicSolver.maneuverNodes[0] != _node)
+            {
+                if (Mode != Modes.ALL_NODES && !Vessel.patchedConicSolver.maneuverNodes.Contains(_node))
+                {
+                    Abort();
+                    return;
+                }
+
+                Init();
+            }
+
+            // keep the dV used for the ignition time current while warping and aligning, not just in LEAD and BURN. Under Principia
+            // the node holds the burn's dV until LEAD, where ullage starts to count against it, so a node deleted or changed
+            // before then is followed: a later node is burnt with its own dV.
             if (!ReflectionUtils.IsLoadedPrincipia)
                 UpdateDvLeft();
+            else if (_hasNodes && (State == States.INITIAL_WARP || State == States.ALIGNING || State == States.WARPING))
+            {
+                _nodeUT = Vessel.patchedConicSolver.maneuverNodes[0].UT;
+                _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            }
 
             _direction = NextDirection();
 
@@ -379,8 +427,11 @@ namespace MuMech
 
             if (!RCSOnly)
             {
-                double timeConstant = _dvLeft > 10 || VesselState.MinThrustAcceleration > 0.25 * VesselState.MaxThrustAcceleration ? 0.5 : 2;
-                Core.Thrust.ThrustForDv(_dvLeft, timeConstant);
+                Vector3d axis = BurnAxis();
+                double timeConstant = _dvLeft > 10 || VesselState.MinThrustAccelerationAlong(axis) > 0.25 * VesselState.MaxThrustAccelerationAlong(axis)
+                    ? 0.5
+                    : 2;
+                Core.Thrust.ThrustForDv(_dvLeft, timeConstant, axis);
             }
         }
 
@@ -514,7 +565,7 @@ namespace MuMech
             if (ReflectionUtils.IsLoadedPrincipia && SafeCurrentPrincipiaNode() == null)
                 return _direction;
 
-            double accel = RCSOnly ? RcsForwardThrust() / VesselState.Mass : VesselState.MaxThrustAcceleration;
+            double accel = RCSOnly ? RcsForwardThrust() / VesselState.Mass : VesselState.MaxThrustAccelerationAlong(BurnAxis());
             if (!ReflectionUtils.IsLoadedPrincipia && _dvLeft < accel)
                 return _direction;
 
@@ -633,9 +684,11 @@ namespace MuMech
 
                 // Right now, for simplicity, we're ignoring throttle limits for
                 // all but the current stage. This is wrong, but hopefully it's
-                // close enough for now.
+                // close enough for now. The current stage is every segment of the
+                // simulation's last KSP stage: a segment ends inside a stage when
+                // the number of running engines changes.
                 // TODO: Be smarter about throttle limits on future stages.
-                if (mjPhase == stats.VacStats.Count - 1)
+                if (s.KSPStage == stats.VacStats[stats.VacStats.Count - 1].KSPStage)
                 {
                     stageAvgAccel *= Core.Thrust.ThrottleFixedLimit;
                 }
@@ -661,19 +714,15 @@ namespace MuMech
             }
 
             //print("******** Found total spoolup time " + spoolupTime);
+            // a burn shorter than half the spool-up time gets twice its burn time as spool-up, so the lead grows smoothly up to the
+            // whole spool-up time
             if (spoolupTime > 0 && burnTime > 0)
             {
                 if (burnTime < spoolupTime * 0.5d)
-                {
-                    spoolupTime = burnTime / (spoolupTime * 0.5d);
-                    burnTime += spoolupTime;
-                    halfBurnTime += spoolupTime;
-                }
-                else
-                {
-                    burnTime += spoolupTime;
-                    halfBurnTime += spoolupTime;
-                }
+                    spoolupTime = 2 * burnTime;
+
+                burnTime += spoolupTime;
+                halfBurnTime += spoolupTime;
             }
 
             return burnTime;

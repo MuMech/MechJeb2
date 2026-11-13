@@ -247,13 +247,26 @@ namespace MuMech
         // Call this function to set the throttle for a burn with dV delta-V remaining.
         // timeConstant controls how quickly we throttle down toward the end of the burn.
         // This function is nice because it will correctly handle engine spool-up/spool-down times.
-        public void ThrustForDv(double dV, double timeConstant)
+        public void ThrustForDv(double dV, double timeConstant) => ThrustForDv(dV, timeConstant, VesselState.Forward);
+
+        // The same, for a burn along axis (a unit vector): the thrust counts along that axis, so a burn that aims the engines'
+        // thrust (INERTIAL_COT) throttles on that thrust, not on its part along the control forward.
+        public void ThrustForDv(double dV, double timeConstant, Vector3d axis)
         {
             timeConstant += VesselState.MaxEngineResponseTime;
-            double spooldownDv = VesselState.CurrentThrustAcceleration * VesselState.MaxEngineResponseTime;
+            double maxAcceleration = VesselState.MaxThrustAccelerationAlong(axis);
+            double spooldownDv = VesselState.CurrentThrustAccelerationAlong(axis) * VesselState.MaxEngineResponseTime;
             double desiredAcceleration = (dV - spooldownDv) / timeConstant;
 
-            TargetThrottle = Mathf.Clamp((float)(desiredAcceleration / VesselState.MaxThrustAcceleration), 0.01f, 1.00f);
+            // with no thrust along the axis there is no ratio to take: full throttle while dV is wanted, as a ratio over a tiny
+            // positive thrust gives, and never NaN or a throttle stuck at the floor from a tiny negative one
+            if (maxAcceleration <= 0)
+            {
+                TargetThrottle = desiredAcceleration > 0 ? 1.00f : 0.01f;
+                return;
+            }
+
+            TargetThrottle = Mathf.Clamp((float)(desiredAcceleration / maxAcceleration), 0.01f, 1.00f);
         }
 
         /* the current throttle limit, this may include transient condition such as limiting to zero due to unstable propellants in RF */
