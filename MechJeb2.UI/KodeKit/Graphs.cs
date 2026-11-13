@@ -67,7 +67,7 @@ namespace KodeKit
 
     /// <summary>
     /// MechJebModuleFlightRecorderGraph's drawing, retained: background gradient, one mesh per series,
-    /// stage markers, Y scale labels, horizontal scrollbar + follow toggle. Call Refresh() when data changed (10 Hz).
+    /// stage markers, Y scale labels at round values, horizontal scrollbar + follow toggle. Call Refresh() when data changed (10 Hz).
     /// </summary>
     public class LineGraph
     {
@@ -76,6 +76,10 @@ namespace KodeKit
         public readonly LineSeriesGraphic Stages;
         readonly List<UIText> yLabels = new List<UIText>();
         readonly CharText[] yChars;
+        readonly RectTransform[] yCells;
+        readonly RectTransform yColumn;
+        readonly float builtHeight;
+        const float LabelHeight = 18;
         public readonly Scrollbar Scroll;
         public bool Follow = true;
         public double VisibleWidth = 100;   // data units across the plot
@@ -86,11 +90,14 @@ namespace KodeKit
 
         /// <param name="scrollbarParent">Where the scrollbar row goes (null: under the plot, indented past the Y labels).
         /// The Flight Recorder passes its window, so the scrollbar spans it as in IMGUI.</param>
+        /// <param name="labelCount">The most Y labels shown: how many the height has room for.</param>
         public LineGraph(KodeWindow w, UIObject parent, float width, float height, int labelCount = 5, UIObject scrollbarParent = null)
         {
             Layout area = KodeWindow.Row(parent);
             // Y labels column, fixed width, absolute positions
             RectTransform labels = Graphs.Surface(area, 70, height, "YLabels");
+            yColumn = labels;
+            builtHeight = height;
             Plot = Graphs.Surface(area, width, height, "Plot");
             Plot.gameObject.AddComponent<RectMask2D>();
             Graphs.Background(Plot, new Color(0.15f, 0.25f, 0.45f), new Color(0.02f, 0.02f, 0.08f));
@@ -109,19 +116,19 @@ namespace KodeKit
             Stages.raycastTarget = false;
 
             yChars = new CharText[labelCount];
+            yCells = new RectTransform[labelCount];
             for (int i = 0; i < labelCount; i++)
             {
-                // the labels column is a KodeUI UIEmpty without layout group: cells are placed by anchors
+                // the labels column is a KodeUI UIEmpty without layout group: Labels() places the cells, from the bottom
                 UIText t = KodeWindow.LiveLabel(labels.GetComponent<UIObject>(), "-000.0 k", false);
                 RectTransform cell = (RectTransform)t.transform.parent;
-                cell.anchorMin = cell.anchorMax = new Vector2(1, i / (labelCount - 1f));
-                // centred on its tick, an end label would stick out over the rows around the plot
-                cell.pivot = new Vector2(1, i == 0 ? 0 : i == labelCount - 1 ? 1 : 0.5f);
-                cell.anchoredPosition = new Vector2(-4, 0);
-                cell.sizeDelta = new Vector2(66, 18);
+                cell.anchorMin = cell.anchorMax = new Vector2(1, 0);
+                cell.pivot = new Vector2(1, 0.5f);
+                cell.sizeDelta = new Vector2(66, LabelHeight);
                 t.tmpText.alignment = TextAlignmentOptions.Right;
                 yLabels.Add(t);
                 yChars[i] = new CharText(t.tmpText);
+                yCells[i] = cell;
             }
 
             Layout bottom = KodeWindow.Row(scrollbarParent ?? parent);
@@ -163,9 +170,47 @@ namespace KodeKit
             Apply(Stages, 0, 1);
             pending = Series.Count + 1;
 
+            Labels(yMin, yMax);
+        }
+
+        static readonly int[] stepMultiples = { 1, 2, 5, 10, 20, 50 };
+        double labelledMin = double.NaN, labelledMax = double.NaN;
+
+        // A label at each whole multiple of the step in the range, where the step is the smallest 1, 2 or 5 × 10^n
+        // that gives no more labels than there are cells. The cells left over are hidden.
+        void Labels(double yMin, double yMax)
+        {
+            if (yMin.Equals(labelledMin) && yMax.Equals(labelledMax)) return;
+            labelledMin = yMin;
+            labelledMax = yMax;
+
+            double range = yMax - yMin, step = 0, first = 0;
+            int count = 0;
+            if (range > 0 && !double.IsInfinity(range))
+            {
+                double magnitude = Math.Pow(10, Math.Floor(Math.Log10(range / yChars.Length)));
+                foreach (int multiple in stepMultiples)
+                {
+                    step = magnitude * multiple;
+                    // the tolerance keeps a limit that is a multiple of the step, short of it by a rounding error
+                    first = Math.Ceiling(yMin / step - 1e-6);
+                    double ticks = Math.Floor(yMax / step + 1e-6) - first + 1;
+                    count = ticks <= yChars.Length ? (int)Math.Max(ticks, 0) : 0;
+                    if (ticks <= yChars.Length) break;
+                }
+            }
+
+            float height = yColumn.rect.height > 0 ? yColumn.rect.height : builtHeight;
             for (int i = 0; i < yChars.Length; i++)
             {
-                double v = yMin + (yMax - yMin) * i / (yChars.Length - 1);
+                GameObject cell = yCells[i].gameObject;
+                if (cell.activeSelf != i < count) cell.SetActive(i < count);
+                if (i >= count) continue;
+
+                double v = (first + i) * step;
+                // centred on its tick, an end label would stick out over the rows around the plot
+                float y = Mathf.Clamp((float)((v - yMin) / range) * height, LabelHeight / 2, height - LabelHeight / 2);
+                yCells[i].anchoredPosition = new Vector2(-4, y);
                 yChars[i].Clear().AppendSI(v, 3).Commit();
             }
         }
