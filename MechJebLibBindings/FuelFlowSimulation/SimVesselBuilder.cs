@@ -6,7 +6,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using KSP.UI;
-using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.FuelFlowSimulation.PartModules;
 using UnityEngine;
@@ -124,7 +123,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             internal void BuildParts()
             {
-                _vessel.SetCurrentStage(StageManager.CurrentStage);
+                _vessel.SetCurrentStage(_manager.KspCurrentStage);
 
                 foreach (Part kspPart in _kspVessel.Parts)
                 {

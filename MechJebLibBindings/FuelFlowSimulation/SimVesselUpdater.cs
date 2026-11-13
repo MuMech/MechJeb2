@@ -6,7 +6,6 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.FuelFlowSimulation.PartModules;
 using static MechJebLib.Utils.Statics;
@@ -53,7 +52,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void UpdateParts()
             {
-                _vessel.ResetCurrentStage(StageManager.CurrentStage);
+                _vessel.ResetCurrentStage(_manager.KspCurrentStage);
 
                 // FIXME: could track only parts that matter to the sim (engines+tanks) and only loop over them here
                 foreach (SimPart part in _vessel.Parts)

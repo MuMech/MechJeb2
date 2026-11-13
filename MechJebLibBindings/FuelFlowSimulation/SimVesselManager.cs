@@ -4,6 +4,7 @@
  */
 
 using System.Collections.Generic;
+using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
@@ -32,6 +33,10 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
         // of those, the ones at least one intake gathers without oxygen (checkForOxygen off)
         private readonly HashSet<int> _intakeResourcesWithoutOxygen = new HashSet<int>();
+
+        // in flight each vessel keeps its own stage, and StageManager's is only the active vessel's; the editor's ship is no
+        // Vessel and has StageManager's
+        private int KspCurrentStage => _kspVessel is Vessel v ? v.currentStage : StageManager.CurrentStage;
 
         public double T => _vessel.T;
         public V3     R => _vessel.R;
