@@ -141,6 +141,14 @@ namespace MuMech
         //public interface:
         public void LandAtPositionTarget(object controller)
         {
+            // every step lands at the target coordinates on this body
+            if (!Core.Target.SurfaceTargetExists(MainBody))
+            {
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_LandingGuidance_noSurfaceTarget", MainBody.displayName.LocalizeRemoveGender()), 5,
+                    ScreenMessageStyle.UPPER_CENTER); //Land at target: the target is not a point on <<1>>'s surface.
+                return;
+            }
+
             LandAtTarget = true;
             Users.Add(controller);
 
