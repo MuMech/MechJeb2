@@ -177,7 +177,7 @@ namespace KodeKit
         double labelledMin = double.NaN, labelledMax = double.NaN;
 
         // A label at each whole multiple of the step in the range, where the step is the smallest 1, 2 or 5 × 10^n
-        // that gives no more labels than there are cells. The cells left over are blank.
+        // that gives no more labels than there are cells. The cells left over are hidden.
         void Labels(double yMin, double yMax)
         {
             if (yMin.Equals(labelledMin) && yMax.Equals(labelledMax)) return;
@@ -203,11 +203,9 @@ namespace KodeKit
             float height = yColumn.rect.height > 0 ? yColumn.rect.height : builtHeight;
             for (int i = 0; i < yChars.Length; i++)
             {
-                if (i >= count)
-                {
-                    yChars[i].Clear().Commit();
-                    continue;
-                }
+                GameObject cell = yCells[i].gameObject;
+                if (cell.activeSelf != i < count) cell.SetActive(i < count);
+                if (i >= count) continue;
 
                 double v = (first + i) * step;
                 // centred on its tick, an end label would stick out over the rows around the plot
