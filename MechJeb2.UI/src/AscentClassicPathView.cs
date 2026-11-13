@@ -106,7 +106,7 @@ namespace MuMech.UI
             AscentUi.SimpleBox(w, r, "#MechJeb_AscentPathEd_label9", Settings.TurnEndAngle, "°"); //"Final flight path angle:"
             AscentUi.SimpleBox(w, r, "#MechJeb_AscentPathEd_label10", Settings.TurnShapeExponent, "%"); //"Turn shape:"
 
-            w.Slider(r, () => (float)Settings.TurnShapeExponent, v => menu.ApplyTurnShapeSlider(v, Settings.TurnShapeExponent), 0f, 1f);
+            w.Slider(r, () => (float)Settings.TurnShapeExponent, v => menu.ApplyTurnShapeSlider(v, Settings.TurnShapeExponent), 0.1f, 1f);
 
             BuildPathPicture(w, r);
         }

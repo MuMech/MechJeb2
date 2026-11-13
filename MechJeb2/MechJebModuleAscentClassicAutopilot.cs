@@ -21,11 +21,16 @@ namespace MuMech
 
         private double _actualTurnStart;
 
+        // the altitude above sea level the vessel was engaged at on the ground (0 when engaged in flight): from a site above the
+        // turn start altitude the turn starts there, not from sea level
+        private double _launchAltitude;
+
         protected override void OnModuleEnabled()
         {
             _placedCircularizeNode = false;
             _mode = AscentMode.PRELAUNCH;
-            _actualTurnStart = 0;
+            _launchAltitude = Vessel.LandedOrSplashed ? Math.Max(VesselState.AltitudeASL, 0) : 0;
+            _actualTurnStart = _launchAltitude;
 
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
@@ -53,11 +58,19 @@ namespace MuMech
 
         public double VerticalAscentEnd() => AscentSettings.AutoPath ? AscentSettings.AutoTurnStartAltitude : AscentSettings.TurnStartAltitude;
 
+        // An orbit inside the atmosphere would never end the coast to its edge, and the rocket would fall back: aim at least
+        // 1 km above it.
+        private double OrbitAltitude =>
+            MainBody.atmosphere ? Math.Max(AscentSettings.DesiredOrbitAltitude, MainBody.RealMaxAtmosphereAltitude() + 1000) : AscentSettings.DesiredOrbitAltitude;
+
+        // a turn shape of 0 drops the pitch to the end angle the moment the turn starts
+        private const double MIN_TURN_SHAPE_EXPONENT = 0.1;
+
         private double SpeedAscentEnd() => AscentSettings.AutoPath ? AscentSettings.AutoTurnStartVelocity : AscentSettings.TurnStartVelocity;
 
         private bool IsVerticalAscent(double altitude, double velocity)
         {
-            _actualTurnStart = Math.Min(_actualTurnStart, VerticalAscentEnd());
+            _actualTurnStart = Math.Min(_actualTurnStart, Math.Max(VerticalAscentEnd(), _launchAltitude));
             if (altitude < VerticalAscentEnd() && velocity < SpeedAscentEnd())
             {
                 _actualTurnStart = Math.Max(_actualTurnStart, altitude);
@@ -69,16 +82,33 @@ namespace MuMech
 
         public double FlightPathAngle(double altitude, double velocity)
         {
-            double turnEnd = AscentSettings.AutoPath ? AscentSettings.AutoTurnEndAltitude : AscentSettings.TurnEndAltitude;
-
             if (IsVerticalAscent(altitude, velocity)) return 90.0;
+
+            return TurnAngle(altitude, _actualTurnStart);
+        }
+
+        /// <summary>
+        ///     The planned path for the Ascent Path Editor's picture: vertical up to the turn start altitude, then the turn from
+        ///     there. Unlike FlightPathAngle it neither reads nor moves the turn start of a flight in progress.
+        /// </summary>
+        public double PlannedFlightPathAngle(double altitude)
+        {
+            double turnStart = VerticalAscentEnd();
+            return altitude < turnStart ? 90.0 : TurnAngle(altitude, turnStart);
+        }
+
+        private double TurnAngle(double altitude, double turnStart)
+        {
+            double turnEnd = AscentSettings.AutoPath ? AscentSettings.AutoTurnEndAltitude : AscentSettings.TurnEndAltitude;
 
             if (altitude > turnEnd) return AscentSettings.TurnEndAngle;
 
             // below the altitude the turn started at (falling back, or a different altitude reference) Pow of a negative base is NaN
-            double turnFraction = altitude > _actualTurnStart ? (altitude - _actualTurnStart) / (turnEnd - _actualTurnStart) : 0;
+            double turnFraction = altitude > turnStart ? (altitude - turnStart) / (turnEnd - turnStart) : 0;
 
-            return Mathf.Clamp((float)(90.0 - Math.Pow(turnFraction, AscentSettings.TurnShapeExponent) * (90.0 - AscentSettings.TurnEndAngle)),
+            double turnShape = Math.Max(AscentSettings.TurnShapeExponent, MIN_TURN_SHAPE_EXPONENT);
+
+            return Mathf.Clamp((float)(90.0 - Math.Pow(turnFraction, turnShape) * (90.0 - AscentSettings.TurnEndAngle)),
                 0.01F, 89.99F);
         }
 
@@ -124,10 +154,10 @@ namespace MuMech
         private void DriveVerticalAscent()
         {
             if (!IsVerticalAscent(VesselState.AltitudeASL, VesselState.SpeedSurface)) _mode = AscentMode.GRAVITY_TURN;
-            if (Orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode = AscentMode.COAST_TO_APOAPSIS;
+            if (Orbit.ApA > OrbitAltitude) _mode = AscentMode.COAST_TO_APOAPSIS;
 
             Core.Attitude.AttitudeToVerticalLaunch(
-                OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val),
+                OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, OrbitAltitude),
                 AscentSettings.ForceRoll && VesselState.AltitudeBottom > AscentSettings.RollAltitude, AscentSettings.VerticalRoll, this);
 
             Core.Thrust.TargetThrottle = 1.0F;
@@ -142,7 +172,7 @@ namespace MuMech
         private void DriveGravityTurn()
         {
             //stop the gravity turn when our apoapsis reaches the desired altitude
-            if (Orbit.ApA > AscentSettings.DesiredOrbitAltitude)
+            if (Orbit.ApA > OrbitAltitude)
             {
                 _mode = AscentMode.COAST_TO_APOAPSIS;
                 return;
@@ -155,7 +185,7 @@ namespace MuMech
                 return;
             }
 
-            Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
+            Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, OrbitAltitude + MainBody.Radius);
             if (Core.Thrust.TargetThrottle < 1.0F)
             {
                 Core.Attitude.LimitedAttitudeTo(_desiredHeading, _desiredPitch * UtilMath.Rad2Deg, AscentSettings.ForceRoll, AscentSettings.TurnRoll,
@@ -182,7 +212,7 @@ namespace MuMech
                 _desiredPitch = Clamp(_desiredPitch + steerAngle, -Math.PI / 2, Math.PI / 2);
             }
 
-            _desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val);
+            _desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, OrbitAltitude);
             Core.Attitude.LimitedAttitudeTo(_desiredHeading, _desiredPitch * UtilMath.Rad2Deg, AscentSettings.ForceRoll, AscentSettings.TurnRoll,
                 ApplyAoALimiter, this);
 
@@ -202,8 +232,8 @@ namespace MuMech
             // follow surface velocity to reduce flipping
             Core.Attitude.LimitedAttitudeTo(VesselState.OrbitalVelocity, AscentSettings.ForceRoll, AscentSettings.TurnRoll, ApplyAoALimiter, this);
 
-            if (Orbit.ApA < AscentSettings.DesiredOrbitAltitude)
-                Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
+            if (Orbit.ApA < OrbitAltitude)
+                Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, OrbitAltitude + MainBody.Radius);
             else
                 Core.Thrust.ThrustOff();
 
