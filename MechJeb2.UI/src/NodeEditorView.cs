@@ -147,11 +147,18 @@ namespace MuMech.UI
         // ---- modern layout: a node dropdown, steppers in a property grid with one step choice, grouped sections ----
 
         string[] nodeEntries = new string[0];
+        ManeuverNode[] listedNodes = new ManeuverNode[0];
 
+        // a new array when the nodes change, not only their count: the labels are by position, so a node removed and another
+        // added in the same frame give the same texts, and an open drop-down list must still close
         string[] NodeEntries()
         {
-            int n = Count;
-            if (nodeEntries.Length == n) return nodeEntries;
+            List<ManeuverNode> nodes = Nodes;
+            int n = nodes?.Count ?? 0;
+            bool same = listedNodes.Length == n;
+            for (int i = 0; same && i < n; i++) same = nodes[i] == listedNodes[i];
+            if (same) return nodeEntries;
+            listedNodes = n == 0 ? new ManeuverNode[0] : nodes.ToArray();
             nodeEntries = new string[n];
             for (int i = 0; i < n; i++) nodeEntries[i] = NodeLabel(i);
             return nodeEntries;
