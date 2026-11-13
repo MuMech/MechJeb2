@@ -94,26 +94,31 @@ namespace KodeKit
         const float Interval = 0.2f;
         bool held;
         float next;
+        Selectable button;
+
+        void Awake() => button = GetComponent<Selectable>();
 
         public void OnPointerDown(PointerEventData e)
         {
             // like Unity's Button: the left button only, and nothing while the button is disabled (a right drag turns the camera)
             if (e.button != PointerEventData.InputButton.Left) return;
-            Selectable button = GetComponent<Selectable>();
             if (button != null && !button.IsInteractable()) return;
             held = true;
             next = Time.unscaledTime + Interval;
             Action?.Invoke();
         }
 
-        public void OnPointerUp(PointerEventData e) => held = false;
+        // another button's release (a right click during the hold) leaves the left button's repeat running
+        public void OnPointerUp(PointerEventData e)
+        {
+            if (e.button == PointerEventData.InputButton.Left) held = false;
+        }
         public void OnPointerExit(PointerEventData e) => held = false;
         void OnDisable() => held = false;
 
         void Update()
         {
             if (!held || Time.unscaledTime < next) return;
-            Selectable button = GetComponent<Selectable>();
             if (button != null && !button.IsInteractable())
             {
                 held = false;
