@@ -48,6 +48,8 @@ namespace MuMech
         public static ReflectionUtils.DelegateContext<DoubleVesselDelegate> FARVesselDynPres;
         public static ReflectionUtils.DelegateContext<CalculateVesselAeroForcesDelegate> FARCalculateVesselAeroForces;
 
+        // FAR is loaded and every FARAPI method MechJeb calls was found: the FAR values are read only then, so a FAR whose API
+        // changed leaves MechJeb on the stock values instead of throwing every tick
         public static bool IsFARCorrectlyInitialized;
 
         // A convenient debug message to display in the UI
@@ -533,6 +535,7 @@ namespace MuMech
             _einfo.Update(CoM, Vessel);
             _iinfo.Update();
             AnalyzeParts(_einfo, _iinfo);
+            _einfo.TrimWrappers(EngineWrappers.Count);
 
             UpdateResourceRequirements(_einfo, _iinfo);
 
@@ -687,7 +690,7 @@ namespace MuMech
 
         private double GetDynamicPressure()
         {
-            if (ReflectionUtils.IsLoadedFAR)
+            if (IsFARCorrectlyInitialized)
             {
                 return FARVesselDynPres.Call(Vessel) * 1000;
             }
@@ -755,8 +758,14 @@ namespace MuMech
                     //if (rcsbal.enabled)
                     //    continue;
 
-                    if (p.ShieldedFromAirstream || !rcs.rcsEnabled || !rcs.isEnabled || rcs.isJustForShow || rcs.flameout)
+                    if ((p.ShieldedFromAirstream && !rcs.shieldedCanThrust) || !rcs.rcsEnabled || !rcs.isEnabled || rcs.isJustForShow || rcs.flameout)
                         continue;
+
+                    // ModuleRCS keeps the vacuum fuel flow and lets the thrust follow the Isp: thrusterPower is the vacuum thrust
+                    float vacuumIsp = rcs.atmosphereCurve.Evaluate(0);
+                    float ispFactor = vacuumIsp > 0
+                        ? rcs.atmosphereCurve.Evaluate((float)p.staticPressureAtm) / vacuumIsp * (float)rcs.ispMult
+                        : 0;
 
                     // ModuleRCS copies the RCS group into rcs_active in its own FixedUpdate: the torque needs both, the thrust neither
                     bool countTorque = rcsGroup && rcs.rcs_active;
@@ -777,7 +786,7 @@ namespace MuMech
 
                         Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
 
-                        float power = rcs.thrusterPower * rcs.thrustPercentage * 0.01f * (float)rcs.flowMult;
+                        float power = rcs.thrusterPower * rcs.thrustPercentage * 0.01f * (float)rcs.flowMult * ispFactor;
 
                         if (FlightInputHandler.fetch.precisionMode)
                         {
@@ -868,7 +877,7 @@ namespace MuMech
             PureDragVector = Vector3d.zero;
             PureLiftVector = Vector3d.zero;
 
-            if (ReflectionUtils.IsLoadedFAR)
+            if (IsFARCorrectlyInitialized)
             {
                 DragCoefficient = FARVesselDragCoeff.Call(Vessel);
                 AreaDrag = FARVesselRefArea.Call(Vessel) * DragCoefficient * PhysicsGlobals.DragMultiplier;
@@ -904,7 +913,7 @@ namespace MuMech
                 //if (p.dynamicPressurekPa > 0 && PhysicsGlobals.DragMultiplier > 0)
                 //    dragCoef += p.simDragScalar / (p.dynamicPressurekPa * PhysicsGlobals.DragMultiplier);
 
-                if (!ReflectionUtils.IsLoadedFAR)
+                if (!IsFARCorrectlyInitialized)
                 {
                     DragCoefficient += p.DragCubes.DragCoeff;
                     AreaDrag += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
@@ -1041,8 +1050,10 @@ namespace MuMech
                                     {
                                         provider.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
-                                        TorqueOthers.Add(pos);
-                                        TorqueOthers.Add(neg);
+                                        // Stock has two conventions: reaction wheels and gimbals give two magnitudes, control
+                                        // surfaces two signed torques. As magnitudes per side, both count once.
+                                        TorqueOthers.Add(pos.Abs());
+                                        TorqueOthers.Add(-neg.Abs());
                                     }
                                     catch (Exception e)
                                     {
@@ -1146,9 +1157,13 @@ namespace MuMech
             if (CoLWeightSum > 0)
                 CoL /= CoLWeightSum;
 
-            Vector3d liftDir = -Vector3d.Cross(Vessel.transform.right, -SurfaceVelocity.normalized);
+            // The lift axis: perpendicular to the velocity and to the right axis of the control point, the frame of the angle of
+            // attack and sideslip above. The cross product is cos(sideslip) long, so it is normalized; zero at 90 degrees of sideslip.
+            Vector3d liftDir = -Vector3d.Cross(Vessel.ReferenceTransform.right, -SurfaceVelocity.normalized);
+            double liftDirLength = liftDir.magnitude;
+            liftDir = liftDirLength > 1e-9 ? liftDir / liftDirLength : Vector3d.zero;
 
-            if (ReflectionUtils.IsLoadedFAR && !Vessel.packed && SurfaceVelocity != Vector3d.zero)
+            if (IsFARCorrectlyInitialized && !Vessel.packed && SurfaceVelocity != Vector3d.zero)
             {
                 CalculateVesselAeroForcesWithCache(Vessel, out Vector3 farForce, SurfaceVelocity, AltitudeASL);
 
@@ -1244,7 +1259,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TerminalVelocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")] //Terminal velocity
         public double TerminalVelocity()
         {
-            if (ReflectionUtils.IsLoadedFAR)
+            if (IsFARCorrectlyInitialized)
                 return FARVesselTermVelEst.Call(Vessel);
 
             if (AltitudeASL > MainBody.RealMaxAtmosphereAltitude())
@@ -1287,6 +1302,9 @@ namespace MuMech
         {
             private readonly List<KeyValuePair<Transform, Quaternion>> _rotSave = new List<KeyValuePair<Transform, Quaternion>>();
 
+            // the engine wrappers, reused every tick instead of one new wrapper per ignited engine
+            private readonly List<EngineWrapper> _wrapperPool = new List<EngineWrapper>();
+
             public readonly Dictionary<int, FuelRequirement> ResourceRequired = new Dictionary<int, FuelRequirement>();
 
             public readonly Vector6 TorqueDifferentialThrottle = new Vector6();
@@ -1321,6 +1339,13 @@ namespace MuMech
                 _atmP0 = (float)(vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres);
                 float alt1 = (float)(vessel.altitude + TimeWarp.fixedDeltaTime * vessel.verticalSpeed);
                 _atmP1 = (float)(FlightGlobals.getStaticPressure(alt1, vessel.mainBody) * PhysicsGlobals.KpaToAtmospheres);
+            }
+
+            // the wrappers this tick did not use go: they must not keep a staged engine's module alive
+            public void TrimWrappers(int used)
+            {
+                if (_wrapperPool.Count > used)
+                    _wrapperPool.RemoveRange(used, _wrapperPool.Count - used);
             }
 
             public void CheckUllageStatus(ModuleEngines e)
@@ -1377,7 +1402,7 @@ namespace MuMech
                 foreach (Propellant propellant in e.propellants)
                 {
                     // maxFuelFlow is in tonnes per second: units per second need the mixture density (as the comment above says)
-                    double maxreq = e.maxFuelFlow * e.mixtureDensityRecip * propellant.ratio;
+                    double maxreq = e.maxFuelFlow * e.multFlow * e.mixtureDensityRecip * propellant.ratio;
                     AddResource(propellant.id, propellant.currentRequirement, maxreq);
                 }
 
@@ -1385,8 +1410,9 @@ namespace MuMech
 
                 float thrustLimiter = e.thrustPercentage / 100f;
 
-                double maxThrust = e.maxFuelFlow * e.flowMultiplier * isp * e.g;
-                double minThrust = e.minFuelFlow * e.flowMultiplier * isp * e.g;
+                // multFlow and multIsp are 1 in stock; mods (TestFlight's failures) lower them, and stock applies them
+                double maxThrust = e.maxFuelFlow * e.flowMultiplier * e.multFlow * isp * e.multIsp * e.g;
+                double minThrust = e.minFuelFlow * e.flowMultiplier * e.multFlow * isp * e.multIsp * e.g;
 
                 // RealFuels engines reports as operational even when they are shutdown
                 // REMOVED: this definitively screws up the 1kN thruster in RO/RF and sets minThrust/maxThrust
@@ -1471,7 +1497,13 @@ namespace MuMech
                         }
                     }
 
-                    enginesWrappers.Add(new EngineWrapper(e, maxVariableForce, constantTorque, maxVariableTorque));
+                    // enginesWrappers is emptied each tick and filled only here: its count indexes the pool
+                    int index = enginesWrappers.Count;
+                    if (index == _wrapperPool.Count)
+                        _wrapperPool.Add(new EngineWrapper(e, maxVariableForce, constantTorque, maxVariableTorque));
+                    else
+                        _wrapperPool[index].Set(e, maxVariableForce, constantTorque, maxVariableTorque);
+                    enginesWrappers.Add(_wrapperPool[index]);
                 }
                 finally
                 {
@@ -1694,9 +1726,12 @@ namespace MuMech
                     double mass = Math.Min(mass0, mass1);
 
                     // Also, we can't have more airflow than what fits in the resource tank of the intake part.
+                    // indexed: foreach over a PartResourceList boxes its enumerator
                     double capacity = 0;
-                    foreach (PartResource tank in intake.part.Resources)
+                    PartResourceList tanks = intake.part.Resources;
+                    for (int t = 0; t < tanks.Count; t++)
                     {
+                        PartResource tank = tanks[t];
                         if (tank.info.id == r.id)
                             capacity += tank.maxAmount; // units per timestep
                     }
@@ -1751,12 +1786,21 @@ namespace MuMech
             }
         }
 
+        // VesselState reuses its wrappers from tick to tick: one in EngineWrappers holds this tick's values only
         public class EngineWrapper
         {
-            public readonly ModuleEngines Engine;
+            public ModuleEngines Engine { get; private set; }
 
             public EngineWrapper(ModuleEngines module, Vector3d maxVariableForce, Vector3d constantTorque,
                 Vector3d maxVariableTorque)
+            {
+                Engine = module;
+                MaxVariableForce = maxVariableForce;
+                ConstantTorque = constantTorque;
+                MaxVariableTorque = maxVariableTorque;
+            }
+
+            internal void Set(ModuleEngines module, Vector3d maxVariableForce, Vector3d constantTorque, Vector3d maxVariableTorque)
             {
                 Engine = module;
                 MaxVariableForce = maxVariableForce;
@@ -1770,11 +1814,11 @@ namespace MuMech
                 set => Engine.thrustPercentage = value * 100;
             }
 
-            public Vector3d MaxVariableForce { get; }
+            public Vector3d MaxVariableForce { get; private set; }
 
-            public Vector3d ConstantTorque { get; }
+            public Vector3d ConstantTorque { get; private set; }
 
-            public Vector3d MaxVariableTorque { get; }
+            public Vector3d MaxVariableTorque { get; private set; }
         }
     }
 }

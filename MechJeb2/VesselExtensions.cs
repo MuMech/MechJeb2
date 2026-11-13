@@ -91,12 +91,11 @@ namespace MuMech
 
             Guid vesselKey = vessel == null ? Guid.Empty : vessel.id;
 
+            // a vessel without MechJeb is remembered too, for the fixed step: the UI asks every frame for the active vessel
             if (!masterMechJeb.TryGetValue(vesselKey, out MechJebCore mj))
             {
                 mj = vessel.GetModule<MechJebCore>(p => p.running);
-                if (mj != null)
-                    masterMechJeb.Add(vesselKey, mj);
-                return mj;
+                masterMechJeb.Add(vesselKey, mj);
             }
 
             return mj;
@@ -234,11 +233,10 @@ namespace MuMech
             bool finalPatch = patch.patchEndTransition == Orbit.PatchTransitionType.FINAL;
 
 
+            // KSP gives a solver only to the active vessel, and only once patched conics are unlocked: a vessel without one
+            // has no maneuver nodes. Adding one would give it conics that stock withholds, and one KSP never removes.
             if (vessel.patchedConicSolver == null)
-            {
-                vessel.patchedConicSolver = vessel.gameObject.AddComponent<PatchedConicSolver>();
-                vessel.patchedConicSolver.Load(vessel.flightPlanNode);
-            }
+                return finalPatch ? null : patch.nextPatch;
 
             //See if any maneuver nodes occur during this patch. If there is one
             //return the patch that follows it
@@ -398,19 +396,18 @@ namespace MuMech
 
         // The part loop in VesselState could expose this, but it gets disabled when the RCS action group is disabled.
         // This method is also useful when the RCS AG is off.
+        // Walks the parts itself: FindPartModulesImplementing builds a new list on each call, and the ullage check asks every tick.
         public static bool hasEnabledRCSModules(this Vessel vessel)
         {
-            List<ModuleRCS> rcsModules = vessel.FindPartModulesImplementing<ModuleRCS>();
-
-            for (int m = 0; m < rcsModules.Count; m++)
+            List<Part> parts = vessel.parts;
+            for (int p = 0; p < parts.Count; p++)
             {
-                ModuleRCS rcs = rcsModules[m];
-
-                if (rcs == null)
-                    continue;
-
-                if (rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
-                    return true;
+                PartModuleList modules = parts[p].Modules;
+                for (int m = 0; m < modules.Count; m++)
+                {
+                    if (modules[m] is ModuleRCS rcs && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
+                        return true;
+                }
             }
 
             return false;

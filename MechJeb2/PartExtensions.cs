@@ -12,9 +12,36 @@ namespace MuMech
 
         public static bool EngineHasFuel(this ModuleEngines me) => !me.getFlameoutState && !me.engineShutdown;
 
+        /// <summary>
+        ///     The part's engine in use: a multi-mode engine's current mode, else an ignited engine module, else the first. The first
+        ///     module alone is a multi-mode engine's primary mode, which keeps its flameout after the switch to the secondary.
+        /// </summary>
+        public static ModuleEngines CurrentEngine(this Part p)
+        {
+            MultiModeEngine multiMode = p.FindModuleImplementing<MultiModeEngine>();
+            if (multiMode != null)
+            {
+                ModuleEngines mode = multiMode.runningPrimary ? multiMode.PrimaryEngine : multiMode.SecondaryEngine;
+                if (mode != null)
+                    return mode;
+            }
+
+            ModuleEngines first = null;
+            for (int i = 0; i < p.Modules.Count; i++)
+            {
+                if (!(p.Modules[i] is ModuleEngines engine))
+                    continue;
+                if (engine.EngineIgnited)
+                    return engine;
+                first ??= engine;
+            }
+
+            return first;
+        }
+
         public static bool EngineHasFuel(this Part p)
         {
-            ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
+            ModuleEngines eng = p.CurrentEngine();
             return eng != null && eng.EngineHasFuel();
         }
 
@@ -23,7 +50,7 @@ namespace MuMech
             if (!VesselState.IsRealFuelsCorrectlyInitialized) // stock doesn't have this concept
                 return false;
 
-            ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
+            ModuleEngines eng = p.CurrentEngine();
 
             if (eng is null) // this case probably doesn't make any sense
                 return false;
@@ -153,7 +180,7 @@ namespace MuMech
 
         public static bool IsThrottleLockedEngine(this Part p)
         {
-            ModuleEngines me = p.FindModuleImplementing<ModuleEngines>();
+            ModuleEngines me = p.CurrentEngine();
             return me != null && me.throttleLocked;
         }
 
