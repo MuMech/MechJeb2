@@ -264,9 +264,10 @@ namespace MuMech.UI
             var skin = (MechJebModuleSettings.UiSkinType)settings.UiSkin;
             bool compact = settings.UiCompact;
             float opacity = Mathf.Clamp(settings.UiOpacity, 0.3f, 1f);
-            bool sameTheme = Theme.Current != null && skin == themeSkin && compact == themeCompact;
+            bool sameTheme = themeApplied && Theme.Current != null && skin == themeSkin && compact == themeCompact;
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (sameTheme && opacity == themeOpacity) return;
+            themeApplied = true;
             themeSkin = skin;
             themeCompact = compact;
             themeOpacity = opacity;
@@ -275,9 +276,11 @@ namespace MuMech.UI
             else Theme.Set(ThemeFor(skin, compact, opacity));
         }
 
+        // what this host last applied: until then Theme.Current is another scene's theme, or KodeKit's default, and is replaced
+        bool themeApplied;
         MechJebModuleSettings.UiSkinType themeSkin;
         bool themeCompact;
-        float themeOpacity = -1;
+        float themeOpacity;
 
         /// <summary>
         /// The opacity slider: only the window backgrounds' alpha changes, so it is written to them and to the themes they
