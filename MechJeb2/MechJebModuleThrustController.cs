@@ -29,6 +29,10 @@ namespace MuMech
         private float _transPrevThrust;
         public bool TransKillH = false;
 
+        // Set by the PANIC abort from its engage until its decouplers have fired: the throttle stays at 0 whatever another
+        // autopilot asks for
+        public bool PanicCut;
+
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitDynamicPressure;
 
@@ -371,6 +375,9 @@ namespace MuMech
             // Enabled for the limiter/ullage service), so "a consumer is driving" means Count > 1, not > 0.
             if (Users.Count > 1)
                 s.mainThrottle = TargetThrottle;
+
+            if (PanicCut)
+                s.mainThrottle = 0;
 
             // before any comparison or Mathf.Min, which turn a NaN request into the throttle limit (often full throttle)
             if (float.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
