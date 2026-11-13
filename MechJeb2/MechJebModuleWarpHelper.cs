@@ -63,13 +63,15 @@ namespace MuMech
                     break;
 
                 case WarpTarget.PhaseAngleT:
-                    if (Core.Target.NormalTargetExists)
+                    // the Sun is a target without an orbit
+                    if (Core.Target.NormalTargetExists && Core.Target.TargetOrbit != null)
                     {
-                        Orbit reference;
+                        Orbit reference = null;
                         if (Core.Target.TargetOrbit.referenceBody == Orbit.referenceBody)
                             reference = Orbit; // we orbit arround the same body
-                        else
-                            reference = Orbit.referenceBody.orbit; // null when we orbit the Sun and the target does not
+                        else if (Core.Target.TargetOrbit.referenceBody == Orbit.referenceBody.referenceBody)
+                            reference = Orbit.referenceBody.orbit; // the target orbits our body's parent; null when we orbit the Sun
+                        // any other target (one around a moon of our body, say) has no phase angle with us
                         if (reference == null)
                         {
                             valid = false;
@@ -99,6 +101,13 @@ namespace MuMech
                     break;
 
                 case WarpTarget.AtmosphericEntry:
+                    // no atmosphere to enter, or already in it: the next crossing would be the datum radius, or the way out
+                    if (!MainBody.atmosphere || VesselState.AltitudeASL < MainBody.RealMaxAtmosphereAltitude())
+                    {
+                        valid = false;
+                        break;
+                    }
+
                     try
                     {
                         targetUT = Vessel.orbit.NextTimeOfRadius(VesselState.Time,
@@ -115,6 +124,8 @@ namespace MuMech
                     try
                     {
                         targetUT = Core.GetComputerModule<MechJebModuleHoverslamSimulation>().IgnitionUT;
+                        // NaN without a hoverslam solution
+                        if (!targetUT.IsFinite()) valid = false;
                     }
                     catch
                     {
@@ -152,6 +163,14 @@ namespace MuMech
                 catch
                 {
                     warping = false;
+                }
+
+                // the solution is gone: a NaN target would neither warp nor ever end
+                if (!targetUT.IsFinite())
+                {
+                    Core.Warp.MinimumWarp(true);
+                    warping = false;
+                    return;
                 }
             }
 
