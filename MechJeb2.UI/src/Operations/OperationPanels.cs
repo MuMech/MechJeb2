@@ -8,8 +8,8 @@ namespace MuMech.UI
 {
     /// <summary>
     /// The parameter rows of each maneuver Operation (its DoParametersGUI), built once into a panel of ManeuverPlannerView.
-    /// Every MechJeb operation has a builder here; another mod's operation has none and is drawn by its own DoParametersGUI
-    /// through ImguiBlock.
+    /// Every MechJeb operation has a builder here; another mod's operation has none, and its panel only says that its
+    /// settings can't be shown.
     /// </summary>
     internal static class OperationPanels
     {

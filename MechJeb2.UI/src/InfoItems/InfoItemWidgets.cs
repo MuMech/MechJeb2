@@ -81,11 +81,9 @@ namespace MuMech.UI
                     ApplyColor(b.GetComponentInChildren<TMP_Text>(), true);
                     break;
                 case GeneralInfoItem g:
-                    if (GeneralItemBuilders.TryBuild(w, parent, g, refresh))
-                        break;
-                    // another mod's item: its IMGUI method inside the window, refreshed like MechJebModuleCustomInfoWindow does
-                    new ImguiBlock(parent, g.DrawItem);
-                    refresh.Add(g.UpdateItem);
+                    // another mod's item has no builder: its IMGUI method can't be shown, so its name only
+                    if (!GeneralItemBuilders.TryBuild(w, parent, g, refresh))
+                        KodeWindow.Label(parent, item.localizedName);
                     break;
                 default:
                     KodeWindow.Label(parent, item.localizedName);

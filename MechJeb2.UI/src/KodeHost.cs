@@ -120,7 +120,6 @@ namespace MuMech.UI
             }
             if (core == null) return;
 
-            ImguiBlockHost.Skin = GuiUtils.Skin; // other mods' info items and operations hosted in views use MechJeb's skin
             // MechJebCore.OnGUI's conditions
             bool show = core.ShowGui &&
                 (HighLogic.LoadedSceneIsEditor || core.vessel == FlightGlobals.ActiveVessel && core.part.State != PartStates.DEAD);

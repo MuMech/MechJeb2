@@ -1029,7 +1029,7 @@ namespace MuMech
     }
 
     // Its id is the method's name, which saved custom windows hold. MechJeb's own methods are empty: MechJeb2.UI builds those
-    // items by id, and the method only draws, in IMGUI, an item from another mod.
+    // items by id, and shows another mod's item as its name only. Nothing calls DrawItem; it stays for mods built against it.
     public class GeneralInfoItem : InfoItem
     {
         private readonly Action draw;

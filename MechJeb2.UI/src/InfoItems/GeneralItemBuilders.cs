@@ -9,7 +9,7 @@ namespace MuMech.UI
 {
     /// <summary>
     /// The KodeKit widgets of MechJeb's GeneralInfoItems, by item id: their methods in MechJeb2 are empty and only register
-    /// the item. Another mod's item has no builder and is drawn by its own IMGUI method through ImguiBlock. Builders take the refresh list for work done at the
+    /// the item. Another mod's item has no builder and shows as its name only. Builders take the refresh list for work done at the
     /// window's refresh rate: the value readouts that walk parts or bodies run there, not every frame.
     /// </summary>
     public static partial class GeneralItemBuilders
