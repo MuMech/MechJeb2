@@ -261,6 +261,7 @@ namespace MuMech
         // lazily computed (and cached) once per fixed update, only when first needed
         private bool _droppingSolids => _shouldDropSolids ??= ShouldDropSolids();
         private double _stageCountdownStart;
+        private double _lastStageRequestTime;
         private Vessel _currentActiveVessel;
         private bool _initializedOnce;
 
@@ -351,8 +352,11 @@ namespace MuMech
                 return;
             }
 
-            // only release launch clamps if we're at nearly full thrust and no failed engines
-            if ((VesselState.ThrustCurrent / VesselState.ThrustAvailable < ClampAutoStageThrustPct || AnyFailedEngines(_allModuleEngines)) &&
+            // only release launch clamps if we're at nearly full thrust and no failed engines. The thrust is the whole thrust, not its
+            // part along the control forward, and no thrust at all holds the clamps
+            double maxThrust = VesselState.ThrustVectorMaxThrottle.magnitude;
+            bool lowThrust = maxThrust <= 0 || VesselState.ThrustVectorLastFrame.magnitude / maxThrust < ClampAutoStageThrustPct;
+            if ((lowThrust || AnyFailedEngines(_allModuleEngines)) &&
                 InverseStageReleasesClamps(Vessel.currentStage - 1))
             {
                 // continually reset the PIDs while we have launch clamps to avoid integral windup
@@ -363,9 +367,11 @@ namespace MuMech
             Stage();
         }
 
+        // The fairing conditions protect the payload from the air, so they apply only on a body with an atmosphere. The
+        // no-active-engines rule in OnFixedUpdate runs before them and stages a fairing whatever they say.
         private bool WaitingForFairing()
         {
-            if (!HasFairing(Vessel.currentStage - 1))
+            if (!HasFairing(Vessel.currentStage - 1) || !MainBody.atmosphere)
             {
                 return false;
             }
@@ -391,6 +397,11 @@ namespace MuMech
         // bypasses staging delays and other checks and immediately stages
         public void ImmediateStage()
         {
+            // KSP refuses a stage during its staging cooldown: nothing is staged then, so the countdown and "Autostage once"
+            // stay for the next call
+            if (Vessel.isActiveVessel && !StageManager.CanSeparate)
+                return;
+
             if (InverseStageFiresDecoupler(Vessel.currentStage - 1))
             {
                 // track the last stage time for the post delay
@@ -402,8 +413,12 @@ namespace MuMech
                 _currentActiveVessel = FlightGlobals.ActiveVessel;
                 Debug.Log($"Mechjeb Autostage: Switching from {FlightGlobals.ActiveVessel.name} to vessel {Vessel.name} to stage");
 
+                // the switch is done within the call (onVesselResumeStaging moves the status on); a refused switch leaves
+                // the status as it was, and the next call tries again. The stage itself waits for the next call.
                 _remoteStagingStatus = RemoteStagingState.WAITING_FOCUS;
-                FlightGlobals.ForceSetActiveVessel(Vessel);
+                if (!FlightGlobals.ForceSetActiveVessel(Vessel))
+                    _remoteStagingStatus = RemoteStagingState.DISABLED;
+                return;
             }
             else
             {
@@ -414,6 +429,8 @@ namespace MuMech
                     case RemoteStagingState.DISABLED:
                         StageManager.ActivateNextStage();
                         break;
+                    // this vessel is active now: the switch is done, whether or not its event came
+                    case RemoteStagingState.WAITING_FOCUS:
                     case RemoteStagingState.FOCUS_FINISHED:
                         StageManager.ActivateNextStage();
                         FlightGlobals.ForceSetActiveVessel(_currentActiveVessel);
@@ -436,12 +453,15 @@ namespace MuMech
             if (Vessel.currentStage <= 0 || Vessel.currentStage <= AutostageLimit || VesselState.Time - _lastStageTime < AutostagePostDelay)
                 return;
 
-            // enforce the predelay
-            if (!_countingDown)
+            // enforce the predelay: the countdown runs while Stage() is asked every tick; a tick without the request (the
+            // condition stopped holding, or the module was off) starts it over
+            if (!_countingDown || VesselState.Time - _lastStageRequestTime > 1.5 * TimeWarp.fixedDeltaTime)
             {
                 _countingDown = true;
                 _stageCountdownStart = VesselState.Time;
             }
+
+            _lastStageRequestTime = VesselState.Time;
 
             if (VesselState.Time - _stageCountdownStart >= AutostagePreDelay)
                 ImmediateStage();
@@ -458,9 +478,13 @@ namespace MuMech
             return false;
         }
 
+        // An empty stage list (a failed stats run) is unknown, not zero: infinity, which keeps hot staging waiting.
         private double LastNonZeroDVStageBurnTime()
         {
             _stats.RequestUpdate();
+            if (_vacStats.Count == 0)
+                return double.PositiveInfinity;
+
             int kspStage = -1;
             int mjPhase;
             double dt = 0f;

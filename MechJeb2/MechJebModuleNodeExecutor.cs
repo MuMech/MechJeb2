@@ -641,6 +641,15 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate();
 
+            // no stage stats (a failed stats run): the current thrust gives an estimate, where the empty list would give 0 s
+            if (stats.VacStats.Count == 0)
+            {
+                double accel = VesselState.LimitedMaxThrustAcceleration;
+                burnTime     = accel > 0 ? dv / accel : 0;
+                halfBurnTime = burnTime / 2;
+                return burnTime;
+            }
+
             double lastStageBurnTime = 0;
             for (int mjPhase = stats.VacStats.Count - 1; mjPhase >= 0 && dvLeft > 0; mjPhase--)
             {

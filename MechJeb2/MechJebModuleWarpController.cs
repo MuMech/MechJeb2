@@ -19,7 +19,6 @@ namespace MuMech
 
         private double warpIncreaseAttemptTime;
 
-        private int lastAskedIndex;
         private float _lastPausedMessageTime = float.NegativeInfinity;
 
         public double warpToUT   { get; private set; }
@@ -36,6 +35,10 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            // a warp stopped by the player, or by KSP, ends at 1x too: SAS goes back to the player's setting
+            if (_sasBeforeWarp != null && TimeWarp.CurrentRateIndex == 0)
+                RestoreSAS();
+
             if (warpToUT > 0)
                 WarpToUT(warpToUT);
         }
@@ -43,19 +46,21 @@ namespace MuMech
         internal void PauseWarp()
         {
             WarpPaused = true;
-
-            if (activateSASOnWarp && TimeWarp.CurrentRateIndex == 0)
-                Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
         }
 
-        internal void ResumeWarp()
+        // the player's SAS setting from before MechJeb turned SAS on for a rails warp, given back when the warp is back at 1x
+        private bool? _sasBeforeWarp;
+
+        private void RestoreSAS()
         {
-            if (!WarpPaused)
-                return;
-
-            WarpPaused = false;
-            SetTimeWarpRate(lastAskedIndex, false);
+            if (_sasBeforeWarp is bool sas)
+                Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, sas);
+            _sasBeforeWarp = null;
         }
+
+        // The autopilots that warp ask again every tick, and raise the warp from there: no rate is restored here, since the one
+        // asked before the pause may belong to a warp that has ended since.
+        internal void ResumeWarp() => WarpPaused = false;
 
         // Turn SAS on during regular warp for compatibility with PersistentRotation
         private void SetTimeWarpRate(int rateIndex, bool instant)
@@ -64,10 +69,6 @@ namespace MuMech
 
             if (rateIndex != TimeWarp.CurrentRateIndex)
             {
-                if (activateSASOnWarp && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
-                    Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
-
-                lastAskedIndex = rateIndex;
                 // Pausing stops MJ from raising the warp. Slowing down is always allowed, so autopilots that need to
                 // stop warping (node executor, landing) still work.
                 if (WarpPaused && rateIndex >= TimeWarp.CurrentRateIndex)
@@ -82,11 +83,19 @@ namespace MuMech
                 }
                 else
                 {
-                    TimeWarp.SetRate(rateIndex, instant);
-                }
+                    // SAS changes only with a rate change that happens: a paused warp leaves it as it is
+                    if (activateSASOnWarp && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
+                    {
+                        _sasBeforeWarp ??= Part.vessel.ActionGroups[KSPActionGroup.SAS];
+                        Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
+                    }
 
-                if (activateSASOnWarp && rateIndex == 0)
-                    Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+                    TimeWarp.SetRate(rateIndex, instant);
+
+                    // back at 1x, or KSP refused the rate
+                    if (TimeWarp.CurrentRateIndex == 0)
+                        RestoreSAS();
+                }
             }
         }
 
@@ -277,6 +286,7 @@ namespace MuMech
             warpToUT = 0.0;
             if (TimeWarp.CurrentRateIndex == 0)
                 return false; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kraken)
+
             SetTimeWarpRate(0, instant);
             return true;
         }
