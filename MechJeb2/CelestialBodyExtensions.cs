@@ -70,7 +70,8 @@ namespace MuMech
             return true;
         }
 
-        public static double AltitudeForPressure(this CelestialBody body, double pressure)
+        // The altitude where the static pressure is pressureKPa, in kPa as FlightGlobals.getStaticPressure gives it
+        public static double AltitudeForPressure(this CelestialBody body, double pressureKPa)
         {
             if (!body.atmosphere)
                 return 0;
@@ -80,7 +81,7 @@ namespace MuMech
             {
                 double testAlt = (upperAlt + lowerAlt) * 0.5;
                 double testPressure = FlightGlobals.getStaticPressure(testAlt, body);
-                if (testPressure < pressure)
+                if (testPressure < pressureKPa)
                 {
                     upperAlt = testAlt;
                 }
