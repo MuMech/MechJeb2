@@ -24,14 +24,13 @@ namespace MuMech
             HighLogic.LoadedSceneIsEditor ? VesselExtensions.EditorParts :
             Vessel == null ? new List<Part>() : Vessel.Parts;
 
+        // the node executor's burn time: the mass lost, the stages and their spool-up, and an RCS burn
         [ValueInfoItem("#MechJeb_NodeBurnTime", InfoItem.Category.Misc)] //Node burn time
         public string NextManeuverNodeBurnTime()
         {
             if (!Vessel.patchedConicsUnlocked() || Vessel.patchedConicSolver.maneuverNodes.Count == 0) return "N/A";
 
-            ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
-            double burnTime = node.GetBurnVector(node.patch).magnitude / VesselState.LimitedMaxThrustAcceleration;
-            return GuiUtils.TimeToDHMS(burnTime);
+            return Core.Node.NextNodeBurnTime();
         }
 
         [ValueInfoItem("#MechJeb_TimeToNode", InfoItem.Category.Misc)] //Time to node
