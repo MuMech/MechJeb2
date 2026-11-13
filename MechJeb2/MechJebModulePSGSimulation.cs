@@ -68,6 +68,12 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LimitQa = new EditableDouble(2000);
 
+        /// <summary>
+        ///     The Qα limit the optimizer plans with and the autopilot flies to, in Pa-rad: 0 (no limit) for a setting of 0 or
+        ///     less, and at most 10000.
+        /// </summary>
+        public double QAlphaLimit => LimitQa > 0 ? Min(LimitQa, 10000) : 0;
+
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble MaxCoast = 450;
 
@@ -361,7 +367,7 @@ namespace MuMech
                     double h0 = r1 / Log(rho0 / rho1);
                     double cd = Cd;
                     double aRef = Aref;
-                    double qAlphaMax = LimitQa;
+                    double qAlphaMax = QAlphaLimit;
                     double qMax = Core.Thrust.LimitDynamicPressure ? Core.Thrust.MaxDynamicPressure.Val : 0.0;
                     V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
 
