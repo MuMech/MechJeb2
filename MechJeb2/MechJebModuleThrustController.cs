@@ -300,9 +300,15 @@ namespace MuMech
                 _userCommandingRotationSmoothed--;
             }
 
-            if (Tmode != TMode.OFF && VesselState.ThrustAvailable > 0)
+            // ThrustAvailable is the thrust along the control forward: on a control point that faces away from the engines it is 0 or
+            // negative, and Kill H/S, which aims the engines themselves, must run there too
+            bool killH = Tmode == TMode.KEEP_VERTICAL && TransKillH;
+            if (Tmode != TMode.OFF && (killH ? VesselState.ThrustVectorMaxThrottle.sqrMagnitude > 0 : VesselState.ThrustAvailable > 0))
             {
                 double spd = 0;
+                // Kill H/S: the angle between the thrust and where it's wanted, and whether the horizontal speed calls for full throttle
+                double aimError = 0;
+                bool killHFull = false;
 
                 switch (Tmode)
                 {
@@ -319,11 +325,12 @@ namespace MuMech
                             var hsdir = Vector3.ProjectOnPlane(VesselState.SurfaceVelocity, VesselState.Up);
                             Vector3 dir = -hsdir + VesselState.Up * Math.Max(Math.Abs(spd), 20 * MainBody.GeeASL);
                             Vector3d rot;
+                            // High and fast: full throttle straight against the horizontal velocity. Decided every tick, so once the horizontal
+                            // speed is down the vertical speed is held again, and the mode stays KEEP_VERTICAL throughout
                             if (Math.Min(VesselState.AltitudeASL, VesselState.AltitudeTrue) > 5000 &&
                                 hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * MainBody.GeeASL) * 2)
                             {
-                                Tmode = TMode.DIRECT;
-                                TransSpdAct = 100;
+                                killHFull = true;
                                 rot = -hsdir;
                             }
                             else
@@ -331,13 +338,31 @@ namespace MuMech
                                 rot = dir.normalized;
                             }
 
-                            Core.Attitude.AttitudeTo(rot, AttitudeReference.INERTIAL, null);
+                            // Aim the engines' thrust along rot, not the control forward, which a control point can turn away from the engines (a
+                            // lander can's "forward" or "reverse" point). The target is the whole attitude: the vessel's own, turned by what takes
+                            // its thrust to rot. A forward direction alone leaves roll to the controller, and with the thrust off the forward axis
+                            // any roll moves the thrust. When the thrust is on rot this is the current attitude, so it holds; with the engines on
+                            // the forward axis it aims the control forward. The thrust is not zero: this block only runs when the engines give some
+                            Vector3d thrustDir = VesselState.ThrustVectorMaxThrottle;
+                            Transform t = Vessel.GetTransform();
+                            QuaternionD current = QuaternionD.LookRotation(t.up, -t.forward);
+                            Core.Attitude.AttitudeTo(MathExtensions.FromToRotation(thrustDir, rot) * current, AttitudeReference.INERTIAL, null);
+
+                            // The throttle waits on the thrust's own error. The attitude controller's error is the control forward's, which
+                            // under-reads it on a control point off the engine axis: with the forward on the turn's axis it reads 0 whatever the
+                            // thrust error
+                            aimError = Vector3d.Angle(thrustDir, rot);
                         }
 
                         break;
                 }
 
-                double tErr = (TransSpdAct - spd) / VesselState.MaxThrustAcceleration;
+                // Kill H/S aims the thrust itself (above), so its full magnitude counts: MaxThrustAcceleration is the part along the control
+                // forward, which is 0 or negative on a control point turned away from the engines
+                double maxAccel = Tmode == TMode.KEEP_VERTICAL && TransKillH
+                    ? VesselState.ThrustVectorMaxThrottle.magnitude / VesselState.Mass
+                    : VesselState.MaxThrustAcceleration;
+                double tErr = (TransSpdAct - spd) / maxAccel;
                 if ((Tmode == TMode.KEEP_ORBITAL && Vector3d.Dot(VesselState.Forward, VesselState.OrbitalVelocity) < 0) ||
                     (Tmode == TMode.KEEP_SURFACE && Vector3d.Dot(VesselState.Forward, VesselState.SurfaceVelocity) < 0))
                 {
@@ -349,12 +374,16 @@ namespace MuMech
 
                 if (Tmode != TMode.KEEP_VERTICAL
                     || !TransKillH
-                    || Core.Attitude.AttitudeError < 2
-                    || (Math.Min(VesselState.AltitudeASL, VesselState.AltitudeTrue) < 1000 && Core.Attitude.AttitudeError < 90))
+                    || aimError < 2
+                    || (Math.Min(VesselState.AltitudeASL, VesselState.AltitudeTrue) < 1000 && aimError < 90))
                 {
                     if (Tmode == TMode.DIRECT)
                     {
                         _transPrevThrust = TargetThrottle = TransSpdAct / 100.0F;
+                    }
+                    else if (killHFull)
+                    {
+                        _transPrevThrust = TargetThrottle = 1;
                     }
                     else
                     {
@@ -369,7 +398,7 @@ namespace MuMech
                     bool useDiffThrottle = VesselState.TorqueDifferentialThrottle.x > VesselState.TorqueAvailable.x * 10 ||
                         VesselState.TorqueDifferentialThrottle.z > VesselState.TorqueAvailable.z * 10;
 
-                    if (Core.Attitude.AttitudeError >= 2 && (useGimbal || (useDiffThrottle && Core.Thrust.DifferentialThrottle)))
+                    if (useGimbal || (useDiffThrottle && Core.Thrust.DifferentialThrottle))
                     {
                         _transPrevThrust = TargetThrottle = 0.1F;
                     }
