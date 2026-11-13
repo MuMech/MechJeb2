@@ -80,7 +80,7 @@ namespace MechJebLib.HoverslamSimulation
         {
             _phase = phase;
 
-            if (!phase.Coast && VelocityError(x.R, x.V).magnitude <= BURN_END_DV)
+            if (!phase.Coast && VelocityError(x.R, x.V).magnitude <= BurnEndDv(phase, x.M))
             {
                 // stop because we're already past where the event would fire
                 tf = t0;
@@ -107,8 +107,15 @@ namespace MechJebLib.HoverslamSimulation
             return true;
         }
 
-        // For "terminal guidance" within the RK integrator we need to stop before the burn direction becomes indeterminate.
+        // The burn steers against the velocity error, so the steering flips from one step to the next as the error reaches zero and
+        // the integrator can only creep up on that point.  The burn's event ends the integration a little earlier, once the error
+        // is down to what the thrust removes in BURN_END_TIME: the steps that near the flip are short enough to end inside that
+        // window, which they rarely do inside a fixed millimetre per second.  FinishBurn does the rest analytically.  BURN_END_DV
+        // is the window's floor.
+        private const double BURN_END_TIME = 0.02;
         private const double BURN_END_DV = 1e-3;
+
+        private static double BurnEndDv(Phase phase, double m) => Math.Max(BURN_END_DV, BURN_END_TIME * phase.VacThrust / m);
 
         private readonly List<Event> _events;
 
@@ -116,26 +123,47 @@ namespace MechJebLib.HoverslamSimulation
         {
             var y = HoverslamLayout.CreateFrom(yin);
 
-            return VelocityError(y.R, y.V).magnitude - BURN_END_DV;
+            return VelocityError(y.R, y.V).magnitude - BurnEndDv(_phase, y.M);
         }
 
-        // Terminal phase analytical landing.
+        // Terminal phase analytical landing: the time dt that the thrust, burning mass as it goes, takes to null the velocity error
+        // while the error drifts along itself at driftAlong, from ve ln(m / (m - mdot dt)) - driftAlong dt = |dv|.  Newton's
+        // method from the constant-acceleration time, where the left side is already at least |dv|, steps down to the root.
         private void FinishBurn(ref HoverslamLayout x, ref double t, Phase phase)
         {
             V3 dv = VelocityError(x.R, x.V);
-            double at = phase.VacThrust / x.M;
-            double rate = at + _mu / x.R.sqrMagnitude * V3.Dot(dv.normalized, x.R.normalized); // -d|dv|/dt
+            double dvMag = dv.magnitude;
+            double r = x.R.magnitude;
+            V3 rhat = x.R / r;
+
+            // how the error changes without thrust: gravity, less how the target velocity changes as the vessel moves (the
+            // ground's rotation, and the final descent's direction turning with the position)
+            V3 drift = -_mu / (r * r) * rhat - V3.Cross(_w, x.V) - _vfm / r * (x.V - V3.Dot(x.V, rhat) * rhat);
+            double driftAlong = V3.Dot(dv.normalized, drift);
+            double rate = phase.VacThrust / x.M - driftAlong; // -d|dv|/dt
 
             // TWR < 1 while already inside the threshold, leave the residual alone
             if (rate <= 0)
                 return;
 
-            double dt = dv.magnitude / rate;
+            // a start that leaves the stage some mass, where the left side is still far above any |dv| inside the window
+            double dt = Math.Min(dvMag / rate, 0.999 * x.M / phase.Mdot);
+
+            for (int i = 0; i < 20; i++)
+            {
+                double m = x.M - phase.Mdot * dt;
+                double step = (phase.VexVacuum * Math.Log(x.M / m) - driftAlong * dt - dvMag) / (phase.VacThrust / m - driftAlong);
+                dt -= step;
+                if (Math.Abs(step) <= 1e-12 * dt)
+                    break;
+            }
+
+            double mf = x.M - phase.Mdot * dt;
 
             x.R += (x.V - 0.5 * dv) * dt;
             x.V = V3.Cross(_w, x.R) + x.R.normalized * _vfm;
-            x.M -= phase.Mdot * dt;
-            x.DV += at * dt;
+            x.DV += phase.VexVacuum * Math.Log(x.M / mf);
+            x.M = mf;
             t += dt;
         }
 

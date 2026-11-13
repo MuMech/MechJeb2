@@ -226,5 +226,39 @@ namespace MechJebLibTest
             hoverslam.IgnitionUT.ShouldBeGreaterThan(t0);
             hoverslam.LandingUT.ShouldBeGreaterThan(hoverslam.IgnitionUT);
         }
+
+        // Kerbal X's last stage during its circularization burn on Kerbin at 3.2x scale: 145 km up, 3,640 m/s, a 67.9 m/s final
+        // descent.  The root solve probes ignition times whose burns reach the target velocity well above the ground, where the
+        // steering against the velocity error flips direction from one step to the next.  The burn has to end there instead of
+        // the integrator running out of RHS evaluations, at every thrust.
+        [Theory]
+        [InlineData(1.0)]
+        [InlineData(2.0)]
+        [InlineData(4.0)]
+        private void KerbinCircularizationBurn(double thrustScale)
+        {
+            var r0 = new V3(69551.341128464323, 2063946.3488512621, -3331.5916838324542);
+            var v0 = new V3(-3636.4884221251632, 127.9998718873436, 0.9007171150732709);
+            double t0 = 4832.68000001265;
+            double mu = 36163584000000.1;
+            var w = new V3(0, 0, 0.0001943071088145276);
+            double height = 1917604.26105962;
+            double descentSpeed = 67.8845000234014;
+
+            var manager = new HoverslamSimulation.HoverslamSimulationManager(false);
+            var hoverslam = new HoverslamSimulation();
+
+            manager.Initial(r0, v0, t0, mu, w)
+               .TargetConditions(height, descentSpeed)
+               .AddStage(13272.5352332957, 7244.987074194, 249999.998417907 * thrustScale, 350.000018530989, 2, 2)
+               .Reconfigure(hoverslam);
+
+            hoverslam.Run();
+
+            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
+            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized, 1e-6);
+            hoverslam.IgnitionUT.ShouldBeGreaterThan(t0);
+            hoverslam.LandingUT.ShouldBeGreaterThan(hoverslam.IgnitionUT);
+        }
     }
 }
