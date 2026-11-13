@@ -8,29 +8,34 @@ using UnityEngine;
 
 namespace MuMech
 {
-    // Recalculating throttles is expensive. This class is used as a key into a
+    // Recalculating throttles is expensive. This struct is used as a key into a
     // dictionary of previously-calculated throttles.
-    public class RCSSolverKey
+    public readonly struct RCSSolverKey : IEquatable<RCSSolverKey>
     {
         // x, y, and z values will each be mapped to the integer range
         // [-precision..precision]. The results cache will have
         //      6 * (p + 1)^2 + 2
-        // entries, assuming p >= 1. Setting precision to 0 is a bad idea.
+        // entries, assuming p >= 1.
         // (p: cache_size) 1: 26, 2: 56, 3: 98, 4: 152, 5: 218
         private static int _precision = 2;
 
+        // Each component is packed into 8 bits as (int)(bucket * 127), which keeps neighbouring buckets apart only up to a precision
+        // of 127; past 16 the cache holds thousands of solves, each run once before it is used.
+        public const int MIN_PRECISION = 1; // Bucketize divides by it
+        public const int MAX_PRECISION = 16;
+
         private readonly int _hash;
 
-        public static void SetPrecision(int precision) => _precision = Math.Max(1, precision); // Bucketize divides by it
+        public static void SetPrecision(int precision) => _precision = Math.Max(MIN_PRECISION, Math.Min(MAX_PRECISION, precision));
 
-        private float Bucketize(double d, int precision) => (float)Mathf.RoundToInt((float)d * precision) / precision;
+        private static float Bucketize(double d, int precision) => (float)Mathf.RoundToInt((float)d * precision) / precision;
 
         public RCSSolverKey(ref Vector3 d, Vector3 rot)
         {
+            _hash = 0;
             if (d == Vector3.zero)
             {
                 // We shouldn't be solving for this, but just in case...
-                _hash = 0;
                 return;
             }
 
@@ -55,11 +60,9 @@ namespace MuMech
             _hash = ((x & 0xFF) << 16) + ((y & 0xFF) << 8) + (z & 0xFF);
         }
 
-        public override bool Equals(object other)
-        {
-            var oth = other as RCSSolverKey;
-            return oth != null && _hash == oth._hash;
-        }
+        public bool Equals(RCSSolverKey other) => _hash == other._hash;
+
+        public override bool Equals(object other) => other is RCSSolverKey key && Equals(key);
 
         public override int GetHashCode() => _hash;
 
@@ -81,7 +84,7 @@ namespace MuMech
 
         private readonly Queue _tasks = Queue.Synchronized(new Queue());
         private readonly AutoResetEvent _workEvent = new AutoResetEvent(false);
-        private bool _stopRunning;
+        private volatile bool _stopRunning;
         private Thread _t;
         private bool _isWorking;
 
@@ -142,9 +145,11 @@ namespace MuMech
             {
                 if (_t != null)
                 {
+                    // the thread checks the flag between tasks: wait for the solve in progress, and abort only one that hangs
                     _stopRunning = true;
                     _workEvent.Set();
-                    _t.Abort();
+                    if (!_t.Join(1000))
+                        _t.Abort();
                     _t = null;
                 }
             }
@@ -200,7 +205,7 @@ namespace MuMech
         // Returns the throttles for 'direction', indexed the same way as the
         // array last passed to SetThrusters(). Returns an empty array if there
         // are no thrusters, the direction is zero, or the result has not been
-        // calculated yet.
+        // calculated yet. The array is the cached one: callers only read it.
         // Note that rotation balancing is not supported at the moment.
         public double[] GetThrottles(Vector3 direction)
         {
@@ -263,8 +268,7 @@ namespace MuMech
                 }
             }
 
-            // Return a copy of the array to make sure ours isn't modified.
-            return (double[])throttles.Clone();
+            return throttles;
         }
 
         private void Run()
@@ -287,7 +291,7 @@ namespace MuMech
                             throttles = _solver.Run(task.Thrusters, ((Vector3d)task.Direction).ToV3(), ((Vector3d)task.Rotation).ToV3(),
                                 task.TuningParams);
                         }
-                        catch (Exception e)
+                        catch (Exception e) when (!(e is ThreadAbortException))
                         {
                             ErrorString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
                         }
@@ -308,7 +312,7 @@ namespace MuMech
                 {
                     // Dequeue() failed due to the queue being cleared.
                 }
-                catch (Exception e)
+                catch (Exception e) when (!(e is ThreadAbortException))
                 {
                     ErrorString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
                 }

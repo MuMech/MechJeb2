@@ -26,7 +26,7 @@ namespace MuMech
         //Conserve RCS fuel
         public readonly bool conserveFuel;
 
-        [EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")] //Conserve RCS fuel threshold
+        [Persistent(pass = (int)Pass.GLOBAL), EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")] //Conserve RCS fuel threshold
         public readonly EditableDouble conserveThreshold = 0.05;
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL)), EditableInfoItem("#MechJeb_RCSTf", InfoItem.Category.Thrust)]
@@ -57,8 +57,12 @@ namespace MuMech
             pid = new PIDControllerV2(Kp, Ki, 1, -1);
         }
 
+        // the RCS group as it was when the controller was engaged, given back when it disengages
+        private bool rcsGroupWasOn;
+
         protected override void OnModuleEnabled()
         {
+            rcsGroupWasOn = Vessel != null && Vessel.ActionGroups[KSPActionGroup.RCS];
             setPIDParameters();
             pid.Reset();
             lastAct = Vector3d.zero;
@@ -113,7 +117,8 @@ namespace MuMech
 
         protected override void OnModuleDisabled()
         {
-            Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+            if (!rcsGroupWasOn)
+                Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
             base.OnModuleDisabled();
         }
 

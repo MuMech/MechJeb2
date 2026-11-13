@@ -216,9 +216,11 @@ namespace MuMech
                 m.Restore();
         }
 
-        // What ModuleRCS.FixedUpdate asks of a module before it fires, fuel aside.
+        // What ModuleRCS.FixedUpdate asks of a module before it fires, and whether it got propellant the last time it fired. A module
+        // throttled to 0 asks for no propellant, which stock reads as a flameout, so only a module with some throttle counts as dry.
         private static bool CanFire(ModuleRCS pm) =>
-            pm.isEnabled && pm.moduleIsEnabled && pm.rcsEnabled && !pm.isJustForShow && (!pm.part.ShieldedFromAirstream || pm.shieldedCanThrust);
+            pm.isEnabled && pm.moduleIsEnabled && pm.rcsEnabled && !pm.isJustForShow && (!pm.part.ShieldedFromAirstream || pm.shieldedCanThrust) &&
+            !(pm.flameout && pm.flowMult > 0);
 
         private bool ThrustersChanged()
         {
@@ -401,7 +403,8 @@ namespace MuMech
         //      foreach part in vessel.parts:
         //          foreach rcsModule in part.Modules.OfType<ModuleRCS>:
         //              ...
-        // The throttles will be empty if they haven't been calculated yet.
+        // The throttles will be empty if they haven't been calculated yet. They are the solver's cached array: read them, don't
+        // change them.
         public void GetThrottles(Vector3 direction, out double[] throttles, out IReadOnlyList<RCSSolver.Thruster> thrusters)
         {
             // Update vessel info if needed.
@@ -444,6 +447,9 @@ namespace MuMech
             // RCS balancing on rotation isn't supported.
             //Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
 
+            // the field shows the precision that is used
+            if (calcPrecision < RCSSolverKey.MIN_PRECISION || calcPrecision > RCSSolverKey.MAX_PRECISION)
+                calcPrecision.Val = Math.Max(RCSSolverKey.MIN_PRECISION, Math.Min(RCSSolverKey.MAX_PRECISION, calcPrecision));
             RCSSolverKey.SetPrecision(calcPrecision);
             double[] throttles = solverThread.GetThrottles(direction);
 
