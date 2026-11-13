@@ -190,7 +190,7 @@ namespace MuMech
                     return Core.Target.TargetOrbit != null;
                 case AttitudeReference.MANEUVER_NODE:
                 case AttitudeReference.MANEUVER_NODE_COT:
-                    return Vessel.patchedConicSolver.maneuverNodes.Count > 0;
+                    return Vessel.patchedConicSolver != null && Vessel.patchedConicSolver.maneuverNodes.Count > 0;
                 default:
                     return true;
             }
@@ -219,10 +219,10 @@ namespace MuMech
                     rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.Forward);
                     break;
                 case AttitudeReference.ORBIT:
-                    rotRef = QuaternionD.LookRotation(VesselState.OrbitalVelocity.normalized, VesselState.Up);
+                    rotRef = Frame(reference, VesselState.OrbitalVelocity, VesselState.Up);
                     break;
                 case AttitudeReference.ORBIT_HORIZONTAL:
-                    rotRef = QuaternionD.LookRotation(Vector3d.Exclude(VesselState.Up, VesselState.OrbitalVelocity.normalized), VesselState.Up);
+                    rotRef = Frame(reference, Vector3d.Exclude(VesselState.Up, VesselState.OrbitalVelocity.normalized), VesselState.Up);
                     break;
                 case AttitudeReference.SURFACE_NORTH:
                     rotRef = VesselState.RotationSurface;
@@ -232,7 +232,7 @@ namespace MuMech
                     rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.Forward) * rotRef;
                     break;
                 case AttitudeReference.SURFACE_VELOCITY:
-                    rotRef = QuaternionD.LookRotation(VesselState.SurfaceVelocity.normalized, VesselState.Up);
+                    rotRef = Frame(reference, VesselState.SurfaceVelocity, VesselState.Up);
                     break;
                 case AttitudeReference.TARGET:
                     fwd = (Core.Target.Position - Vessel.GetTransform().position).normalized;
@@ -273,11 +273,44 @@ namespace MuMech
                     rotRef = QuaternionD.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SURFACE_HORIZONTAL:
-                    rotRef = QuaternionD.LookRotation(Vector3d.Exclude(VesselState.Up, VesselState.SurfaceVelocity.normalized), VesselState.Up);
+                    rotRef = Frame(reference, Vector3d.Exclude(VesselState.Up, VesselState.SurfaceVelocity.normalized), VesselState.Up);
                     break;
             }
 
             return rotRef;
+        }
+
+        // The last frame built for each reference, kept for the ticks when its directions define none
+        private readonly QuaternionD[] _lastFrames = InitialFrames();
+
+        private static QuaternionD[] InitialFrames()
+        {
+            var frames = new QuaternionD[Enum.GetValues(typeof(AttitudeReference)).Length];
+            for (int i = 0; i < frames.Length; i++)
+                frames[i] = QuaternionD.identity;
+            return frames;
+        }
+
+        // A frame looking along fwd with up as the roll hint. A zero fwd (before VesselState has run)
+        // defines no frame and keeps the last one. An up that is zero or along fwd gives no roll, so the last frame's up or right
+        // is the hint there.
+        private QuaternionD Frame(AttitudeReference reference, Vector3d fwd, Vector3d up)
+        {
+            int i = (int)reference;
+
+            if (fwd.sqrMagnitude < 1e-12)
+                return _lastFrames[i];
+
+            fwd = fwd.normalized;
+
+            if (Vector3d.Cross(fwd, up.normalized).sqrMagnitude < 1e-12)
+                up = _lastFrames[i] * Vector3d.up;
+
+            if (Vector3d.Cross(fwd, up).sqrMagnitude < 1e-12)
+                up = _lastFrames[i] * Vector3d.right;
+
+            _lastFrames[i] = QuaternionD.LookRotation(fwd, up);
+            return _lastFrames[i];
         }
 
         private Vector3d AttitudeWorldToReference(Vector3d vector, AttitudeReference reference) =>
