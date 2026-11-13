@@ -58,6 +58,8 @@ namespace MuMech.UI
             KodeWindow.TitleBarOnly = () => settings != null && settings.UseTitlebarDragging;
             MechJebUiHost.Register(this);
             MechJebModuleSettings.Changed += OnSettingsChanged;
+            // the font is searched again in each scene when the last search found none
+            arialMetricSearched = false;
             Debug.Log("[MechJeb2.UI] KodeHost registered");
         }
 
@@ -343,7 +345,7 @@ namespace MuMech.UI
         {
             get
             {
-                // the fonts are all loaded before the first window: a font that is missing stays missing, so it is searched once
+                // a missing font is searched once per scene (KodeHost.Start clears the flag), not at each theme build
                 if (arialMetric != null || arialMetricSearched) return arialMetric;
                 arialMetricSearched = true;
                 arialMetric = Resources.FindObjectsOfTypeAll<TMP_FontAsset>().FirstOrDefault(f => f.name == "LiberationSans SDF");
