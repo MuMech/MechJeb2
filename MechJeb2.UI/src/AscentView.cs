@@ -86,6 +86,7 @@ namespace MuMech.UI
         double incDelta;
 
         bool HasVessel => Core.vessel != null;
+        double BodyRadius => HasVessel && Core.vessel.mainBody != null ? Core.vessel.mainBody.Radius : 0;
 
         // what WindowGUI did before and while drawing
         protected override void BeforeSync()
@@ -228,9 +229,14 @@ namespace MuMech.UI
             w.Visible(l3.gameObject, ApLtPe);
             // IMGUI draws these three with OrangeLabel (green until dev fixed it), the one above yellow
             UIText high = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltHigh", Tone.Caution); //Attach > Ap: apoapsis insertion
-            w.Visible(high.gameObject, () => !ApLtPe() && Psgs.BurnoutAltitudeFlag && Psgs.BurnoutAltitude > Psgs.ApoapsisAltitude);
+            w.Visible(high.gameObject, () => Psgs.ApoapsisAltitude >= 0 && !ApLtPe() && Psgs.BurnoutAltitudeFlag &&
+                Psgs.BurnoutAltitude > Psgs.ApoapsisAltitude);
             UIText l4 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label4", Tone.Caution); //Hyperbolic target orbit (neg Ap)
-            w.Visible(l4.gameObject, () => Psgs.ApoapsisAltitude < 0);
+            w.Visible(l4.gameObject, () => Psgs.ApoapsisAltitude < 0 && !TooShallow());
+            // a negative apoapsis is the hyperbola's apoapsis radius, which has to be under minus the periapsis radius
+            bool TooShallow() => Psgs.ApoapsisAltitude < 0 && Psgs.ApoapsisAltitude >= -(BodyRadius + Psgs.PeriapsisAltitude);
+            UIText shallow = AscentUi.ToneText(opt, "Neg Ap must be below -(Pe + radius)", Tone.Bad);
+            w.Visible(shallow.gameObject, TooShallow);
             UIText low = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltLow", Tone.Caution); //Attach < Pe: periapsis insertion
             w.Visible(low.gameObject, () => Psgs.BurnoutAltitudeFlag && Psgs.BurnoutAltitude < Psgs.PeriapsisAltitude);
 
