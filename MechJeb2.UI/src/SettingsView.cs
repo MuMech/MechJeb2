@@ -46,19 +46,20 @@ namespace MuMech.UI
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 w.BindRole(b, () => settings.UIScale.Val == preset ? ButtonRole.Selected : ButtonRole.Normal);
             }
-            // the typed scale applies when the edit ends: applied per keystroke, "0.9" would shrink every window to the
-            // smallest scale at the "0"
+            // the typed scale reaches the setting when the edit ends: applied per keystroke, "0.9" would shrink every window
+            // to the smallest scale at the "0"
+            var typedScale = new EditableDouble(settings.UIScale.Val);
             bool scaleTyped = false;
-            TMP_InputField scaleField = EditFields.Field(w, scale, () => settings.UIScale.Text, s =>
+            TMP_InputField scaleField = EditFields.Field(w, scale, () => scaleTyped ? typedScale.Text : settings.UIScale.Text, s =>
             {
-                settings.UIScale.Text = s;
-                settings.Dirty = true;
+                typedScale.Text = s;
                 scaleTyped = true;
-            }, 60, () => settings.UIScale.IsParsed);
+            }, 60, () => scaleTyped ? typedScale.IsParsed : settings.UIScale.IsParsed);
             scaleField.onEndEdit.AddListener(_ =>
             {
                 if (!scaleTyped) return;
                 scaleTyped = false;
+                settings.UIScale.Text = typedScale.Text;
                 Changed();
             });
 
