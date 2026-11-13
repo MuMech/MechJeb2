@@ -95,13 +95,25 @@ namespace MuMech
                 ShiftNode(orbits * node.patch.period);
         }
 
-        // whether UT is still on the node's patch: a time computed from the patch's orbit past its sphere of influence change is a
-        // point of an orbit the vessel no longer follows then
+        // whether UT is on the node's patch: a time computed from the patch's orbit before the patch starts, or past its sphere of
+        // influence change, is a point of an orbit the vessel does not follow then
         private bool OnNodePatch(double UT)
         {
             Orbit o = node.patch;
-            return o.patchEndTransition == Orbit.PatchTransitionType.FINAL || o.patchEndTransition == Orbit.PatchTransitionType.MANEUVER ||
-                   UT <= o.EndUT;
+            if (o.patchStartTransition != Orbit.PatchTransitionType.INITIAL && UT < o.StartUT)
+                return false;
+
+            // KSP cuts the patch of a node after the first at the node (MANEUVER, EndUT = node.UT): where the patch ends without
+            // the node is solved again, on a copy
+            if (o.patchEndTransition == Orbit.PatchTransitionType.MANEUVER)
+            {
+                var uncut = new Orbit(o);
+                PatchedConics.CalculatePatch(uncut, new Orbit(), o.epoch, new PatchedConics.SolverParameters(),
+                    Vessel.patchedConicSolver.targetBody);
+                o = uncut;
+            }
+
+            return o.patchEndTransition == Orbit.PatchTransitionType.FINAL || UT <= o.EndUT;
         }
 
         private void MoveNode(double UT)
