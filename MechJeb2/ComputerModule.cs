@@ -126,10 +126,6 @@ namespace MuMech
         {
         }
 
-        public virtual void OnAwake()
-        {
-        }
-
         public virtual void OnFixedUpdate()
         {
         }
@@ -140,15 +136,51 @@ namespace MuMech
 
         public virtual void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
+            if (global != null) LoadPass(global, Pass.GLOBAL);
+            if (type != null) LoadPass(type, Pass.TYPE);
+            if (local != null) LoadPass(local, Pass.LOCAL);
+        }
+
+        // KSP stops reading a node at the first value it cannot parse (an enum name that no longer exists, a malformed vector):
+        // the node is then read again one value and one sub-node at a time, so only what fails to parse keeps its default.
+        private void LoadPass(ConfigNode node, Pass pass)
+        {
             try
             {
-                if (global != null) ConfigNode.LoadObjectFromConfig(this, global, (int)Pass.GLOBAL);
-                if (type != null) ConfigNode.LoadObjectFromConfig(this, type, (int)Pass.TYPE);
-                if (local != null) ConfigNode.LoadObjectFromConfig(this, local, (int)Pass.LOCAL);
+                ConfigNode.LoadObjectFromConfig(this, node, (int)pass);
+                return;
             }
             catch (Exception e)
             {
-                Debug.Log("MechJeb caught exception in OnLoad for " + GetType().Name + ": " + e);
+                Debug.Log("MechJeb caught exception in OnLoad for " + GetType().Name + ", reading its settings one by one: " + e);
+            }
+
+            foreach (ConfigNode.Value value in node.values)
+            {
+                var single = new ConfigNode(node.name);
+                single.AddValue(value.name, value.value);
+                try
+                {
+                    ConfigNode.LoadObjectFromConfig(this, single, (int)pass);
+                }
+                catch (Exception)
+                {
+                    Debug.Log("MechJeb could not read the setting " + GetType().Name + "." + value.name + " = " + value.value + ", left at its default");
+                }
+            }
+
+            foreach (ConfigNode child in node.nodes)
+            {
+                var single = new ConfigNode(node.name);
+                single.AddNode(child);
+                try
+                {
+                    ConfigNode.LoadObjectFromConfig(this, single, (int)pass);
+                }
+                catch (Exception)
+                {
+                    Debug.Log("MechJeb could not read the settings " + GetType().Name + "." + child.name + ", left partly at their defaults");
+                }
             }
         }
 
@@ -176,9 +208,6 @@ namespace MuMech
                     ConfigNode.CreateConfigFromObject(this, (int)Pass.LOCAL, local);
                     Profiler.EndSample();
                 }
-
-                // Only the global/type save writes the files: the sfs save (local only) must not hide pending file changes
-                if (global != null) Dirty = false;
             }
             catch (Exception e)
             {

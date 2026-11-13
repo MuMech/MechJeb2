@@ -415,7 +415,6 @@ namespace MuMech
 
                 windowNode.AddValue("enabledFlight", window.EnabledFlight);
                 windowNode.AddValue("enabledEditor", window.EnabledEditor);
-                window.Dirty = false;
             }
 
             if (_backup != null)
