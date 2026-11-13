@@ -19,21 +19,6 @@ namespace MuMech.UI
 
         MechJebCore Core => settings.Core;
 
-        // cached "Current skin: <<1>>"
-        int shownSkin = -1;
-        string skinLabel;
-
-        string SkinLabel()
-        {
-            if (settings.SkinId != shownSkin)
-            {
-                shownSkin = settings.SkinId;
-                skinLabel = Localizer.Format("#MechJeb_Settings_label1", (GuiUtils.SkinType)settings.SkinId);
-            }
-
-            return skinLabel;
-        }
-
         void Changed()
         {
             settings.Dirty = true;
@@ -45,11 +30,6 @@ namespace MuMech.UI
             UIObject r = w.Root;
 
             KodeWindow.Button(r, "#MechJeb_Settings_button1", settings.RestoreFactoryDefaults, true); //"\nRestore factory default settings\n"
-
-            w.BoundLabel(r, SkinLabel, true);
-            SkinButton(w, "#MechJeb_Settings_button2", GuiUtils.SkinType.MECH_JEB1); //"Use MechJeb 1 GUI skin"
-            SkinButton(w, "#MechJeb_Settings_button3", GuiUtils.SkinType.DEFAULT);   //"Use MechJeb 2 GUI skin"
-            SkinButton(w, "#MechJeb_Settings_button4", GuiUtils.SkinType.COMPACT);   //"Use MJ2 Compact GUI skin"
 
             Layout scale = KodeWindow.Row(r);
             KodeWindow.Label(scale, "#MechJeb_Settings_label2", true); //"UI Scale:"
@@ -170,17 +150,6 @@ namespace MuMech.UI
             var r = new string[keys.Length];
             for (int i = 0; i < keys.Length; i++) r[i] = Localizer.Format(keys[i]);
             return r;
-        }
-
-        void SkinButton(KodeWindow w, string key, GuiUtils.SkinType skin)
-        {
-            UIButton b = KodeWindow.Button(w.Root, key, () =>
-            {
-                GuiUtils.LoadSkin(skin);
-                settings.SkinId = (int)skin;
-                Changed();
-            }, true);
-            w.Visible(b.gameObject, () => settings.SkinId != (int)skin);
         }
     }
 }
