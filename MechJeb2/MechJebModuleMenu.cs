@@ -380,11 +380,7 @@ namespace MuMech
 
                         if (mj.Staging.Enabled && mj.Staging.AutostagingOnce)
                         {
-                            if (mj.Staging.Users.Contains(w))
-                            {
-                                mj.Staging.Users.Remove(w);
-                                w.autostageSavedState = false;
-                            }
+                            mj.Staging.CancelAutostageOnce();
                         }
                         else
                         {
