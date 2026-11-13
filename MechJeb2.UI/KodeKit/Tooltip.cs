@@ -39,6 +39,18 @@ namespace KodeKit
         LayoutElement width;
         TextMeshProUGUI label;
         Image background;
+        string follow; // the text that follows the pointer, or null
+
+        /// <summary>
+        /// Shows <paramref name="text"/> next to the pointer at once, and keeps it there every frame until this is called with
+        /// null (a label for what the pointer is over, such as the map's position picker). Meanwhile no hover tooltip shows.
+        /// </summary>
+        public static void FollowPointer(string text)
+        {
+            if (text == null && (instance == null || instance.follow == null)) return;
+            Instance.follow = text;
+            if (text == null) instance.Hide();
+        }
 
         public static TooltipTrigger Add(GameObject target, string textOrKey) => string.IsNullOrEmpty(textOrKey) ? null : Add(target, () => textOrKey);
 
@@ -118,6 +130,15 @@ namespace KodeKit
 
         void Update()
         {
+            if (follow != null)
+            {
+                pending = null;
+                pointer = Input.mousePosition;
+                if (Visible && label.text == follow) Place();
+                else Show(follow);
+                return;
+            }
+
             if (pending == null) return;
             // any press cancels the tooltip under the pointer, shown or still waiting
             if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2))
@@ -143,7 +164,11 @@ namespace KodeKit
             width.preferredWidth = Mathf.Min(MaxWidth, TextMeasure.Measure(text, th).x + 1);
             panel.gameObject.SetActive(true);
             LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
+            Place();
+        }
 
+        void Place()
+        {
             // below-right of the pointer, kept on screen
             var parent = (RectTransform)panel.parent;
             Camera cam = Overlay.Root.worldCamera;

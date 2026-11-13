@@ -715,7 +715,7 @@ namespace MuMech
 
         /// <summary>
         /// The red marker on the selected waypoint in the map view, while the window shows its waypoints page. A GL draw:
-        /// MechJebCore's post-draw queue runs it on the OnGUI repaint.
+        /// MechJebCore's post-draw queue runs it after the planetarium camera renders.
         /// </summary>
         private void DrawSelectedMarker()
         {

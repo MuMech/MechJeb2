@@ -118,11 +118,18 @@ namespace MuMech.UI
                 if (language != null) DestroyViews();
                 language = lang;
             }
-            if (core == null) return;
+            if (core == null)
+            {
+                Tooltips.FollowPointer(null);
+                return;
+            }
 
             // MechJebCore.OnGUI's conditions
             bool show = core.ShowGui &&
                 (HighLogic.LoadedSceneIsEditor || core.vessel == FlightGlobals.ActiveVessel && core.part.State != PartStates.DEAD);
+
+            // picking a target position on the map: its coordinates and biome next to the pointer
+            Tooltips.FollowPointer(show ? core.Target?.PickLabel : null);
 
             List<ComputerModule> modules = core.GetComputerModules<DisplayModule>();
 

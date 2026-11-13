@@ -466,6 +466,7 @@ namespace MuMech
             GameEvents.onVesselWasModified.Add(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Add(OnVesselStandardModification);
             GameEvents.onGameSceneLoadRequested.Add(OnGameSceneLoadRequested);
+            Camera.onPostRender += OnCameraPostRender;
 
             _lastSettingsSaveTime = Time.time;
 
@@ -1157,6 +1158,7 @@ namespace MuMech
             GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
             GameEvents.onGameSceneLoadRequested.Remove(OnGameSceneLoadRequested);
+            Camera.onPostRender -= OnCameraPostRender;
         }
 
         // The last save of a scene. KSP sets the next scene's flags before it destroys this one, so the save in OnDestroy does
@@ -1319,20 +1321,6 @@ namespace MuMech
 
                 PreventClickthrough();
                 GUI.matrix = previousGuiMatrix;
-
-                // GL lines show only on Repaint; OnGUI also runs for Layout and every input event. The map callbacks read the
-                // mouse with Input, which holds for the whole frame, so they need no other event.
-                for (int i = 0; Event.current.type == EventType.Repaint && i < _postDrawQueue.Count; i++)
-                {
-                    try
-                    {
-                        _postDrawQueue[i]();
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogException(e);
-                    }
-                }
             }
             else if (_weLockedInputs)
             {
@@ -1342,7 +1330,38 @@ namespace MuMech
             Profiler.EndSample();
         }
 
+        /// <summary>
+        /// A GL drawing (map markers, trajectories, the docking boxes) run once per frame, after the camera the player sees
+        /// renders: the planetarium camera in the map view, the near flight camera otherwise. It draws over the scene and
+        /// under the UI.
+        /// </summary>
         internal void AddToPostDrawQueue(Callback c) => _postDrawQueue.Add(c);
+
+        private void OnCameraPostRender(Camera cam)
+        {
+            if (_postDrawQueue.Count == 0 || !HighLogic.LoadedSceneIsFlight) return;
+            Camera shown = MapView.MapIsEnabled ? PlanetariumCamera.Camera : FlightCamera.fetch != null ? FlightCamera.fetch.mainCamera : null;
+            if (cam != shown) return;
+            // MechJebCore.OnGUI's conditions: F2 hides the drawings with the windows
+            if (!ShowGui || !_ready || !FlightGlobals.ready || vessel != FlightGlobals.ActiveVessel || part.State == PartStates.DEAD ||
+                this != vessel.GetMasterMechJeb())
+                return;
+
+            Profiler.BeginSample("MechJebCore.OnCameraPostRender");
+            for (int i = 0; i < _postDrawQueue.Count; i++)
+            {
+                try
+                {
+                    _postDrawQueue[i]();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            }
+
+            Profiler.EndSample();
+        }
 
         // VAB/SPH description
         public override string GetInfo() => Localizer.Format("#MechJeb_MechJebInfo_VABSPH"); //"Attitude control by MechJeb™"
