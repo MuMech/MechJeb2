@@ -7,7 +7,7 @@ using Tone = KodeKit.KodeWindow.Tone;
 
 namespace MuMech.UI
 {
-    /// <summary>Small widget helpers shared by the four Ascent views (GuiUtils.SimpleTextBox and friends).</summary>
+    /// <summary>Small widget helpers shared by the four Ascent views (label, field and unit rows).</summary>
     internal static class AscentUi
     {
         /// <summary>A text in a state colour (MechJeb's Green/Yellow/Red labels).</summary>
@@ -18,7 +18,7 @@ namespace MuMech.UI
             return t;
         }
 
-        /// <summary>GuiUtils.SimpleTextBox: label [field] unit. Returns the row (null when not framed).</summary>
+        /// <summary>label [field] unit. Returns the row (null when not framed).</summary>
         public static Layout SimpleBox(KodeWindow w, UIObject parent, string left, IEditable ed, string unit = null, float width = 100,
             bool framing = true, Func<Tone> leftTone = null)
         {
@@ -35,7 +35,7 @@ namespace MuMech.UI
             return row;
         }
 
-        /// <summary>GuiUtils.ToggledTextBox: [x] label [field] unit</summary>
+        /// <summary>[x] label [field] unit</summary>
         public static Layout ToggledBox(KodeWindow w, UIObject parent, string key, Func<bool> get, Action<bool> set, IEditable ed, string unit,
             float width, Func<Tone> tone = null)
         {
@@ -47,7 +47,7 @@ namespace MuMech.UI
             return row;
         }
 
-        /// <summary>GuiUtils.ButtonTextBox: [button] [field] unit</summary>
+        /// <summary>[button] [field] unit</summary>
         public static Layout ButtonBox(KodeWindow w, UIObject parent, string key, Action action, IEditable ed, string unit, float width)
         {
             Layout row = KodeWindow.Row(parent);
@@ -122,7 +122,7 @@ namespace MuMech.UI
         Tone GuidanceTone()
         {
             if (Core.Guidance.IsStable()) return Tone.Good;
-            if (Core.Guidance.IsInitializing() || Core.Guidance.Status == PSGStatus.FINISHED) return Tone.Caution; // OrangeLabel
+            if (Core.Guidance.IsInitializing() || Core.Guidance.Status == PSGStatus.FINISHED) return Tone.Caution;
             return Tone.Bad;
         }
 
@@ -227,7 +227,7 @@ namespace MuMech.UI
             bool ApLtPe() => Psgs.ApoapsisAltitude >= 0 && Psgs.ApoapsisAltitude < Psgs.PeriapsisAltitude;
             UIText l3 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label3", Tone.Warn); //Ap < Pe: circularizing orbit
             w.Visible(l3.gameObject, ApLtPe);
-            // IMGUI draws these three with OrangeLabel (green until dev fixed it), the one above yellow
+            // these three in the caution colour, the one above in the warning colour
             UIText high = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltHigh", Tone.Caution); //Attach > Ap: apoapsis insertion
             w.Visible(high.gameObject, () => Psgs.ApoapsisAltitude >= 0 && !ApLtPe() && Psgs.BurnoutAltitudeFlag &&
                 Psgs.BurnoutAltitude > Psgs.ApoapsisAltitude);
@@ -345,7 +345,7 @@ namespace MuMech.UI
             KodeWindow.Label(countdown, "s");
             w.Visible(countdown.gameObject, () => Core.Node != null && Core.Node.Autowarp);
 
-            UIText invalid = AscentUi.ToneText(box, "#MechJeb_Ascent_warnInvalidTarget", Tone.Caution, true); // Target must be in the same sphere of influence. (OrangeLabel)
+            UIText invalid = AscentUi.ToneText(box, "#MechJeb_Ascent_warnInvalidTarget", Tone.Caution, true); // Target must be in the same sphere of influence.
             KodeWindow.WrapToWidth(invalid);
             w.Visible(invalid.gameObject, () => !anyPlaneControl && !targetExists && Core.Target.NormalTargetExists);
             UIText select = KodeWindow.Label(box, "#MechJeb_Ascent_label34"); //Select a target for a timed launch.

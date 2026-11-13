@@ -257,7 +257,7 @@ namespace MuMech.UI
                 ct => ct.Append(parts.Pre).Append(value(), 2).Append(parts.Post).Append(suffix), () => ApEnabled);
         }
 
-        /// <summary>GuiUtils.SimpleTextBox(label, editable, unit); the editable is read again on every access (the autopilot replaces it when it clamps).</summary>
+        /// <summary>label [field] unit; the editable is read again on every access (the autopilot replaces it when it clamps).</summary>
         static Layout EditRow(KodeWindow w, UIObject parent, string key, Func<EditableDouble> ed, string unit) => EditUi.Row(w, parent, key, ed, unit);
 
         // DrawTargetPortSelector: "Target port" [<] port (n/m) [>] (the modern layout: a dropdown), or a note when the target is out of range
@@ -267,7 +267,7 @@ namespace MuMech.UI
             w.Visible(row.gameObject, () => portState != MechJebModuleDockingGuidance.PortSelectorState.Hidden);
             KodeWindow.Label(row, "#MechJeb_Docking_targetPort");
 
-            // ArrowSelectorStyeGuiStyleExpand: centred and word-wrapped in the room left by the label
+            // centred and word-wrapped in the room left by the label
             UIText unavailable = GuidanceUi.Wrapped(row, "#MechJeb_Docking_targetPortUnavailable");
             unavailable.tmpText.alignment = TextAlignmentOptions.Center;
             w.Visible(unavailable.gameObject, () => portState == MechJebModuleDockingGuidance.PortSelectorState.Unavailable);

@@ -60,7 +60,7 @@ namespace KodeKit
         public float LineHeight = 0;    // minimum height of a text row (labels, live cells, buttons); 0: the text's own height
         public int Padding = 6, Spacing = 2;
         public Color Text = Color.white, Dim = new Color(0.75f, 0.75f, 0.75f), Good = Color.green, Warn = Color.yellow, Bad = new Color(1f, 0.35f, 0.35f);
-        public Color Caution = new Color(0.976f, 0.451f, 0.024f); // KSP's XKCDColors.Orange, MechJeb's OrangeLabel
+        public Color Caution = new Color(0.976f, 0.451f, 0.024f); // KSP's XKCDColors.Orange
         public ElementStyle Window = new ElementStyle(), Button = new ElementStyle(), Toggle = new ElementStyle(), Check = new ElementStyle(),
             Field = new ElementStyle(), Box = new ElementStyle(), Tooltip = new ElementStyle();
 
@@ -182,8 +182,7 @@ namespace KodeKit
         }
 
         /// <summary>
-        /// MechJeb's COMPACT skin: same sprites and font size, tighter margins and padding
-        /// (GuiUtils.CopyCompactSkin only changes RectOffsets).
+        /// MechJeb's COMPACT skin: same sprites and font size, tighter margins and padding.
         /// </summary>
         public static Theme Compact(Theme from)
         {

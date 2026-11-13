@@ -8,7 +8,7 @@ namespace MuMech.UI
 {
     /// <summary>
     /// OperationAdvancedTransfer's parameters: the mode selector, the "limited time" field and the porkchop plot (KodeKit PlotView).
-    /// The operation keeps the model and does what DoParametersGUI did while drawing in ViewUpdate (the planner view calls it every
+    /// The operation keeps the model and does its per-frame work in ViewUpdate (the planner view calls it every
     /// frame). Not ported from PlotArea: the mouse wheel zoom and the WASD / arrow keys pan.
     /// </summary>
     internal static class AdvancedTransferPanel

@@ -31,7 +31,7 @@ namespace MuMech
                 targetController.SetPositionTarget(o.referenceBody, 0, targetController.targetLongitude);
         }
 
-        // what DoParametersGUI does besides drawing, for the new UI
+        // the per-frame work, for the UI
         internal override void ViewUpdate(Orbit o, double UT, MechJebModuleTargetController targetController)
         {
             if (targetController.Target == null)

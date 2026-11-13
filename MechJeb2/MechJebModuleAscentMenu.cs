@@ -120,8 +120,7 @@ namespace MuMech
         private DateTime _lastRefresh = DateTime.MinValue;
         internal string vgo, heading, tgo, pitch, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
 
-        // the severity that goes with autopilotStatus; WindowGUI turns it into a style (GUI.skin only exists inside OnGUI,
-        // and MechJeb2.UI calls UpdateStrings outside it)
+        // the severity that goes with autopilotStatus, which MechJeb2.UI turns into a colour
         internal AscentStatusLevel autopilotStatusLevel;
 
         [UsedImplicitly]

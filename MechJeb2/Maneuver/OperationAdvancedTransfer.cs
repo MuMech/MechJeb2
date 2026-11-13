@@ -54,11 +54,11 @@ namespace MuMech
 
         private const int PORKCHOP_HEIGHT = 200;
 
-        // ---- state of the new UI (MechJeb2.UI), which drives this operation through ViewUpdate instead of DoParametersGUI ----
+        // ---- state of the UI (MechJeb2.UI), which drives this operation through ViewUpdate ----
 
         internal const int PLOT_WIDTH = 276;
         internal const int PLOT_HEIGHT = PORKCHOP_HEIGHT;
-        private bool _nativeChanged; // what GUI.changed is to DoParametersGUI
+        private bool _nativeChanged; // an edit since the last ViewUpdate
         private bool _nativePlotReady;
         private int[]? _nativeSelected;
         private Texture2D? _nativeTexture;
@@ -171,7 +171,7 @@ namespace MuMech
 
         // ---- the new UI ----
 
-        /// <summary>DoParametersGUI without the drawing, run every frame while this operation is selected.</summary>
+        /// <summary>The operation's per-frame work, run every frame while it is selected.</summary>
         internal override void ViewUpdate(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             _draggable = true;
@@ -259,7 +259,7 @@ namespace MuMech
             set => _targetInclinationFlag = value;
         }
 
-        /// <summary>An edit that changes what has to be computed (the GUI.changed of DoParametersGUI).</summary>
+        /// <summary>An edit that changes what has to be computed.</summary>
         internal void MarkChanged() => _nativeChanged = true;
 
         /// <summary>The "reset" button: back to the default departure and transfer time windows.</summary>

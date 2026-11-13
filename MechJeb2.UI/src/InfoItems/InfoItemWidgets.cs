@@ -11,7 +11,7 @@ using UnityEngine.UI;
 namespace MuMech.UI
 {
     /// <summary>
-    /// Builds the KodeKit widget of one InfoItem (what InfoItem.DrawItem draws in IMGUI), for custom info windows and
+    /// Builds the KodeKit widget of one InfoItem, for custom info windows and
     /// any other window that shows registry items. Values are refreshed by the owner through Refresh() at its rate.
     /// </summary>
     public class InfoItemWidgets

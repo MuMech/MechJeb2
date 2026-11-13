@@ -108,24 +108,6 @@ namespace MuMech
             }
         }
 
-        public void DoChooseTimeGUI()
-        {
-            GUILayout.Label(Localizer.Format("#MechJeb_Maneu_STB")); //Schedule the burn
-            GUILayout.BeginHorizontal();
-            _currentTimeRef = GuiUtils.ComboBox.Box(_currentTimeRef, _timeRefNames, this);
-            switch (TimeReference)
-            {
-                case TimeReference.X_FROM_NOW:
-                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_of"), LeadTime); //"of"
-                    break;
-                case TimeReference.ALTITUDE:
-                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_of"), CircularizeAltitude, "km"); //"of"
-                    break;
-            }
-
-            GUILayout.EndHorizontal();
-        }
-
         public double ComputeManeuverTime(Orbit o, double ut, MechJebModuleTargetController target)
         {
             switch (_allowedTimeRef[_currentTimeRef])

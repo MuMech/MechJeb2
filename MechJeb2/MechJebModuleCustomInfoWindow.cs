@@ -552,7 +552,7 @@ namespace MuMech
             Dirty = true;           // the windows are saved by this module: the next save drops the removed one
         }
 
-        // ---- editing actions, shared by WindowGUI and MechJeb2.UI's editor ----
+        // ---- editing actions, for MechJeb2.UI's editor ----
 
         internal void AddItem(InfoItem item)
         {
@@ -722,7 +722,6 @@ namespace MuMech
             showInFlight = attribute.showInFlight;
         }
 
-        public virtual void DrawItem()   { }
         public virtual void UpdateItem() { }
 
         /// <summary>What a window gets when the editor adds this item: the shared item itself, or a copy for items with their own state.</summary>
@@ -805,7 +804,7 @@ namespace MuMech
         public double Scale => scale;
         public float Width => width;
 
-        /// <summary>The value as DrawItem shows it (refreshed like DrawItem does).</summary>
+        /// <summary>The value as the item shows it.</summary>
         public string StringValue
         {
             get
@@ -1028,11 +1027,10 @@ namespace MuMech
         }
     }
 
-    // Its id is the method's name, which saved custom windows hold. MechJeb's own methods are empty: MechJeb2.UI builds those
-    // items by id, and shows another mod's item as its name only. Nothing calls DrawItem; it stays for mods built against it.
+    // Its id is the method's name, which saved custom windows hold. The methods are empty: MechJeb2.UI builds MechJeb's items
+    // by id, and shows another mod's item as its name only.
     public class GeneralInfoItem : InfoItem
     {
-        private readonly Action draw;
         private readonly object obj;
 
         public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
@@ -1042,7 +1040,6 @@ namespace MuMech
 
             id = GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
-            draw = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
             this.obj = obj;
 
             Profiler.EndSample();
@@ -1050,8 +1047,6 @@ namespace MuMech
 
         /// <summary>The module the item's method belongs to (for another UI's native version of the item).</summary>
         public object Target => obj;
-
-        public override void DrawItem() => draw();
 
         public override void UpdateItem()
         {

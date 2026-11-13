@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace KodeKit
 {
     /// <summary>
-    /// GuiUtils.ComboBox for uGUI: a button showing the current entry; clicking it opens a popup list
+    /// A drop-down: a button showing the current entry; clicking it opens a popup list
     /// above every window, positioned under the button, clamped on screen, at the window's scale.
     /// A click on an entry selects it; a click anywhere else closes the popup without a change.
     /// </summary>

@@ -558,7 +558,7 @@ namespace MuMech
             }
         }
 
-        // the slide animation; shared by the IMGUI DrawGUI and the new UI
+        // the slide animation, for MechJeb2.UI's menu
         internal void AdvanceAnimation()
         {
             float time = Core.Settings.MenuAnimationTime;

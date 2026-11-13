@@ -55,7 +55,7 @@ namespace MuMech.UI
                 {
                     int index = i;
                     UIButton row = KodeWindow.ListRow(contentsList, items[i].ListName, () => ed.selectedItemIndex = index);
-                    // GuiUtils.YellowLabel; SetSelected looks its bar up by name, so only on a change (a new row is unselected)
+                    // in the warning colour; SetSelected looks its bar up by name, so only on a change (a new row is unselected)
                     bool shownSelected = false;
                     win.AddSync(() =>
                     {
