@@ -30,7 +30,8 @@ namespace MuMech.UI
         MechJebModuleLandingPredictions Predictor => predictor ??= Core.GetComputerModule<MechJebModuleLandingPredictions>();
         CelestialBody Body => Core.vessel != null ? Core.vessel.mainBody : null;
         bool LandedOrSplashed => Core.vessel != null && Core.vessel.LandedOrSplashed;
-        bool HasPositionTarget => Core.Target != null && Core.Target.PositionTargetExists;
+        // a point on this body to land at: a vessel in flight or a target on another body has none
+        bool HasPositionTarget => Core.Target != null && Core.Target.SurfaceTargetExists(Body);
         // WindowGUI pushed these into the predictor each frame while the window was drawn
         protected override void BeforeSync()
         {

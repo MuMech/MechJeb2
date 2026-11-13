@@ -114,6 +114,15 @@ namespace MuMech
 
         public bool PositionTargetExists => Target != null && (Target is PositionTarget || Target is Vessel) && !(Target is DirectionTarget);
 
+        /// <summary>
+        /// True when targetLatitude and targetLongitude are a point on `body` to land at: a position target on that body, or the
+        /// coordinates taken from a vessel that was landed on it when targeted. A vessel targeted in flight, a direction (a
+        /// PositionTarget to KSP), or a target on another body has no such point there.
+        /// </summary>
+        public bool SurfaceTargetExists(CelestialBody body) =>
+            body != null && targetBody == body && (Target is PositionTarget && !(Target is DirectionTarget) ||
+                                                   Target is Vessel v && v != null && ReferenceEquals(v, _coordinatesTakenFrom));
+
         public bool CanAlign => Target.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation;
 
         public ITargetable Target { get; private set; }
@@ -235,12 +244,11 @@ namespace MuMech
             if (Target != Vessel.targetObject)
             {
                 Target = Vessel.targetObject;
-                if (Target is Vessel && ((Vessel)Target).LandedOrSplashed && ((Vessel)Target).mainBody == Vessel.mainBody)
-                {
-                    targetBody = Vessel.mainBody;
-                    targetLatitude = Vessel.mainBody.GetLatitude(Target.GetTransform().position);
-                    targetLongitude = Vessel.mainBody.GetLongitude(Target.GetTransform().position);
-                }
+                _coordinatesTakenFrom = null;
+
+                // a landed vessel target gives its coordinates, once: the player can then edit them in Landing Guidance to land beside it
+                if (Target is Vessel landed && landed != null && landed.LandedOrSplashed)
+                    TakeLandedVesselCoordinates(landed);
 
                 if (Target is CelestialBody)
                 {
@@ -251,6 +259,18 @@ namespace MuMech
             // .23 temp fix until I understand better what's going on
             if (targetBody == null)
                 targetBody = Vessel.mainBody;
+        }
+
+        // the vessel target that targetLatitude and targetLongitude were taken from
+        private Vessel _coordinatesTakenFrom;
+
+        // KSP keeps a landed vessel's latitude and longitude: from its transform while it is loaded, its saved ones while it is packed
+        private void TakeLandedVesselCoordinates(Vessel landed)
+        {
+            _coordinatesTakenFrom = landed;
+            targetBody            = landed.mainBody;
+            targetLatitude        = landed.latitude;
+            targetLongitude       = landed.longitude;
         }
 
         public override void OnUpdate()
