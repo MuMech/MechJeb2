@@ -4,6 +4,7 @@
  */
 
 using System;
+using MechJebLib.Functions;
 using MechJebLib.HoverslamSimulation;
 using MechJebLib.Primitives;
 using Xunit;
@@ -195,6 +196,35 @@ namespace MechJebLibTest
             (hoverslam.LandingUT - t0).ShouldEqual(3.43880722904578, 1e-5);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
             hoverslam.Dv.ShouldEqual(31.246491642967, 1e-5);
+        }
+
+        // a direct impact from outside the sphere of influence follows a hyperbola, which the simulation plans as it plans an ellipse
+        [Fact]
+        private void HyperbolicImpactMoon()
+        {
+            double mu = 4.9028e12;
+            double rbody = 1737400;
+            double t0 = 0;
+            var r0 = new V3(rbody + 200000, 0, 0);
+            V3 w = 2.6617e-6 * V3.northpole;
+            var v0 = new V3(-2500, 300, 0);
+
+            Astro.EccFromStateVectors(mu, r0, v0).ShouldBeGreaterThan(1);
+
+            var manager = new HoverslamSimulation.HoverslamSimulationManager(false);
+            var hoverslam = new HoverslamSimulation();
+
+            manager.AddStage(15095, 3095, 450400, 311, 0, 0)
+               .Initial(r0, v0, t0, mu, w)
+               .TargetConditions(rbody, 0)
+               .Reconfigure(hoverslam);
+
+            hoverslam.Run();
+
+            hoverslam.Rf.magnitude.ShouldEqual(rbody, 1e-6);
+            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-6);
+            hoverslam.IgnitionUT.ShouldBeGreaterThan(t0);
+            hoverslam.LandingUT.ShouldBeGreaterThan(hoverslam.IgnitionUT);
         }
     }
 }
