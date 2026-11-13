@@ -98,9 +98,12 @@ namespace MuMech.UI
             OpUi.DynamicParagraph(w, diffBar, DifferentialStatus());
             w.Visible(diffBar.gameObject, DifferentialFailed);
 
-            g = w.Group(r, "#MechJeb_NewUI_Deployment"); //Deployment
-            DeployRow(w, g, Core.Solarpanel, "#MechJeb_SolarPanelDeployButton"); //"Auto-deploy solar panels"
-            DeployRow(w, g, Core.AntennaControl, "#MechJeb_Autodeployantennas"); //"Auto-deploy antennas"
+            if (Core.Solarpanel != null || Core.AntennaControl != null)
+            {
+                g = w.Group(r, "#MechJeb_NewUI_Deployment"); //Deployment
+                DeployRow(w, g, Core.Solarpanel, "#MechJeb_SolarPanelDeployButton"); //"Auto-deploy solar panels"
+                DeployRow(w, g, Core.AntennaControl, "#MechJeb_Autodeployantennas"); //"Auto-deploy antennas"
+            }
 
             g = w.Group(r, "#MechJeb_NewUI_Autostage"); //Autostage
             Layout auto = KodeWindow.Row(g);
