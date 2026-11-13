@@ -161,7 +161,9 @@ namespace KodeKit
             th.Tooltip.ApplyImage(background);
             th.ApplyText(label);
             label.text = text;
-            width.preferredWidth = Mathf.Min(MaxWidth, TextMeasure.Measure(text, th).x + 1);
+            // the panel's width: the text's and the panel's own padding (the LayoutElement replaces the group's width, padding included)
+            int padding = panel.GetComponent<LayoutGroup>().padding.horizontal;
+            width.preferredWidth = Mathf.Min(MaxWidth, TextMeasure.Measure(text, th).x + padding + 1);
             panel.gameObject.SetActive(true);
             LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
             Place();
