@@ -712,8 +712,12 @@ namespace MuMech
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
 
+            // a calendar without days or years (a length of 0): hours are the largest unit
+            long year = KSPUtil.dateTimeFormatter.Year > 0 ? KSPUtil.dateTimeFormatter.Year : long.MaxValue;
+            long day = KSPUtil.dateTimeFormatter.Day > 0 ? KSPUtil.dateTimeFormatter.Day : long.MaxValue;
+
             // from a thousand years, years with an SI prefix (ISO 80000-3's "a"): "398.6 Ma", not "398597826y 072d 00h 06m 54s"
-            double years = seconds / KSPUtil.dateTimeFormatter.Year;
+            double years = seconds / year;
             if (Math.Abs(years) >= 1000) return years.ToSI() + "a";
 
             StringBuilder ret = _dhmsBuilder ??= new StringBuilder();
@@ -732,7 +736,7 @@ namespace MuMech
 
                 for (int i = 0; i < DHMS_UNITS.Length; i++)
                 {
-                    long interval = i == 0 ? KSPUtil.dateTimeFormatter.Year : i == 1 ? KSPUtil.dateTimeFormatter.Day : DHMS_SECONDS[i];
+                    long interval = i == 0 ? year : i == 1 ? day : DHMS_SECONDS[i];
                     long n = (long)(seconds / interval);
                     bool first = ret.Length < 2;
                     // the seconds always show when nothing else did, after a "-" too ("-00.5s", not "-")

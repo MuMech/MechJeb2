@@ -116,6 +116,9 @@ namespace KodeKit
         public CharText AppendDHMS(double seconds, int decimalPlaces, long daySeconds, long yearSeconds)
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return Append("Inf");
+            // a calendar without days or years (a length of 0): hours are the largest unit
+            if (daySeconds <= 0) daySeconds = long.MaxValue;
+            if (yearSeconds <= 0) yearSeconds = long.MaxValue;
             // GuiUtils.TimeToDHMS: from a thousand years, years with an SI prefix ("398.6 Ma")
             double years = seconds / yearSeconds;
             if (Math.Abs(years) >= 1000) return AppendSI(years).Append('a');
