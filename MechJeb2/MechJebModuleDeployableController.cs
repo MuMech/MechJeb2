@@ -45,9 +45,13 @@ namespace MuMech
         // the parts an auto-deploy left folded because they were shielded (a fairing, a closed bay): extended once they are not
         private readonly List<ModuleDeployablePart> _shieldedAtDeploy = new List<ModuleDeployablePart>();
 
+        // the list is not saved, PrevShouldDeploy is: false until an ExtendAll or a RetractAll of this session has set the list
+        private bool _shieldedAtDeployKnown;
+
         public void ExtendAll()
         {
             _shieldedAtDeploy.Clear();
+            _shieldedAtDeployKnown = true;
             foreach (ModuleDeployablePart mdp in CachedPartModules)
             {
                 if (mdp is null || !IsDeployable(mdp)) continue;
@@ -61,6 +65,16 @@ namespace MuMech
         // only the parts ExtendAll skipped: a panel the player retracts by hand afterwards stays retracted
         private void ExtendUnshielded()
         {
+            // a vessel loaded already deployed: the parts still folded and shielded are the ones its ExtendAll skipped, as KSP
+            // extends no shielded part
+            if (!_shieldedAtDeployKnown)
+            {
+                _shieldedAtDeployKnown = true;
+                foreach (ModuleDeployablePart mdp in CachedPartModules)
+                    if (!(mdp is null) && IsDeployable(mdp) && mdp.part.ShieldedFromAirstream)
+                        _shieldedAtDeploy.Add(mdp);
+            }
+
             for (int i = _shieldedAtDeploy.Count - 1; i >= 0; i--)
             {
                 ModuleDeployablePart mdp = _shieldedAtDeploy[i];
@@ -76,6 +90,8 @@ namespace MuMech
 
         public void RetractAll()
         {
+            _shieldedAtDeploy.Clear();
+            _shieldedAtDeployKnown = true;
             foreach (ModuleDeployablePart mdp in CachedPartModules)
                 if (!(mdp is null) && IsDeployable(mdp))
                     mdp.Retract();
@@ -175,7 +191,6 @@ namespace MuMech
                         ExtendUnshielded();
                         break;
                     case false when PrevShouldDeploy || AutoDeploy != PrevAutoDeploy:
-                        _shieldedAtDeploy.Clear();
                         RetractAll();
                         break;
                 }
@@ -198,16 +213,25 @@ namespace MuMech
         /// <summary>The toggle button's text ("Toggle ... (currently extended)").</summary>
         internal string CurrentButtonText => ButtonText;
 
-        /// <summary>The toggle button's action: extend or retract all, unless parts are still moving.</summary>
+        /// <summary>The toggle button's action: retract all when a part can retract, extend all otherwise, unless parts are still moving.</summary>
         internal void ToggleDeploy()
         {
             if (ExtendingOrRetracting())
                 return;
 
-            if (!Extended)
-                ExtendAll();
-            else
+            // not Extended: an extended part that cannot retract would keep the button on a RetractAll that moves nothing
+            if (AnyCanRetract())
                 RetractAll();
+            else
+                ExtendAll();
+        }
+
+        private bool AnyCanRetract()
+        {
+            foreach (ModuleDeployablePart mdp in CachedPartModules)
+                if (mdp != null && mdp.Events["Retract"].active)
+                    return true;
+            return false;
         }
 
         protected bool ExtendingOrRetracting()
