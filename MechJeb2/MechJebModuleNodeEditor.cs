@@ -107,7 +107,9 @@ namespace MuMech
             // the node is solved again, on a copy
             if (o.patchEndTransition == Orbit.PatchTransitionType.MANEUVER)
             {
-                var uncut = new Orbit(o);
+                // the encounter search only looks between StartUT and EndUT, which KSP sets to one period before it solves a patch
+                var uncut = new Orbit(o) { StartUT = o.StartUT };
+                uncut.EndUT = uncut.eccentricity < 1 ? uncut.StartUT + uncut.period : uncut.period;
                 PatchedConics.CalculatePatch(uncut, new Orbit(), o.epoch, new PatchedConics.SolverParameters(),
                     Vessel.patchedConicSolver.targetBody);
                 o = uncut;
