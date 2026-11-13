@@ -53,22 +53,42 @@ namespace KodeKit
             size.preferredHeight = layout ? 22 : 0;
             if (layout)
             {
-                // the IMGUI controls read the mouse themselves, and uGUI would pass a press on the empty cell through to the
-                // window's body drag: a dragged slider would move the window too. An invisible graphic takes the press and a
-                // sink takes the drag.
-                Image catcher = cell.gameObject.AddComponent<Image>();
-                catcher.color = new Color(0, 0, 0, 0);
-                cell.gameObject.AddComponent<DragSink>();
+                // the IMGUI controls read the mouse themselves, and uGUI would pass a press on the cell through to the
+                // window's body drag: a dragged slider would move the window too. A graphic that draws nothing makes the cell
+                // a raycast target, and DragGate decides who gets the drag.
+                cell.gameObject.AddComponent<Touchable>();
+                cell.gameObject.AddComponent<DragGate>();
             }
             ImguiBlockHost.Register(this);
         }
 
-        /// <summary>Takes the drag events of an ImguiBlock's cell so they don't reach the window's drag handle.</summary>
-        sealed class DragSink : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+        /// <summary>
+        /// The drag of an ImguiBlock's cell. A drag that starts on an IMGUI control (a slider, a button, a text field: the
+        /// control took GUIUtility.hotControl at the press) stays with the cell, so it moves only the control. A drag that
+        /// starts on the block's empty space or on a label goes to the handler above the cell, as IMGUI's GUI.DragWindow
+        /// does: the window's body drag (an overlay window drags anywhere) or a scroll list.
+        /// </summary>
+        sealed class DragGate : MonoBehaviour, IInitializePotentialDragHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
         {
-            public void OnBeginDrag(PointerEventData e) { }
+            public void OnInitializePotentialDrag(PointerEventData e)
+            {
+                GameObject up = Above<IInitializePotentialDragHandler>();
+                if (up != null) ExecuteEvents.Execute(up, e, ExecuteEvents.initializePotentialDrag);
+            }
+
+            public void OnBeginDrag(PointerEventData e)
+            {
+                if (GUIUtility.hotControl != 0) return;
+                // the input module sends the rest of this drag, and its end, to pointerDrag
+                e.pointerDrag = Above<IDragHandler>();
+                if (e.pointerDrag != null) ExecuteEvents.Execute(e.pointerDrag, e, ExecuteEvents.beginDragHandler);
+            }
+
             public void OnDrag(PointerEventData e) { }
             public void OnEndDrag(PointerEventData e) { }
+
+            GameObject Above<T>() where T : IEventSystemHandler =>
+                transform.parent != null ? ExecuteEvents.GetEventHandler<T>(transform.parent.gameObject) : null;
         }
 
         internal bool Alive => placeholder != null;
