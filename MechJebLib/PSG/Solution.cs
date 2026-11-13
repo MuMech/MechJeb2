@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using MechJebLib.Functions;
 using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
@@ -46,7 +45,7 @@ namespace MechJebLib.PSG
         private readonly List<double>         _dvend        = new List<double>();
         private readonly List<VecInterpolant> _interpolants = new List<VecInterpolant>();
 
-        // in SI units, for TerminalString
+        // in SI units, for TerminalLines
         private readonly double _mu;
         private readonly double _rbody;
 
@@ -360,9 +359,9 @@ namespace MechJebLib.PSG
         }
 
         // FIXME: this is really specific display logic
-        public string TerminalString()
+        public string[] TerminalLines()
         {
-            Check.False(Normalized, "TerminalString prints SI units, use DeNormalized()");
+            Check.False(Normalized, "TerminalLines prints SI units, use DeNormalized()");
 
             (V3 rf, V3 vf) = TerminalStateVectors();
 
@@ -377,12 +376,13 @@ namespace MechJebLib.PSG
             double rT = rf.magnitude - _rbody;
             double vT = vf.magnitude;
 
-            var sb = new StringBuilder();
-            sb.AppendLine($"Orbit: {peA.ToSI()}m x {apA.ToSI()}m");
-            sb.AppendLine($"rT: {rT.ToSI()}m vT: {vT.ToSI()}m/s FPA: {Rad2Deg(fpa):F1}°");
-            sb.AppendLine($"sma: {sma.ToSI()}m ecc: {ecc:F3} inc: {Rad2Deg(inc):F1}°");
-            sb.Append($"lan: {Rad2Deg(lan):F1}° argp: {Rad2Deg(argp):F1}° ta: {Rad2Deg(tanom):F1}°");
-            return sb.ToString();
+            return new[]
+            {
+                $"Orbit: {peA.ToSI()}m x {apA.ToSI()}m",
+                $"rT: {rT.ToSI()}m vT: {vT.ToSI()}m/s FPA: {Rad2Deg(fpa):F1}°",
+                $"sma: {sma.ToSI()}m ecc: {ecc:F3} inc: {Rad2Deg(inc):F1}°",
+                $"lan: {Rad2Deg(lan):F1}° argp: {Rad2Deg(argp):F1}° ta: {Rad2Deg(tanom):F1}°"
+            };
         }
 
         private int IndexFor(double t)

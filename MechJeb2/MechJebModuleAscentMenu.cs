@@ -168,8 +168,8 @@ namespace MuMech
             Profiler.EndSample();
         }
 
-        // The PSG status lines (one per burn/coast phase, then the terminal conditions), for the new UI whose rows are fixed
-        internal const int MAX_PHASE_LINES = 12;
+        // The PSG status lines (one per burn/coast phase, then the terminal conditions, one per line), for the new UI whose rows are fixed
+        internal const int MAX_PHASE_LINES = 15;
         internal readonly string[] PhaseLines = new string[MAX_PHASE_LINES];
         internal int PhaseLineCount;
 
@@ -179,9 +179,11 @@ namespace MuMech
             if (_ascentSettings.AscentType != AscentType.PSG || Core.Guidance.Solution == null) return;
 
             Solution solution = Core.Guidance.Solution;
-            for (int psgPhase = solution.Segments - 1; psgPhase >= 0 && PhaseLineCount < MAX_PHASE_LINES - 1; psgPhase--)
+            string[] terminal = solution.TerminalLines();
+            for (int psgPhase = solution.Segments - 1; psgPhase >= 0 && PhaseLineCount < MAX_PHASE_LINES - terminal.Length; psgPhase--)
                 PhaseLines[PhaseLineCount++] = PhaseString(solution, VesselState.MET, psgPhase);
-            PhaseLines[PhaseLineCount++] = solution.TerminalString();
+            foreach (string line in terminal)
+                PhaseLines[PhaseLineCount++] = line;
         }
 
         internal void RefreshRateChanged(int oldRate)
