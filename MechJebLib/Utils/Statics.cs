@@ -799,6 +799,34 @@ namespace MechJebLib.Utils
         {
             if (!IsFinite(d)) return d.ToString();
 
+            SIDigits(d, sigFigs, maxPrecision, out int exponent, out int index, out int siExponent, out int decimalDigits);
+
+            string unit = exponent < 0 ? _negPrefix[index] : _posPrefix[index];
+
+            d /= Pow(10, siExponent); // scale d by the SI prefix exponent
+
+            return $"{d.ToString("F" + decimalDigits)} {unit}";
+        }
+
+        /// <summary>
+        ///     <paramref name="d" /> rounded to the digits ToSI shows for it: two values with the same result have the same
+        ///     ToSI text, so a caller can keep a text until this changes.
+        /// </summary>
+        public static double RoundToSI(this double d, int sigFigs = 4, int maxPrecision = int.MaxValue)
+        {
+            if (!IsFinite(d) || d == 0) return d;
+
+            SIDigits(d, sigFigs, maxPrecision, out _, out _, out int siExponent, out int decimalDigits);
+
+            double step = Pow(10, siExponent - decimalDigits);
+            // "F" formatting rounds a half away from zero
+            return Round(d / step, MidpointRounding.AwayFromZero) * step;
+        }
+
+        // the SI prefix of a finite d and the number of decimals ToSI shows after scaling by it
+        private static void SIDigits(double d, int sigFigs, int maxPrecision, out int exponent, out int index, out int siExponent,
+            out int decimalDigits)
+        {
             if (maxPrecision == int.MaxValue)
                 maxPrecision = -29 - sigFigs;
 
@@ -806,24 +834,18 @@ namespace MechJebLib.Utils
             // (also 999.95 should be rounded to 1k, so bumps up an SI prefix)
             double offset = 5 * (d != 0 ? Pow(10, Floor(Log10(Abs(d))) - sigFigs) : 0);
 
-            int exponent = (int)Floor(Log10(Abs(d) + offset));
+            exponent = (int)Floor(Log10(Abs(d) + offset));
 
-            int index = d != 0 ? (int)Abs(Floor(exponent / 3.0)) : 0; // index of the SI prefix
+            index = d != 0 ? (int)Abs(Floor(exponent / 3.0)) : 0; // index of the SI prefix
             if (index > 10) index = 10; // there's only 10 SI prefixes
 
-            int siExponent = Sign(exponent) * index * 3; // the SI prefix exponent
-
-            string unit = exponent < 0 ? _negPrefix[index] : _posPrefix[index];
-
-            d /= Pow(10, siExponent); // scale d by the SI prefix exponent
+            siExponent = Sign(exponent) * index * 3; // the SI prefix exponent
 
             int wholeDigits = d != 0 ? exponent - siExponent + 1 : 1;
             int maxDecimalDigits = siExponent - maxPrecision;
-            int decimalDigits = sigFigs - wholeDigits;
+            decimalDigits = sigFigs - wholeDigits;
             decimalDigits = decimalDigits > maxDecimalDigits ? maxDecimalDigits : decimalDigits;
             decimalDigits = decimalDigits < 0 ? 0 : decimalDigits;
-
-            return $"{d.ToString("F" + decimalDigits)} {unit}";
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

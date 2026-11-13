@@ -51,7 +51,8 @@ namespace MuMech.UI
             public string Get()
             {
                 double v = HasValue ? value() : 0;
-                double key = Shown(v);
+                // an airless body's turn start follows the terrain every frame
+                double key = v.RoundToSI(digits);
                 if (text == null || !key.Equals(lastKey))
                 {
                     lastKey = key;
@@ -59,17 +60,6 @@ namespace MuMech.UI
                 }
 
                 return text;
-            }
-
-            // the value in units of ToSI's last shown digit (an airless body's turn start follows the terrain every frame)
-            double Shown(double v)
-            {
-                if (v == 0 || double.IsNaN(v) || double.IsInfinity(v)) return v;
-                int exponent = (int)Math.Floor(Math.Log10(Math.Abs(v)));
-                int siExponent = 3 * (int)Math.Floor(exponent / 3.0);
-                int decimals = Math.Max(0, digits - (exponent - siExponent + 1));
-                double step = Math.Pow(10, siExponent - decimals);
-                return Math.Round(v / step) * step;
             }
 
             public Func<bool> Available;
