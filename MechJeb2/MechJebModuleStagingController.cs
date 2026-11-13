@@ -397,9 +397,9 @@ namespace MuMech
         // bypasses staging delays and other checks and immediately stages
         public void ImmediateStage()
         {
-            // KSP refuses a stage during its staging cooldown, and a remote stage waits for the focus switch: nothing is staged
-            // then, so the countdown and "Autostage once" stay for the next call
-            if (_remoteStagingStatus == RemoteStagingState.WAITING_FOCUS || (Vessel.isActiveVessel && !StageManager.CanSeparate))
+            // KSP refuses a stage during its staging cooldown: nothing is staged then, so the countdown and "Autostage once"
+            // stay for the next call
+            if (Vessel.isActiveVessel && !StageManager.CanSeparate)
                 return;
 
             if (InverseStageFiresDecoupler(Vessel.currentStage - 1))
@@ -413,8 +413,11 @@ namespace MuMech
                 _currentActiveVessel = FlightGlobals.ActiveVessel;
                 Debug.Log($"Mechjeb Autostage: Switching from {FlightGlobals.ActiveVessel.name} to vessel {Vessel.name} to stage");
 
+                // the switch is done within the call (onVesselResumeStaging moves the status on); a refused switch leaves
+                // the status as it was, and the next call tries again. The stage itself waits for the next call.
                 _remoteStagingStatus = RemoteStagingState.WAITING_FOCUS;
-                FlightGlobals.ForceSetActiveVessel(Vessel);
+                if (!FlightGlobals.ForceSetActiveVessel(Vessel))
+                    _remoteStagingStatus = RemoteStagingState.DISABLED;
                 return;
             }
             else
@@ -426,6 +429,8 @@ namespace MuMech
                     case RemoteStagingState.DISABLED:
                         StageManager.ActivateNextStage();
                         break;
+                    // this vessel is active now: the switch is done, whether or not its event came
+                    case RemoteStagingState.WAITING_FOCUS:
                     case RemoteStagingState.FOCUS_FINISHED:
                         StageManager.ActivateNextStage();
                         FlightGlobals.ForceSetActiveVessel(_currentActiveVessel);
