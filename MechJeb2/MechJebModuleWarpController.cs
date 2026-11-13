@@ -35,6 +35,10 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            // a warp stopped by the player, or by KSP, ends at 1x too: SAS goes back to the player's setting
+            if (_sasBeforeWarp != null && TimeWarp.CurrentRateIndex == 0)
+                RestoreSAS();
+
             if (warpToUT > 0)
                 WarpToUT(warpToUT);
         }
@@ -42,9 +46,6 @@ namespace MuMech
         internal void PauseWarp()
         {
             WarpPaused = true;
-
-            if (TimeWarp.CurrentRateIndex == 0)
-                RestoreSAS();
         }
 
         // the player's SAS setting from before MechJeb turned SAS on for a rails warp, given back when the warp is back at 1x
@@ -91,7 +92,8 @@ namespace MuMech
 
                     TimeWarp.SetRate(rateIndex, instant);
 
-                    if (rateIndex == 0)
+                    // back at 1x, or KSP refused the rate
+                    if (TimeWarp.CurrentRateIndex == 0)
                         RestoreSAS();
                 }
             }
@@ -283,11 +285,7 @@ namespace MuMech
         {
             warpToUT = 0.0;
             if (TimeWarp.CurrentRateIndex == 0)
-            {
-                // the player may have stopped the warp: SAS goes back to their setting all the same
-                RestoreSAS();
                 return false; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kraken)
-            }
 
             SetTimeWarpRate(0, instant);
             return true;
