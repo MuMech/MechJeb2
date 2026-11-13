@@ -8,8 +8,8 @@ using UnityEngine.UI;
 namespace MuMech.UI
 {
     /// <summary>
-    /// Native KodeKit versions of GeneralInfoItem methods (IMGUI draw methods registered as info items), by item id.
-    /// Items without a builder are hosted with ImguiBlock. Builders take the refresh list for work done at the
+    /// The KodeKit widgets of MechJeb's GeneralInfoItems, by item id: their methods in MechJeb2 are empty and only register
+    /// the item. Another mod's item has no builder and is drawn by its own IMGUI method through ImguiBlock. Builders take the refresh list for work done at the
     /// window's refresh rate: the value readouts that walk parts or bodies run there, not every frame.
     /// </summary>
     public static partial class GeneralItemBuilders
@@ -101,7 +101,7 @@ namespace MuMech.UI
             return true;
         }
 
-        /// <summary>Build a general item by id from its module (for windows that call the IMGUI method directly).</summary>
+        /// <summary>Build a general item by id from its module (for windows that show the item among their own rows).</summary>
         public static void Build(KodeWindow w, UIObject parent, string id, object target, List<Action> refresh = null) =>
             builders[id](w, parent, target, refresh ?? new List<Action>());
 

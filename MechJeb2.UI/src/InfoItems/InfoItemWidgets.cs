@@ -83,7 +83,7 @@ namespace MuMech.UI
                 case GeneralInfoItem g:
                     if (GeneralItemBuilders.TryBuild(w, parent, g, refresh))
                         break;
-                    // not ported: the IMGUI method inside the window, refreshed like MechJebModuleCustomInfoWindow does
+                    // another mod's item: its IMGUI method inside the window, refreshed like MechJebModuleCustomInfoWindow does
                     new ImguiBlock(parent, g.DrawItem);
                     refresh.Add(g.UpdateItem);
                     break;

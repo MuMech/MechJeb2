@@ -9,7 +9,7 @@ namespace MuMech.UI
     /// <summary>
     /// MechJebModuleManeuverPlanner ("Maneuver Planner") in KodeKit, row for row with its WindowGUI. The module keeps the state
     /// (selected operation, create/change mode) and the node creation; each Operation's parameter rows are built once into their own
-    /// panel by OperationPanels (an operation without a builder falls back to its DoParametersGUI through ImguiBlock),
+    /// panel by OperationPanels (another mod's operation, which has no builder, falls back to its DoParametersGUI through ImguiBlock),
     /// and the selected operation's panel is shown.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleManeuverPlanner))]
