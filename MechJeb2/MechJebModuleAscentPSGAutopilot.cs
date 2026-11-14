@@ -152,6 +152,8 @@ namespace MuMech
 
         private double _pitchStartTime;
 
+        private string _awaitingComputing;
+
         private void DriveVerticalAscent()
         {
             //during the vertical ascent we just thrust straight up at max throttle
@@ -162,7 +164,11 @@ namespace MuMech
 
             if (!liftedOff)
             {
-                Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
+                // the first solve can take minutes on a slow machine: say so, or the pad looks stuck
+                if (Core.Guidance.Solution == null)
+                    Status.Set(_awaitingComputing ??= Localizer.Format("#MechJeb_Ascent_status12") + ": computing the ascent…"); //"Awaiting liftoff"
+                else
+                    Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
                 return;
             }
 
@@ -184,7 +190,15 @@ namespace MuMech
             // not below the horizon while waiting for guidance (no solution yet, or none at all)
             double pitch = Math.Max(90 - theta, 0);
 
-            Status.Set(Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}")); //Pitch program <<1>>° to guidance
+            // without a solution the guidance pitch is 0, so "N° to guidance" would be the pitch itself: say what is missing instead,
+            // since the pitch program goes on down to the horizon
+            if (Core.Guidance.Solution == null)
+                Status.Set($"No guidance yet, pitch program at {pitch:F0}°. " +
+                    MechJebModuleAscentMenu.OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, true, false,
+                        Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0),
+                    AscentStatusLevel.WARNING);
+            else
+                Status.Set(Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}")); //Pitch program <<1>>° to guidance
 
             if (CheckForGuidanceTransition(pitch))
             {
