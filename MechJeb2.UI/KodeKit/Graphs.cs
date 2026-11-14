@@ -85,6 +85,12 @@ namespace KodeKit
         public double DataMaxX;             // rightmost data x
         public double ViewMin;              // left edge of the view
 
+        /// <summary>
+        /// Writes a Y label: the text to fill, the value and the step between labels (0 when the range has no ticks). Null: the
+        /// value in SI with the significant figures that tell neighbours apart, 3 at least.
+        /// </summary>
+        public Action<CharText, double, double> LabelFormat;
+
         readonly RectTransform frame;
 
         /// <param name="scrollbarParent">Where the scrollbar row goes (null: under the plot, indented past the Y labels).
@@ -199,7 +205,9 @@ namespace KodeKit
                 // centred on its tick, an end label would stick out over the rows around the plot
                 float y = ticked ? (float)((v - yMin) / range) * height : 0;
                 yCells[i].anchoredPosition = new Vector2(-4, Mathf.Clamp(y, LabelHeight / 2, height - LabelHeight / 2));
-                yChars[i].Clear().AppendSI(v, sigFigs).Commit();
+                if (LabelFormat != null) LabelFormat(yChars[i].Clear(), v, ticked ? step : 0);
+                else yChars[i].Clear().AppendSI(v, sigFigs);
+                yChars[i].Commit();
             }
         }
 

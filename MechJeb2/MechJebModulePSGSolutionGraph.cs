@@ -34,9 +34,13 @@ namespace MuMech
             // a range the Y labels keep, widened by the data when it goes outside; NaN for one from the data alone
             public readonly double Min, Max;
 
+            // series of one group share their Y range, so that the same value is at the same height (0: a range of its own)
+            public readonly int Group;
+
             public SeriesInfo(string label, Column column, FlownColumn? flown, Color color, double factor = 1, double min = double.NaN,
-                double max = double.NaN)
+                double max = double.NaN, int group = 0)
             {
+                Group = group;
                 Label = label;
                 Column = column;
                 Flown = flown;
@@ -47,17 +51,20 @@ namespace MuMech
             }
         }
 
+        // the unit groups: the percentages (throttle, Qα and Q of their limits) and the speeds
+        private const int PERCENT = 1, SPEED = 2;
+
         internal static readonly SeriesInfo[] Series =
         {
             new SeriesInfo("Pitch °", Column.PITCH, FlownColumn.PITCH, XKCDColors.Mint, 1, 0, 90),
             new SeriesInfo("Heading °", Column.HEADING, FlownColumn.HEADING, XKCDColors.Lime),
-            new SeriesInfo("Throttle %", Column.THROTTLE, FlownColumn.THROTTLE, XKCDColors.LightRed, 100, 0, 100),
+            new SeriesInfo("Throttle %", Column.THROTTLE, FlownColumn.THROTTLE, XKCDColors.LightRed, 100, 0, 100, PERCENT),
             new SeriesInfo("AoA °", Column.AOA, FlownColumn.AOA, XKCDColors.Lavender, 1, 0),
-            new SeriesInfo("Qα % of limit", Column.Q_ALPHA_FRACTION, FlownColumn.Q_ALPHA_FRACTION, XKCDColors.Yellow, 100, 0, 100),
-            new SeriesInfo("Q % of limit", Column.Q_FRACTION, FlownColumn.Q_FRACTION, XKCDColors.Orange, 100, 0, 100),
+            new SeriesInfo("Qα % of limit", Column.Q_ALPHA_FRACTION, FlownColumn.Q_ALPHA_FRACTION, XKCDColors.Yellow, 100, 0, 100, PERCENT),
+            new SeriesInfo("Q % of limit", Column.Q_FRACTION, FlownColumn.Q_FRACTION, XKCDColors.Orange, 100, 0, 100, PERCENT),
             new SeriesInfo("Altitude m", Column.ALTITUDE, FlownColumn.ALTITUDE, XKCDColors.White, 1, 0),
-            new SeriesInfo("Speed m/s", Column.SPEED, FlownColumn.SPEED, XKCDColors.Apricot, 1, 0),
-            new SeriesInfo("Surface speed m/s", Column.SURFACE_SPEED, FlownColumn.SURFACE_SPEED, XKCDColors.Khaki, 1, 0),
+            new SeriesInfo("Speed m/s", Column.SPEED, FlownColumn.SPEED, XKCDColors.Apricot, 1, 0, double.NaN, SPEED),
+            new SeriesInfo("Surface speed m/s", Column.SURFACE_SPEED, FlownColumn.SURFACE_SPEED, XKCDColors.Khaki, 1, 0, double.NaN, SPEED),
             new SeriesInfo("Mass kg", Column.MASS, null, XKCDColors.Pink, 1, 0),
             new SeriesInfo("Δv m/s", Column.DELTA_V, null, XKCDColors.Beige, 1, 0)
         };

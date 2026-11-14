@@ -160,7 +160,7 @@ namespace MuMech.UI
             bool due = Time.frameCount - lastRefreshFrame >= graph.Series.Count + 2 && Time.unscaledTime - lastRefreshTime >= 0.5f;
             if (!force && !due) return;
 
-            bool rangesStale = planChanged || Flown.Count != lastFlownCount || shownChanged;
+            bool rangesStale = planChanged || Flown.Count != lastFlownCount || shownChanged || mask != lastMask;
             lastSampled = g.Sampled;
             lastPadSampled = g.PadSampled;
             lastMask = mask;
@@ -286,9 +286,44 @@ namespace MuMech.UI
                 lo -= pad;
                 hi += pad;
                 if (!(hi > lo)) hi = lo + 1;
+                yMin[i] = groupMin[i] = lo;
+                yMax[i] = groupMax[i] = hi;
+            }
+
+            // a group's series share the widest of their ranges, taken over those displayed (all of them when none is)
+            for (int i = 0; i < Infos.Length; i++)
+            {
+                int group = Infos[i].Group;
+                if (group == 0) continue;
+                bool anyShown = false;
+                for (int k = 0; k < Infos.Length; k++)
+                    anyShown |= Infos[k].Group == group && g.Displayed(k);
+                double lo = double.PositiveInfinity, hi = double.NegativeInfinity;
+                for (int k = 0; k < Infos.Length; k++)
+                {
+                    if (Infos[k].Group != group || (anyShown && !g.Displayed(k))) continue;
+                    lo = Math.Min(lo, groupMin[k]);
+                    hi = Math.Max(hi, groupMax[k]);
+                }
+
                 yMin[i] = lo;
                 yMax[i] = hi;
             }
+        }
+
+        // the ranges each series would have alone, before the groups share theirs
+        readonly double[] groupMin = new double[Infos.Length], groupMax = new double[Infos.Length];
+
+        // a Y label at the precision of the step between labels: whole numbers for a step of 1 or more, and k or M for large
+        // values (altitude, mass)
+        static void StepLabel(CharText t, double v, double step)
+        {
+            double unit = Math.Abs(step) >= 1e6 ? 1e6 : Math.Abs(step) >= 1e3 ? 1e3 : 1;
+            double scaled = step > 0 ? step / unit : 0.1;
+            int decimals = Math.Max(0, (int)Math.Ceiling(-Math.Log10(scaled) - 1e-9));
+            t.Append(v / unit, decimals);
+            if (unit == 1e6) t.Append(" M");
+            else if (unit == 1e3) t.Append(" k");
         }
 
         // ---- texts, computed when what they show changes ----
@@ -408,7 +443,7 @@ namespace MuMech.UI
             Layout left = plotRow.Add<Layout>("Plot");
             left.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false);
             left.Finish();
-            graph = new LineGraph(w, left, 512, height, builtLabels, r) { Follow = false };
+            graph = new LineGraph(w, left, 512, height, builtLabels, r) { Follow = false, LabelFormat = StepLabel };
             plotSize = graph.Plot.GetComponent<LayoutElement>();
             plotSize.flexibleWidth = 1;
             labelsSize = graph.Plot.parent.Find("YLabels").GetComponent<LayoutElement>();
