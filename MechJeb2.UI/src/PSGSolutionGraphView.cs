@@ -15,7 +15,7 @@ namespace MuMech.UI
     /// <summary>
     /// MechJebModulePSGSolutionGraph ("PSG Solution"): PSG's Solutions against MET, on a KodeKit LineGraph. Each quantity has its
     /// own Y range, and the drop-down above the plot's right end picks the one the Y labels show. Three lines per quantity, which the
-    /// legend under the plot draws: the Solution guidance flies now (bright), the one the vessel lifted off with (washed out,
+    /// legend under the plot draws: the Solution guidance flies now (bright, solid), the one the vessel lifted off with (dashed,
     /// hidden while it is the current one) and what the vessel flew (dark). Vertical marks: the current Solution's phase
     /// boundaries, its interpolant nodes' edges, its collocation points (where the optimizer enforces the Qα and Q limits),
     /// and the vessel's MET. Zoom narrows the visible span, which the scrollbar moves; the corner grip resizes the window
@@ -43,7 +43,8 @@ namespace MuMech.UI
         const float PlanThickness = 2, PadThickness = 1.5f, FlownThickness = 1.5f;
 
         // opaque shades of the series' colour, since overlapping translucent quads bead a thin line
-        static Color PadShade(Color c) => Color.Lerp(c, new Color(0.55f, 0.55f, 0.6f), 0.6f);
+        // the pad Solution is dashed, in a lighter shade; the flown line solid, in a darker one
+        static Color PadShade(Color c) => Color.Lerp(c, Color.white, 0.3f);
         static Color FlownShade(Color c) => Color.Lerp(c, Color.black, 0.45f);
 
         static readonly Color PhaseColor = new Color(0.8f, 0.8f, 0.8f, 0.85f);
@@ -113,7 +114,7 @@ namespace MuMech.UI
 
         LineGraph graph;
         readonly LineSeriesGraphic[] planLines = new LineSeriesGraphic[Infos.Length];
-        readonly LineSeriesGraphic[] padLines = new LineSeriesGraphic[Infos.Length];
+        readonly DashedLineGraphic[] padLines = new DashedLineGraphic[Infos.Length];
         readonly LineSeriesGraphic[] flownLines = new LineSeriesGraphic[Infos.Length];
         LineSeriesGraphic nodeLines, knotLines, nowLine;
         LineSeriesGraphic[] extraMarkers;
@@ -191,6 +192,10 @@ namespace MuMech.UI
             {
                 planLines[i].YMin = padLines[i].YMin = flownLines[i].YMin = yMin[i];
                 planLines[i].YMax = padLines[i].YMax = flownLines[i].YMax = yMax[i];
+                // the dashed pad lines aren't LineGraph's series: give them its view and redraw them now
+                padLines[i].XMin = graph.ViewMin;
+                padLines[i].XMax = graph.ViewMin + graph.VisibleWidth;
+                padLines[i].SetVerticesDirty();
             }
 
             // the extra markers aren't LineGraph's: give them its view and redraw them now
@@ -412,7 +417,10 @@ namespace MuMech.UI
             {
                 int k = i;
                 SeriesInfo info = Infos[i];
-                padLines[i] = graph.AddSeries(new TraceSeries(() => g.PadPlan, info), PadShade(info.Color));
+                padLines[i] = Graphs.Fill<DashedLineGraphic>(graph.Plot, "Pad" + i);
+                padLines[i].Source = new TraceSeries(() => g.PadPlan, info);
+                padLines[i].color = PadShade(info.Color);
+                padLines[i].raycastTarget = false;
                 padLines[i].Thickness = PadThickness;
                 w.Visible(padLines[i].gameObject, () => g.Displayed(k) && !g.PlanIsPad);
             }
@@ -442,7 +450,7 @@ namespace MuMech.UI
 
             Layout lines = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
             LegendItem(lines, white, PlanThickness, false, "Current solution");
-            LegendItem(lines, PadShade(white), PadThickness, false, "Pad solution (the one it lifted off with)");
+            KodeWindow.Label(LegendCell(lines, PadShade(white), PadThickness, false, true), "Pad solution (the one it lifted off with)");
             w.Toggle(LegendCell(lines, FlownShade(white), FlownThickness, false), "Flown", () => g.ShowFlown, v => g.ShowFlown = v);
 
             Layout marks = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
@@ -461,12 +469,29 @@ namespace MuMech.UI
         static void LegendItem(UIObject parent, Color color, float thickness, bool vertical, string text) =>
             KodeWindow.Label(LegendCell(parent, color, thickness, vertical), text);
 
-        static Layout LegendCell(UIObject parent, Color color, float thickness, bool vertical)
+        static Layout LegendCell(UIObject parent, Color color, float thickness, bool vertical, bool dashed = false)
         {
             Layout cell = KodeWindow.Row(parent);
             cell.FlexibleLayout(0f, 0f);
             cell.Spacing(4);
             RectTransform swatch = Graphs.Surface(cell, 18, 14, "Swatch");
+            if (dashed)
+            {
+                // three dashes, as the plot draws them
+                for (int i = 0; i < 3; i++)
+                {
+                    var dash = Graphs.Fill<Image>(swatch, "Dash" + i);
+                    dash.color = color;
+                    dash.raycastTarget = false;
+                    RectTransform d = dash.rectTransform;
+                    d.anchorMin = new Vector2(i / 3f, 0.5f);
+                    d.anchorMax = new Vector2(i / 3f + 0.2f, 0.5f);
+                    d.sizeDelta = new Vector2(0, thickness);
+                }
+
+                return cell;
+            }
+
             var bar = Graphs.Fill<Image>(swatch, "Bar");
             bar.color = color;
             bar.raycastTarget = false;

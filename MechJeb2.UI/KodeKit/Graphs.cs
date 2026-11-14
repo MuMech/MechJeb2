@@ -264,6 +264,82 @@ namespace KodeKit
     }
 
     /// <summary>
+    /// A polyline drawn dashed, as one uGUI mesh: Dash pixels drawn, Gap pixels left, the pattern running on across the points.
+    /// Like LineSeriesGraphic it draws Source between XMin and XMax, the points scaled into its rect and Y clamped to it, and is
+    /// rebuilt only on SetVerticesDirty. For short series (no decimation): a few hundred points.
+    /// </summary>
+    public class DashedLineGraphic : MaskableGraphic
+    {
+        public IGraphSource Source;
+        public double XMin, XMax, YMin, YMax;
+        public float Thickness = 1.5f;
+        public float Dash = 6, Gap = 4;
+
+        protected override void OnPopulateMesh(VertexHelper vh)
+        {
+            vh.Clear();
+            if (Source == null || XMax <= XMin || YMax <= YMin || Dash <= 0) return;
+            Rect r = rectTransform.rect;
+            double sx = r.width / (XMax - XMin), sy = r.height / (YMax - YMin);
+
+            bool havePrev = false, on = true;
+            float phase = 0; // how far into the current dash or gap
+            Vector2 prev = default;
+            for (int i = 0; i < Source.Count; i++)
+            {
+                double xd = Source.X(i);
+                if (xd < XMin) continue;
+                var p = new Vector2(r.xMin + (float)((xd - XMin) * sx),
+                    Mathf.Clamp(r.yMin + (float)((Source.Y(i) - YMin) * sy), r.yMin, r.yMax));
+                if (!havePrev)
+                {
+                    prev = p;
+                    havePrev = true;
+                    continue;
+                }
+
+                Vector2 d = p - prev;
+                float len = d.magnitude;
+                if (len > 0)
+                {
+                    Vector2 dir = d / len;
+                    for (float t = 0; t < len;)
+                    {
+                        float step = Mathf.Min((on ? Dash : Gap) - phase, len - t);
+                        if (on) Quad(vh, prev + dir * t, prev + dir * (t + step));
+                        t += step;
+                        phase += step;
+                        if (phase >= (on ? Dash : Gap))
+                        {
+                            on = !on;
+                            phase = 0;
+                        }
+                    }
+                }
+
+                prev = p;
+                if (p.x > r.xMax) break; // the segment towards the first point outside, for a parent RectMask2D to clip
+            }
+        }
+
+        void Quad(VertexHelper vh, Vector2 a, Vector2 b)
+        {
+            if (vh.currentVertCount > 64000) return; // 16-bit index limit of UI meshes
+            Vector2 d = b - a;
+            float len = d.magnitude;
+            if (len < 1e-4f) return;
+            Vector2 n = new Vector2(-d.y, d.x) / len * (Thickness * 0.5f);
+            int i = vh.currentVertCount;
+            vh.AddVert(a - n, color, Vector2.zero);
+            vh.AddVert(a + n, color, Vector2.zero);
+            vh.AddVert(b + n, color, Vector2.zero);
+            vh.AddVert(b - n, color, Vector2.zero);
+            vh.AddTriangle(i, i + 1, i + 2);
+            vh.AddTriangle(i, i + 2, i + 3);
+        }
+    }
+
+    /// <summary>
     /// PlotArea (porkchop) in uGUI: a texture with hover pixel, click-to-select and drag-a-box-to-zoom.
     /// Pixel coordinates are texture pixels with y up, like PlotArea.HoveredPoint/SelectedPoint.
     /// </summary>
