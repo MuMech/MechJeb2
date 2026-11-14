@@ -14,7 +14,7 @@ namespace MuMech.UI
 {
     /// <summary>
     /// MechJebModulePSGSolutionGraph ("PSG Solution"): PSG's Solutions against MET, on a KodeKit LineGraph. Each quantity has its
-    /// own Y range, and the drop-down in the plot's corner picks the one the Y labels show. Three lines per quantity, which the
+    /// own Y range, and the drop-down in the plot's top-right corner picks the one the Y labels show. Three lines per quantity, which the
     /// legend under the plot draws: the Solution guidance flies now (bright), the one the vessel lifted off with (washed out,
     /// hidden while it is the current one) and what the vessel flew (dark). Vertical marks: the current Solution's phase
     /// boundaries, its interpolant nodes' edges, its collocation points (where the optimizer enforces the Qα and Q limits),
@@ -510,7 +510,7 @@ namespace MuMech.UI
             KodeWindow.Button(row, "+", plus);
         }
 
-        // ---- the drop-down over the plot: the displayed series, whose Y labels are shown ----
+        // ---- the drop-down in the plot's top-right corner: the displayed series, whose Y labels are shown ----
 
         readonly List<int> scaleSeries = new List<int>();
         string[] scaleNames;
@@ -545,8 +545,8 @@ namespace MuMech.UI
         {
             // over the plot, after the series: the Plot surface has no layout group, so a new selection stays out of the window's layout
             Layout corner = KodeWindow.Row(graph.Plot.GetComponent<UIObject>());
-            corner.PreferredSizeFitter(true, true).Anchor(AnchorPresets.TopLeft).Pivot(PivotPresets.TopLeft);
-            corner.rectTransform.anchoredPosition = new Vector2(6, -6);
+            corner.PreferredSizeFitter(true, true).Anchor(AnchorPresets.TopRight).Pivot(PivotPresets.TopRight);
+            corner.rectTransform.anchoredPosition = new Vector2(-6, -6);
             new ComboBox(w, corner, ScalePosition, i => g.ScaleIdx = scaleSeries[i], ScaleNames, false, i => Infos[scaleSeries[i]].Color);
             w.Visible(corner.gameObject, () => ScaleNames().Length > 0);
         }
