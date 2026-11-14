@@ -190,7 +190,14 @@ namespace MuMech
             // not below the horizon while waiting for guidance (no solution yet, or none at all)
             double pitch = Math.Max(90 - theta, 0);
 
-            Status.Set(Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}")); //Pitch program <<1>>° to guidance
+            // without a solution the guidance pitch is 0, so "N° to guidance" would be the pitch itself: say what is missing instead,
+            // since the pitch program goes on down to the horizon
+            if (Core.Guidance.Solution == null)
+                Status.Set($"No guidance yet, pitch program at {pitch:F0}°. " +
+                    MechJebModuleAscentMenu.OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, true),
+                    AscentStatusLevel.WARNING);
+            else
+                Status.Set(Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}")); //Pitch program <<1>>° to guidance
 
             if (CheckForGuidanceTransition(pitch))
             {
