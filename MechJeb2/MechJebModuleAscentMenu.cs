@@ -152,7 +152,10 @@ namespace MuMech
                 znorm = $"infeasibility: {Core.PSGSimulation.LastInfeasibility:G5}";
                 if (Core.PSGSimulation.LastFailureMessage != null)
                     label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}";
-                optimizerState = OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null);
+                // the optimizer only runs while the autopilot (or kOS) uses it: no line before the autopilot is engaged
+                optimizerState = Core.PSGSimulation.Enabled
+                    ? OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null)
+                    : null;
             }
 
             if (_launchingToPlane) launchTimer = CachedLocalizer.Instance.MechJebAscentMsg2; //Launching to target plane
