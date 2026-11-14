@@ -246,6 +246,10 @@ namespace MuMech.UI
             Layout fpa = AscentUi.SimpleBox(w, fixedPlan, "Flight Path Angle", Psgs.FPA, "°");
             w.Visible(fpa.gameObject, () => !anyPlaneControl);
             AscentUi.SimpleBox(w, fixedPlan, "#MechJeb_Ascent_attachAlt", Psgs.BurnoutAltitude, "km");
+            // why Pe and Ap are gone: nothing can be shut down early, so there is no orbit to aim at, only the energy to maximize
+            UIText fixedNote = AscentUi.ToneText(fixedPlan, "Every stage has a fixed burn time: PSG reaches this burnout altitude and flight " +
+                "path angle with all the energy the rocket has, and can't aim at a periapsis or apoapsis.", Tone.Dim, true);
+            KodeWindow.WrapToWidth(fixedNote);
 
             // Classic
             Layout classic = KodeWindow.Panel(box);
@@ -265,6 +269,7 @@ namespace MuMech.UI
             UIText below = w.BoundLabel(box, DeltaText, true);
             KodeWindow.ToneText(below, Tone.Bad);
             w.Visible(below, () => 2.001 < incDelta);
+            w.Attention(inc, () => 2.001 < incDelta);
         }
 
         // the "Ascent Settings" and "PSG Settings" window toggles
@@ -277,6 +282,7 @@ namespace MuMech.UI
                 WindowButton(w, buttons, "Ascent Settings", menu._settingsMenu);
                 UIButton psgButton = WindowButton(w, buttons, "PSG Settings", menu._psgSettingsMenu);
                 w.Visible(psgButton.gameObject, () => psg);
+                w.Badge(psgButton, () => PsgAttention.Any(Core));
                 return;
             }
 
@@ -288,6 +294,9 @@ namespace MuMech.UI
             w.Toggle(row, "Ascent Settings", () => settingsMenu.Enabled, v => settingsMenu.Enabled = v);
             UnityEngine.UI.Toggle psgSettings = w.Toggle(row, "PSG Settings", () => psgSettingsMenu.Enabled, v => psgSettingsMenu.Enabled = v);
             w.Visible(KodeWindow.RowOf(psgSettings), () => psg);
+            // the classic layout has a toggle, not a button, to carry a badge: its label turns orange instead
+            w.ToneText(KodeWindow.RowOf(psgSettings).GetComponentInChildren<TMPro.TMP_Text>(true),
+                () => PsgAttention.Any(Core) ? Tone.Caution : Tone.Normal);
         }
 
         /// <summary>A button that opens or closes another window, selected while that window is open.</summary>
@@ -317,6 +326,10 @@ namespace MuMech.UI
             Layout tgo = KodeWindow.Row(box);
             w.BoundLabel(tgo, "tgo: 999.999", () => menu.tgo ?? " ");
             w.BoundLabel(tgo, "pitch: -90.0", () => menu.pitch ?? " ", true);
+
+            UIText reach = w.Wrap(w.BoundLabel(box, () => menu.ReachWarning ?? " ", true));
+            KodeWindow.ToneText(reach, Tone.Bad);
+            w.Visible(reach, () => menu.ReachWarning != null);
 
             UIText status = w.BoundLabel(box, () => menu.label26 ?? " ", true); //Guidance Status:
             w.ToneText(status, GuidanceTone);

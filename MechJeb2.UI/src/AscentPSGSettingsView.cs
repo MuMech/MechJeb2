@@ -8,6 +8,91 @@ using Tone = KodeKit.KodeWindow.Tone;
 namespace MuMech.UI
 {
     /// <summary>
+    /// PSG settings that need the player's attention: their rows are marked in the PSG Settings window, and the Ascent window's PSG
+    /// Settings button carries a badge while any of them is.
+    /// </summary>
+    static class PsgAttention
+    {
+        /// <summary>Aref 0 (the default) on a body with an atmosphere: PSG then plans the ascent with no drag at all.</summary>
+        public static bool ArefUnset(MechJebCore core) => core.PSGSimulation.Aref <= 0 && Atmosphere(core);
+
+        /// <summary>A minimum coast longer than the maximum, which PSG refuses to plan with (only read when a coast stage is set).</summary>
+        public static bool CoastTimesInverted(MechJebCore core) =>
+            core.AscentSettings.CoastStage >= 0 && core.PSGSimulation.MinCoast > core.PSGSimulation.MaxCoast;
+
+        /// <summary>A Qα limit PSG clamps to between 0 and 10000 Pa-rad.</summary>
+        public static bool QaClamped(MechJebCore core) => core.PSGSimulation.LimitQa < 0 || core.PSGSimulation.LimitQa > 10000;
+
+        /// <summary>
+        ///     A coast during a stage (it burns, coasts, then burns again) with an engine that can't light a second time: a stock engine
+        ///     that doesn't allow a restart, or a RealFuels engine without the ignitions left. The burn after the coast loses its thrust.
+        /// </summary>
+        public static bool CoastNoRelight(MechJebCore core)
+        {
+            // the check walks every module of the vessel and reads RealFuels' ignitions by reflection, and the window asks several
+            // times a frame: computed at most every half second
+            if (Time.unscaledTime < _relightNext && core == _relightCore)
+                return _relight;
+
+            _relightCore = core;
+            _relightNext = Time.unscaledTime + 0.5f;
+            _relight = ComputeCoastNoRelight(core);
+            return _relight;
+        }
+
+        static MechJebCore _relightCore;
+        static float _relightNext;
+        static bool _relight;
+
+        static bool ComputeCoastNoRelight(MechJebCore core)
+        {
+            MechJebModuleAscentSettings s = core.AscentSettings;
+            int stage = s.CoastStage;
+            // once the coast is over, its relight is behind: an engine with no ignitions left in the burn after it is fine
+            if (stage < 0 || s.CoastLocation != 0 || core.Guidance.hasCoasted)
+                return false;
+
+            System.Collections.Generic.List<Part> parts = core.vessel != null ? core.vessel.parts : EditorLogic.fetch?.ship?.parts;
+            if (parts == null)
+                return false;
+
+            for (int i = 0; i < parts.Count; i++)
+            {
+                Part p = parts[i];
+                if (p.inverseStage != stage)
+                    continue;
+                for (int m = 0; m < p.Modules.Count; m++)
+                    if (p.Modules[m] is ModuleEngines e && !CanRelight(e))
+                        return true;
+            }
+
+            return false;
+        }
+
+        // RealFuels counts ignitions (-1: unlimited), and an engine not lit yet needs one for its first burn; stock engines say
+        // whether they allow a restart
+        static bool CanRelight(ModuleEngines e)
+        {
+            if (VesselState.IsRealFuelsCorrectlyInitialized && VesselState.RFModuleEnginesRFType.IsInstance(e))
+            {
+                int ignitions = VesselState.RFignitionsField.GetValue<int>(e);
+                return ignitions < 0 || ignitions >= (e.EngineIgnited ? 1 : 2);
+            }
+
+            return e.allowRestart;
+        }
+
+        public static bool Any(MechJebCore core) => ArefUnset(core) || CoastTimesInverted(core) || QaClamped(core) || CoastNoRelight(core);
+
+        // the vessel's body in flight, Kerbin (or the home body) in the editor
+        static bool Atmosphere(MechJebCore core)
+        {
+            CelestialBody body = core.vessel != null ? core.vessel.mainBody : FlightGlobals.GetHomeBody();
+            return body != null && body.atmosphere;
+        }
+    }
+
+    /// <summary>
     /// MechJebModuleAscentPSGSettingsMenu ("PSG Settings") in KodeKit.
     /// The per-stage table (FlightPlan.DrawStageGUI) is native: pooled retained rows with garbage-free text.
     /// </summary>
@@ -31,6 +116,55 @@ namespace MuMech.UI
         {
             hasStages = menu.HasStages;
             stageCount = StageList?.Count ?? 0;
+            UpdateSkipped();
+        }
+
+        // the burns Min ΔV leaves out of the plan: some Δv, but under Min ΔV. Rebuilt only when that set changes, as the
+        // label reads it every frame.
+        string skipped;
+        double skippedKey = double.NaN;
+
+        void UpdateSkipped()
+        {
+            System.Collections.Generic.List<MechJebLib.FuelFlowSimulation.FuelStats> vac = Core.StageStats.VacStats;
+            double min = Psgs.MinDeltaV;
+            int top = Settings.LastStage;
+            double key = min * 7919 + top;
+            int count = 0;
+            for (int i = 0; i < vac.Count; i++)
+                if (vac[i].KSPStage >= top && vac[i].DeltaV >= 0.5 && vac[i].DeltaV < min)
+                {
+                    count++;
+                    key = key * 31 + vac[i].KSPStage * 100003 + Math.Round(vac[i].DeltaV);
+                }
+
+            if (key == skippedKey) return;
+            skippedKey = key;
+            if (count == 0)
+            {
+                skipped = null;
+                return;
+            }
+
+            var sb = new System.Text.StringBuilder(count == 1 ? "Stage left out of the plan, under Min ΔV: " : "Stages left out of the plan, under Min ΔV: ");
+            bool first = true;
+            for (int i = 0; i < vac.Count; i++)
+                if (vac[i].KSPStage >= top && vac[i].DeltaV >= 0.5 && vac[i].DeltaV < min)
+                {
+                    if (!first) sb.Append(", ");
+                    first = false;
+                    sb.Append(vac[i].KSPStage).Append(" (").Append(Math.Round(vac[i].DeltaV).ToString("F0")).Append(" m/s)");
+                }
+
+            skipped = sb.ToString();
+        }
+
+        // under the stage table: which burns the plan leaves out, in the caution colour
+        void BuildSkipped(KodeWindow w, UIObject parent)
+        {
+            UIText note = w.Wrap(w.BoundLabel(parent, () => skipped ?? " ", true));
+            KodeWindow.ToneText(note, Tone.Caution);
+            w.Visible(note, () => skipped != null);
         }
 
         int stageCount;
@@ -156,6 +290,7 @@ namespace MuMech.UI
 
             Layout stages = KodeWindow.Panel(r);
             BuildStageTable(w, stages);
+            BuildSkipped(w, stages);
             w.Visible(stages.gameObject, () => hasStages);
 
             LayoutPanel box = KodeWindow.Box(r);
@@ -167,15 +302,18 @@ namespace MuMech.UI
                 Settings.UnguidedStagesInternal, null, 100);
 
             box = KodeWindow.Box(r);
-            AscentUi.ToggledBox(w, box, "Coast Stage: ", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v,
-                Settings.CoastStageInternal, null, 100);
+            w.Attention(AscentUi.ToggledBox(w, box, "Coast Stage: ", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v,
+                Settings.CoastStageInternal, null, 100), () => PsgAttention.CoastNoRelight(Core));
+            UIText relight = AscentUi.ToneText(box, RelightNote, Tone.Caution, true);
+            KodeWindow.WrapToWidth(relight);
+            w.Visible(relight.gameObject, () => PsgAttention.CoastNoRelight(Core));
             Layout coast = KodeWindow.Row(box);
             CoastToggle(w, coast, "Coast Before", -1);
             CoastToggle(w, coast, "Coast During", 0);
             CoastToggle(w, coast, "Coast After", 1);
             Layout coastTimes = KodeWindow.Row(box);
-            AscentUi.SimpleBox(w, coastTimes, "Min Coast:", Psgs.MinCoast, "s", 40);
-            AscentUi.SimpleBox(w, coastTimes, "Max Coast:", Psgs.MaxCoast, "s", 40);
+            w.Attention(AscentUi.SimpleBox(w, coastTimes, "Min Coast:", Psgs.MinCoast, "s", 40), () => PsgAttention.CoastTimesInverted(Core));
+            w.Attention(AscentUi.SimpleBox(w, coastTimes, "Max Coast:", Psgs.MaxCoast, "s", 40), () => PsgAttention.CoastTimesInverted(Core));
             AscentUi.SimpleBox(w, box, "Ullage lead time: ", Core.Guidance.UllageLeadTime, "s", 60);
 
             box = KodeWindow.Box(r);
@@ -188,12 +326,15 @@ namespace MuMech.UI
             box = KodeWindow.Box(r);
             Layout drag = KodeWindow.Row(box);
             AscentUi.SimpleBox(w, drag, "Cd:", Psgs.Cd, "", 40);
-            AscentUi.SimpleBox(w, drag, "Aref:", Psgs.Aref, "m²", 40);
+            w.Attention(AscentUi.SimpleBox(w, drag, "Aref:", Psgs.Aref, "m²", 40), () => PsgAttention.ArefUnset(Core));
+            UIText arefNote = AscentUi.ToneText(box, ArefNote, Tone.Caution, true);
+            KodeWindow.WrapToWidth(arefNote);
+            w.Visible(arefNote.gameObject, () => PsgAttention.ArefUnset(Core));
             AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 40); //Booster Pitch start:
             AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 40); //Booster Pitch rate:
 
             box = KodeWindow.Box(r);
-            AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad"); //Qα limit
+            w.Attention(AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad"), () => PsgAttention.QaClamped(Core)); //Qα limit
             UIText clamped = AscentUi.ToneText(box, "Qα limit has been clamped to between 0 and 10000 Pa-rad", Tone.Bad, true);
             KodeWindow.WrapToWidth(clamped);
             w.Visible(clamped.gameObject, () => OutsideRecommended && (Psgs.LimitQa < 0 || Psgs.LimitQa > 10000));
@@ -206,6 +347,10 @@ namespace MuMech.UI
 
         bool OutsideRecommended => Psgs.LimitQa < 1000 || Psgs.LimitQa > 4000;
 
+        const string RelightNote = "An engine of the coast stage can't light again after the coast (no restart, or no ignitions left).";
+
+        const string ArefNote = "Aref is 0: PSG plans the ascent with no drag. Set the rocket's cross-section area.";
+
         static readonly string[] coastLocations = { "Before", "During", "After" };
 
         // modern layout: titled groups of aligned fields, the coast location as one choice, the Qα warnings in a status bar
@@ -216,6 +361,7 @@ namespace MuMech.UI
             Layout stages = KodeWindow.Panel(r);
             KodeWindow.Header(stages, "#MechJeb_NewUI_Stages"); //Stages
             BuildStageTable(w, stages);
+            BuildSkipped(w, stages);
             w.Visible(stages.gameObject, () => hasStages);
 
             KodeWindow.PropertyGrid plan = w.Properties(r);
@@ -227,12 +373,17 @@ namespace MuMech.UI
 
             UIObject g = w.Group(r, "#MechJeb_NewUI_Coast"); //Coast
             KodeWindow.PropertyGrid coast = w.Properties(g);
-            ModernRows.Switch(coast, "Coast Stage", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v, Settings.CoastStageInternal, "", 100);
+            w.Attention(ModernRows.Switch(coast, "Coast Stage", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v, Settings.CoastStageInternal, "", 100),
+                () => PsgAttention.CoastNoRelight(Core));
+            UIText relight = coast.Note(RelightNote);
+            KodeWindow.ToneText(relight, Tone.Caution);
+            KodeWindow.WrapToWidth(relight);
+            w.Visible(relight.transform.parent.gameObject, () => PsgAttention.CoastNoRelight(Core));
             Layout where = KodeWindow.Row(g);
             w.Segmented(where, coastLocations, () => Settings.CoastLocation + 1, i => Settings.CoastLocation = i - 1);
             KodeWindow.PropertyGrid coastTimes = w.Properties(g);
-            ModernRows.Field(coastTimes, "Min Coast", Psgs.MinCoast, "s", 50);
-            ModernRows.Field(coastTimes, "Max Coast", Psgs.MaxCoast, "s", 50);
+            w.Attention(ModernRows.Field(coastTimes, "Min Coast", Psgs.MinCoast, "s", 50), () => PsgAttention.CoastTimesInverted(Core));
+            w.Attention(ModernRows.Field(coastTimes, "Max Coast", Psgs.MaxCoast, "s", 50), () => PsgAttention.CoastTimesInverted(Core));
             ModernRows.Field(coastTimes, "Ullage lead time", Core.Guidance.UllageLeadTime, "s", 50);
 
             g = w.Group(r, "#MechJeb_NewUI_Spinup"); //Spinup
@@ -246,11 +397,15 @@ namespace MuMech.UI
             ModernRows.Field(aero, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
             ModernRows.Field(aero, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
             ModernRows.Field(aero, "Cd", Psgs.Cd, "", 50);
-            ModernRows.Field(aero, "Aref", Psgs.Aref, "m²", 50);
+            w.Attention(ModernRows.Field(aero, "Aref", Psgs.Aref, "m²", 50), () => PsgAttention.ArefUnset(Core));
+            UIText arefNote = aero.Note(ArefNote);
+            KodeWindow.ToneText(arefNote, Tone.Caution);
+            KodeWindow.WrapToWidth(arefNote);
+            w.Visible(arefNote.transform.parent.gameObject, () => PsgAttention.ArefUnset(Core));
 
             g = w.Group(r, "#MechJeb_NewUI_Limits"); //Limits
             KodeWindow.PropertyGrid limits = w.Properties(g);
-            ModernRows.Field(limits, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60); //Qα limit
+            w.Attention(ModernRows.Field(limits, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60), () => PsgAttention.QaClamped(Core)); //Qα limit
             bool Clamped() => Psgs.LimitQa < 0 || Psgs.LimitQa > 10000;
             Layout qa = w.StatusBar(g, () => Clamped() ? Tone.Bad : Tone.Warn);
             UIText clamped = GuidanceUi.Wrapped(qa, "Qα limit has been clamped to between 0 and 10000 Pa-rad");
