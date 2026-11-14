@@ -59,18 +59,20 @@ namespace MuMech.UI
             return g;
         }
 
-        // the pointer from the window's top-left corner, x right and y down
-        bool Local(PointerEventData e, out Vector2 p)
+        // a screen point from the window's top-left corner, x right and y down
+        bool Local(Vector2 screen, Camera cam, out Vector2 p)
         {
-            bool ok = RectTransformUtility.ScreenPointToLocalPointInRectangle(Root, e.position, e.pressEventCamera, out Vector2 local);
+            bool ok = RectTransformUtility.ScreenPointToLocalPointInRectangle(Root, screen, cam, out Vector2 local);
             Rect r = Root.rect;
             p = new Vector2(local.x + Root.pivot.x * r.width, (1 - Root.pivot.y) * r.height - local.y);
             return ok;
         }
 
+        // from where the button went down: a drag begins only once the pointer has passed the event system's drag threshold,
+        // and measuring from there would lose those first pixels
         public void OnBeginDrag(PointerEventData e)
         {
-            if (!Local(e, out Vector2 p)) return;
+            if (!Local(e.pressPosition, e.pressEventCamera, out Vector2 p)) return;
             offset = new Vector2(Root.rect.width, Root.rect.height) - p;
             Dragging = true;
             Resized(Root.rect.width, Root.rect.height);
@@ -78,7 +80,7 @@ namespace MuMech.UI
 
         public void OnDrag(PointerEventData e)
         {
-            if (Dragging && Local(e, out Vector2 p)) Resized(p.x + offset.x, p.y + offset.y);
+            if (Dragging && Local(e.position, e.pressEventCamera, out Vector2 p)) Resized(p.x + offset.x, p.y + offset.y);
         }
 
         public void OnEndDrag(PointerEventData e)
