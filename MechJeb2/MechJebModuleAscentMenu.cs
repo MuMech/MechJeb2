@@ -183,8 +183,7 @@ namespace MuMech
             MechJebModulePSGSimulation sim = Core.PSGSimulation;
 
             if (sim.DeltaVShortfall >= 2.5)
-                return $"Not enough Δv: the rocket is {sim.DeltaVShortfall:F0} m/s short of the target orbit and will run out of " +
-                    "propellant before reaching it. Add propellant or lower the target.";
+                return $"Not enough Δv: the rocket is {sim.DeltaVShortfall:F0} m/s short of the target orbit.";
 
             if (!double.IsNaN(sim.SuborbitalPeriapsis))
                 return $"Not enough Δv for orbit: the planned orbit's periapsis is {sim.SuborbitalPeriapsis / 1000:F0} km, " +
