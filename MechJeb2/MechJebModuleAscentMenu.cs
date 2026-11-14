@@ -93,6 +93,17 @@ namespace MuMech
             return Math.Abs(VesselState.Latitude) - (inclination < 90.0 ? inclination : 180.0 - inclination);
         }
 
+        // a known reason for "Target unreachable": the same test as the window's red "inc below current latitude" line
+        private string UnreachableCause()
+        {
+            string failure = Core.PSGSimulation.LastFailureMessage;
+            if (failure == null || failure.IndexOf("unreachable", StringComparison.OrdinalIgnoreCase) < 0)
+                return string.Empty;
+
+            double below = InclinationBelowLatitude(Core.PSGSimulation.Inc);
+            return below > 2.001 ? $" (the target inclination is {below:F1}° below the launch latitude)" : string.Empty;
+        }
+
         internal bool AutoWarpTargetExists => Core.Target.NormalTargetExists && Core.Target.TargetOrbit?.referenceBody == MainBody;
 
         // what ShowAutoWarpGUIElements does before drawing when nothing is being launched and there is no usable target
@@ -151,7 +162,7 @@ namespace MuMech
                 label29 = $"{CachedLocalizer.Instance.MechJebAscentLabel29} {GuiUtils.TimeToDHMS(Core.PSGSimulation.Staleness)}";
                 znorm = $"infeasibility: {Core.PSGSimulation.LastInfeasibility:G5}";
                 if (Core.PSGSimulation.LastFailureMessage != null)
-                    label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}";
+                    label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}{UnreachableCause()}";
             }
 
             if (_launchingToPlane) launchTimer = CachedLocalizer.Instance.MechJebAscentMsg2; //Launching to target plane
