@@ -246,6 +246,10 @@ namespace MuMech.UI
             Layout fpa = AscentUi.SimpleBox(w, fixedPlan, "Flight Path Angle", Psgs.FPA, "°");
             w.Visible(fpa.gameObject, () => !anyPlaneControl);
             AscentUi.SimpleBox(w, fixedPlan, "#MechJeb_Ascent_attachAlt", Psgs.BurnoutAltitude, "km");
+            // why Pe and Ap are gone: nothing can be shut down early, so there is no orbit to aim at, only the energy to maximize
+            UIText fixedNote = AscentUi.ToneText(fixedPlan, "Every stage has a fixed burn time: PSG reaches this burnout altitude and flight " +
+                "path angle with all the energy the rocket has, and can't aim at a periapsis or apoapsis.", Tone.Dim, true);
+            KodeWindow.WrapToWidth(fixedNote);
 
             // Classic
             Layout classic = KodeWindow.Panel(box);
