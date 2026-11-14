@@ -194,7 +194,7 @@ namespace MuMech
             // precise shutdown stage and so never gets terminal guidance (due to residuals Tgo may go less than zero so we wait for natural
             // termination of thrust).   no support for RCS terminal trim.
             if (Solution.OptimizeKSPStage() != Solution.TerminalKSPStage() && Vessel.currentStage <= Solution.TerminalKSPStage() && Solution.Tgo(VesselState.MET) <= 0 &&
-                VesselState.ThrustAvailable == 0)
+                NoThrust(VesselState.ThrustAvailable))
             {
                 Done();
                 return;
@@ -271,6 +271,11 @@ namespace MuMech
             }
         }
 
+        // Thrust in kN too small to matter: under 1 mm/s² on this vessel.  Not an exact zero: with the engines out and the RCS group
+        // on, ThrustAvailable is the RCS thrust along the vessel's axis, which on a rocket with no RCS pushing forward is rounding
+        // noise of 1e-7 kN rather than 0.
+        private bool NoThrust(double thrust) => thrust < 1e-3 * VesselState.Mass;
+
         private double _spentSince = double.NaN;
 
         // On the terminal stage with no thrust left to give: the engines are out (a flamed-out engine adds nothing to
@@ -279,7 +284,7 @@ namespace MuMech
         private bool TerminalStageSpent()
         {
             bool spent = Solution != null && Vessel.currentStage == Solution.TerminalKSPStage() &&
-                (Status == PSGStatus.TERMINAL_RCS ? VesselState.RCSThrustAvailable.Up == 0 : VesselState.ThrustAvailable == 0);
+                NoThrust(Status == PSGStatus.TERMINAL_RCS ? VesselState.RCSThrustAvailable.Up : VesselState.ThrustAvailable);
 
             if (!spent)
             {
