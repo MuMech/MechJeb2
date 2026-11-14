@@ -103,25 +103,40 @@ namespace MuMech
             GL.Vertex3(viewportPoint2.x, viewportPoint2.y, 0);
         }
 
+        private static Vector3 ScreenPoint(Vector3d worldPosition, bool map) =>
+            map
+                ? PlanetariumCamera.Camera.WorldToScreenPoint(ScaledSpace.LocalToScaledSpace(worldPosition))
+                : FlightCamera.fetch.mainCamera.WorldToScreenPoint(worldPosition);
+
         private static void GLPixelLine(Vector3d worldPosition1, Vector3d worldPosition2, bool map)
         {
-            Vector3 screenPoint1, screenPoint2;
-            if (map)
-            {
-                screenPoint1 = PlanetariumCamera.Camera.WorldToScreenPoint(ScaledSpace.LocalToScaledSpace(worldPosition1));
-                screenPoint2 = PlanetariumCamera.Camera.WorldToScreenPoint(ScaledSpace.LocalToScaledSpace(worldPosition2));
-            }
-            else
-            {
-                screenPoint1 = FlightCamera.fetch.mainCamera.WorldToScreenPoint(worldPosition1);
-                screenPoint2 = FlightCamera.fetch.mainCamera.WorldToScreenPoint(worldPosition2);
-            }
+            Vector3 screenPoint1 = ScreenPoint(worldPosition1, map);
+            Vector3 screenPoint2 = ScreenPoint(worldPosition2, map);
 
             if (screenPoint1.z > 0 && screenPoint2.z > 0)
             {
                 GL.Vertex3(screenPoint1.x, screenPoint1.y, 0);
                 GL.Vertex3(screenPoint2.x, screenPoint2.y, 0);
             }
+        }
+
+        // An edge as a quad width pixels wide, for GL.QUADS in LoadPixelMatrix: GL.LINES are always 1 px
+        private static void GLPixelQuad(Vector3d worldPosition1, Vector3d worldPosition2, float width, bool map)
+        {
+            Vector3 screenPoint1 = ScreenPoint(worldPosition1, map);
+            Vector3 screenPoint2 = ScreenPoint(worldPosition2, map);
+            if (screenPoint1.z <= 0 || screenPoint2.z <= 0)
+                return;
+
+            var along = new Vector2(screenPoint2.x - screenPoint1.x, screenPoint2.y - screenPoint1.y);
+            if (along.sqrMagnitude < 1e-6f)
+                return;
+
+            Vector2 side = 0.5f * width * new Vector2(-along.y, along.x).normalized;
+            GL.Vertex3(screenPoint1.x + side.x, screenPoint1.y + side.y, 0);
+            GL.Vertex3(screenPoint2.x + side.x, screenPoint2.y + side.y, 0);
+            GL.Vertex3(screenPoint2.x - side.x, screenPoint2.y - side.y, 0);
+            GL.Vertex3(screenPoint1.x - side.x, screenPoint1.y - side.y, 0);
         }
 
         //Tests if byBody occludes worldPosition, from the perspective of the planetarium camera
@@ -141,12 +156,13 @@ namespace MuMech
 
         //If dashed = false, draws 0-1-2-3-4-5...
         //If dashed = true, draws 0-1 2-3 4-5...
-        public static void DrawPath(CelestialBody mainBody, List<Vector3d> points, Color c, bool map, bool dashed = false)
+        //A width (in pixels) draws each edge as a quad that wide; 0 draws 1 px lines.
+        public static void DrawPath(CelestialBody mainBody, List<Vector3d> points, Color c, bool map, bool dashed = false, float width = 0)
         {
             GL.PushMatrix();
             _material.SetPass(0);
             GL.LoadPixelMatrix();
-            GL.Begin(GL.LINES);
+            GL.Begin(width > 0 ? GL.QUADS : GL.LINES);
             GL.Color(c);
 
             Vector3d camPos = map
@@ -158,7 +174,10 @@ namespace MuMech
             {
                 if (!IsOccluded(points[i], mainBody, camPos) && !IsOccluded(points[i + 1], mainBody, camPos))
                 {
-                    GLPixelLine(points[i], points[i + 1], map);
+                    if (width > 0)
+                        GLPixelQuad(points[i], points[i + 1], width, map);
+                    else
+                        GLPixelLine(points[i], points[i + 1], map);
                 }
             }
 
