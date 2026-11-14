@@ -163,6 +163,11 @@ namespace MuMech
                 znorm = $"infeasibility: {Core.PSGSimulation.LastInfeasibility:G5}";
                 if (Core.PSGSimulation.LastFailureMessage != null)
                     label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}{UnreachableCause()}";
+                // the optimizer only runs while the autopilot (or kOS) uses it: no line before the autopilot is engaged
+                optimizerState = Core.PSGSimulation.Enabled
+                    ? OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting(),
+                        Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0)
+                    : null;
                 // the figures belong to the last solve: kept in flight after the ascent ended (they say why), but not on the pad with the
                 // autopilot off, where the player may have changed the rocket or the target since
                 ReachWarning = Core.PSGSimulation.Enabled || (Vessel != null && !Vessel.LandedOrSplashed) ? PsgReachWarning() : null;
@@ -183,6 +188,50 @@ namespace MuMech
             autopilotStatusLevel = _autopilot.Status.Severity;
             UpdatePhaseLines();
             Profiler.EndSample();
+        }
+
+        /// <summary>"Optimizer: …": what the PSG optimizer is doing, or why it is not solving, so that a climbing staleness reads as a pause.</summary>
+        internal string optimizerState;
+
+        /// <param name="failingFor">
+        ///     the plan's age while the re-solves fail (a failure is kept until the next success), else 0: guidance keeps flying the
+        ///     last plan, and its age says how stale it is
+        /// </param>
+        internal static string OptimizerStateText(OptimizerState state, double seconds, bool noSolution, bool coasting = false, double failingFor = 0)
+        {
+            switch (state)
+            {
+                case OptimizerState.SOLVING:
+                case OptimizerState.READY:
+                    if (noSolution) return failingFor > 0 ? "Optimizer: no plan yet, the solves are failing" : "Optimizer: computing the ascent…";
+                    // a re-solve or two can fail and the next succeed: only a plan older than a few seconds is worth a line
+                    return failingFor > 3 ? $"Optimizer: re-solves failing, flying the plan from {GuiUtils.TimeToDHMS(failingFor)} ago" : "Optimizer: running";
+                case OptimizerState.NO_PLAN:
+                    return "Optimizer: no flight plan, no stages to optimize";
+                case OptimizerState.STAGE_ENDING:
+                    // the freeze comes before the end of each phase: a burn's end or, in a coast, the burn after it
+                    return coasting
+                        ? $"Optimizer: paused, the burn starts in {Math.Ceiling(seconds):F0} s"
+                        : $"Optimizer: paused, the stage ends in {Math.Ceiling(seconds):F0} s";
+                case OptimizerState.AFTER_STAGING:
+                    return $"Optimizer: paused after staging, {Math.Ceiling(seconds):F0} s";
+                case OptimizerState.ON_PAD:
+                    return "Optimizer: paused until liftoff";
+                case OptimizerState.AFTER_PHASE:
+                    return $"Optimizer: paused while the next phase starts, {Math.Ceiling(seconds):F0} s";
+                case OptimizerState.COAST_PAUSE:
+                    return $"Optimizer: paused for the coast, resumes in {GuiUtils.TimeToDHMS(seconds)}";
+                case OptimizerState.TERMINAL:
+                    return "Optimizer: paused, terminal guidance";
+                case OptimizerState.UNGUIDED_ONLY:
+                    return "Optimizer: paused, only unguided stages left";
+                case OptimizerState.FINISHED:
+                    return "Optimizer: guidance finished";
+                case OptimizerState.RETRYING:
+                    return "Optimizer: can't plan with these settings, retrying";
+                default:
+                    return null;
+            }
         }
 
         /// <summary>Why the PSG plan can't reach orbit with this rocket, in words, or null.</summary>
