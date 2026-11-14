@@ -53,11 +53,11 @@ namespace MuMech
             new SeriesInfo("Heading °", Column.HEADING, FlownColumn.HEADING, XKCDColors.Lime),
             new SeriesInfo("Throttle %", Column.THROTTLE, FlownColumn.THROTTLE, XKCDColors.LightRed, 100, 0, 100),
             new SeriesInfo("AoA °", Column.AOA, FlownColumn.AOA, XKCDColors.Lavender, 1, 0),
-            new SeriesInfo("Qα % of limit", Column.Q_ALPHA_FRACTION, FlownColumn.Q_ALPHA_FRACTION, XKCDColors.Cyan, 100, 0, 100),
+            new SeriesInfo("Qα % of limit", Column.Q_ALPHA_FRACTION, FlownColumn.Q_ALPHA_FRACTION, XKCDColors.Yellow, 100, 0, 100),
             new SeriesInfo("Q % of limit", Column.Q_FRACTION, FlownColumn.Q_FRACTION, XKCDColors.Orange, 100, 0, 100),
             new SeriesInfo("Altitude m", Column.ALTITUDE, FlownColumn.ALTITUDE, XKCDColors.White, 1, 0),
             new SeriesInfo("Speed m/s", Column.SPEED, FlownColumn.SPEED, XKCDColors.Apricot, 1, 0),
-            new SeriesInfo("Surface speed m/s", Column.SURFACE_SPEED, FlownColumn.SURFACE_SPEED, XKCDColors.Yellow, 1, 0),
+            new SeriesInfo("Surface speed m/s", Column.SURFACE_SPEED, FlownColumn.SURFACE_SPEED, XKCDColors.Khaki, 1, 0),
             new SeriesInfo("Mass kg", Column.MASS, null, XKCDColors.Pink, 1, 0),
             new SeriesInfo("Δv m/s", Column.DELTA_V, null, XKCDColors.Beige, 1, 0)
         };

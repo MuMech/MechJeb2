@@ -147,8 +147,8 @@ namespace MuMech.UI
             double visible = span / (1 << g.Zoom);
             if (g.Zoom != lastZoom)
             {
-                // zoom about the middle of the view
-                double middle = graph.ViewMin + graph.VisibleWidth / 2;
+                // zoom about the vessel's MET when the data reaches it, about the middle of the view otherwise
+                double middle = now.Met > 0 && now.Met < span ? now.Met : graph.ViewMin + graph.VisibleWidth / 2;
                 graph.ViewMin = middle - visible / 2;
                 lastZoom = g.Zoom;
             }
@@ -335,7 +335,7 @@ namespace MuMech.UI
 
             nodeLines = Marker("Nodes", new Markers(Plan.NodeBoundaries), new Color(0.5f, 0.5f, 0.5f, 0.35f));
             w.Visible(nodeLines.gameObject, () => g.ShowNodes);
-            knotLines = Marker("Knots", new Markers(Plan.Knots), new Color(0.9f, 0.8f, 0.2f, 0.3f));
+            knotLines = Marker("Knots", new Markers(Plan.Knots), new Color(0.95f, 0.85f, 0.3f, 0.6f));
             w.Visible(knotLines.gameObject, () => g.ShowKnots);
 
             for (int i = 0; i < Infos.Length; i++)
@@ -345,10 +345,10 @@ namespace MuMech.UI
                 planLines[i] = graph.AddSeries(new PlanSeries(this, info), info.Color);
                 w.Visible(planLines[i].gameObject, () => g.Displayed(k));
 
-                Color faded = info.Color;
-                faded.a = 0.7f;
+                // opaque, since overlapping translucent quads bead a thin line: the series' colour darkened
+                Color faded = Color.Lerp(info.Color, Color.black, 0.35f);
                 flownLines[i] = graph.AddSeries(info.Flown.HasValue ? new FlownSeries(this, info.Flown.Value, info.Factor) : null, faded);
-                flownLines[i].Thickness = 1;
+                flownLines[i].Thickness = 1.5f;
                 w.Visible(flownLines[i].gameObject, () => g.ShowFlown && g.Displayed(k));
             }
 
