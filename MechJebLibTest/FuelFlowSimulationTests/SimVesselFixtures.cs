@@ -1058,6 +1058,93 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         }
 
         /// <summary>
+        ///     An RP-1 Titan II with a lead ballast payload under a procedural fairing, sitting in two launch clamps on the pad,
+        ///     staged for hot staging.  The LR87-11 is in stage 5 and the launch clamps in stage 4.  Stage 3 lights the LR91
+        ///     with the first stage still attached, and stage 2 fires the interstage adapter, a stack decoupler, which drops the
+        ///     first stage with the interstage fairing and activates the four nitrogen RCS thrusters of the upper stage.  Stage 1
+        ///     jettisons the payload fairing and stage 0 separates the payload.  This is MechJebLibTest/Craft/RP-1/My Titan II.craft,
+        ///     as captured in Captures/MyTitanII.out.
+        /// </summary>
+        public static SimVessel MyTitanII(bool kscPad = false)
+        {
+            SimVessel v = NewVessel(6);
+            v.SetInitial(739438.57563752739,
+                new V3(-3668572.7117899787, -4222113.456321435, 3050612.7645846731),
+                new V3(307.8813878902655, -267.51653126610785, -9.884522590961318E-06),
+                new V3(-0.57586806543135105, -0.6626513548363332, 0.4788205623626709));
+
+            var lr91Direction = new V3(-0.58332262599538898, -0.65609918749817053, 0.47882050275802612);
+            // the two chambers of the LR87 are canted apart, the last two thrust transforms point along the vessel
+            var lr87ChamberA = new V3(-0.60904901320175076, -0.63251068720394787, 0.47852879762649536);
+            var lr87ChamberB = new V3(-0.55688548172132579, -0.67888825598638847, 0.47852888703346252);
+            var lr87Axial = new V3(-0.5833228963956808, -0.65609943804752791, 0.47881972789764404);
+
+            SimPart payload = ROTServiceModule(v, 2289098390, -0.85024905204772949, 216.47669999999997);
+            SimPart fairingBase = KzResizableFairingBase(v, 3787586566, 0, 0.36134645342826843, payload);
+            SimPart avionics2 = ProceduralAvionics(v, 2933895313, 0, -0.71953253075480461, 42403.699999999997, 50);
+            SimPart tank2 = ROTGenericTankSeparateHypergolic(v, 3612462960, 0, 0.61927139759063721, 10529.605527740925, 11764.710972259074);
+            SimPart lr91 = ROELR91(v, 723236996, 3, lr91Direction, lr91Direction, lr91Direction, lr91Direction, lr91Direction,
+                lr91Direction);
+            SimPart interstage = KzInterstageAdapter2(v, 677988021, 2, 0.28844645619392395, lr91);
+            SimPart avionics1 = ProceduralAvionics(v, 2914987794, 2, -0.84630639478564262, 1675.7983340669045, 1675.7999999999995, 200);
+            SimPart tank1 = ROTGenericTankSeparateHypergolic(v, 3090975513, 2, 3.4792208671569824, 44653.809065127869, 53486.430734872098,
+                true);
+
+            SimPart[] clamps = { RP1LaunchClamp1(v, 1201024498, 4), RP1LaunchClamp1(v, 347487273, 4) };
+
+            SimPart lr87 = ROELR87_11(v, 3170772688, 5, lr87ChamberA, lr87ChamberB, lr87ChamberA, lr87ChamberB, lr87ChamberA, lr87ChamberB,
+                lr87Axial, lr87Axial);
+
+            SimPart[] interstageFairing = { KzProcFairingSide1(v, 2396440584, 2, 0.051677700132131577), KzProcFairingSide1(v, 574038679, 2, 0.051677700132131577), KzProcFairingSide1(v, 1338471937, 2, 0.051677700132131577), KzProcFairingSide1(v, 4059928443, 2, 0.051677700132131577) };
+
+            SimPart[] rcs = { RCSBlock138(v, 3962952172, 2), RCSBlock138(v, 3805247425, 2), RCSBlock138(v, 1699402223, 2), RCSBlock138(v, 1909377480, 2) };
+
+            SimPart[] nitrogenTanks = { RORFTankSM(v, 4273079064, 0, -0.9762495756149292, 11309.739999999998), RORFTankSM(v, 1522381228, 0, -0.9762495756149292, 11309.739999999998) };
+
+            SimPart[] payloadFairing = { KzProcFairingSide1(v, 3748101133, 1, 0.10445929318666458), KzProcFairingSide1(v, 62638139, 1, 0.10445929318666458) };
+
+            MakeRoot(payload);
+
+            Link(payload, fairingBase);
+            Link(fairingBase, avionics2);
+            foreach (SimPart p in payloadFairing)
+                Link(fairingBase, p);
+            Link(avionics2, tank2);
+            Link(tank2, lr91);
+            foreach (SimPart p in rcs)
+                Link(tank2, p);
+            foreach (SimPart p in nitrogenTanks)
+                Link(tank2, p);
+            Link(lr91, interstage);
+            Link(interstage, avionics1);
+            foreach (SimPart p in interstageFairing)
+                Link(interstage, p);
+            Link(avionics1, tank1);
+            foreach (SimPart p in clamps)
+                Link(tank1, p);
+            Link(tank1, lr87);
+
+            CrossFeedSet(new[] { payload, fairingBase }, payload);
+            CrossFeedSet(Concat(nitrogenTanks.Reverse().ToArray(), rcs.Reverse().ToArray(), new[] { lr91, tank2, avionics2, interstage, fairingBase }),
+                Concat(new[] { avionics2, tank2, lr91 }, rcs, nitrogenTanks));
+            CrossFeedSet(new[] { lr87, tank1, avionics1, interstage }, avionics1, tank1, lr87);
+            // the decouplers, launch clamps and fairings each have a set of their own
+            foreach (SimPart p in Concat(new[] { fairingBase, interstage }, clamps, interstageFairing, payloadFairing))
+                CrossFeed(p);
+
+            Symmetry(clamps);
+            Symmetry(interstageFairing);
+            Symmetry(rcs);
+            Symmetry(nitrogenTanks);
+            Symmetry(payloadFairing);
+
+            if (kscPad)
+                v.SetConditions(1.2128204505617977, 0.98832934925710891, 6.5586583939917773E-08);
+
+            return Finish(v);
+        }
+
+        /// <summary>
         ///     Borrows a SimVessel and sets every field that the KSP SimVesselManager would set, since pooled SimVessels
         ///     are not reset when they are released.  The conditions are vacuum and the initial state is zeros.
         /// </summary>
