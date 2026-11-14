@@ -131,7 +131,7 @@ namespace MuMech.UI
         int lastRefreshFrame = int.MinValue / 2;
         float lastRefreshTime;
         int lastMask = -1, lastZoom = -1, lastScaleIdx = -1, lastSampled = -1, lastPadSampled = -1, lastFlownCount = -1;
-        bool lastFlown, lastNodes, lastKnots;
+        bool lastFlown, lastCurrent, lastPad, lastNodes, lastKnots;
         double span = 1;
 
         static int LabelsFor(int height) => Mathf.Clamp(height / 24 + 1, 3, 11);
@@ -153,18 +153,21 @@ namespace MuMech.UI
             now.Met = g.Vessel != null ? g.VesselState.MET : double.NaN;
 
             int mask = g.DisplayedMask;
-            bool force = planChanged || mask != lastMask || g.Zoom != lastZoom || g.ScaleIdx != lastScaleIdx || g.ShowFlown != lastFlown ||
+            bool shownChanged = g.ShowFlown != lastFlown || g.ShowCurrent != lastCurrent || g.ShowPad != lastPad;
+            bool force = planChanged || mask != lastMask || g.Zoom != lastZoom || g.ScaleIdx != lastScaleIdx || shownChanged ||
                          g.ShowNodes != lastNodes || g.ShowKnots != lastKnots;
             // LineGraph rebuilds one mesh per frame after a Refresh: don't refresh again before it has gone through them all
             bool due = Time.frameCount - lastRefreshFrame >= graph.Series.Count + 2 && Time.unscaledTime - lastRefreshTime >= 0.5f;
             if (!force && !due) return;
 
-            bool rangesStale = planChanged || Flown.Count != lastFlownCount || g.ShowFlown != lastFlown;
+            bool rangesStale = planChanged || Flown.Count != lastFlownCount || shownChanged;
             lastSampled = g.Sampled;
             lastPadSampled = g.PadSampled;
             lastMask = mask;
             lastScaleIdx = g.ScaleIdx;
             lastFlown = g.ShowFlown;
+            lastCurrent = g.ShowCurrent;
+            lastPad = g.ShowPad;
             lastNodes = g.ShowNodes;
             lastKnots = g.ShowKnots;
             lastFlownCount = Flown.Count;
@@ -247,7 +250,7 @@ namespace MuMech.UI
 
         SolutionTrace[] traces;
 
-        // each series' Y range: its data's (current, pad and, when shown, flown), widened to its fixed range
+        // each series' Y range: the data of the lines shown (current, pad, flown), widened to its fixed range
         void ComputeRanges()
         {
             for (int i = 0; i < Infos.Length; i++)
@@ -256,7 +259,7 @@ namespace MuMech.UI
                 double lo = double.PositiveInfinity, hi = double.NegativeInfinity;
                 foreach (SolutionTrace trace in traces)
                 {
-                    if (trace.Count == 0) continue;
+                    if (trace.Count == 0 || (trace == Plan ? !g.ShowCurrent : !g.ShowPad)) continue;
                     (double tMin, double tMax) = trace.Range(info.Column);
                     lo = Math.Min(lo, tMin * info.Factor);
                     hi = Math.Max(hi, tMax * info.Factor);
@@ -425,7 +428,7 @@ namespace MuMech.UI
                 padLines[i].color = PadShade(info.Color);
                 padLines[i].raycastTarget = false;
                 padLines[i].Thickness = PadThickness;
-                w.Visible(padLines[i].gameObject, () => g.Displayed(k) && !g.PlanIsPad);
+                w.Visible(padLines[i].gameObject, () => g.ShowPad && g.Displayed(k) && !g.PlanIsPad);
             }
 
             for (int i = 0; i < Infos.Length; i++)
@@ -439,7 +442,7 @@ namespace MuMech.UI
 
                 planLines[i] = graph.AddSeries(new TraceSeries(() => g.Plan, info), info.Color);
                 planLines[i].Thickness = PlanThickness;
-                w.Visible(planLines[i].gameObject, () => g.Displayed(k));
+                w.Visible(planLines[i].gameObject, () => g.ShowCurrent && g.Displayed(k));
             }
 
             nowLine = Marker("Now", now, NowColor);
@@ -452,8 +455,9 @@ namespace MuMech.UI
             var white = new Color(0.95f, 0.95f, 0.95f);
 
             Layout lines = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
-            LegendItem(lines, white, PlanThickness, false, "Current solution");
-            KodeWindow.Label(LegendCell(lines, PadShade(white), PadThickness, false, true), "Pad solution (the one it lifted off with)");
+            w.Toggle(LegendCell(lines, white, PlanThickness, false), "Current solution", () => g.ShowCurrent, v => g.ShowCurrent = v);
+            w.Toggle(LegendCell(lines, PadShade(white), PadThickness, false, true), "Pad solution (the one it lifted off with)",
+                () => g.ShowPad, v => g.ShowPad = v);
             w.Toggle(LegendCell(lines, FlownShade(white), FlownThickness, false), "Flown", () => g.ShowFlown, v => g.ShowFlown = v);
 
             Layout marks = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);

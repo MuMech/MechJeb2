@@ -91,6 +91,14 @@ namespace MuMech
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool ShowCurrent = true;
+
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool ShowPad = true;
+
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool ShowFlown = true;
 
         [UsedImplicitly]
