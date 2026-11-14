@@ -48,6 +48,9 @@ namespace MechJebLib.PSG
         public double Cost;
         public Solution? Solution;
 
+        // the last Run() stopped at OptimizerTimeout rather than converging or failing
+        public bool TimedOut;
+
         public const int DEFAULT_TIMEOUT = 120_000; // milliseconds
 
         public int    K                   => 3 * N + 1;
@@ -581,6 +584,7 @@ namespace MechJebLib.PSG
             using var runCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
             runCts.CancelAfter(OptimizerTimeout);
             RunToken = runCts.Token;
+            TimedOut = false;
 
             try
             {
@@ -590,12 +594,14 @@ namespace MechJebLib.PSG
             catch (OperationCanceledException) when (!CancellationToken.IsCancellationRequested)
             {
                 // timed out, return null so bootstrapping can fall back to the previous stage
+                TimedOut = true;
             }
             catch (alglib.alglibexception) when (RunToken.IsCancellationRequested)
             {
                 // ALGLIB rewraps the OperationCanceledException thrown from our callback as a "non-ALGLIB exception".  A
                 // timeout returns null, an external cancel aborts.
                 CancellationToken.ThrowIfCancellationRequested();
+                TimedOut = true;
             }
             catch (alglib.alglibexception e)
             {
