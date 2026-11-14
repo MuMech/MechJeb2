@@ -27,6 +27,7 @@ namespace MuMech
         NO_PLAN,       // no flight plan, or nothing left in it to plan
         STAGE_ENDING,  // the current stage is about to end: the solution is frozen through staging
         AFTER_STAGING, // a short wait after staging
+        AFTER_PHASE,   // the same wait after a phase ended without staging (the end of a coast during a stage)
         COAST_PAUSE,   // a long coast above the atmosphere: resumes 20 s before the burn
         TERMINAL,      // terminal guidance flies the end of the burn on the frozen solution
         UNGUIDED_ONLY, // only unguided stages are left, which the optimizer can't steer
@@ -401,8 +402,9 @@ namespace MuMech
 
             if (_blockOptimizerUntilTime > VesselState.Time)
             {
-                // the routine second between two solves is not a pause; a pause that outlasts the stage end is the wait after staging
-                OptimizerState reason = _blockReason == OptimizerState.STAGE_ENDING ? OptimizerState.AFTER_STAGING : _blockReason;
+                // the routine second between two solves is not a pause. A staging event names its own wait (HandleStageEvent): a
+                // pre-staging freeze that outlasts its phase without one is the end of a phase that needed no staging
+                OptimizerState reason = _blockReason == OptimizerState.STAGE_ENDING ? OptimizerState.AFTER_PHASE : _blockReason;
                 SetState(reason, _blockOptimizerUntilTime - VesselState.Time);
                 return;
             }
