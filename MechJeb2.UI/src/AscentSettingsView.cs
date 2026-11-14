@@ -14,6 +14,7 @@ namespace MuMech.UI
     public class AscentSettingsView : KodeView
     {
         readonly MechJebModuleAscentSettingsMenu menu;
+        MechJebModuleAscentClassicAutopilot classic;
 
         public AscentSettingsView(MechJebModuleAscentSettingsMenu menu) : base(menu) => this.menu = menu;
 
@@ -21,6 +22,7 @@ namespace MuMech.UI
 
         MechJebCore Core => menu.Core;
         MechJebModuleAscentSettings Settings => Core.AscentSettings;
+        MechJebModuleAscentClassicAutopilot Classic => classic ??= Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         MechJebModuleThrustController Thrust => Core.Thrust;
 
         bool psg;
@@ -82,26 +84,26 @@ namespace MuMech.UI
             Layout aoa = KodeWindow.Panel(box);
             w.Visible(aoa.gameObject, () => !psg);
             Layout limit = KodeWindow.Row(aoa);
-            w.Toggle(limit, "#MechJeb_Ascent_checkbox3", () => Settings.LimitAoA, v => Settings.LimitAoA = v,
+            w.Toggle(limit, "#MechJeb_Ascent_checkbox3", () => Classic.LimitAoA, v => Classic.LimitAoA = v,
                 () => Settings.LimitingAoA ? Tone.Good : Tone.Normal); //Limit AoA to
-            EditUi.Field(w, limit, Settings.MaxAoA, 30);
+            EditUi.Field(w, limit, Classic.MaxAoA, 30);
             w.BoundLabel(limit, "° (99.9°)", CurrentMaxAoA);
 
             Layout fadeout = KodeWindow.Row(aoa);
             KodeWindow.Space(fadeout, 25);
-            AscentUi.SimpleBox(w, fadeout, "#MechJeb_Ascent_label24", Settings.AOALimitFadeoutPressure, "Pa", 50, false, //Dynamic Pressure Fadeout
-                () => Settings.LimitingAoA && Core.VesselState != null && Core.VesselState.DynamicPressure < Settings.AOALimitFadeoutPressure
+            AscentUi.SimpleBox(w, fadeout, "#MechJeb_Ascent_label24", Classic.AOALimitFadeoutPressure, "Pa", 50, false, //Dynamic Pressure Fadeout
+                () => Settings.LimitingAoA && Core.VesselState != null && Core.VesselState.DynamicPressure < Classic.AOALimitFadeoutPressure
                     ? Tone.Good
                     : Tone.Normal);
-            w.Visible(fadeout.gameObject, () => Settings.LimitAoA);
+            w.Visible(fadeout.gameObject, () => Classic.LimitAoA);
 
             // corrective steering (Classic only)
             Layout steering = KodeWindow.Row(box);
             w.Visible(steering.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
-            w.Toggle(steering, "#MechJeb_Ascent_checkbox4", () => Settings.CorrectiveSteering, v => Settings.CorrectiveSteering = v); //Corrective steering
+            w.Toggle(steering, "#MechJeb_Ascent_checkbox4", () => Classic.CorrectiveSteering, v => Classic.CorrectiveSteering = v); //Corrective steering
             Layout gain = KodeWindow.Row(steering);
-            AscentUi.SimpleBox(w, gain, "#MechJeb_Ascent_label25", Settings.CorrectiveSteeringGain, null, 40, false); // Gain
-            w.Visible(gain.gameObject, () => Settings.CorrectiveSteering);
+            AscentUi.SimpleBox(w, gain, "#MechJeb_Ascent_label25", Classic.CorrectiveSteeringGain, null, 40, false); // Gain
+            w.Visible(gain.gameObject, () => Classic.CorrectiveSteering);
 
             // autostage
             w.Toggle(box, "#MechJeb_Ascent_checkbox5", () => Settings.Autostage, v => Settings.Autostage = v); //Autostage
@@ -114,8 +116,8 @@ namespace MuMech.UI
 
             Layout warp = KodeWindow.Row(box);
             NodeUi.AutowarpToggle(w, warp, Core, "#MechJeb_Ascent_checkbox8"); //Auto-warp
-            UnityEngine.UI.Toggle skip = w.Toggle(warp, "#MechJeb_Ascent_checkbox9", () => Settings.SkipCircularization,
-                v => Settings.SkipCircularization = v); //Skip Circularization
+            UnityEngine.UI.Toggle skip = w.Toggle(warp, "#MechJeb_Ascent_checkbox9", () => Classic.SkipCircularization,
+                v => Classic.SkipCircularization = v); //Skip Circularization
             w.Visible(KodeWindow.RowOf(skip), () => !psg);
 
             UnityEngine.UI.Toggle rss = w.Toggle(box, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
@@ -140,21 +142,21 @@ namespace MuMech.UI
                 w.Visible(row.gameObject, () => Settings.ForceRoll);
 
             // [switch] Limit AoA to [max] ° (x.x°): the unit cell shows the current limit
-            Layout aoa = ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox3", () => Settings.LimitAoA, v => Settings.LimitAoA = v,
+            Layout aoa = ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox3", () => Classic.LimitAoA, v => Classic.LimitAoA = v,
                 tone: () => Settings.LimitingAoA ? Tone.Good : Tone.Normal); //Limit AoA to
-            TMPro.TMP_InputField maxAoA = EditFields.Field(w, aoa, () => Settings.MaxAoA.Text, s => Settings.MaxAoA.Text = s, 50,
-                () => Settings.MaxAoA.IsParsed);
+            TMPro.TMP_InputField maxAoA = EditFields.Field(w, aoa, () => Classic.MaxAoA.Text, s => Classic.MaxAoA.Text = s, 50,
+                () => Classic.MaxAoA.IsParsed);
             UIText current = w.BoundLabel(aoa, "° (99.9°)", CurrentMaxAoA);
-            steer.Dim(maxAoA.gameObject, KodeWindow.CellOf(current), () => !Settings.LimitAoA);
-            Layout fadeout = ModernRows.Field(steer, "#MechJeb_Ascent_label24", Settings.AOALimitFadeoutPressure, "Pa", 60); //Dynamic Pressure Fadeout
+            steer.Dim(maxAoA.gameObject, KodeWindow.CellOf(current), () => !Classic.LimitAoA);
+            Layout fadeout = ModernRows.Field(steer, "#MechJeb_Ascent_label24", Classic.AOALimitFadeoutPressure, "Pa", 60); //Dynamic Pressure Fadeout
             w.Visible(aoa.gameObject, () => !psg);
-            w.Visible(fadeout.gameObject, () => !psg && Settings.LimitAoA);
+            w.Visible(fadeout.gameObject, () => !psg && Classic.LimitAoA);
 
-            Layout corrective = ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox4", () => Settings.CorrectiveSteering,
-                v => Settings.CorrectiveSteering = v); //Corrective steering
-            Layout gain = ModernRows.Field(steer, "#MechJeb_Ascent_label25", Settings.CorrectiveSteeringGain, "", 50); // Gain
+            Layout corrective = ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox4", () => Classic.CorrectiveSteering,
+                v => Classic.CorrectiveSteering = v); //Corrective steering
+            Layout gain = ModernRows.Field(steer, "#MechJeb_Ascent_label25", Classic.CorrectiveSteeringGain, "", 50); // Gain
             w.Visible(corrective.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
-            w.Visible(gain.gameObject, () => Settings.AscentType == AscentType.CLASSIC && Settings.CorrectiveSteering);
+            w.Visible(gain.gameObject, () => Settings.AscentType == AscentType.CLASSIC && Classic.CorrectiveSteering);
 
             g = w.Group(r, "#MechJeb_NewUI_Autostage"); //Autostage
             w.SwitchRow(g, "#MechJeb_Ascent_checkbox5", () => Settings.Autostage, v => Settings.Autostage = v); //Autostage
@@ -168,8 +170,8 @@ namespace MuMech.UI
 
             g = w.Group(r, "#MechJeb_NewUI_Other"); //Other
             NodeUi.AutowarpToggle(w, g, Core, "#MechJeb_Ascent_checkbox8"); //Auto-warp
-            UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Settings.SkipCircularization,
-                v => Settings.SkipCircularization = v); //Skip Circularization
+            UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Classic.SkipCircularization,
+                v => Classic.SkipCircularization = v); //Skip Circularization
             w.Visible(skip, () => !psg);
             UnityEngine.UI.Toggle rss = w.SwitchRow(g, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
             w.Visible(rss, () => psg);
