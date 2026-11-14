@@ -473,13 +473,11 @@ namespace MuMech.UI
             Layout marks = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
             w.Toggle(LegendCell(marks, PhaseColor, 1, true), "Phase start/end", () => g.ShowPhases, v => g.ShowPhases = v);
             w.Toggle(LegendCell(marks, NodeColor, 1, true), "Node edge", () => g.ShowNodes, v => g.ShowNodes = v);
-            w.Toggle(LegendCell(marks, KnotColor, 1, true), "Collocation point", () => g.ShowKnots, v => g.ShowKnots = v);
+            UnityEngine.UI.Toggle knots = w.Toggle(LegendCell(marks, KnotColor, 1, true), "Collocation point", () => g.ShowKnots, v => g.ShowKnots = v);
+            Tooltips.Add(KodeWindow.RowOf(knots),
+                "Each phase is a chain of nodes, each a cubic through two collocation points: the optimizer enforces the Qα and Q " +
+                "limits only at those points.");
             LegendItem(marks, NowColor, 1, true, "Vessel's MET");
-
-            UIText hint = w.Wrap(KodeWindow.Label(r,
-                "Each phase is a chain of nodes, each a cubic through two collocation points: the optimizer enforces the Qα and Q limits " +
-                "only at those points.", true));
-            KodeWindow.ToneText(hint, KodeWindow.Tone.Dim);
         }
 
         // a swatch then a label, kept together when the row wraps
