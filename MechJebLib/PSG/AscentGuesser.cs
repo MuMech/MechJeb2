@@ -575,6 +575,11 @@ namespace MechJebLib.PSG
             if (!feasible)
             {
                 double twr = LiftoffTWR();
+                // the guess also runs in flight when there is no solution to start from: then the first phase is the current stage,
+                // at its current mass, and the problem's MET is past zero
+                if (_problem.T0 > 0)
+                    throw new Exception(
+                        $"No ascent found from here: the rocket falls back even flying almost straight up (thrust-to-weight now {twr:F2})");
                 throw new Exception(twr < 1
                     ? $"The rocket can't lift off: its thrust-to-weight at liftoff is {twr:F2}, under 1"
                     : $"The rocket falls back to the ground even flying almost straight up (thrust-to-weight at liftoff {twr:F2})");
