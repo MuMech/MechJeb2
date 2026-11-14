@@ -33,8 +33,29 @@ namespace MechJebLib.Rootfinding
             if (!IsFinite(a) || !IsFinite(b))
                 throw new ArgumentException("Brent's rootfinding method: bounds must be finite");
 
-            double fa = f(a, o);
-            double fb = f(b, o);
+            return Solve(f, a, b, f(a, o), f(b, o), o, maxiter, rtol, sign);
+        }
+
+        /// <summary>
+        ///     Brent's rootfinding method, bounded search, with the function already evaluated at the bounds.  Uses secant,
+        ///     inverse quadratic interpolation and bisection.
+        /// </summary>
+        /// <param name="f">1 dimensional function</param>
+        /// <param name="a">minimum bounds</param>
+        /// <param name="b">maximum bounds</param>
+        /// <param name="fa">f(a)</param>
+        /// <param name="fb">f(b)</param>
+        /// <param name="o">state object to pass to function</param>
+        /// <param name="maxiter">maximum iterations</param>
+        /// <param name="rtol">tolerance</param>
+        /// <param name="sign">try to return x such that f(x0) has the same sign as this (0 means the best match)</param>
+        /// <returns>value for which the function evaluates to zero</returns>
+        /// <exception cref="ArgumentException">guess does not bracket the root</exception>
+        public static double Solve(Func<double, object?, double> f, double a, double b, double fa, double fb, object? o, int maxiter = 100,
+            double rtol = EPS, int sign = 0)
+        {
+            if (!IsFinite(a) || !IsFinite(b))
+                throw new ArgumentException("Brent's rootfinding method: bounds must be finite");
 
             if (!IsFinite(fa) || !IsFinite(fb))
                 throw new ArgumentException("Brent's rootfinding method: function returned a non-finite value");

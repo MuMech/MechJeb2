@@ -7,6 +7,7 @@ using System;
 using MechJebLib.Functions;
 using MechJebLib.HoverslamSimulation;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 using Xunit;
 
 namespace MechJebLibTest
@@ -259,6 +260,113 @@ namespace MechJebLibTest
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized, 1e-6);
             hoverslam.IgnitionUT.ShouldBeGreaterThan(t0);
             hoverslam.LandingUT.ShouldBeGreaterThan(hoverslam.IgnitionUT);
+        }
+
+        // A Falcon 9 just before BECO (RSS Earth, 67°), from a debug log: 4 t of propellant left in the booster, under a TWR 0.8
+        // upper stage.  Igniting at the apoapsis, 109 s out, ends 113 km below the target, so the upper stage has to ignite on the
+        // way up, 1.5 s out.  The search used to start at the apoapsis and failed to bracket a root every cycle.
+        [Fact]
+        private void FalconNineAtBecoIgnitesBeforeApoapsis()
+        {
+            var r0 = new V3(-3626469.7902521691, -4247393.9215891249, 3182016.5085892561);
+            var v0 = new V3(1524.5812960131307, -613.63036735859805, 2714.6154341399078);
+            double t0 = 739430.044230688;
+            double mu = 398600435436096;
+            var w = new V3(0, 0, 7.2921151467069236E-05);
+            double height = 6371100;
+            double descentSpeed = 22.4714577042764;
+
+            var manager = new HoverslamSimulation.HoverslamSimulationManager(false);
+            var hoverslam = new HoverslamSimulation();
+
+            manager.Initial(r0, v0, t0, mu, w)
+               .TargetConditions(height, descentSpeed)
+               .AddStage(149797.409051593, 145657.464645449, 8227079.9788932, 311.14825559866, 3, 3)
+               .AddCoast(120917.05657943, 120917.05657943, 0.5625, 1, 1)
+               .AddStage(120917.05657943, 14247.8616646372, 934120.190221791, 348.000704095542, 1, 1)
+               .Reconfigure(hoverslam);
+
+            hoverslam.Run();
+
+            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
+            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized, 1e-6);
+            (hoverslam.IgnitionUT - t0).ShouldBeLessThan(Astro.TimeToNextApoapsis(mu, r0, v0));
+            (hoverslam.IgnitionUT - t0).ShouldEqual(1.5488141343230382, 1e-5);
+            (hoverslam.LandingUT - t0).ShouldEqual(305.60697760852054, 1e-5);
+            hoverslam.Dv.ShouldEqual(4012.0544684282654, 1e-5);
+        }
+
+        // The same Falcon 9 earlier, with 28 t of propellant left in the booster: even igniting now, the burn ends 22 km below
+        // the target, and 142 km below once the vessel has coasted 120 s on, past its apoapsis.  No ignition lands, so the
+        // simulation says to ignite now instead of failing to bracket a root.
+        [Theory]
+        [InlineData(0)]
+        [InlineData(120)]
+        private void FalconNineTooLateIgnitesNow(double dt)
+        {
+            var r0 = new V3(-3639409.4584768461, -4242004.0932683712, 3159206.6426269831);
+            var v0 = new V3(1335.7765860868881, -577.41995037047252, 2329.7213166105125);
+            double t0 = 739420.984230679;
+            double mu = 398600435436096;
+            var w = new V3(0, 0, 7.2921151467069236E-05);
+            double height = 6371100;
+            double descentSpeed = 22.4714577042764;
+
+            (V3 r1, V3 v1) = Shepperd.Solve(mu, dt, r0, v0);
+
+            var manager = new HoverslamSimulation.HoverslamSimulationManager(false);
+            var hoverslam = new HoverslamSimulation();
+
+            manager.Initial(r1, v1, t0 + dt, mu, w)
+               .TargetConditions(height, descentSpeed)
+               .AddStage(174179.643063018, 145716.371847787, 8227079.9788932, 311.021564364408, 3, 3)
+               .AddCoast(120917.0769579, 120917.0769579, 0.5625, 1, 1)
+               .AddStage(120917.0769579, 14247.853031072, 934120.190221791, 348.000704095372, 1, 1)
+               .Reconfigure(hoverslam);
+
+            hoverslam.Run();
+
+            hoverslam.IgnitionUT.ShouldEqual(t0 + dt, 0);
+            hoverslam.Rf.magnitude.ShouldBeLessThan(height);
+            hoverslam.LandingUT.ShouldBeGreaterThan(hoverslam.IgnitionUT);
+        }
+
+        // The same Falcon 9 earlier still, with 132 t of propellant left in the booster, ignites 115 s out, after its apoapsis.
+        // Coasted on past that, the simulation finds the same ignition, in the past (a negative countdown), also once the coast
+        // has taken the vessel below the target height, where the next time of the target radius is on the far side of the
+        // planet.
+        [Theory]
+        [InlineData(0)]
+        [InlineData(130)]
+        [InlineData(141)]
+        private void FalconNineCoastingKeepsTheIgnition(double dt)
+        {
+            var r0 = new V3(-3678793.8653503247, -4221718.8548339587, 3093357.0492668888);
+            var v0 = new V3(745.36602320589793, -492.03551242704145, 1186.4584312884731);
+            double t0 = 739382.411525309;
+            double mu = 398600435436096;
+            var w = new V3(0, 0, 7.2921151467069236E-05);
+            double height = 6371100;
+            double descentSpeed = 60.2357999705925;
+
+            (V3 r1, V3 v1) = Shepperd.Solve(mu, dt, r0, v0);
+
+            var manager = new HoverslamSimulation.HoverslamSimulationManager(false);
+            var hoverslam = new HoverslamSimulation();
+
+            manager.Initial(r1, v1, t0 + dt, mu, w)
+               .TargetConditions(height, descentSpeed)
+               .AddStage(278275.169509146, 145967.901189525, 8227079.9788932, 311.004566271706, 3, 3)
+               .AddCoast(120917.159558271, 120917.159558271, 0.5625, 1, 1)
+               .AddStage(120917.159558271, 14247.8429972215, 934120.190221791, 348.000785527152, 1, 1)
+               .Reconfigure(hoverslam);
+
+            hoverslam.Run();
+
+            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
+            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized, 1e-6);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(115.18867923936341, 1e-6);
+            (hoverslam.LandingUT - t0).ShouldEqual(156.42870721442159, 1e-6);
         }
     }
 }
