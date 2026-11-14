@@ -278,9 +278,13 @@ namespace MuMech.UI
                 }
 
                 if (lo > hi) lo = hi = 0;
-                double pad = Math.Max(hi - lo, Math.Abs(hi) * 1e-3) * 0.05;
-                lo = double.IsNaN(info.Min) ? lo - pad : Math.Min(info.Min, lo);
-                hi = double.IsNaN(info.Max) ? hi + pad : Math.Max(info.Max, hi);
+                // widened to the fixed range, then a margin on both sides: a line at the range's edge (a throttle at 100 %, a
+                // coast at 0 %) would otherwise lie on the plot's frame, half clipped
+                if (!double.IsNaN(info.Min)) lo = Math.Min(info.Min, lo);
+                if (!double.IsNaN(info.Max)) hi = Math.Max(info.Max, hi);
+                double pad = Math.Max(hi - lo, Math.Abs(hi) * 1e-3) * 0.04;
+                lo -= pad;
+                hi += pad;
                 if (!(hi > lo)) hi = lo + 1;
                 yMin[i] = lo;
                 yMax[i] = hi;
