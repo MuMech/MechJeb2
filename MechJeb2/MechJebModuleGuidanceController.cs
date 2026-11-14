@@ -55,6 +55,8 @@ namespace MuMech
         // what guidance does with RCS, said once at each change: it turns RCS on for a coast, and trims the end of the last burn with
         // RCS only when the RCS group is already on, which otherwise looks like chance
         private ScreenMessage _rcsCoastMessage = null!, _rcsTrimMessage = null!, _rcsOffMessage = null!;
+        // what the vessel flew since guidance was engaged, for the PSG Solution window
+        public readonly PSGFlownTrack FlownTrack = new PSGFlownTrack();
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -75,6 +77,7 @@ namespace MuMech
         {
             Debug.Log("MechJebModuleGuidanceController: Enabled");
             ResetToAwaitingSolution();
+            FlownTrack.Clear();
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
             Core.Spinup.Users.Add(this);
@@ -126,6 +129,9 @@ namespace MuMech
 
             if (!Enabled || Status == PSGStatus.ENABLED)
                 return;
+
+            if (Solution != null && !IsGrounded())
+                FlownTrack.Record(Core);
 
             if (Status == PSGStatus.FINISHED)
             {

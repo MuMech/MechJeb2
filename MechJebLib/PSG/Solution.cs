@@ -39,6 +39,9 @@ namespace MechJebLib.PSG
         public readonly List<Phase> Phases = new List<Phase>();
         public readonly FlightPlan? FlightPlan;
 
+        // the atmosphere and aerodynamic limits of the Problem, in this solution's units
+        public readonly AeroModel Aero;
+
         private readonly List<double>         _tmin         = new List<double>();
         private readonly List<double>         _tmax         = new List<double>();
         private readonly List<double>         _dvstart      = new List<double>();
@@ -63,12 +66,13 @@ namespace MechJebLib.PSG
 
         // a normalized solution for the problem
         public Solution(Problem problem, FlightPlan? flightPlan)
-            : this(problem.Scale, true, problem.Mu, problem.RBody * problem.Scale.LengthScale, problem.R0, flightPlan)
+            : this(problem.Scale, true, problem.Mu, problem.RBody * problem.Scale.LengthScale, problem.R0, AeroModel.From(problem), flightPlan)
         {
         }
 
-        private Solution(Scale scale, bool normalized, double mu, double rbody, V3 r0, FlightPlan? flightPlan)
+        private Solution(Scale scale, bool normalized, double mu, double rbody, V3 r0, AeroModel aero, FlightPlan? flightPlan)
         {
+            Aero = aero;
             Scale = scale;
             Normalized = normalized;
             _mu = mu;
@@ -94,7 +98,7 @@ namespace MechJebLib.PSG
 
         public Solution DeepCopy()
         {
-            var dup = new Solution(Scale, Normalized, _mu, _rbody, _r0, FlightPlan?.DeepCopy()) { _rotation = _rotation };
+            var dup = new Solution(Scale, Normalized, _mu, _rbody, _r0, Aero, FlightPlan?.DeepCopy()) { _rotation = _rotation };
             for (int i = 0; i < _interpolants.Count; i++)
                 dup.AddSegment(_interpolants[i].DeepCopy(), Phases[i]);
             return dup;
@@ -108,7 +112,8 @@ namespace MechJebLib.PSG
         {
             Check.True(Normalized, "the Solution is already in SI units");
 
-            var dup = new Solution(Scale, false, _mu, _rbody, _r0 * Scale.LengthScale, FlightPlan?.DeepCopy()) { _rotation = _rotation };
+            var dup = new Solution(Scale, false, _mu, _rbody, _r0 * Scale.LengthScale, Aero.DeNormalize(Scale),
+                FlightPlan?.DeepCopy()) { _rotation = _rotation };
 
             using var yScale = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             new InterpolantLayout
@@ -151,6 +156,33 @@ namespace MechJebLib.PSG
         }
 
         public double StartTime(int p) => _tmin[p];
+
+        /// <summary>
+        ///     The state on phase p's own interpolant at t, turned like every other accessor.  At a phase boundary it gives that
+        ///     phase's side of it, and it extrapolates outside the phase.
+        /// </summary>
+        public InterpolantLayout State(int p, double t)
+        {
+            using Vec xRaw = Interpolate(p, t);
+            var x = InterpolantLayout.CreateFrom(xRaw);
+            x.R = _rotation * x.R;
+            x.V = _rotation * x.V;
+            x.U = _rotation * x.U;
+            return x;
+        }
+
+        // adds the bounds between phase p's interpolant nodes, its start and end included
+        public void NodeBoundaries(int p, List<double> into)
+        {
+            VecInterpolant interpolant = _interpolants[p];
+            for (int i = 0; i < interpolant.NodeCount; i++)
+                into.Add(interpolant.NodeLeftT(i));
+            if (interpolant.NodeCount > 0)
+                into.Add(interpolant.NodeRightT(interpolant.NodeCount - 1));
+        }
+
+        // adds the times phase p's interpolant passes through, which for a SolutionBuilder solution are its collocation points
+        public void Knots(int p, List<double> into) => _interpolants[p].Knots(into);
 
         public double EndTime(int p) => _tmax[p];
 

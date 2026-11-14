@@ -37,6 +37,21 @@ namespace MechJebLib.Interpolants
 
         public bool IsEmpty => _nodes.Count == 0;
 
+        public int NodeCount => _nodes.Count;
+
+        // the start of node i, in the order the nodes were appended
+        public double NodeLeftT(int i) => _nodes[i].LeftT;
+
+        // the end of node i
+        public double NodeRightT(int i) => _nodes[i].RightT;
+
+        // adds the times each node interpolates through (InterpolantNode.Knots), node by node
+        public void Knots(List<double> into)
+        {
+            foreach (InterpolantNode<T> n in _nodes)
+                n.Knots(into);
+        }
+
         protected Interpolant() { }
 
         protected static void Clear(Interpolant<T> o)
@@ -183,6 +198,9 @@ namespace MechJebLib.Interpolants
         public double RightT;
 
         public abstract Typ Evaluate(double t);
+
+        // adds the times the node interpolates through, which may lie inside its bounds; none for a node that doesn't
+        public virtual void Knots(List<double> into) { }
 
         // a copy with its own pooled storage, disposing either one leaves the other intact
         public abstract InterpolantNode<Typ> DeepCopy();

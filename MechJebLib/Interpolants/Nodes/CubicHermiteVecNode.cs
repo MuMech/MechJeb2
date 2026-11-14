@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System.Collections.Generic;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 
@@ -67,6 +68,14 @@ namespace MechJebLib.Interpolants
             for (int i = 0; i < yout.Length; i++)
                 yout[i] = _c0[i] + s * (_c1[i] + s * (_c2[i] + s * _c3[i]));
             return yout;
+        }
+
+        // its two ends, t and t + h, one for a zero-width node
+        public override void Knots(List<double> into)
+        {
+            into.Add(_t);
+            if (_invH > 0)
+                into.Add(_t + 1 / _invH);
         }
 
         public override InterpolantNode<Vec> DeepCopy()

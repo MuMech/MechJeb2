@@ -16,7 +16,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.PSGTests
 {
-    public class SolutionTests
+    public partial class SolutionTests
     {
         private const int SAMPLES = 64;
 
