@@ -454,23 +454,15 @@ namespace MuMech.UI
         {
             var white = new Color(0.95f, 0.95f, 0.95f);
 
-            // the colour of each series shown: a vertical stretch of a line is that quantity jumping (the throttle at a coast)
-            Layout colours = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
-            for (int i = 0; i < Infos.Length; i++)
-            {
-                int k = i;
-                Layout cell = LegendCell(colours, Infos[i].Color, PlanThickness, false);
-                KodeWindow.Label(cell, Infos[i].Label);
-                w.Visible(cell.gameObject, () => g.Displayed(k));
-            }
-
             Layout lines = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
+            KodeWindow.ToneText(KodeWindow.Label(lines, "Curves:"), KodeWindow.Tone.Dim);
             w.Toggle(LegendCell(lines, white, PlanThickness, false), "Current solution", () => g.ShowCurrent, v => g.ShowCurrent = v);
             w.Toggle(LegendCell(lines, PadShade(white), PadThickness, false, true), "Pad solution (the one it lifted off with)",
                 () => g.ShowPad, v => g.ShowPad = v);
             w.Toggle(LegendCell(lines, FlownShade(white), FlownThickness, false), "Flown", () => g.ShowFlown, v => g.ShowFlown = v);
 
             Layout marks = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
+            KodeWindow.ToneText(KodeWindow.Label(marks, "Vertical lines:"), KodeWindow.Tone.Dim);
             w.Toggle(LegendCell(marks, PhaseColor, 1, true), "Phase start/end", () => g.ShowPhases, v => g.ShowPhases = v);
             w.Toggle(LegendCell(marks, NodeColor, 1, true), "Node edge", () => g.ShowNodes, v => g.ShowNodes = v);
             UnityEngine.UI.Toggle knots = w.Toggle(LegendCell(marks, KnotColor, 1, true), "Collocation point", () => g.ShowKnots, v => g.ShowKnots = v);
