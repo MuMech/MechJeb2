@@ -52,6 +52,8 @@ namespace MuMech.MechJebKos
             var smartASS = new SmartASSBinding(() => _core, attitude);
             var target = new TargetBinding(() => _core, shared);
             var dockingAutopilot = new DockingAutopilotBinding(() => _core, shared, attitude);
+            var rendezvousAutopilot = new RendezvousAutopilotBinding(() => _core, attitude);
+            var rendezvousPlanner = new RendezvousPlannerBinding(() => _core, shared);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() => _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
@@ -93,6 +95,10 @@ namespace MuMech.MechJebKos
                 "MechJeb's target: position targets (a latitude/longitude to land at), and the vessel, body or docking port targeted."));
             AddSuffix("DOCKINGAUTOPILOT", new NoArgsSuffix<DockingAutopilotBinding>(() => dockingAutopilot,
                 "The docking autopilot: the target port, its options, engaging it, and how it ended."));
+            AddSuffix("RENDEZVOUSAUTOPILOT", new NoArgsSuffix<RendezvousAutopilotBinding>(() => rendezvousAutopilot,
+                "The rendezvous autopilot: its options, engaging it, and how it ended."));
+            AddSuffix("RENDEZVOUSPLANNER", new NoArgsSuffix<RendezvousPlannerBinding>(() => rendezvousPlanner,
+                "The rendezvous planner's maneuvers (align planes, Hohmann intercept, match velocities, ...) and closest-approach readouts."));
         }
     }
 }

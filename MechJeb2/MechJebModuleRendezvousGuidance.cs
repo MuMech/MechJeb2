@@ -25,30 +25,26 @@ namespace MuMech
             }
         }
 
-        // The maneuver planning actions, called by the view.
+        // The maneuver planning actions, called by the view and kOS. Each replaces the maneuver nodes, and returns null, or why it
+        // couldn't (and left them as they were).
 
-        internal void AlignPlanes()
+        internal string AlignPlanes()
         {
             if (!OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanes(Orbit, Core.Target.TargetOrbit, VesselState.Time, out Vector3d dV, out double UT))
-            {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_RZplan_noNode"), 5);
-                return;
-            }
+                return Localizer.Format("#MechJeb_RZplan_noNode"); //"No node with the target's plane ahead on this orbit."
 
             Vessel.RemoveAllManeuverNodes();
             Vessel.PlaceManeuverNode(Orbit, dV, UT);
+            return null;
         }
 
-        internal void EstablishNewOrbit()
+        internal string EstablishNewOrbit()
         {
             const double leadTime = 30;
             double phasingOrbitRadius = phasingOrbitAltitude + MainBody.Radius;
 
             if (phasingOrbitRadius >= MainBody.sphereOfInfluence)
-            {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_RZplan_outsideSOI"), 5);
-                return;
-            }
+                return Localizer.Format("#MechJeb_RZplan_outsideSOI"); //"That altitude is outside the sphere of influence."
 
             List<ManeuverParameters> maneuvers = OrbitalManeuverCalculator.ManeuversToCircularOrbit(Orbit, VesselState.Time + leadTime, phasingOrbitRadius);
             double earliestUT = Autopilot.EarliestBurnUT(maneuvers[0].dV.magnitude);
@@ -58,12 +54,13 @@ namespace MuMech
             Vessel.RemoveAllManeuverNodes();
             foreach (ManeuverParameters maneuver in maneuvers)
                 Vessel.PlaceManeuverNode(Orbit, maneuver.dV, maneuver.UT);
+            return null;
         }
 
         // Only a warning: a player can know that an orbit under the highest peak is clear where it goes.
         internal bool PhasingOrbitIsSafe => MainBody.IsSafeOrbitRadius(phasingOrbitAltitude + MainBody.Radius);
 
-        internal void InterceptWithHohmann()
+        internal string InterceptWithHohmann()
         {
             (Vector3d dV, double UT, _, _) =
                 OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.Time, coplanar: false);
@@ -77,9 +74,10 @@ namespace MuMech
 
             Vessel.RemoveAllManeuverNodes();
             Vessel.PlaceManeuverNode(Orbit, dV, UT);
+            return null;
         }
 
-        internal void MatchVelocitiesAtClosestApproach()
+        internal string MatchVelocitiesAtClosestApproach()
         {
             double closestApproachUT = Orbit.MinimumSeparationTime(Core.Target.TargetOrbit, VesselState.Time);
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, closestApproachUT, Core.Target.TargetOrbit);
@@ -87,17 +85,15 @@ namespace MuMech
 
             // A burn centered on the closest approach would end at it, which can be inside the target. Use the autopilot's stand-off.
             Vessel.PlaceManeuverNode(Orbit, dV, Autopilot.BurnUTToStopAtDesiredDistance(closestApproachUT));
+            return null;
         }
 
-        internal void GetCloser()
+        internal string GetCloser()
         {
             // the range of the autopilot's close-in phase: from farther away this costs about a tenth of the distance in m/s
             double distance = Core.Target.Distance;
             if (distance >= VesselState.Radius / 25)
-            {
-                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_RZplan_tooFar"), 5);
-                return;
-            }
+                return Localizer.Format("#MechJeb_RZplan_tooFar"); //"Target too far away to get closer: use a Hohmann transfer."
 
             double closingTime = Autopilot.ClosingTime(distance);
             (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, VesselState.Time, Core.Target.TargetOrbit, closingTime, 10);
@@ -105,6 +101,7 @@ namespace MuMech
             (dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, UT, Core.Target.TargetOrbit, closingTime, 10);
             Vessel.RemoveAllManeuverNodes();
             Vessel.PlaceManeuverNode(Orbit, dV, UT);
+            return null;
         }
 
         public override string GetName() => Localizer.Format("#MechJeb_RZplan_title"); //"Rendezvous Planner"
