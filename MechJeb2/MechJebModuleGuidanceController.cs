@@ -154,7 +154,11 @@ namespace MuMech
                 return;
 
             if (!IsThrustOn())
+            {
+                // the spent stage's second is counted while thrust is asked for: a coast starts it again
+                _spentSince = double.NaN;
                 return;
+            }
 
             if (IsGrounded())
                 return;
