@@ -6,6 +6,7 @@
 
 extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
@@ -281,10 +282,30 @@ namespace MuMech
         // On the terminal stage with no thrust left to give: the engines are out (a flamed-out engine adds nothing to
         // ThrustAvailable, which also counts the RCS when the engines are out and the RCS group is on), or in the RCS trim the
         // RCS is.  Only true once that has held for a second.
+        // under 1 m/s left in the current stage by the stage stats; not empty while they have nothing for it
+        private bool CurrentStageEmpty()
+        {
+            List<FuelStats> vac = Core.StageStats.VacStats;
+            bool found = false;
+            double dv = 0;
+            for (int i = 0; i < vac.Count; i++)
+                if (vac[i].KSPStage == Vessel.currentStage)
+                {
+                    found = true;
+                    dv += vac[i].DeltaV;
+                }
+
+            return found && dv < 1;
+        }
+
         private bool TerminalStageSpent()
         {
+            // a RealFuels engine that has not lit yet (MechJeb holding its ignition until the propellant settles) has no
+            // ThrustAvailable either, but still has its propellant: in a burn the stage stats must say it is empty too
             bool spent = Solution != null && Vessel.currentStage == Solution.TerminalKSPStage() &&
-                NoThrust(Status == PSGStatus.TERMINAL_RCS ? VesselState.RCSThrustAvailable.Up : VesselState.ThrustAvailable);
+                (Status == PSGStatus.TERMINAL_RCS
+                    ? NoThrust(VesselState.RCSThrustAvailable.Up)
+                    : NoThrust(VesselState.ThrustAvailable) && CurrentStageEmpty());
 
             if (!spent)
             {
