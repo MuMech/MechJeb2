@@ -108,8 +108,9 @@ namespace MuMech
         public double DeltaVShortfall;
 
         /// <summary>
-        ///     For a rocket with only fixed burn times, the periapsis altitude in m of the orbit the last converged solution ends on
-        ///     when that periapsis is under the atmosphere (or the surface on an airless body), else NaN.  Such a rocket maximizes its
+        ///     For a rocket with only fixed burn times and a burnout altitude above the atmosphere, the periapsis altitude in m of the
+        ///     orbit the last converged solution ends on when that periapsis is under the atmosphere (or the surface on an airless body),
+        ///     else NaN.  Such a rocket maximizes its
         ///     energy instead of aiming at an orbit, so running short shows up here and not as a DeltaVShortfall.
         /// </summary>
         public double SuborbitalPeriapsis = double.NaN;
@@ -180,10 +181,15 @@ namespace MuMech
             if (_optimizeStageFlag)
                 return;
 
+            // the target of such a rocket is its burnout altitude: one inside the atmosphere is a suborbital flight on purpose (a
+            // sounding rocket), with no orbit to fall short of
+            double floor = MainBody.atmosphere ? MainBody.atmosphereDepth : 0;
+            if (BurnoutAltitude < floor)
+                return;
+
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
             (double sma, double ecc, _, _, _, _, _) = Astro.KeplerianFromStateVectors(MainBody.gravParameter, rf, vf);
             double pe = Astro.PeriapsisFromKeplerian(sma, ecc) - MainBody.Radius;
-            double floor = MainBody.atmosphere ? MainBody.atmosphereDepth : 0;
             if (pe < floor)
                 SuborbitalPeriapsis = pe;
         }
