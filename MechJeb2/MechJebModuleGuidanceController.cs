@@ -51,8 +51,19 @@ namespace MuMech
 
         public PSGStatus Status = PSGStatus.ENABLED;
 
+        // what guidance does with RCS, said once at each change: it turns RCS on for a coast, and trims the end of the last burn with
+        // RCS only when the RCS group is already on, which otherwise looks like chance
+        private ScreenMessage _rcsCoastMessage = null!, _rcsTrimMessage = null!, _rcsOffMessage = null!;
+
         public override void OnStart(PartModule.StartState state)
         {
+            _rcsCoastMessage = new ScreenMessage("<color=orange>[MechJeb]: PSG coast, RCS on to hold attitude and settle propellant</color>", 5f,
+                ScreenMessageStyle.UPPER_CENTER);
+            _rcsTrimMessage = new ScreenMessage("<color=orange>[MechJeb]: PSG finishing the burn with RCS</color>", 5f,
+                ScreenMessageStyle.UPPER_CENTER);
+            _rcsOffMessage = new ScreenMessage("<color=orange>[MechJeb]: RCS is off, so PSG won't trim the end of the burn with RCS</color>", 5f,
+                ScreenMessageStyle.UPPER_CENTER);
+
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {
                 Core.AddToPostDrawQueue(DrawTrajectory);
@@ -140,11 +151,14 @@ namespace MuMech
             // We might have wonky transforms and have a tiny bit of fore RCS, so require at least 10% of the max RCS thrust to be
             // in the pointy direction (which should be "up" / y-axis per KSP/Unity semantics). VesselState counts the RCS thrust with the
             // group off too: an ascent flown with RCS off ends without the RCS trim, as it always has.
-            bool hasRCS = Vessel.hasEnabledRCSModules() && Vessel.ActionGroups[KSPActionGroup.RCS] &&
-                VesselState.RCSThrustAvailable.Up > 0.1 * VesselState.RCSThrustAvailable.MaxMagnitude();
+            bool hasRCS = HasForwardRCS() && Vessel.ActionGroups[KSPActionGroup.RCS];
 
             return hasRCS && Status != PSGStatus.TERMINAL_RCS && Vessel.currentStage == Solution.TerminalKSPStage();
         }
+
+        // at least 10 % of the RCS thrust pushes the vessel forward (the RCS group off counts too)
+        private bool HasForwardRCS() =>
+            Vessel.hasEnabledRCSModules() && VesselState.RCSThrustAvailable.Up > 0.1 * VesselState.RCSThrustAvailable.MaxMagnitude();
 
         private void HandleTerminal()
         {
@@ -216,7 +230,12 @@ namespace MuMech
                 return;
 
             if (Status != PSGStatus.TERMINAL_RCS)
+            {
+                if (Status != PSGStatus.TERMINAL && HasForwardRCS() && !Vessel.ActionGroups[KSPActionGroup.RCS] &&
+                    Vessel.currentStage == Solution.TerminalKSPStage())
+                    ScreenMessages.PostScreenMessage(_rcsOffMessage);
                 Status = PSGStatus.TERMINAL;
+            }
 
             Core.Warp.MinimumWarp();
 
@@ -255,6 +274,7 @@ namespace MuMech
                 if (WillDoRCSButNotYet())
                 {
                     Debug.Log("[MechJebModuleGuidanceController] transition to RCS terminal guidance.");
+                    ScreenMessages.PostScreenMessage(_rcsTrimMessage);
                     Status = PSGStatus.TERMINAL_RCS;
                     if (!Vessel.ActionGroups[KSPActionGroup.RCS])
                         Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
@@ -495,7 +515,10 @@ namespace MuMech
             StartCoast = VesselState.Time;
             // force RCS on at the state transition
             if (!Vessel.ActionGroups[KSPActionGroup.RCS])
+            {
                 Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                ScreenMessages.PostScreenMessage(_rcsCoastMessage);
+            }
 
             Status = PSGStatus.COASTING;
 
