@@ -146,6 +146,42 @@ namespace MuMech
 
         public double Staleness;
         public double LastInfeasibility;
+
+        /// <summary>
+        ///     While a first solve runs, where it is, for the Ascent window: "computing the ascent, step 2 of 5, adding the unguided
+        ///     stages: 1m 12s, iteration 143, error 3.1e-02". Null otherwise, and for in-flight re-solves.
+        /// </summary>
+        public string? ProgressDetail;
+
+        /// <summary>The same, short, for the autopilot status: "computing the ascent, step 2 of 5 (1m 12s)".</summary>
+        public string? ProgressShort;
+
+        private int _progressPass, _progressSeconds, _progressIterations;
+
+        // rebuilt when the step, the whole second or the iteration count changes, so about once a second or per iteration
+        private void UpdateProgressText(SolveProgress p)
+        {
+            if (p.Pass == 0)
+            {
+                ProgressDetail = ProgressShort = null;
+                return;
+            }
+
+            int seconds = (int)p.PassSeconds;
+            if (ProgressDetail != null && p.Pass == _progressPass && seconds == _progressSeconds && p.Iterations == _progressIterations)
+                return;
+
+            _progressPass       = p.Pass;
+            _progressSeconds    = seconds;
+            _progressIterations = p.Iterations;
+
+            string time = GuiUtils.TimeToDHMS(seconds);
+            string step = $"computing the ascent, step {p.Pass} of {Max(p.Pass, p.PassCount)}";
+            ProgressShort = $"{step} ({time})";
+            ProgressDetail = p.Iterations > 0 && !double.IsNaN(p.Infeasibility)
+                ? $"{step}, {p.Name}: {time}, iteration {p.Iterations}, error {p.Infeasibility:0.0e+00}"
+                : $"{step}, {p.Name}: {time}";
+        }
         private double _lastTime;
 
         public MechJebModulePSGSimulation(MechJebCore core) : base(core) { }
@@ -372,8 +408,11 @@ namespace MuMech
             if (_ascent is { IsRunning: true })
             {
                 SetState(OptimizerState.SOLVING);
+                UpdateProgressText(_ascent.GetProgress());
                 return;
             }
+
+            ProgressDetail = ProgressShort = null;
 
             GatherException();
 

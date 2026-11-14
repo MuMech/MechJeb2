@@ -153,6 +153,23 @@ namespace MuMech
         private double _pitchStartTime;
 
         private string _awaitingComputing;
+        private string _awaitingProgress, _awaitingProgressFrom;
+
+        // "Awaiting liftoff: computing the ascent, step 2 of 5 (1m 12s)", rebuilt only when the progress text changes
+        private string AwaitingComputing()
+        {
+            string progress = Core.PSGSimulation.ProgressShort;
+            if (progress == null)
+                return _awaitingComputing ??= Localizer.Format("#MechJeb_Ascent_status12") + ": computing the ascent…"; //"Awaiting liftoff"
+
+            if (!ReferenceEquals(progress, _awaitingProgressFrom))
+            {
+                _awaitingProgressFrom = progress;
+                _awaitingProgress     = Localizer.Format("#MechJeb_Ascent_status12") + ": " + progress;
+            }
+
+            return _awaitingProgress;
+        }
 
         private void DriveVerticalAscent()
         {
@@ -166,7 +183,7 @@ namespace MuMech
             {
                 // the first solve can take minutes on a slow machine: say so, or the pad looks stuck
                 if (Core.Guidance.Solution == null)
-                    Status.Set(_awaitingComputing ??= Localizer.Format("#MechJeb_Ascent_status12") + ": computing the ascent…"); //"Awaiting liftoff"
+                    Status.Set(AwaitingComputing()); //"Awaiting liftoff: computing the ascent…"
                 else
                     Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
                 return;
