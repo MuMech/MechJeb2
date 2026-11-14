@@ -53,8 +53,10 @@ namespace MechJebLib.PSG
         public Optimizer? GetOptimizer() => _optimizer;
 
         // a failed run, saying so when it was the per-run time limit that stopped it rather than the problem
-        private Exception Failed(Optimizer psg, string what) =>
-            new Exception(psg.TimedOut ? $"{what}: the optimizer timed out after {_optimizerTimeout / 1000.0:F0} s" : what);
+        private Exception Failed(Optimizer psg, string what) => new Exception(FailureText(what, psg.TimedOut, _optimizerTimeout));
+
+        internal static string FailureText(string what, bool timedOut, int timeoutMilliseconds) =>
+            timedOut ? $"{what}: the optimizer timed out after {timeoutMilliseconds / 1000.0:F0} s" : what;
 
         private Optimizer ConvergedOptimization(Solution oldSolution)
         {
