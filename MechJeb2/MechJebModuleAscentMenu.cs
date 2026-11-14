@@ -152,7 +152,9 @@ namespace MuMech
                 znorm = $"infeasibility: {Core.PSGSimulation.LastInfeasibility:G5}";
                 if (Core.PSGSimulation.LastFailureMessage != null)
                     label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}";
-                ReachWarning = PsgReachWarning();
+                // the figures belong to the last solve: kept in flight after the ascent ended (they say why), but not on the pad with the
+                // autopilot off, where the player may have changed the rocket or the target since
+                ReachWarning = Core.PSGSimulation.Enabled || (Vessel != null && !Vessel.LandedOrSplashed) ? PsgReachWarning() : null;
             }
             else
             {
