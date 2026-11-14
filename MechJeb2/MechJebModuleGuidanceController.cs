@@ -76,6 +76,7 @@ namespace MuMech
             Solution = null;
             _allowExecution = false;
             hasCoasted = false;
+            _spentSince = double.NaN;
             Tgo = Vgo = CurrentPhaseTgo = 0;
             Pitch = Heading = 0;
             _inertial = V3.zero;
@@ -164,6 +165,16 @@ namespace MuMech
                 return;
             }
 
+            // the last stage has nothing left to burn, so the target is out of reach (a rocket short of delta-v runs dry before
+            // it, burning or in terminal guidance).  Nothing would stage it off, so stop here, once it has lasted a second so that
+            // an engine that is lighting does not count.
+            if (TerminalStageSpent())
+            {
+                Debug.Log($"[MechJebModuleGuidanceController] the last stage ran dry {Solution.Tgo(VesselState.MET):F1} s before the end of the burn.");
+                Done();
+                return;
+            }
+
             /*
              * FIXME: consider liquid booster()s + unguided beehive cluster
              *
@@ -240,13 +251,6 @@ namespace MuMech
 
             bool shouldEndTerminal = false;
 
-            // this handles ending TERMINAL guidance (but not TERMINAL_RCS) due to thrust fault in the last stage
-            if (Status == PSGStatus.TERMINAL && VesselState.ThrustCurrent == 0 && Vessel.currentStage < Solution.TerminalKSPStage())
-            {
-                Debug.Log("[MechJebModuleGuidanceController] no thrust in last stage.");
-                shouldEndTerminal = true;
-            }
-
             if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), VesselState.MET, Vessel.currentStage))
                 shouldEndTerminal = true;
 
@@ -265,6 +269,28 @@ namespace MuMech
                     TerminalDone();
                 }
             }
+        }
+
+        private double _spentSince = double.NaN;
+
+        // On the terminal stage with no thrust left to give: the engines are out (a flamed-out engine adds nothing to
+        // ThrustAvailable, which also counts the RCS when the engines are out and the RCS group is on), or in the RCS trim the
+        // RCS is.  Only true once that has held for a second.
+        private bool TerminalStageSpent()
+        {
+            bool spent = Solution != null && Vessel.currentStage == Solution.TerminalKSPStage() &&
+                (Status == PSGStatus.TERMINAL_RCS ? VesselState.RCSThrustAvailable.Up == 0 : VesselState.ThrustAvailable == 0);
+
+            if (!spent)
+            {
+                _spentSince = double.NaN;
+                return false;
+            }
+
+            if (double.IsNaN(_spentSince))
+                _spentSince = VesselState.Time;
+
+            return VesselState.Time - _spentSince >= 1;
         }
 
         private void HandleSpinup()
