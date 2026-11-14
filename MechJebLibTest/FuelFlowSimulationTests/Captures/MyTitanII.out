@@ -1,0 +1,408 @@
+[LOG 11:00:33.803] [MechJeb2] SimVessel:
+  CurrentStage=6 HasLaunchClamp=True MainThrottle=1
+  ATMPressure=0.98832934925710891 ATMDensity=1.2128204505617977 MachNumber=6.5586583939917773E-08
+  T=739438.57563752739 R=[-3668572.7117899787, -4222113.456321435, 3050612.7645846731] V=[307.8813878902655, -267.51653126610785, -9.884522590961318E-06] U=[-0.57586806543135105, -0.6626513548363332, 0.4788205623626709]
+  Parts (23):
+    SimPart 'ROT-ServiceModule-2289098390':
+      IsRoot=True ResourcePriority=-10 Mass=2.6045966686628756 DryMass=1 ModulesStagedMass=-0.85024905204772949 ModulesUnstagedMass=-0.85024905204772949
+      Links: KzResizableFairingBase-3787586566
+      CrossFeedPartSet: ROT-ServiceModule-2289098390 KzResizableFairingBase-3787586566
+      Resources: [id=42120693 amount=216.47669999999997 maxAmount=216.47669999999997 density=0.011339999735355377 free=False residual=0]
+    SimPart 'KzResizableFairingBase-3787586566':
+      InverseStage=0 DecoupledInStage=0 Mass=0.36134645342826843 ModulesStagedMass=0.36134645342826843 ModulesUnstagedMass=0.36134645342826843
+      Links: ROT-ServiceModule-2289098390 proceduralAvionics-2933895313 KzProcFairingSide1-3748101133 KzProcFairingSide1-62638139
+      CrossFeedPartSet: KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleDecouple: Index=2 Staged=True AttachedPart=ROT-ServiceModule-2289098390
+    SimPart 'proceduralAvionics-2933895313':
+      InverseStage=0 DecoupledInStage=0 Mass=0.28046746924519539 DryMass=1 ModulesStagedMass=-0.71953253075480461 ModulesUnstagedMass=-0.71953253075480461
+      Links: KzResizableFairingBase-3787586566 ROT-GenericTank-Separate-3612462960
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Resources: [id=1566956177 amount=42403.699999999997 maxAmount=42403.699999999997 density=0 free=True residual=0]
+      Modules (1):
+        SimModuleAvionics: Index=23 ControllableMass=50
+    SimPart 'ROT-GenericTank-Separate-3612462960':
+      InverseStage=0 DecoupledInStage=0 Mass=2.2495458822767174 DryMass=1 ModulesStagedMass=0.61927139759063721 ModulesUnstagedMass=0.61927139759063721
+      Links: proceduralAvionics-2933895313 ROE-LR91-723236996 RCSBlock.138-3962952172 RCSBlock.138-3805247425 RCSBlock.138-1699402223 RCSBlock.138-1909377480 RO-RFTank-SM-4273079064 RO-RFTank-SM-1522381228
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Resources: [id=-258938826 amount=10529.605527740925 maxAmount=10529.605527740925 density=0.00089999998454004526 free=False residual=0] [id=-1844636135 amount=11764.710972259074 maxAmount=11764.710972259074 density=0.0014329999685287476 free=False residual=0]
+    SimPart 'ROE-LR91-723236996':
+      InverseStage=3 DecoupledInStage=0 IsEngine=True ResourcePriority=30 Mass=0.5 DryMass=0.62099999189376831 ModulesStagedMass=-0.12099999189376831 ModulesUnstagedMass=-0.12099999189376831 EngineResiduals=0.0047444175548941175
+      Links: ROT-GenericTank-Separate-3612462960 KzInterstageAdapter2-677988021
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleEngines: IsEnabled=True Index=1
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.147977576 MinFuelFlow=0.147977576 MaxThrust=448.700012 MinThrust=448.700012 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0.0047444175548941175 ModuleSpoolupTime=2.3807389736175537 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
+          ThrottleResponseRate=0.520853162
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=309.20001220703125] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=309.20001220703125 c1=-114.19999694824219 c2=-4.57763671875E-05 c3=3.0517578125E-05] [ConstantDoubleNode leftT=1 rightT=1 y=195]
+          ThrustCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrottleIspCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrottleIspCurveAtmStrength: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          VelCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          VelCurveIsp: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ATMCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ATMCurveIsp: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrustTransformMultipliers: 0.33044996857643127 0.33044996857643127 0.33044996857643127 0.0028833332471549511 0.0028833332471549511 0.0028833332471549511
+          ThrustDirectionVectors: [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612] [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612] [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612] [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612] [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612] [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612]
+          Propellants: [id=-258938826 ignoreForIsp=False ratio=0.45860001444816589 flowMode=STACK_PRIORITY_SEARCH density=0.00089999998454004526] [id=-1844636135 ignoreForIsp=False ratio=0.54140001535415649 flowMode=STACK_PRIORITY_SEARCH density=0.0014329999685287476]
+    SimPart 'KzInterstageAdapter2-677988021':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.28844645619392395 ModulesStagedMass=0.28844645619392395 ModulesUnstagedMass=0.28844645619392395
+      Links: ROE-LR91-723236996 proceduralAvionics-2914987794 KzProcFairingSide1-2396440584 KzProcFairingSide1-574038679 KzProcFairingSide1-1338471937 KzProcFairingSide1-4059928443
+      CrossFeedPartSet: KzInterstageAdapter2-677988021
+      Modules (1):
+        SimModuleDecouple: Index=2 Staged=True AttachedPart=ROE-LR91-723236996
+    SimPart 'proceduralAvionics-2914987794':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.15369360521435738 DryMass=1 ModulesStagedMass=-0.84630639478564262 ModulesUnstagedMass=-0.84630639478564262
+      Links: KzInterstageAdapter2-677988021 ROT-GenericTank-Separate-3090975513
+      CrossFeedPartSet: ROE-LR87.11-3170772688 ROT-GenericTank-Separate-3090975513 proceduralAvionics-2914987794 KzInterstageAdapter2-677988021
+      Resources: [id=1566956177 amount=1675.7983340669045 maxAmount=1675.7999999999995 density=0 free=True residual=0]
+      Modules (1):
+        SimModuleAvionics: Index=23 ControllableMass=200
+    SimPart 'ROT-GenericTank-Separate-3090975513':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=5.2169218146367795 DryMass=1 ModulesStagedMass=3.4792208671569824 ModulesUnstagedMass=3.4792208671569824
+      Links: proceduralAvionics-2914987794 launchClamp1-1201024498 launchClamp1-347487273 ROE-LR87.11-3170772688
+      CrossFeedPartSet: ROE-LR87.11-3170772688 ROT-GenericTank-Separate-3090975513 proceduralAvionics-2914987794 KzInterstageAdapter2-677988021
+      Resources: [id=-1844636135 amount=53486.430734872098 maxAmount=53486.430734872098 density=0.0014329999685287476 free=False residual=0] [id=-258938826 amount=44653.809065127869 maxAmount=44653.809065127869 density=0.00089999998454004526 free=False residual=0]
+    SimPart 'launchClamp1-1201024498':
+      InverseStage=4 DecoupledInStage=4 IsLaunchClamp=True ResourcePriority=40 DryMass=0.10000000149011612
+      Links: ROT-GenericTank-Separate-3090975513
+      SymmetryCounterParts: launchClamp1-347487273
+      CrossFeedPartSet: launchClamp1-1201024498
+      Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
+      Modules (1):
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-347487273':
+      InverseStage=4 DecoupledInStage=4 IsLaunchClamp=True ResourcePriority=40 DryMass=0.10000000149011612
+      Links: ROT-GenericTank-Separate-3090975513
+      SymmetryCounterParts: launchClamp1-1201024498
+      CrossFeedPartSet: launchClamp1-347487273
+      Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
+      Modules (1):
+        SimLaunchClamp: Index=1
+    SimPart 'ROE-LR87.11-3170772688':
+      InverseStage=5 DecoupledInStage=2 IsEngine=True ResourcePriority=50 Mass=1.5160729885101318 DryMass=1.8625799417495728 ModulesStagedMass=-0.34650695323944092 ModulesUnstagedMass=-0.34650695323944092 EngineResiduals=0.0049362938111973832
+      Links: ROT-GenericTank-Separate-3090975513
+      CrossFeedPartSet: ROE-LR87.11-3170772688 ROT-GenericTank-Separate-3090975513 proceduralAvionics-2914987794 KzInterstageAdapter2-677988021
+      Modules (1):
+        SimModuleEngines: IsEnabled=True Index=1
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.780386746 MinFuelFlow=0.780386746 MaxThrust=2311.19995 MinThrust=2311.19995 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0.0049362938111973832 ModuleSpoolupTime=3.2784943580627441 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
+          ThrottleResponseRate=0.377188444
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=302] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=302 c1=-48 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=254]
+          ThrustCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrottleIspCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrottleIspCurveAtmStrength: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          VelCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          VelCurveIsp: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ATMCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ATMCurveIsp: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrustTransformMultipliers: 0.16610167920589447 0.16610167920589447 0.16610167920589447 0.16610167920589447 0.16610167920589447 0.16610167920589447 0.0016949150012806058 0.0016949150012806058
+          ThrustDirectionVectors: [-0.60904901320175076, -0.63251068720394787, 0.47852879762649536] [-0.55688548172132579, -0.67888825598638847, 0.47852888703346252] [-0.60904901320175076, -0.63251068720394787, 0.47852879762649536] [-0.55688548172132579, -0.67888825598638847, 0.47852888703346252] [-0.60904901320175076, -0.63251068720394787, 0.47852879762649536] [-0.55688548172132579, -0.67888825598638847, 0.47852888703346252] [-0.5833228963956808, -0.65609943804752791, 0.47881972789764404] [-0.5833228963956808, -0.65609943804752791, 0.47881972789764404]
+          Propellants: [id=-258938826 ignoreForIsp=False ratio=0.45399999618530273 flowMode=STACK_PRIORITY_SEARCH density=0.00089999998454004526] [id=-1844636135 ignoreForIsp=False ratio=0.54600000381469727 flowMode=STACK_PRIORITY_SEARCH density=0.0014329999685287476]
+    SimPart 'KzProcFairingSide1-2396440584':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.051677700132131577 ModulesStagedMass=0.051677700132131577 ModulesUnstagedMass=0.051677700132131577
+      Links: KzInterstageAdapter2-677988021
+      SymmetryCounterParts: KzProcFairingSide1-574038679 KzProcFairingSide1-1338471937 KzProcFairingSide1-4059928443
+      CrossFeedPartSet: KzProcFairingSide1-2396440584
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-574038679':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.051677700132131577 ModulesStagedMass=0.051677700132131577 ModulesUnstagedMass=0.051677700132131577
+      Links: KzInterstageAdapter2-677988021
+      SymmetryCounterParts: KzProcFairingSide1-1338471937 KzProcFairingSide1-4059928443 KzProcFairingSide1-2396440584
+      CrossFeedPartSet: KzProcFairingSide1-574038679
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-1338471937':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.051677700132131577 ModulesStagedMass=0.051677700132131577 ModulesUnstagedMass=0.051677700132131577
+      Links: KzInterstageAdapter2-677988021
+      SymmetryCounterParts: KzProcFairingSide1-4059928443 KzProcFairingSide1-2396440584 KzProcFairingSide1-574038679
+      CrossFeedPartSet: KzProcFairingSide1-1338471937
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-4059928443':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.051677700132131577 ModulesStagedMass=0.051677700132131577 ModulesUnstagedMass=0.051677700132131577
+      Links: KzInterstageAdapter2-677988021
+      SymmetryCounterParts: KzProcFairingSide1-2396440584 KzProcFairingSide1-574038679 KzProcFairingSide1-1338471937
+      CrossFeedPartSet: KzProcFairingSide1-4059928443
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'RCSBlock.138-3962952172':
+      InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.01032658014446497 DryMass=0.012836580164730549 ModulesStagedMass=-0.0025100000202655792 ModulesUnstagedMass=-0.0025100000202655792
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RCSBlock.138-3805247425 RCSBlock.138-1699402223 RCSBlock.138-1909377480
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleRCS: IsEnabled=True Index=0
+          G=9.8066499999999994 Isp=50.700000762939453 Thrust=0.043276999145746224 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=8.7041927049057551E-05 MassFlowRate=8.7041927049057551E-05
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=50.700000762939453] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=50.700000762939453 c1=-5.070000171661377 c2=-69.053571462631226 c3=46.857780694961548] [ConstantDoubleNode leftT=1 rightT=1 y=23.434209823608398]
+          Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
+    SimPart 'RCSBlock.138-3805247425':
+      InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.01032658014446497 DryMass=0.012836580164730549 ModulesStagedMass=-0.0025100000202655792 ModulesUnstagedMass=-0.0025100000202655792
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RCSBlock.138-1699402223 RCSBlock.138-1909377480 RCSBlock.138-3962952172
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleRCS: IsEnabled=True Index=0
+          G=9.8066499999999994 Isp=50.700000762939453 Thrust=0.043276999145746224 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=8.7041927049057551E-05 MassFlowRate=8.7041927049057551E-05
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=50.700000762939453] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=50.700000762939453 c1=-5.070000171661377 c2=-69.053571462631226 c3=46.857780694961548] [ConstantDoubleNode leftT=1 rightT=1 y=23.434209823608398]
+          Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
+    SimPart 'RCSBlock.138-1699402223':
+      InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.01032658014446497 DryMass=0.012836580164730549 ModulesStagedMass=-0.0025100000202655792 ModulesUnstagedMass=-0.0025100000202655792
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RCSBlock.138-1909377480 RCSBlock.138-3962952172 RCSBlock.138-3805247425
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleRCS: IsEnabled=True Index=0
+          G=9.8066499999999994 Isp=50.700000762939453 Thrust=0.043276999145746224 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=8.7041927049057551E-05 MassFlowRate=8.7041927049057551E-05
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=50.700000762939453] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=50.700000762939453 c1=-5.070000171661377 c2=-69.053571462631226 c3=46.857780694961548] [ConstantDoubleNode leftT=1 rightT=1 y=23.434209823608398]
+          Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
+    SimPart 'RCSBlock.138-1909377480':
+      InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.01032658014446497 DryMass=0.012836580164730549 ModulesStagedMass=-0.0025100000202655792 ModulesUnstagedMass=-0.0025100000202655792
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RCSBlock.138-3962952172 RCSBlock.138-3805247425 RCSBlock.138-1699402223
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleRCS: IsEnabled=True Index=0
+          G=9.8066499999999994 Isp=50.700000762939453 Thrust=0.043276999145746224 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=8.7041927049057551E-05 MassFlowRate=8.7041927049057551E-05
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=50.700000762939453] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=50.700000762939453 c1=-5.070000171661377 c2=-69.053571462631226 c3=46.857780694961548] [ConstantDoubleNode leftT=1 rightT=1 y=23.434209823608398]
+          Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
+    SimPart 'RO-RFTank-SM-4273079064':
+      InverseStage=0 DecoupledInStage=0 Mass=0.03789890864833069 DryMass=1 ModulesStagedMass=-0.9762495756149292 ModulesUnstagedMass=-0.9762495756149292
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RO-RFTank-SM-1522381228
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Resources: [id=254642152 amount=11309.739999999998 maxAmount=11309.739999999998 density=1.2509999578469433E-06 free=False residual=0]
+    SimPart 'RO-RFTank-SM-1522381228':
+      InverseStage=0 DecoupledInStage=0 Mass=0.03789890864833069 DryMass=1 ModulesStagedMass=-0.9762495756149292 ModulesUnstagedMass=-0.9762495756149292
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RO-RFTank-SM-4273079064
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Resources: [id=254642152 amount=11309.739999999998 maxAmount=11309.739999999998 density=1.2509999578469433E-06 free=False residual=0]
+    SimPart 'KzProcFairingSide1-3748101133':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.10445929318666458 ModulesStagedMass=0.10445929318666458 ModulesUnstagedMass=0.10445929318666458
+      Links: KzResizableFairingBase-3787586566
+      SymmetryCounterParts: KzProcFairingSide1-62638139
+      CrossFeedPartSet: KzProcFairingSide1-3748101133
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-62638139':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.10445929318666458 ModulesStagedMass=0.10445929318666458 ModulesUnstagedMass=0.10445929318666458
+      Links: KzResizableFairingBase-3787586566
+      SymmetryCounterParts: KzProcFairingSide1-3748101133
+      CrossFeedPartSet: KzProcFairingSide1-62638139
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+[LOG 11:00:33.807] [MechJeb2] SimVessel:
+  CurrentStage=6 HasLaunchClamp=True MainThrottle=1
+  ATMPressure=0 ATMDensity=0 MachNumber=0
+  T=739438.57563752739 R=[-3668572.7117899787, -4222113.456321435, 3050612.7645846731] V=[307.8813878902655, -267.51653126610785, -9.884522590961318E-06] U=[-0.57586806543135105, -0.6626513548363332, 0.4788205623626709]
+  Parts (23):
+    SimPart 'ROT-ServiceModule-2289098390':
+      IsRoot=True ResourcePriority=-10 Mass=2.6045966686628756 DryMass=1 ModulesStagedMass=-0.85024905204772949 ModulesUnstagedMass=-0.85024905204772949
+      Links: KzResizableFairingBase-3787586566
+      CrossFeedPartSet: ROT-ServiceModule-2289098390 KzResizableFairingBase-3787586566
+      Resources: [id=42120693 amount=216.47669999999997 maxAmount=216.47669999999997 density=0.011339999735355377 free=False residual=0]
+    SimPart 'KzResizableFairingBase-3787586566':
+      InverseStage=0 DecoupledInStage=0 Mass=0.36134645342826843 ModulesStagedMass=0.36134645342826843 ModulesUnstagedMass=0.36134645342826843
+      Links: ROT-ServiceModule-2289098390 proceduralAvionics-2933895313 KzProcFairingSide1-3748101133 KzProcFairingSide1-62638139
+      CrossFeedPartSet: KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleDecouple: Index=2 Staged=True AttachedPart=ROT-ServiceModule-2289098390
+    SimPart 'proceduralAvionics-2933895313':
+      InverseStage=0 DecoupledInStage=0 Mass=0.28046746924519539 DryMass=1 ModulesStagedMass=-0.71953253075480461 ModulesUnstagedMass=-0.71953253075480461
+      Links: KzResizableFairingBase-3787586566 ROT-GenericTank-Separate-3612462960
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Resources: [id=1566956177 amount=42403.699999999997 maxAmount=42403.699999999997 density=0 free=True residual=0]
+      Modules (1):
+        SimModuleAvionics: Index=23 ControllableMass=50
+    SimPart 'ROT-GenericTank-Separate-3612462960':
+      InverseStage=0 DecoupledInStage=0 Mass=2.2495458822767174 DryMass=1 ModulesStagedMass=0.61927139759063721 ModulesUnstagedMass=0.61927139759063721
+      Links: proceduralAvionics-2933895313 ROE-LR91-723236996 RCSBlock.138-3962952172 RCSBlock.138-3805247425 RCSBlock.138-1699402223 RCSBlock.138-1909377480 RO-RFTank-SM-4273079064 RO-RFTank-SM-1522381228
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Resources: [id=-258938826 amount=10529.605527740925 maxAmount=10529.605527740925 density=0.00089999998454004526 free=False residual=0] [id=-1844636135 amount=11764.710972259074 maxAmount=11764.710972259074 density=0.0014329999685287476 free=False residual=0]
+    SimPart 'ROE-LR91-723236996':
+      InverseStage=3 DecoupledInStage=0 IsEngine=True ResourcePriority=30 Mass=0.5 DryMass=0.62099999189376831 ModulesStagedMass=-0.12099999189376831 ModulesUnstagedMass=-0.12099999189376831 EngineResiduals=0.0047444175548941175
+      Links: ROT-GenericTank-Separate-3612462960 KzInterstageAdapter2-677988021
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleEngines: IsEnabled=True Index=1
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.147977576 MinFuelFlow=0.147977576 MaxThrust=448.700012 MinThrust=448.700012 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0.0047444175548941175 ModuleSpoolupTime=2.3807389736175537 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
+          ThrottleResponseRate=0.520853162
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=309.20001220703125] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=309.20001220703125 c1=-114.19999694824219 c2=-4.57763671875E-05 c3=3.0517578125E-05] [ConstantDoubleNode leftT=1 rightT=1 y=195]
+          ThrustCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrottleIspCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrottleIspCurveAtmStrength: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          VelCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          VelCurveIsp: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ATMCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ATMCurveIsp: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrustTransformMultipliers: 0.33044996857643127 0.33044996857643127 0.33044996857643127 0.0028833332471549511 0.0028833332471549511 0.0028833332471549511
+          ThrustDirectionVectors: [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612] [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612] [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612] [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612] [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612] [-0.58332262599538898, -0.65609918749817053, 0.47882050275802612]
+          Propellants: [id=-258938826 ignoreForIsp=False ratio=0.45860001444816589 flowMode=STACK_PRIORITY_SEARCH density=0.00089999998454004526] [id=-1844636135 ignoreForIsp=False ratio=0.54140001535415649 flowMode=STACK_PRIORITY_SEARCH density=0.0014329999685287476]
+    SimPart 'KzInterstageAdapter2-677988021':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.28844645619392395 ModulesStagedMass=0.28844645619392395 ModulesUnstagedMass=0.28844645619392395
+      Links: ROE-LR91-723236996 proceduralAvionics-2914987794 KzProcFairingSide1-2396440584 KzProcFairingSide1-574038679 KzProcFairingSide1-1338471937 KzProcFairingSide1-4059928443
+      CrossFeedPartSet: KzInterstageAdapter2-677988021
+      Modules (1):
+        SimModuleDecouple: Index=2 Staged=True AttachedPart=ROE-LR91-723236996
+    SimPart 'proceduralAvionics-2914987794':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.15369360521435738 DryMass=1 ModulesStagedMass=-0.84630639478564262 ModulesUnstagedMass=-0.84630639478564262
+      Links: KzInterstageAdapter2-677988021 ROT-GenericTank-Separate-3090975513
+      CrossFeedPartSet: ROE-LR87.11-3170772688 ROT-GenericTank-Separate-3090975513 proceduralAvionics-2914987794 KzInterstageAdapter2-677988021
+      Resources: [id=1566956177 amount=1675.7983340669045 maxAmount=1675.7999999999995 density=0 free=True residual=0]
+      Modules (1):
+        SimModuleAvionics: Index=23 ControllableMass=200
+    SimPart 'ROT-GenericTank-Separate-3090975513':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=5.2169218146367795 DryMass=1 ModulesStagedMass=3.4792208671569824 ModulesUnstagedMass=3.4792208671569824
+      Links: proceduralAvionics-2914987794 launchClamp1-1201024498 launchClamp1-347487273 ROE-LR87.11-3170772688
+      CrossFeedPartSet: ROE-LR87.11-3170772688 ROT-GenericTank-Separate-3090975513 proceduralAvionics-2914987794 KzInterstageAdapter2-677988021
+      Resources: [id=-1844636135 amount=53486.430734872098 maxAmount=53486.430734872098 density=0.0014329999685287476 free=False residual=0] [id=-258938826 amount=44653.809065127869 maxAmount=44653.809065127869 density=0.00089999998454004526 free=False residual=0]
+    SimPart 'launchClamp1-1201024498':
+      InverseStage=4 DecoupledInStage=4 IsLaunchClamp=True ResourcePriority=40 DryMass=0.10000000149011612
+      Links: ROT-GenericTank-Separate-3090975513
+      SymmetryCounterParts: launchClamp1-347487273
+      CrossFeedPartSet: launchClamp1-1201024498
+      Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
+      Modules (1):
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-347487273':
+      InverseStage=4 DecoupledInStage=4 IsLaunchClamp=True ResourcePriority=40 DryMass=0.10000000149011612
+      Links: ROT-GenericTank-Separate-3090975513
+      SymmetryCounterParts: launchClamp1-1201024498
+      CrossFeedPartSet: launchClamp1-347487273
+      Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
+      Modules (1):
+        SimLaunchClamp: Index=1
+    SimPart 'ROE-LR87.11-3170772688':
+      InverseStage=5 DecoupledInStage=2 IsEngine=True ResourcePriority=50 Mass=1.5160729885101318 DryMass=1.8625799417495728 ModulesStagedMass=-0.34650695323944092 ModulesUnstagedMass=-0.34650695323944092 EngineResiduals=0.0049362938111973832
+      Links: ROT-GenericTank-Separate-3090975513
+      CrossFeedPartSet: ROE-LR87.11-3170772688 ROT-GenericTank-Separate-3090975513 proceduralAvionics-2914987794 KzInterstageAdapter2-677988021
+      Modules (1):
+        SimModuleEngines: IsEnabled=True Index=1
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.780386746 MinFuelFlow=0.780386746 MaxThrust=2311.19995 MinThrust=2311.19995 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0.0049362938111973832 ModuleSpoolupTime=3.2784943580627441 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
+          ThrottleResponseRate=0.377188444
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=302] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=302 c1=-48 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=254]
+          ThrustCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrottleIspCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrottleIspCurveAtmStrength: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          VelCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          VelCurveIsp: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ATMCurve: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ATMCurveIsp: [ConstantDoubleNode leftT=0 rightT=0 y=0]
+          ThrustTransformMultipliers: 0.16610167920589447 0.16610167920589447 0.16610167920589447 0.16610167920589447 0.16610167920589447 0.16610167920589447 0.0016949150012806058 0.0016949150012806058
+          ThrustDirectionVectors: [-0.60904901320175076, -0.63251068720394787, 0.47852879762649536] [-0.55688548172132579, -0.67888825598638847, 0.47852888703346252] [-0.60904901320175076, -0.63251068720394787, 0.47852879762649536] [-0.55688548172132579, -0.67888825598638847, 0.47852888703346252] [-0.60904901320175076, -0.63251068720394787, 0.47852879762649536] [-0.55688548172132579, -0.67888825598638847, 0.47852888703346252] [-0.5833228963956808, -0.65609943804752791, 0.47881972789764404] [-0.5833228963956808, -0.65609943804752791, 0.47881972789764404]
+          Propellants: [id=-258938826 ignoreForIsp=False ratio=0.45399999618530273 flowMode=STACK_PRIORITY_SEARCH density=0.00089999998454004526] [id=-1844636135 ignoreForIsp=False ratio=0.54600000381469727 flowMode=STACK_PRIORITY_SEARCH density=0.0014329999685287476]
+    SimPart 'KzProcFairingSide1-2396440584':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.051677700132131577 ModulesStagedMass=0.051677700132131577 ModulesUnstagedMass=0.051677700132131577
+      Links: KzInterstageAdapter2-677988021
+      SymmetryCounterParts: KzProcFairingSide1-574038679 KzProcFairingSide1-1338471937 KzProcFairingSide1-4059928443
+      CrossFeedPartSet: KzProcFairingSide1-2396440584
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-574038679':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.051677700132131577 ModulesStagedMass=0.051677700132131577 ModulesUnstagedMass=0.051677700132131577
+      Links: KzInterstageAdapter2-677988021
+      SymmetryCounterParts: KzProcFairingSide1-1338471937 KzProcFairingSide1-4059928443 KzProcFairingSide1-2396440584
+      CrossFeedPartSet: KzProcFairingSide1-574038679
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-1338471937':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.051677700132131577 ModulesStagedMass=0.051677700132131577 ModulesUnstagedMass=0.051677700132131577
+      Links: KzInterstageAdapter2-677988021
+      SymmetryCounterParts: KzProcFairingSide1-4059928443 KzProcFairingSide1-2396440584 KzProcFairingSide1-574038679
+      CrossFeedPartSet: KzProcFairingSide1-1338471937
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-4059928443':
+      InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.051677700132131577 ModulesStagedMass=0.051677700132131577 ModulesUnstagedMass=0.051677700132131577
+      Links: KzInterstageAdapter2-677988021
+      SymmetryCounterParts: KzProcFairingSide1-2396440584 KzProcFairingSide1-574038679 KzProcFairingSide1-1338471937
+      CrossFeedPartSet: KzProcFairingSide1-4059928443
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'RCSBlock.138-3962952172':
+      InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.01032658014446497 DryMass=0.012836580164730549 ModulesStagedMass=-0.0025100000202655792 ModulesUnstagedMass=-0.0025100000202655792
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RCSBlock.138-3805247425 RCSBlock.138-1699402223 RCSBlock.138-1909377480
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleRCS: IsEnabled=True Index=0
+          G=9.8066499999999994 Isp=50.700000762939453 Thrust=0.043276999145746224 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=8.7041927049057551E-05 MassFlowRate=8.7041927049057551E-05
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=50.700000762939453] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=50.700000762939453 c1=-5.070000171661377 c2=-69.053571462631226 c3=46.857780694961548] [ConstantDoubleNode leftT=1 rightT=1 y=23.434209823608398]
+          Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
+    SimPart 'RCSBlock.138-3805247425':
+      InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.01032658014446497 DryMass=0.012836580164730549 ModulesStagedMass=-0.0025100000202655792 ModulesUnstagedMass=-0.0025100000202655792
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RCSBlock.138-1699402223 RCSBlock.138-1909377480 RCSBlock.138-3962952172
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleRCS: IsEnabled=True Index=0
+          G=9.8066499999999994 Isp=50.700000762939453 Thrust=0.043276999145746224 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=8.7041927049057551E-05 MassFlowRate=8.7041927049057551E-05
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=50.700000762939453] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=50.700000762939453 c1=-5.070000171661377 c2=-69.053571462631226 c3=46.857780694961548] [ConstantDoubleNode leftT=1 rightT=1 y=23.434209823608398]
+          Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
+    SimPart 'RCSBlock.138-1699402223':
+      InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.01032658014446497 DryMass=0.012836580164730549 ModulesStagedMass=-0.0025100000202655792 ModulesUnstagedMass=-0.0025100000202655792
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RCSBlock.138-1909377480 RCSBlock.138-3962952172 RCSBlock.138-3805247425
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleRCS: IsEnabled=True Index=0
+          G=9.8066499999999994 Isp=50.700000762939453 Thrust=0.043276999145746224 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=8.7041927049057551E-05 MassFlowRate=8.7041927049057551E-05
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=50.700000762939453] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=50.700000762939453 c1=-5.070000171661377 c2=-69.053571462631226 c3=46.857780694961548] [ConstantDoubleNode leftT=1 rightT=1 y=23.434209823608398]
+          Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
+    SimPart 'RCSBlock.138-1909377480':
+      InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.01032658014446497 DryMass=0.012836580164730549 ModulesStagedMass=-0.0025100000202655792 ModulesUnstagedMass=-0.0025100000202655792
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RCSBlock.138-3962952172 RCSBlock.138-3805247425 RCSBlock.138-1699402223
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Modules (1):
+        SimModuleRCS: IsEnabled=True Index=0
+          G=9.8066499999999994 Isp=50.700000762939453 Thrust=0.043276999145746224 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=8.7041927049057551E-05 MassFlowRate=8.7041927049057551E-05
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=50.700000762939453] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=50.700000762939453 c1=-5.070000171661377 c2=-69.053571462631226 c3=46.857780694961548] [ConstantDoubleNode leftT=1 rightT=1 y=23.434209823608398]
+          Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
+    SimPart 'RO-RFTank-SM-4273079064':
+      InverseStage=0 DecoupledInStage=0 Mass=0.03789890864833069 DryMass=1 ModulesStagedMass=-0.9762495756149292 ModulesUnstagedMass=-0.9762495756149292
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RO-RFTank-SM-1522381228
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Resources: [id=254642152 amount=11309.739999999998 maxAmount=11309.739999999998 density=1.2509999578469433E-06 free=False residual=0]
+    SimPart 'RO-RFTank-SM-1522381228':
+      InverseStage=0 DecoupledInStage=0 Mass=0.03789890864833069 DryMass=1 ModulesStagedMass=-0.9762495756149292 ModulesUnstagedMass=-0.9762495756149292
+      Links: ROT-GenericTank-Separate-3612462960
+      SymmetryCounterParts: RO-RFTank-SM-4273079064
+      CrossFeedPartSet: RO-RFTank-SM-1522381228 RO-RFTank-SM-4273079064 RCSBlock.138-1909377480 RCSBlock.138-1699402223 RCSBlock.138-3805247425 RCSBlock.138-3962952172 ROE-LR91-723236996 ROT-GenericTank-Separate-3612462960 proceduralAvionics-2933895313 KzInterstageAdapter2-677988021 KzResizableFairingBase-3787586566
+      Resources: [id=254642152 amount=11309.739999999998 maxAmount=11309.739999999998 density=1.2509999578469433E-06 free=False residual=0]
+    SimPart 'KzProcFairingSide1-3748101133':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.10445929318666458 ModulesStagedMass=0.10445929318666458 ModulesUnstagedMass=0.10445929318666458
+      Links: KzResizableFairingBase-3787586566
+      SymmetryCounterParts: KzProcFairingSide1-62638139
+      CrossFeedPartSet: KzProcFairingSide1-3748101133
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-62638139':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.10445929318666458 ModulesStagedMass=0.10445929318666458 ModulesUnstagedMass=0.10445929318666458
+      Links: KzResizableFairingBase-3787586566
+      SymmetryCounterParts: KzProcFairingSide1-3748101133
+      CrossFeedPartSet: KzProcFairingSide1-62638139
+      Modules (1):
+        SimProceduralFairingDecoupler: Index=1
