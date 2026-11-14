@@ -197,6 +197,8 @@ namespace MuMech
                         : $"Optimizer: paused, the stage ends in {Math.Ceiling(seconds):F0} s";
                 case OptimizerState.AFTER_STAGING:
                     return $"Optimizer: paused after staging, {Math.Ceiling(seconds):F0} s";
+                case OptimizerState.ON_PAD:
+                    return "Optimizer: paused until liftoff";
                 case OptimizerState.AFTER_PHASE:
                     return $"Optimizer: paused while the next phase starts, {Math.Ceiling(seconds):F0} s";
                 case OptimizerState.COAST_PAUSE:
