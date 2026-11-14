@@ -233,7 +233,7 @@ namespace MuMech.UI
             w.Toggle(parent, "#MechJeb_Docking_checkbox1", () => ApEnabled, v => //"Autopilot enabled"
             {
                 if (v) Ap.Users.Add(guidance);
-                else Ap.Users.Remove(guidance);
+                else Ap.Users.Clear(); // also a run kOS started
             });
 
         void RunningLabels(KodeWindow w, UIObject running)

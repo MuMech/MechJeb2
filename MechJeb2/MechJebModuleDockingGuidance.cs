@@ -72,7 +72,7 @@ namespace MuMech
 
             foreach (ModuleDockingNode port in targetVessel.GetModules<ModuleDockingNode>())
             {
-                if (IsAvailableTargetPort(port) && port.GetTransform() != null && ArePortsCompatible(referencePort, port))
+                if (IsSelectableTargetPort(referencePort, port))
                     targetPorts.Add(port);
             }
 
@@ -114,6 +114,10 @@ namespace MuMech
 
             return Core.Target.Target?.GetVessel();
         }
+
+        // A port the selector offers: free, and one the port this vessel is controlled from can dock with.
+        internal static bool IsSelectableTargetPort(ModuleDockingNode referencePort, ModuleDockingNode port) =>
+            IsAvailableTargetPort(port) && port.GetTransform() != null && ArePortsCompatible(referencePort, port);
 
         private static bool IsAvailableTargetPort(ModuleDockingNode port) =>
             port != null && !IsDockedState(port.state);
@@ -160,6 +164,8 @@ namespace MuMech
         internal void SelectTargetPort(ModuleDockingNode targetPort)
         {
             selectedTargetPort = targetPort;
+            // so the selector, which drops the choice when the target vessel changes, keeps it when this sets the target
+            selectedTargetVessel = targetPort.vessel;
             // also KSP's own target, so other docking aids see the port change at once
             Core.Target.Set(targetPort);
         }

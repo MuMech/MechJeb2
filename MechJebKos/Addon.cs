@@ -51,6 +51,7 @@ namespace MuMech.MechJebKos
             var attitude = new AttitudeBinding(() => _core, shared);
             var smartASS = new SmartASSBinding(() => _core, attitude);
             var target = new TargetBinding(() => _core, shared);
+            var dockingAutopilot = new DockingAutopilotBinding(() => _core, shared, attitude);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() => _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
@@ -90,6 +91,8 @@ namespace MuMech.MechJebKos
                 "SmartASS, as in its window (prograde, surface heading/pitch/roll, ...)."));
             AddSuffix("TARGET", new NoArgsSuffix<TargetBinding>(() => target,
                 "MechJeb's target: position targets (a latitude/longitude to land at), and the vessel, body or docking port targeted."));
+            AddSuffix("DOCKINGAUTOPILOT", new NoArgsSuffix<DockingAutopilotBinding>(() => dockingAutopilot,
+                "The docking autopilot: the target port, its options, engaging it, and how it ended."));
         }
     }
 }
