@@ -19,6 +19,21 @@ using static System.Math;
 
 namespace MuMech
 {
+    /// <summary>What the PSG optimizer is doing, or why it is not solving (MechJebModulePSGSimulation.State).</summary>
+    public enum OptimizerState
+    {
+        READY,         // between two solves
+        SOLVING,       // a solve is running
+        NO_PLAN,       // no flight plan, or nothing left in it to plan
+        STAGE_ENDING,  // the current stage is about to end: the solution is frozen through staging
+        AFTER_STAGING, // a short wait after staging
+        COAST_PAUSE,   // a long coast above the atmosphere: resumes 20 s before the burn
+        TERMINAL,      // terminal guidance flies the end of the burn on the frozen solution
+        UNGUIDED_ONLY, // only unguided stages are left, which the optimizer can't steer
+        FINISHED,      // guidance is done
+        RETRYING       // the problem could not be built (a setting PSG refuses): tried again every second
+    }
+
     /// <summary>
     ///     This class isolates a bunch of glue between MJ and the PSG optimizer that I don't
     ///     yet understand how to write correctly.
@@ -93,6 +108,18 @@ namespace MuMech
 
         private double _blockOptimizerUntilTime;
 
+        // why _blockOptimizerUntilTime is set: the second between two solves is routine, the others are pauses worth showing
+        private OptimizerState _blockReason = OptimizerState.READY;
+
+        /// <summary>What the optimizer is doing, or why it is not solving, as of the last physics frame.</summary>
+        public OptimizerState State { get; private set; } = OptimizerState.READY;
+
+        /// <summary>
+        ///     For STAGE_ENDING, the seconds left in the stage; for AFTER_STAGING and RETRYING, the seconds left in the pause; for
+        ///     COAST_PAUSE, the seconds until it ends (20 s before the burn).
+        /// </summary>
+        public double StateSeconds { get; private set; }
+
         public int SuccessfulConverges;
         public int LastLmStatus;
         public int MaxLmIterations;
@@ -153,6 +180,7 @@ namespace MuMech
             LastLmStatus = LastLmIterations = 0;
             Staleness = LastInfeasibility = _lastTime = 0;
             LastFailureMessage = null;
+            SetState(OptimizerState.READY);
         }
 
         /// <summary>
@@ -168,7 +196,19 @@ namespace MuMech
             Core.Guidance.FlushSolution();
         }
 
-        private void HandleStageEvent(int data) => _blockOptimizerUntilTime = VesselState.Time + OptimizerPauseTime;
+        private void HandleStageEvent(int data) => Block(OptimizerPauseTime, OptimizerState.AFTER_STAGING);
+
+        private void Block(double seconds, OptimizerState reason)
+        {
+            _blockOptimizerUntilTime = VesselState.Time + seconds;
+            _blockReason = reason;
+        }
+
+        private void SetState(OptimizerState state, double seconds = 0)
+        {
+            State = state;
+            StateSeconds = seconds;
+        }
 
         public void RequestFlightPlanUpdate()
         {
@@ -287,7 +327,10 @@ namespace MuMech
             Staleness = VesselState.Time - _lastTime;
 
             if (_ascent is { IsRunning: true })
+            {
+                SetState(OptimizerState.SOLVING);
                 return;
+            }
 
             GatherException();
 
@@ -296,7 +339,10 @@ namespace MuMech
             MarkReady();
 
             if (FlightPlan == null)
+            {
+                SetState(OptimizerState.NO_PLAN);
                 return;
+            }
 
             // reconcile the flight plan stages with the VacStats, using the EngineSignatures
             FlightPlan.ReconcileStages(Core.StageStats.VacStats, Core.StageStats.AtmoStats, MinDeltaV);
@@ -318,31 +364,46 @@ namespace MuMech
             {
                 // if we have only inertially guided stages we can't run the optimizer
                 if (FlightPlan.AllUnguidedStages())
+                {
+                    SetState(OptimizerState.UNGUIDED_ONLY);
                     return;
+                }
             }
 
             // check for readiness (not terminal guidance and not finished)
             if (!Core.Guidance.IsReady())
+            {
+                SetState(Core.Guidance.IsTerminal() ? OptimizerState.TERMINAL : OptimizerState.FINISHED);
                 return;
+            }
 
             bool vesselOutsideAtmosphere = !MainBody.atmosphere || VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude();
 
             // suspend guidance for long coast phases out of the atmosphere
             if (Core.Guidance.IsCoasting() && Core.Guidance.CurrentPhaseTgo > 20 && vesselOutsideAtmosphere)
+            {
+                SetState(OptimizerState.COAST_PAUSE, Core.Guidance.CurrentPhaseTgo - 20);
                 return;
+            }
 
             if (Core.Guidance.Solution != null)
             {
                 // check for prestaging as the current stage gets low
                 if (Core.Guidance.CurrentPhaseTgo < PreStageTime)
                 {
-                    _blockOptimizerUntilTime = VesselState.Time + OptimizerPauseTime;
+                    Block(OptimizerPauseTime, OptimizerState.STAGE_ENDING);
+                    SetState(OptimizerState.STAGE_ENDING, Core.Guidance.CurrentPhaseTgo);
                     return;
                 }
             }
 
             if (_blockOptimizerUntilTime > VesselState.Time)
+            {
+                // the routine second between two solves is not a pause; a pause that outlasts the stage end is the wait after staging
+                OptimizerState reason = _blockReason == OptimizerState.STAGE_ENDING ? OptimizerState.AFTER_STAGING : _blockReason;
+                SetState(reason, _blockOptimizerUntilTime - VesselState.Time);
                 return;
+            }
 
             // The PSG clock is MET.  The stage stats snapshot is a little older than now, and one taken before liftoff is at MET
             // zero, so a solution computed on the ground always starts at liftoff.
@@ -399,7 +460,10 @@ namespace MuMech
                 int startingIndex = FindStartingIndex();
 
                 if (startingIndex == -1)
+                {
+                    SetState(OptimizerState.NO_PLAN);
                     return;
+                }
 
                 // walk the rocket from the bottom up
                 // NOTE: if we ever reversed the order the AscentBuilder takes stages this API gets cleaner
@@ -452,14 +516,16 @@ namespace MuMech
                 // escape OnFixedUpdate on every tick without being reported in the UI or backing off.
                 LastFailureMessage = e.Message;
                 Debug.Log(e);
-                _blockOptimizerUntilTime = VesselState.Time + 1;
+                Block(1, OptimizerState.RETRYING);
+                SetState(OptimizerState.RETRYING, 1);
                 return;
             }
 
             if (!_ascent.TryStartJob())
                 throw new Exception("[MechJebModulePSGSimulation] could not start optimizer job");
 
-            _blockOptimizerUntilTime = VesselState.Time + 1;
+            Block(1, OptimizerState.READY);
+            SetState(OptimizerState.SOLVING);
         }
 
         private int FindStartingIndex()

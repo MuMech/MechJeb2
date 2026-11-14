@@ -324,6 +324,9 @@ namespace MuMech.UI
             Layout conv = KodeWindow.Row(box);
             w.BoundLabel(conv, "converges: 999", () => menu.label27 ?? " "); //converges:
             w.BoundLabel(conv, "staleness: 99d 99h 99m 99s", () => menu.label29 ?? " ", true); //staleness:
+            UIText optimizer = w.Wrap(w.BoundLabel(box, () => menu.optimizerState ?? " ", true));
+            w.ToneText(optimizer, () => Psgs.State == OptimizerState.NO_PLAN || Psgs.State == OptimizerState.RETRYING ? Tone.Bad : Tone.Normal);
+
             Layout n = KodeWindow.Row(box);
             w.BoundLabel(n, "n: 100(100)", () => menu.n ?? " ");
             w.BoundLabel(n, "infeasibility: -1.2345E-05", () => menu.znorm ?? " ", true);

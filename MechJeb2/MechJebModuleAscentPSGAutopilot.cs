@@ -152,6 +152,8 @@ namespace MuMech
 
         private double _pitchStartTime;
 
+        private string _awaitingComputing;
+
         private void DriveVerticalAscent()
         {
             //during the vertical ascent we just thrust straight up at max throttle
@@ -162,7 +164,11 @@ namespace MuMech
 
             if (!liftedOff)
             {
-                Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
+                // the first solve can take minutes on a slow machine: say so, or the pad looks stuck
+                if (Core.Guidance.Solution == null)
+                    Status.Set(_awaitingComputing ??= Localizer.Format("#MechJeb_Ascent_status12") + ": computing the ascent…"); //"Awaiting liftoff"
+                else
+                    Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
                 return;
             }
 

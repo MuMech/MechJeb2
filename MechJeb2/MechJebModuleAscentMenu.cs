@@ -152,6 +152,7 @@ namespace MuMech
                 znorm = $"infeasibility: {Core.PSGSimulation.LastInfeasibility:G5}";
                 if (Core.PSGSimulation.LastFailureMessage != null)
                     label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}";
+                optimizerState = OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null);
             }
 
             if (_launchingToPlane) launchTimer = CachedLocalizer.Instance.MechJebAscentMsg2; //Launching to target plane
@@ -165,6 +166,37 @@ namespace MuMech
             autopilotStatusLevel = _autopilot.Status.Severity;
             UpdatePhaseLines();
             Profiler.EndSample();
+        }
+
+        /// <summary>"Optimizer: …": what the PSG optimizer is doing, or why it is not solving, so that a climbing staleness reads as a pause.</summary>
+        internal string optimizerState;
+
+        internal static string OptimizerStateText(OptimizerState state, double seconds, bool noSolution)
+        {
+            switch (state)
+            {
+                case OptimizerState.SOLVING:
+                case OptimizerState.READY:
+                    return noSolution ? "Optimizer: computing the ascent…" : "Optimizer: running";
+                case OptimizerState.NO_PLAN:
+                    return "Optimizer: no flight plan, no stages to optimize";
+                case OptimizerState.STAGE_ENDING:
+                    return $"Optimizer: paused, the stage ends in {Math.Ceiling(seconds):F0} s";
+                case OptimizerState.AFTER_STAGING:
+                    return $"Optimizer: paused after staging, {Math.Ceiling(seconds):F0} s";
+                case OptimizerState.COAST_PAUSE:
+                    return $"Optimizer: paused for the coast, resumes in {GuiUtils.TimeToDHMS(seconds)}";
+                case OptimizerState.TERMINAL:
+                    return "Optimizer: paused, terminal guidance";
+                case OptimizerState.UNGUIDED_ONLY:
+                    return "Optimizer: paused, only unguided stages left";
+                case OptimizerState.FINISHED:
+                    return "Optimizer: guidance finished";
+                case OptimizerState.RETRYING:
+                    return "Optimizer: can't plan with these settings, retrying";
+                default:
+                    return null;
+            }
         }
 
         // The PSG status lines (one per burn/coast phase, then the terminal conditions, one per line), for the new UI whose rows are fixed
