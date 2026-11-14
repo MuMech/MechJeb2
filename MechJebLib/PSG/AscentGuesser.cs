@@ -573,7 +573,17 @@ namespace MechJebLib.PSG
             }
 
             if (!feasible)
-                throw new Exception("AscentGuesser: the rocket hits the ground even going nearly straight up");
+            {
+                double twr = LiftoffTWR();
+                // the guess also runs in flight when there is no solution to start from: then the first phase is the current stage,
+                // at its current mass, and the problem's MET is past zero
+                if (_problem.T0 > 0)
+                    throw new Exception(
+                        $"No ascent found from here: the rocket falls back even flying almost straight up (thrust-to-weight now {twr:F2})");
+                throw new Exception(twr < 1
+                    ? $"The rocket can't lift off: its thrust-to-weight at liftoff is {twr:F2}, under 1"
+                    : $"The rocket falls back to the ground even flying almost straight up (thrust-to-weight at liftoff {twr:F2})");
+            }
 
             double tCut0 = _tCut;
             V3 a0 = _a;
@@ -600,6 +610,16 @@ namespace MechJebLib.PSG
             _a = a0;
             _b = V3.zero;
             _tCut = tCut0;
+        }
+
+        // The first burn's thrust at current conditions (VexCurrent, the pad's on the ground) over the weight at the initial
+        // position. In the normalized units the problem and the phases use, mu is 1, so the gravity there is 1 / |r0|².
+        private double LiftoffTWR()
+        {
+            foreach (Phase p in _phases)
+                if (!p.Coast)
+                    return p.Mdot * p.VexCurrent / p.M0 * _problem.R0.sqrMagnitude;
+            return 0;
         }
 
         public Solution InitialGuess(PhaseCollection phases, CancellationToken cancellationToken = default)

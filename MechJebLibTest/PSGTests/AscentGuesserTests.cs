@@ -79,6 +79,26 @@ namespace MechJebLibTest.PSGTests
                 Phase.NewStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)));
         }
 
+        // the Titan II with its first stage cut to 1000 kN can't lift its own weight: the guess fails, and says so with the figure
+        [Fact]
+        public void TooHeavyToLiftOffGivesTheThrustToWeight()
+        {
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double rT = EARTH_RADIUS + 185e+3;
+
+            var problem = new Problem(r0, v0, r0.normalized, 157355.487476332, 0, EARTH_MU, EARTH_RADIUS, 0, 0, 0, 0, V3.zero,
+                new Kepler3(rT, 0, Deg2Rad(28.608)));
+
+            var guesser = new AscentGuesser(problem, null);
+            Exception e = Assert.ThrowsAny<Exception>(() => guesser.InitialGuess(Phases(problem,
+                Phase.NewStage(157355.487476332, 40267.56108456338, 1000000, 301.817977905273, 4, 4),
+                Phase.NewStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3))));
+
+            double twr = 1000000 / (157355.487476332 * EARTH_MU / r0.sqrMagnitude);
+            Assert.Contains($"thrust-to-weight at liftoff is {twr:F2}, under 1", e.Message);
+        }
+
         // launches from 0.5 degrees north to an equatorial orbit, so it has to dogleg
         [Fact]
         public void Titan2CircularEquatorial()

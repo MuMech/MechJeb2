@@ -52,6 +52,12 @@ namespace MechJebLib.PSG
 
         public Optimizer? GetOptimizer() => _optimizer;
 
+        // a failed run, saying so when it was the per-run time limit that stopped it rather than the problem
+        private Exception Failed(Optimizer psg, string what) => new Exception(FailureText(what, psg.TimedOut, _optimizerTimeout));
+
+        internal static string FailureText(string what, bool timedOut, int timeoutMilliseconds) =>
+            timedOut ? $"{what}: the optimizer timed out after {timeoutMilliseconds / 1000.0:F0} s" : what;
+
         private Optimizer ConvergedOptimization(Solution oldSolution)
         {
             Optimizer.ObjectiveType cost = _fixedBurnTime ? Optimizer.ObjectiveType.MAX_ENERGY : Optimizer.ObjectiveType.MIN_TIME;
@@ -60,7 +66,7 @@ namespace MechJebLib.PSG
             Solution? solution = psg.Run();
 
             if (!psg.Success() || solution == null)
-                throw new Exception("converged optimizer failed");
+                throw Failed(psg, "the re-solve did not converge, guidance keeps the last plan");
 
             return psg;
         }
@@ -79,7 +85,7 @@ namespace MechJebLib.PSG
             Solution? solution2 = psg.Run();
 
             if (!psg.Success() || solution2 == null)
-                throw new Exception("Target unreachable (fixed bootstrapping)");
+                throw Failed(psg, "Target unreachable (fixed bootstrapping)");
 
             PhaseCollection bootphases2 = _phases.DeepCopy();
 
@@ -88,7 +94,7 @@ namespace MechJebLib.PSG
             Solution? solution3 = psg2.Run();
 
             if (!psg2.Success() || solution3 == null)
-                throw new Exception("Target unreachable");
+                throw Failed(psg2, "Target unreachable");
 
             return psg2;
         }
@@ -126,7 +132,7 @@ namespace MechJebLib.PSG
             Solution? solution2 = psg2.Run();
 
             if (!psg2.Success() || solution2 == null)
-                throw new Exception("MaxQ/QAlpha failed");
+                throw Failed(psg2, "Target unreachable within the Qα or max Q limit");
 
             return psg2;
         }
@@ -158,7 +164,7 @@ namespace MechJebLib.PSG
             solution = psg.Run();
 
             if (!psg.Success() || solution == null)
-                throw new Exception("Target unreachable (bootstrapping)");
+                throw Failed(psg, "Target unreachable (bootstrapping)");
 
             bool reConverge = false;
 
@@ -179,7 +185,7 @@ namespace MechJebLib.PSG
                 solution = psg.Run();
 
                 if (!psg.Success() || solution == null)
-                    throw new Exception("Target unreachable (re-adding unguided stages)");
+                    throw Failed(psg, "Target unreachable (re-adding unguided stages)");
             }
 
             if (_problem.Terminal.IsFPA())
