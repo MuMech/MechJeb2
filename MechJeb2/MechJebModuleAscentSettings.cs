@@ -25,12 +25,6 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble PitchRate = new EditableDouble(PITCH_RATE_DEFAULT);
 
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult TurnStartAltitude = new EditableDoubleMult(500, 1000);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult TurnStartVelocity = new EditableDoubleMult(50);
-
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public int AscentTypeInteger;
@@ -58,12 +52,6 @@ namespace MuMech
         public bool RelativeLAN = false;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool CorrectiveSteering = false;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble CorrectiveSteeringGain = new EditableDouble(3.0);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool ForceRoll = true;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
@@ -77,9 +65,6 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool AutoDeployAntennas = true;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool SkipCircularization = false;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble RollAltitude = new EditableDouble(50);
@@ -107,16 +92,7 @@ namespace MuMech
             }
         }
 
-        /* classic AoA limiter */
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool LimitAoA = true;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble MaxAoA = 5;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult AOALimitFadeoutPressure = new EditableDoubleMult(2500);
-
+        // whether the ascent autopilot's AoA limiter is currently limiting, for the settings window
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool LimitingAoA = false;
 
@@ -128,40 +104,6 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableInt WarpCountDown = 11;
-
-        /*
-         * "Classic" ascent path settings
-         */
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult TurnEndAltitude = new EditableDoubleMult(60000, 1000);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble TurnEndAngle = 0;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult TurnShapeExponent = new EditableDoubleMult(0.4, 0.01);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool AutoPath = true;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public float AutoTurnPerc = 0.05f;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public float AutoTurnSpdFactor = 18.5f;
-
-        public double AutoTurnStartAltitude =>
-            Vessel.mainBody.atmosphere ? Vessel.mainBody.RealMaxAtmosphereAltitude() * AutoTurnPerc : Vessel.terrainAltitude + 25;
-
-        public double AutoTurnStartVelocity => Vessel.mainBody.atmosphere
-            ? AutoTurnSpdFactor * AutoTurnSpdFactor * AutoTurnSpdFactor * 0.015625f
-            : double.PositiveInfinity;
-
-        public double AutoTurnEndAltitude =>
-            Vessel.mainBody.atmosphere
-                ? Math.Min(Vessel.mainBody.RealMaxAtmosphereAltitude() * 0.85, DesiredOrbitAltitude)
-                : Math.Min(30000, DesiredOrbitAltitude * 0.85);
 
         /*
          * PSG Staging values

@@ -35,7 +35,7 @@ namespace MuMech.UI
 
             UIButton engage = KodeWindow.Button(main, "#MechJeb_RZauto_button1", () => Autopilot.Users.Add(window), ButtonRole.Primary); //"Engage autopilot"
             w.Visible(engage.gameObject, () => Autopilot != null && !Autopilot.Enabled);
-            UIButton disengage = KodeWindow.Button(main, "#MechJeb_RZauto_button2", () => Autopilot.Users.Remove(window), ButtonRole.Danger); //"Disengage autopilot"
+            UIButton disengage = KodeWindow.Button(main, "#MechJeb_RZauto_button2", () => Autopilot.Users.Clear(), ButtonRole.Danger); //"Disengage autopilot", also a run kOS started
             w.Visible(disengage.gameObject, () => Autopilot != null && Autopilot.Enabled);
 
             ValueRow(w, main, "#MechJeb_RZauto_label4", () => Autopilot?.desiredDistance, "m"); //"Desired final distance:"
