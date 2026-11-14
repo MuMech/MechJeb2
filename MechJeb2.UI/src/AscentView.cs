@@ -265,6 +265,7 @@ namespace MuMech.UI
             UIText below = w.BoundLabel(box, DeltaText, true);
             KodeWindow.ToneText(below, Tone.Bad);
             w.Visible(below, () => 2.001 < incDelta);
+            w.Attention(inc, () => 2.001 < incDelta);
         }
 
         // the "Ascent Settings" and "PSG Settings" window toggles
@@ -277,6 +278,7 @@ namespace MuMech.UI
                 WindowButton(w, buttons, "Ascent Settings", menu._settingsMenu);
                 UIButton psgButton = WindowButton(w, buttons, "PSG Settings", menu._psgSettingsMenu);
                 w.Visible(psgButton.gameObject, () => psg);
+                w.Badge(psgButton, () => PsgAttention.Any(Core));
                 return;
             }
 
@@ -288,6 +290,9 @@ namespace MuMech.UI
             w.Toggle(row, "Ascent Settings", () => settingsMenu.Enabled, v => settingsMenu.Enabled = v);
             UnityEngine.UI.Toggle psgSettings = w.Toggle(row, "PSG Settings", () => psgSettingsMenu.Enabled, v => psgSettingsMenu.Enabled = v);
             w.Visible(KodeWindow.RowOf(psgSettings), () => psg);
+            // the classic layout has a toggle, not a button, to carry a badge: its label turns orange instead
+            w.ToneText(KodeWindow.RowOf(psgSettings).GetComponentInChildren<TMPro.TMP_Text>(true),
+                () => PsgAttention.Any(Core) ? Tone.Caution : Tone.Normal);
         }
 
         /// <summary>A button that opens or closes another window, selected while that window is open.</summary>

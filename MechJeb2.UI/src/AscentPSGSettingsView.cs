@@ -8,6 +8,31 @@ using Tone = KodeKit.KodeWindow.Tone;
 namespace MuMech.UI
 {
     /// <summary>
+    /// PSG settings that need the player's attention: their rows are marked in the PSG Settings window, and the Ascent window's PSG
+    /// Settings button carries a badge while any of them is.
+    /// </summary>
+    static class PsgAttention
+    {
+        /// <summary>Aref 0 (the default) on a body with an atmosphere: PSG then plans the ascent with no drag at all.</summary>
+        public static bool ArefUnset(MechJebCore core) => core.PSGSimulation.Aref <= 0 && Atmosphere(core);
+
+        /// <summary>A minimum coast longer than the maximum, which PSG refuses to plan with.</summary>
+        public static bool CoastTimesInverted(MechJebCore core) => core.PSGSimulation.MinCoast > core.PSGSimulation.MaxCoast;
+
+        /// <summary>A Qα limit PSG clamps to between 0 and 10000 Pa-rad.</summary>
+        public static bool QaClamped(MechJebCore core) => core.PSGSimulation.LimitQa < 0 || core.PSGSimulation.LimitQa > 10000;
+
+        public static bool Any(MechJebCore core) => ArefUnset(core) || CoastTimesInverted(core) || QaClamped(core);
+
+        // the vessel's body in flight, Kerbin (or the home body) in the editor
+        static bool Atmosphere(MechJebCore core)
+        {
+            CelestialBody body = core.vessel != null ? core.vessel.mainBody : FlightGlobals.GetHomeBody();
+            return body != null && body.atmosphere;
+        }
+    }
+
+    /// <summary>
     /// MechJebModuleAscentPSGSettingsMenu ("PSG Settings") in KodeKit.
     /// The per-stage table (FlightPlan.DrawStageGUI) is native: pooled retained rows with garbage-free text.
     /// </summary>
@@ -174,8 +199,8 @@ namespace MuMech.UI
             CoastToggle(w, coast, "Coast During", 0);
             CoastToggle(w, coast, "Coast After", 1);
             Layout coastTimes = KodeWindow.Row(box);
-            AscentUi.SimpleBox(w, coastTimes, "Min Coast:", Psgs.MinCoast, "s", 40);
-            AscentUi.SimpleBox(w, coastTimes, "Max Coast:", Psgs.MaxCoast, "s", 40);
+            w.Attention(AscentUi.SimpleBox(w, coastTimes, "Min Coast:", Psgs.MinCoast, "s", 40), () => PsgAttention.CoastTimesInverted(Core));
+            w.Attention(AscentUi.SimpleBox(w, coastTimes, "Max Coast:", Psgs.MaxCoast, "s", 40), () => PsgAttention.CoastTimesInverted(Core));
             AscentUi.SimpleBox(w, box, "Ullage lead time: ", Core.Guidance.UllageLeadTime, "s", 60);
 
             box = KodeWindow.Box(r);
@@ -188,12 +213,15 @@ namespace MuMech.UI
             box = KodeWindow.Box(r);
             Layout drag = KodeWindow.Row(box);
             AscentUi.SimpleBox(w, drag, "Cd:", Psgs.Cd, "", 40);
-            AscentUi.SimpleBox(w, drag, "Aref:", Psgs.Aref, "m²", 40);
+            w.Attention(AscentUi.SimpleBox(w, drag, "Aref:", Psgs.Aref, "m²", 40), () => PsgAttention.ArefUnset(Core));
+            UIText arefNote = AscentUi.ToneText(box, ArefNote, Tone.Caution, true);
+            KodeWindow.WrapToWidth(arefNote);
+            w.Visible(arefNote.gameObject, () => PsgAttention.ArefUnset(Core));
             AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 40); //Booster Pitch start:
             AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 40); //Booster Pitch rate:
 
             box = KodeWindow.Box(r);
-            AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad"); //Qα limit
+            w.Attention(AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad"), () => PsgAttention.QaClamped(Core)); //Qα limit
             UIText clamped = AscentUi.ToneText(box, "Qα limit has been clamped to between 0 and 10000 Pa-rad", Tone.Bad, true);
             KodeWindow.WrapToWidth(clamped);
             w.Visible(clamped.gameObject, () => OutsideRecommended && (Psgs.LimitQa < 0 || Psgs.LimitQa > 10000));
@@ -205,6 +233,8 @@ namespace MuMech.UI
         }
 
         bool OutsideRecommended => Psgs.LimitQa < 1000 || Psgs.LimitQa > 4000;
+
+        const string ArefNote = "Aref is 0: PSG plans the ascent with no drag. Set the rocket's cross-section area.";
 
         static readonly string[] coastLocations = { "Before", "During", "After" };
 
@@ -231,8 +261,8 @@ namespace MuMech.UI
             Layout where = KodeWindow.Row(g);
             w.Segmented(where, coastLocations, () => Settings.CoastLocation + 1, i => Settings.CoastLocation = i - 1);
             KodeWindow.PropertyGrid coastTimes = w.Properties(g);
-            ModernRows.Field(coastTimes, "Min Coast", Psgs.MinCoast, "s", 50);
-            ModernRows.Field(coastTimes, "Max Coast", Psgs.MaxCoast, "s", 50);
+            w.Attention(ModernRows.Field(coastTimes, "Min Coast", Psgs.MinCoast, "s", 50), () => PsgAttention.CoastTimesInverted(Core));
+            w.Attention(ModernRows.Field(coastTimes, "Max Coast", Psgs.MaxCoast, "s", 50), () => PsgAttention.CoastTimesInverted(Core));
             ModernRows.Field(coastTimes, "Ullage lead time", Core.Guidance.UllageLeadTime, "s", 50);
 
             g = w.Group(r, "#MechJeb_NewUI_Spinup"); //Spinup
@@ -246,11 +276,15 @@ namespace MuMech.UI
             ModernRows.Field(aero, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
             ModernRows.Field(aero, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
             ModernRows.Field(aero, "Cd", Psgs.Cd, "", 50);
-            ModernRows.Field(aero, "Aref", Psgs.Aref, "m²", 50);
+            w.Attention(ModernRows.Field(aero, "Aref", Psgs.Aref, "m²", 50), () => PsgAttention.ArefUnset(Core));
+            UIText arefNote = aero.Note(ArefNote);
+            KodeWindow.ToneText(arefNote, Tone.Caution);
+            KodeWindow.WrapToWidth(arefNote);
+            w.Visible(arefNote.transform.parent.gameObject, () => PsgAttention.ArefUnset(Core));
 
             g = w.Group(r, "#MechJeb_NewUI_Limits"); //Limits
             KodeWindow.PropertyGrid limits = w.Properties(g);
-            ModernRows.Field(limits, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60); //Qα limit
+            w.Attention(ModernRows.Field(limits, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60), () => PsgAttention.QaClamped(Core)); //Qα limit
             bool Clamped() => Psgs.LimitQa < 0 || Psgs.LimitQa > 10000;
             Layout qa = w.StatusBar(g, () => Clamped() ? Tone.Bad : Tone.Warn);
             UIText clamped = GuidanceUi.Wrapped(qa, "Qα limit has been clamped to between 0 and 10000 Pa-rad");
