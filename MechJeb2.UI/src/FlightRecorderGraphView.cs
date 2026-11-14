@@ -298,12 +298,12 @@ namespace MuMech.UI
                 lastRefreshFrame = Time.frameCount;
                 lastRefreshTime = Time.unscaledTime;
 
-                MechJebModuleFlightRecorderGraph.graphState selected = g.graphStates[g.scaleIdx];
+                MechJebModuleFlightRecorderGraph.graphState selected = g.drawnStates[g.scaleIdx];
                 graph.Refresh(selected.minimum, selected.maximum);
-                // every graph has its own Y range
+                // every graph has its own Y range, shared with the other graphs of its unit
                 for (int i = 0; i < graph.Series.Count; i++)
                 {
-                    MechJebModuleFlightRecorderGraph.graphState s = g.graphStates[(int)MechJebModuleFlightRecorderGraph.graphInfos[i].Type];
+                    MechJebModuleFlightRecorderGraph.graphState s = g.drawnStates[(int)MechJebModuleFlightRecorderGraph.graphInfos[i].Type];
                     graph.Series[i].YMin = s.minimum;
                     graph.Series[i].YMax = s.maximum;
                 }

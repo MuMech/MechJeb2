@@ -93,7 +93,21 @@ namespace MuMech
         private CelestialBody oldMainBody;
         internal static readonly int typeCount = Enum.GetValues(typeof(RecordType)).Length;
 
+        // each graph's own Y range, grown from what it recorded since the mark
         internal readonly graphState[] graphStates;
+
+        // the Y range each graph is drawn and labelled with: graphs of one unit share the widest range among the
+        // displayed graphs of their group (or among all of them when none is displayed), so the same value is
+        // drawn at the same height whichever of them the Y labels show
+        internal readonly graphState[] drawnStates;
+
+        private static readonly RecordType[][] rangeGroups =
+        {
+            new[] { RecordType.ALTITUDE_ASL, RecordType.ALTITUDE_TRUE },
+            new[] { RecordType.SPEED_SURFACE, RecordType.SPEED_ORBITAL },
+            new[] { RecordType.GRAVITY_LOSSES, RecordType.DRAG_LOSSES, RecordType.STEERING_LOSSES },
+            new[] { RecordType.AO_A, RecordType.AO_S, RecordType.AO_D }
+        };
 
         // the recorder's mark the scales were last reset for
         internal double scaleMarkUT;
@@ -120,6 +134,7 @@ namespace MuMech
         {
             Priority = 2000;
             graphStates = new graphState[typeCount];
+            drawnStates = new graphState[typeCount];
             displayed = new bool[typeCount];
         }
 
@@ -174,11 +189,11 @@ namespace MuMech
         // keeps the atmosphere background texture (and the scales it depends on) up to date
         internal void UpdateBackground()
         {
-            if (oldMainBody != MainBody || lastMaximumAltitude != graphStates[(int)RecordType.ALTITUDE_ASL].maximum ||
+            if (oldMainBody != MainBody || lastMaximumAltitude != drawnStates[(int)RecordType.ALTITUDE_ASL].maximum ||
                 height != backgroundTexture.height)
             {
                 UpdateScale();
-                lastMaximumAltitude = graphStates[(int)RecordType.ALTITUDE_ASL].maximum;
+                lastMaximumAltitude = drawnStates[(int)RecordType.ALTITUDE_ASL].maximum;
 
                 if (backgroundTexture == null || height != backgroundTexture.height)
                 {
@@ -253,17 +268,46 @@ namespace MuMech
                 }
 
                 if (change)
-                {
-                    double maximum = graphStates[t].maximum;
-                    double minimum = graphStates[t].minimum;
-                    double range = heckbertNiceNum(maximum - minimum, false);
-                    double step = heckbertNiceNum(range / (ScaleTicks - 1), true);
+                    RoundLimits(ref graphStates[t]);
+            }
 
-                    minimum = Math.Floor(minimum / step) * step;
-                    maximum = Math.Ceiling(maximum / step) * step;
-                    graphStates[t].minimum = minimum;
-                    graphStates[t].maximum = maximum;
+            ShareRanges();
+        }
+
+        // widens the range to multiples of a nice tick step
+        private void RoundLimits(ref graphState state)
+        {
+            double range = heckbertNiceNum(state.maximum - state.minimum, false);
+            double step = heckbertNiceNum(range / (ScaleTicks - 1), true);
+
+            state.minimum = Math.Floor(state.minimum / step) * step;
+            state.maximum = Math.Ceiling(state.maximum / step) * step;
+        }
+
+        // fills drawnStates from graphStates
+        private void ShareRanges()
+        {
+            Array.Copy(graphStates, drawnStates, typeCount);
+
+            foreach (RecordType[] group in rangeGroups)
+            {
+                bool anyDisplayed = false;
+                foreach (RecordType type in group)
+                    anyDisplayed |= displayed[(int)type];
+
+                var shared = new graphState { minimum = double.MaxValue, maximum = double.MinValue, limitsRounded = true };
+                foreach (RecordType type in group)
+                {
+                    if (anyDisplayed && !displayed[(int)type]) continue;
+                    shared.minimum = Math.Min(shared.minimum, graphStates[(int)type].minimum);
+                    shared.maximum = Math.Max(shared.maximum, graphStates[(int)type].maximum);
                 }
+
+                // each range is already rounded; rounding their union keeps the tick step a nice number
+                RoundLimits(ref shared);
+
+                foreach (RecordType type in group)
+                    drawnStates[(int)type] = shared;
             }
         }
 
@@ -304,6 +348,8 @@ namespace MuMech
             graphStates[(int)RecordType.GRAVITY_LOSSES].maximum = 100;
             graphStates[(int)RecordType.DRAG_LOSSES].maximum = 100;
             graphStates[(int)RecordType.STEERING_LOSSES].maximum = 100;
+
+            ShareRanges();
         }
 
         private double heckbertNiceNum(double x, bool round)
