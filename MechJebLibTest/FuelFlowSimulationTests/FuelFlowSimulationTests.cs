@@ -67,6 +67,14 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         // a Merlin with its TEATEB
         private const double MERLIN_MASS = 0.46998396515846252 + 4 * TEATEB_DENSITY;
 
+        // the hypergolic engines of the MyTitanII, which don't throttle
+        private const float LR87_MAX_FUEL_FLOW = 0.780386746f;
+        private const double LR87_SPOOLUP_TIME = 3.2784943580627441;
+        private const double LR87_RESIDUALS = 0.0049362938111973832;
+        private const float LR91_MAX_FUEL_FLOW = 0.147977576f;
+        private const double LR91_SPOOLUP_TIME = 2.3807389736175537;
+        private const double LR91_RESIDUALS = 0.0047444175548941175;
+
         // the propellant in a full tank of the MerlinPair, which is 5 t dry
         private const double MERLIN_PAIR_PROPELLANT =
             SimVesselFixtures.MERLIN_PAIR_KEROLOX * (0.3877f * COOLED_RP1_DENSITY + 0.6123f * COOLED_LQD_OXYGEN_DENSITY);
@@ -102,6 +110,9 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
         [Fact]
         public void MyFalcon9Block5MatchesCapture() => AssertMatchesCapture("MyFalcon9Block5.out", SimVesselFixtures.MyFalcon9Block5);
+
+        [Fact]
+        public void MyTitanIIMatchesCapture() => AssertMatchesCapture("MyTitanII.out", SimVesselFixtures.MyTitanII);
 
         // the Mainsail burns both full tanks to empty after the launch clamps are released
         [Theory]
@@ -552,6 +563,102 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertNoBurn(segments[0], 0, payloadMass, segments[1].EndMass - payloadMass);
 
             AssertMassesMatchCapture(v, "MyFalcon9Block5.out", kscPad);
+        }
+
+        // the Titan II is staged for hot staging: the LR91 lights in stage 3, a stage of its own ahead of the stack decoupler
+        // in stage 2, which also has the interstage fairing and the upper stage's RCS.  the simulation burns the LR87 out in
+        // stage 4, since stage 3 decouples nothing, and lights the LR91 in a segment of no time before the first stage drops.
+        // the payload fairing is jettisoned before the LR91 burns anything, as on the Falcon 9.  both stages burn their NTO
+        // down to the residuals with Aerozine50 left over, since the tanks hold more of it than the engines' mixture needs.
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void MyTitanII(bool kscPad)
+        {
+            SimVessel v = SimVesselFixtures.MyTitanII(kscPad);
+            double p = v.ATMPressure;
+            // the atmosphereCurves between vacuum and 1 atm, from the capture.  the engines' isps are those of their thrust
+            // along the vessel: the LR87's two chambers are canted apart, by ~4°.
+            double lr87Isp = (302 - 48 * p) * ThrustFactor(v, "ROE-LR87.11");
+            double lr91Isp = (309.20001220703125 + p * (-114.19999694824219 + p * (-4.57763671875E-05 + p * 3.0517578125E-05))) *
+                ThrustFactor(v, "ROE-LR91");
+            double rcsIsp = 50.700000762939453 + p * (-5.070000171661377 + p * (-69.053571462631226 + p * 46.857780694961548));
+            double lr87Thrust = LR87_MAX_FUEL_FLOW * lr87Isp * G0;
+            double lr91Thrust = LR91_MAX_FUEL_FLOW * lr91Isp * G0;
+            double rcsThrust = 4 * TITAN_RCS_MAX_FUEL_FLOW * rcsIsp * 9.80665;
+
+            // the dry masses are the prefab masses and the IPartMassModifier masses of the capture.  the launch clamps
+            // count for nothing.
+            double payloadMass = 1 - 0.85024905204772949 + 216.47669999999997 * LEAD_BALLAST_DENSITY;
+            const double FAIRING_BASE_MASS = 0.36134645342826843;
+            const double PAYLOAD_FAIRING_MASS = 2 * 0.10445929318666458;
+            // the avionics, the tank, the LR91, the RCS and the nitrogen tanks
+            const double UPPER_STAGE_DRY_MASS = 1 - 0.71953253075480461 + 1 + 0.61927139759063721 + 0.62099999189376831 -
+                0.12099999189376831 + 4 * (0.012836580164730549 - 0.0025100000202655792) + 2 * (1 - 0.9762495756149292);
+            // the interstage adapter and its fairing, the avionics, the tank and the LR87
+            const double FIRST_STAGE_DRY_MASS = 0.28844645619392395 + 4 * 0.051677700132131577 + 1 - 0.84630639478564262 + 1 +
+                3.4792208671569824 + 1.8625799417495728 - 0.34650695323944092;
+            double nitrogen = 2 * 11309.739999999998 * NITROGEN_DENSITY;
+            double upperStagePropellant = 10529.605527740925 * AEROZINE50_DENSITY + 11764.710972259074 * NTO_DENSITY;
+            double firstStagePropellant = 44653.809065127869 * AEROZINE50_DENSITY + 53486.430734872098 * NTO_DENSITY;
+
+            double upperStackMass = payloadMass + FAIRING_BASE_MASS + PAYLOAD_FAIRING_MASS + UPPER_STAGE_DRY_MASS + nitrogen +
+                upperStagePropellant;
+            double padMass = upperStackMass + FIRST_STAGE_DRY_MASS + firstStagePropellant;
+            double firstStageBurned = HypergolicBurned(53486.430734872098, LR87_RESIDUALS, LR87_AEROZINE50_RATIO, LR87_NTO_RATIO);
+            double upperStageBurned = HypergolicBurned(11764.710972259074, LR91_RESIDUALS, LR91_AEROZINE50_RATIO, LR91_NTO_RATIO);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(7, segments.Count);
+
+            // the first stage's avionics can control 200t, the upper stage's 50t.  the upper stage's avionics is below the
+            // fairing base, so the payload goes on without any.
+            for (int i = 0; i < segments.Count; i++)
+                segments[i].ControllableMass.ShouldEqual(i >= 3 ? 200 : i >= 1 ? 50 : 0);
+
+            // the spoolup is that of the LR87 while the launch clamps hold the vessel, and of the LR91 where it lights with the
+            // first stage still attached
+            for (int i = 0; i < segments.Count; i++)
+                segments[i].SpoolUpTime.ShouldEqual(i == 5 ? LR87_SPOOLUP_TIME : i == 3 ? LR91_SPOOLUP_TIME : 0, 1e-12);
+
+            AssertNoBurn(segments[6], 6, padMass, 0);
+            AssertNoBurn(segments[5], 5, padMass, 0, lr87Thrust);
+
+            // the burns run one 1 ms step, the simulation's minimum, past the NTO reaching the residuals
+            const double TOLERANCE = 1e-5;
+            AssertBurn(segments[4], 4, padMass, firstStageBurned, LR87_MAX_FUEL_FLOW, lr87Isp, 1, tolerance: TOLERANCE);
+
+            // the LR91 lights while the first stage is still attached
+            AssertNoBurn(segments[3], 3, padMass - firstStageBurned, 0, lr91Thrust);
+
+            // the stack decoupler drops the first stage, with its residuals and leftover Aerozine50, and the interstage fairing
+            AssertNoBurn(segments[2], 2, upperStackMass, padMass - firstStageBurned - upperStackMass, lr91Thrust);
+
+            AssertBurn(segments[1], 1, upperStackMass - PAYLOAD_FAIRING_MASS, upperStageBurned, LR91_MAX_FUEL_FLOW, lr91Isp, 1,
+                PAYLOAD_FAIRING_MASS, tolerance: TOLERANCE);
+
+            // the four RCS thrusters, which the stack decoupler's stage activates, settle the LR91's propellant using the
+            // RealFuels ullage approximation, and their RCS delta-v uses all the nitrogen
+            for (int i = 1; i <= 2; i++)
+            {
+                segments[i].RcsUllageTime.ShouldEqual(0.35 / (1.5 * rcsThrust / segments[i].StartMass), 1e-9);
+                segments[i].RcsThrust.ShouldEqual(rcsThrust, 1e-9);
+                segments[i].RcsISP.ShouldEqual(rcsIsp, 1e-6);
+                segments[i].RcsMass.ShouldEqual(nitrogen, 1e-9);
+            }
+
+            // before then there is no RCS
+            for (int i = 3; i < segments.Count; i++)
+                segments[i].RcsThrust.ShouldBeZero();
+
+            // the upper stage drops with its residuals, leftover Aerozine50, nitrogen and the fairing base
+            AssertNoBurn(segments[0], 0, payloadMass, segments[1].EndMass - payloadMass);
+
+            // hot staging counts down the burn time of the last stage that burns before the stage that only lights an engine
+            Assert.Equal(4, segments.FindLast(s => s.DeltaTime > 0).KSPStage);
+
+            AssertMassesMatchCapture(v, "MyTitanII.out", kscPad);
         }
 
         // the RD-108's HTP is ignoreForIsp: its fuel flow and rated isp are for the kerosene and liquid oxygen alone, so its
@@ -1258,6 +1365,27 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         {
             SimPart engine = v.Parts.Find(p => p.IsEngine);
             return ((SimModuleEngines)engine.Modules[0]).ThrustDirectionVectors[0].magnitude;
+        }
+
+        // an engine's thrust along the vessel per unit of its thrust: the directions of its thrust transforms, weighted by their
+        // multipliers
+        private static double ThrustFactor(SimVessel v, string engineName)
+        {
+            var e = (SimModuleEngines)v.Parts.Find(p => p.Name == engineName).Modules[0];
+
+            V3 direction = V3.zero;
+            for (int i = 0; i < e.ThrustDirectionVectors.Count; i++)
+                direction += e.ThrustTransformMultipliers[i] * e.ThrustDirectionVectors[i];
+
+            return direction.magnitude;
+        }
+
+        // the mass a MyTitanII engine burns from its full tank.  the tanks hold more Aerozine50 than the engines' mixture burns
+        // with their NTO, so the NTO runs down to the residuals first.  the propellant ratios are of the units.
+        private static double HypergolicBurned(double nto, double residuals, float aerozine50Ratio, float ntoRatio)
+        {
+            double ntoBurned = (1 - residuals) * nto;
+            return ntoBurned * (NTO_DENSITY + (double)aerozine50Ratio / ntoRatio * AEROZINE50_DENSITY);
         }
 
         // This should replicate the MainsailISP FloatCurve both within its range and outside of it.
