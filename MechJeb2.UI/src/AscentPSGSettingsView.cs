@@ -22,7 +22,48 @@ namespace MuMech.UI
         /// <summary>A Qα limit PSG clamps to between 0 and 10000 Pa-rad.</summary>
         public static bool QaClamped(MechJebCore core) => core.PSGSimulation.LimitQa < 0 || core.PSGSimulation.LimitQa > 10000;
 
-        public static bool Any(MechJebCore core) => ArefUnset(core) || CoastTimesInverted(core) || QaClamped(core);
+        /// <summary>
+        ///     A coast during a stage (it burns, coasts, then burns again) with an engine that can't light a second time: a stock engine
+        ///     that doesn't allow a restart, or a RealFuels engine without the ignitions left. The burn after the coast loses its thrust.
+        /// </summary>
+        public static bool CoastNoRelight(MechJebCore core)
+        {
+            MechJebModuleAscentSettings s = core.AscentSettings;
+            int stage = s.CoastStage;
+            if (stage < 0 || s.CoastLocation != 0)
+                return false;
+
+            System.Collections.Generic.List<Part> parts = core.vessel != null ? core.vessel.parts : EditorLogic.fetch?.ship?.parts;
+            if (parts == null)
+                return false;
+
+            for (int i = 0; i < parts.Count; i++)
+            {
+                Part p = parts[i];
+                if (p.inverseStage != stage)
+                    continue;
+                for (int m = 0; m < p.Modules.Count; m++)
+                    if (p.Modules[m] is ModuleEngines e && !CanRelight(e))
+                        return true;
+            }
+
+            return false;
+        }
+
+        // RealFuels counts ignitions (-1: unlimited), and an engine not lit yet needs one for its first burn; stock engines say
+        // whether they allow a restart
+        static bool CanRelight(ModuleEngines e)
+        {
+            if (VesselState.IsRealFuelsCorrectlyInitialized && VesselState.RFModuleEnginesRFType.IsInstance(e))
+            {
+                int ignitions = VesselState.RFignitionsField.GetValue<int>(e);
+                return ignitions < 0 || ignitions >= (e.EngineIgnited ? 1 : 2);
+            }
+
+            return e.allowRestart;
+        }
+
+        public static bool Any(MechJebCore core) => ArefUnset(core) || CoastTimesInverted(core) || QaClamped(core) || CoastNoRelight(core);
 
         // the vessel's body in flight, Kerbin (or the home body) in the editor
         static bool Atmosphere(MechJebCore core)
@@ -242,8 +283,11 @@ namespace MuMech.UI
                 Settings.UnguidedStagesInternal, null, 100);
 
             box = KodeWindow.Box(r);
-            AscentUi.ToggledBox(w, box, "Coast Stage: ", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v,
-                Settings.CoastStageInternal, null, 100);
+            w.Attention(AscentUi.ToggledBox(w, box, "Coast Stage: ", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v,
+                Settings.CoastStageInternal, null, 100), () => PsgAttention.CoastNoRelight(Core));
+            UIText relight = AscentUi.ToneText(box, RelightNote, Tone.Caution, true);
+            KodeWindow.WrapToWidth(relight);
+            w.Visible(relight.gameObject, () => PsgAttention.CoastNoRelight(Core));
             Layout coast = KodeWindow.Row(box);
             CoastToggle(w, coast, "Coast Before", -1);
             CoastToggle(w, coast, "Coast During", 0);
@@ -284,6 +328,8 @@ namespace MuMech.UI
 
         bool OutsideRecommended => Psgs.LimitQa < 1000 || Psgs.LimitQa > 4000;
 
+        const string RelightNote = "An engine of the coast stage can't light again after the coast (no restart, or no ignitions left).";
+
         const string ArefNote = "Aref is 0: PSG plans the ascent with no drag. Set the rocket's cross-section area.";
 
         static readonly string[] coastLocations = { "Before", "During", "After" };
@@ -308,7 +354,12 @@ namespace MuMech.UI
 
             UIObject g = w.Group(r, "#MechJeb_NewUI_Coast"); //Coast
             KodeWindow.PropertyGrid coast = w.Properties(g);
-            ModernRows.Switch(coast, "Coast Stage", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v, Settings.CoastStageInternal, "", 100);
+            w.Attention(ModernRows.Switch(coast, "Coast Stage", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v, Settings.CoastStageInternal, "", 100),
+                () => PsgAttention.CoastNoRelight(Core));
+            UIText relight = coast.Note(RelightNote);
+            KodeWindow.ToneText(relight, Tone.Caution);
+            KodeWindow.WrapToWidth(relight);
+            w.Visible(relight.transform.parent.gameObject, () => PsgAttention.CoastNoRelight(Core));
             Layout where = KodeWindow.Row(g);
             w.Segmented(where, coastLocations, () => Settings.CoastLocation + 1, i => Settings.CoastLocation = i - 1);
             KodeWindow.PropertyGrid coastTimes = w.Properties(g);
