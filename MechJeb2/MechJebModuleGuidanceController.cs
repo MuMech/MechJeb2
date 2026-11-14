@@ -58,6 +58,10 @@ namespace MuMech
         // what the vessel flew since guidance was engaged, for the PSG Solution window
         public readonly PSGFlownTrack FlownTrack = new PSGFlownTrack();
 
+        // the last Solution computed on the ground (it starts at MET zero), the one the vessel lifted off with, kept after
+        // Solution moves on, for the PSG Solution window
+        public Solution? PadSolution;
+
         public override void OnStart(PartModule.StartState state)
         {
             _rcsCoastMessage = new ScreenMessage("<color=orange>[MechJeb]: PSG coast, RCS on to hold attitude and settle propellant</color>", 5f,
@@ -89,6 +93,7 @@ namespace MuMech
         {
             Status = PSGStatus.ENABLED;
             Solution = null;
+            PadSolution = null;
             _allowExecution = false;
             hasCoasted = false;
             _spentSince = double.NaN;
@@ -593,6 +598,8 @@ namespace MuMech
             Check.False(solution.Normalized, "guidance needs a DeNormalized() Solution");
 
             Solution = solution;
+            if (solution.T0 <= 0)
+                PadSolution = solution;
             if (Status == PSGStatus.ENABLED)
                 Status = PSGStatus.INITIALIZED;
         }

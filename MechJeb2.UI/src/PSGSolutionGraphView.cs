@@ -13,11 +13,13 @@ using SeriesInfo = MuMech.MechJebModulePSGSolutionGraph.SeriesInfo;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModulePSGSolutionGraph ("PSG Solution"): the Solution guidance flies, against MET, on a KodeKit LineGraph. Each
-    /// quantity has its own Y range, and the drop-down in the plot's corner picks the one the Y labels show. The plan is a solid
-    /// line, what the vessel flew a thin one over it. Vertical lines mark the phase boundaries and, on request, the interpolant
-    /// nodes' bounds and the collocation points, where the optimizer applies the Qα and Q limits: between them the limits
-    /// aren't enforced. A white line is the vessel's MET. Zoom narrows the visible span, which the scrollbar moves.
+    /// MechJebModulePSGSolutionGraph ("PSG Solution"): PSG's Solutions against MET, on a KodeKit LineGraph. Each quantity has its
+    /// own Y range, and the drop-down in the plot's corner picks the one the Y labels show. Three lines per quantity, which the
+    /// legend under the plot draws: the Solution guidance flies now (bright), the one the vessel lifted off with (washed out,
+    /// hidden while it is the current one) and what the vessel flew (dark). Vertical marks: the current Solution's phase
+    /// boundaries, its interpolant nodes' edges, its collocation points (where the optimizer enforces the Qα and Q limits),
+    /// and the vessel's MET. Zoom narrows the visible span, which the scrollbar moves; the corner grip resizes the window
+    /// and the plot.
     /// </summary>
     [KodeViewFor(typeof(MechJebModulePSGSolutionGraph))]
     public class PSGSolutionGraphView : KodeView
@@ -32,26 +34,41 @@ namespace MuMech.UI
 
         SolutionTrace Plan => g.Plan;
 
+        SolutionTrace Pad => g.PadPlan;
+
         PSGFlownTrack Flown => g.Flown;
+
+        // ---- how each line and mark looks, shared by the plot and its legend ----
+
+        const float PlanThickness = 2, PadThickness = 1.5f, FlownThickness = 1.5f;
+
+        // opaque shades of the series' colour, since overlapping translucent quads bead a thin line
+        static Color PadShade(Color c) => Color.Lerp(c, new Color(0.55f, 0.55f, 0.6f), 0.6f);
+        static Color FlownShade(Color c) => Color.Lerp(c, Color.black, 0.45f);
+
+        static readonly Color PhaseColor = new Color(0.8f, 0.8f, 0.8f, 0.85f);
+        static readonly Color NodeColor = new Color(0.5f, 0.5f, 0.55f, 0.5f);
+        static readonly Color KnotColor = new Color(0.95f, 0.85f, 0.3f, 0.6f);
+        static readonly Color NowColor = new Color(1, 1, 1, 0.9f);
 
         // ---- data sources (no allocation) ----
 
-        sealed class PlanSeries : IGraphSource
+        sealed class TraceSeries : IGraphSource
         {
-            readonly PSGSolutionGraphView v;
+            readonly Func<SolutionTrace> trace;
             readonly Column column;
             readonly double factor;
 
-            public PlanSeries(PSGSolutionGraphView v, SeriesInfo info)
+            public TraceSeries(Func<SolutionTrace> trace, SeriesInfo info)
             {
-                this.v = v;
+                this.trace = trace;
                 column = info.Column;
                 factor = info.Factor;
             }
 
-            public int Count => v.Plan.Count;
-            public double X(int i) => v.Plan[Column.MET, i];
-            public double Y(int i) => v.Plan[column, i] * factor;
+            public int Count => trace().Count;
+            public double X(int i) => trace()[Column.MET, i];
+            public double Y(int i) => trace()[column, i] * factor;
         }
 
         sealed class FlownSeries : IGraphSource
@@ -96,29 +113,40 @@ namespace MuMech.UI
 
         LineGraph graph;
         readonly LineSeriesGraphic[] planLines = new LineSeriesGraphic[Infos.Length];
+        readonly LineSeriesGraphic[] padLines = new LineSeriesGraphic[Infos.Length];
         readonly LineSeriesGraphic[] flownLines = new LineSeriesGraphic[Infos.Length];
         LineSeriesGraphic nodeLines, knotLines, nowLine;
         LineSeriesGraphic[] extraMarkers;
         readonly NowMarker now = new NowMarker();
         readonly double[] yMin = new double[Infos.Length], yMax = new double[Infos.Length];
-        int builtVSize;
+
+        // the sizes the resize grip sets
+        LayoutElement rootSize, plotSize, labelsSize;
+        ResizeGrip grip;
+        int builtLabels, shownWidth = -1, shownPlotHeight = -1;
+        float dragStartHeight;
+        int dragStartPlotHeight;
 
         int lastRefreshFrame = int.MinValue / 2;
         float lastRefreshTime;
-        int lastMask = -1, lastZoom = -1, lastScaleIdx = -1, lastSampled = -1, lastFlownCount = -1;
+        int lastMask = -1, lastZoom = -1, lastScaleIdx = -1, lastSampled = -1, lastPadSampled = -1, lastFlownCount = -1;
         bool lastFlown, lastNodes, lastKnots;
         double span = 1;
+
+        static int LabelsFor(int height) => Mathf.Clamp(height / 24 + 1, 3, 11);
 
         protected override void BeforeSync()
         {
             g.ClampSettings();
-            if (g.VSize != builtVSize)
+            ApplySize();
+            // a new height needs another number of Y labels: rebuild once the drag is over
+            if (!grip.Dragging && LabelsFor(g.PlotHeight) != builtLabels)
             {
                 RebuildRequested = true;
                 return;
             }
 
-            bool planChanged = g.Refresh() || g.Sampled != lastSampled;
+            bool planChanged = g.Refresh() || g.Sampled != lastSampled || g.PadSampled != lastPadSampled;
             if (planChanged) Summarize();
 
             now.Met = g.Vessel != null ? g.VesselState.MET : double.NaN;
@@ -132,6 +160,7 @@ namespace MuMech.UI
 
             bool rangesStale = planChanged || Flown.Count != lastFlownCount || g.ShowFlown != lastFlown;
             lastSampled = g.Sampled;
+            lastPadSampled = g.PadSampled;
             lastMask = mask;
             lastScaleIdx = g.ScaleIdx;
             lastFlown = g.ShowFlown;
@@ -143,7 +172,7 @@ namespace MuMech.UI
 
             if (rangesStale) ComputeRanges();
 
-            span = Math.Max(Math.Max(Plan.Tf, Flown.LastMET), 1);
+            span = Math.Max(Math.Max(Math.Max(Plan.Tf, Pad.Tf), Flown.LastMET), 1);
             double visible = span / (1 << g.Zoom);
             if (g.Zoom != lastZoom)
             {
@@ -160,8 +189,8 @@ namespace MuMech.UI
             graph.Refresh(yMin[g.ScaleIdx], yMax[g.ScaleIdx]);
             for (int i = 0; i < Infos.Length; i++)
             {
-                planLines[i].YMin = flownLines[i].YMin = yMin[i];
-                planLines[i].YMax = flownLines[i].YMax = yMax[i];
+                planLines[i].YMin = padLines[i].YMin = flownLines[i].YMin = yMin[i];
+                planLines[i].YMax = padLines[i].YMax = flownLines[i].YMax = yMax[i];
             }
 
             // the extra markers aren't LineGraph's: give them its view and redraw them now
@@ -175,18 +204,57 @@ namespace MuMech.UI
             }
         }
 
-        // each series' Y range: its data's, the plan's and (when shown) the flown one's, widened to its fixed range
+        // the window's width and the plot's height, when the grip or a saved setting changed them
+        void ApplySize()
+        {
+            int width = Math.Max(g.Width, Mathf.CeilToInt(MinWidth));
+            if (width != shownWidth)
+            {
+                shownWidth = width;
+                rootSize.minWidth = rootSize.preferredWidth = width;
+            }
+
+            if (g.PlotHeight != shownPlotHeight)
+            {
+                shownPlotHeight = g.PlotHeight;
+                plotSize.preferredHeight = labelsSize.preferredHeight = g.PlotHeight;
+            }
+        }
+
+        void Resized(float width, float height)
+        {
+            if (dragStartPlotHeight < 0)
+            {
+                dragStartHeight = height;
+                dragStartPlotHeight = g.PlotHeight;
+            }
+
+            g.Width = Mathf.RoundToInt(width);
+            g.PlotHeight = Mathf.RoundToInt(dragStartPlotHeight + height - dragStartHeight);
+            g.ClampSettings();
+        }
+
+        void ResizeDone()
+        {
+            dragStartPlotHeight = -1;
+            g.Dirty = true;
+        }
+
+        SolutionTrace[] traces;
+
+        // each series' Y range: its data's (current, pad and, when shown, flown), widened to its fixed range
         void ComputeRanges()
         {
             for (int i = 0; i < Infos.Length; i++)
             {
                 SeriesInfo info = Infos[i];
                 double lo = double.PositiveInfinity, hi = double.NegativeInfinity;
-                if (Plan.Count > 0)
+                foreach (SolutionTrace trace in traces)
                 {
-                    (double pMin, double pMax) = Plan.Range(info.Column);
-                    lo = pMin * info.Factor;
-                    hi = pMax * info.Factor;
+                    if (trace.Count == 0) continue;
+                    (double tMin, double tMax) = trace.Range(info.Column);
+                    lo = Math.Min(lo, tMin * info.Factor);
+                    hi = Math.Max(hi, tMax * info.Factor);
                 }
 
                 if (g.ShowFlown && info.Flown.HasValue)
@@ -205,7 +273,6 @@ namespace MuMech.UI
                 double pad = Math.Max(hi - lo, Math.Abs(hi) * 1e-3) * 0.05;
                 lo = double.IsNaN(info.Min) ? lo - pad : Math.Min(info.Min, lo);
                 hi = double.IsNaN(info.Max) ? hi + pad : Math.Max(info.Max, hi);
-                if (!double.IsNaN(info.Min) && info.Min >= 0 && lo < 0 && !(lo < info.Min)) lo = 0;
                 if (!(hi > lo)) hi = lo + 1;
                 yMin[i] = lo;
                 yMax[i] = hi;
@@ -245,33 +312,33 @@ namespace MuMech.UI
             return viewText;
         }
 
-        // the plan's peaks: what the limits and the steering reach
+        // the peaks of the current and pad Solutions: what the limits and the steering reach
         void Summarize()
         {
-            if (Plan.Count == 0)
-            {
-                summaryText = "";
-                return;
-            }
-
-            int qa = ArgMax(Column.Q_ALPHA_FRACTION), q = ArgMax(Column.Q_FRACTION), aoa = ArgMax(Column.AOA);
-            var parts = new List<string>();
-            if (Plan.Aero.HasQAlphaLimit)
-                parts.Add($"max Qα {Plan[Column.Q_ALPHA_FRACTION, qa] * 100:F0} % of limit at MET {Plan[Column.MET, qa]:F0} s");
-            if (Plan.Aero.HasQLimit)
-                parts.Add($"max Q {Plan[Column.Q_FRACTION, q] * 100:F0} % at MET {Plan[Column.MET, q]:F0} s");
-            if (Plan.Aero.Atmosphere)
-                parts.Add($"max AoA {Plan[Column.AOA, aoa]:F1}° at MET {Plan[Column.MET, aoa]:F0} s");
-            else
-                parts.Add("no atmosphere in the plan");
-            summaryText = "Plan: " + string.Join(", ", parts);
+            var lines = new List<string>();
+            if (Plan.Count > 0) lines.Add("Current: " + Peaks(Plan));
+            if (Pad.Count > 0 && !g.PlanIsPad) lines.Add("Pad: " + Peaks(Pad));
+            summaryText = string.Join("\n", lines);
         }
 
-        int ArgMax(Column c)
+        static string Peaks(SolutionTrace t)
+        {
+            if (!t.Aero.Atmosphere) return "no atmosphere in the plan";
+            int qa = ArgMax(t, Column.Q_ALPHA_FRACTION), q = ArgMax(t, Column.Q_FRACTION), aoa = ArgMax(t, Column.AOA);
+            var parts = new List<string>();
+            if (t.Aero.HasQAlphaLimit)
+                parts.Add($"max Qα {t[Column.Q_ALPHA_FRACTION, qa] * 100:F1} % of limit at MET {t[Column.MET, qa]:F0} s");
+            if (t.Aero.HasQLimit)
+                parts.Add($"max Q {t[Column.Q_FRACTION, q] * 100:F1} % at MET {t[Column.MET, q]:F0} s");
+            parts.Add($"max AoA {t[Column.AOA, aoa]:F1}° at MET {t[Column.MET, aoa]:F0} s");
+            return string.Join(", ", parts);
+        }
+
+        static int ArgMax(SolutionTrace t, Column c)
         {
             int best = 0;
-            for (int i = 1; i < Plan.Count; i++)
-                if (Plan[c, i] > Plan[c, best])
+            for (int i = 1; i < t.Count; i++)
+                if (t[c, i] > t[c, best])
                     best = i;
             return best;
         }
@@ -282,8 +349,10 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
             g.ClampSettings();
-            builtVSize = g.VSize;
-            lastSampled = lastMask = lastZoom = lastScaleIdx = lastFlownCount = -1;
+            lastSampled = lastPadSampled = lastMask = lastZoom = lastScaleIdx = lastFlownCount = -1;
+            shownWidth = shownPlotHeight = -1;
+            dragStartPlotHeight = -1;
+            traces = new[] { Plan, Pad };
 
             Layout top = KodeWindow.Row(r);
             w.BoundLabel(top, "Solution 999: MET 9999 to 9999 s, 99 phases (held, guidance has a newer one)", StatusText, true);
@@ -295,15 +364,6 @@ namespace MuMech.UI
             Nudge(w, options, "×256", () => "×" + (1 << g.Zoom), () => g.Zoom--, () => g.Zoom++);
             w.BoundLabel(options, "MET 9999 to 9999 s", ViewText);
             KodeWindow.FlexibleSpace(options);
-            KodeWindow.Label(options, "Height");
-            Nudge(w, options, "9", () => g.VSize.ToString(), () => g.VSize--, () => g.VSize++);
-
-            Layout marks = KodeWindow.Row(r);
-            w.Toggle(marks, "Flown", () => g.ShowFlown, v => g.ShowFlown = v);
-            w.Toggle(marks, "Phases", () => g.ShowPhases, v => g.ShowPhases = v);
-            w.Toggle(marks, "Nodes", () => g.ShowNodes, v => g.ShowNodes = v);
-            w.Toggle(marks, "Collocation points", () => g.ShowKnots, v => g.ShowKnots = v);
-            KodeWindow.FlexibleSpace(marks);
 
             Layout chips = KodeWindow.FlowWrap(KodeWindow.Row(r), 4);
             for (int i = 0; i < Infos.Length; i++)
@@ -313,48 +373,118 @@ namespace MuMech.UI
             }
 
             BuildPlot(w, r);
+            BuildLegend(w, r);
 
             UIText summary = w.Wrap(w.BoundLabel(r, () => summaryText, true));
             KodeWindow.ToneText(summary, KodeWindow.Tone.Dim);
+
+            rootSize = w.Root.GetComponent<LayoutElement>() ?? w.Root.gameObject.AddComponent<LayoutElement>();
+            grip = ResizeGrip.Add(w, Resized, ResizeDone);
+            ApplySize();
         }
 
         void BuildPlot(KodeWindow w, UIObject r)
         {
-            int height = 128 * g.VSize;
+            int height = g.PlotHeight;
+            builtLabels = LabelsFor(height);
             Layout plotRow = KodeWindow.Row(r);
             plotRow.Padding(0, 0, 5, 5);
             Layout left = plotRow.Add<Layout>("Plot");
             left.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false);
             left.Finish();
-            graph = new LineGraph(w, left, 512, height, Mathf.Clamp(height / 24 + 1, 3, 11), r) { Follow = false };
-            graph.Plot.GetComponent<LayoutElement>().flexibleWidth = 1;
+            graph = new LineGraph(w, left, 512, height, builtLabels, r) { Follow = false };
+            plotSize = graph.Plot.GetComponent<LayoutElement>();
+            plotSize.flexibleWidth = 1;
+            labelsSize = graph.Plot.parent.Find("YLabels").GetComponent<LayoutElement>();
 
             graph.Stages.Source = new Markers(Plan.PhaseBoundaries);
-            graph.Stages.color = new Color(0.75f, 0.75f, 0.75f, 0.8f);
+            graph.Stages.color = PhaseColor;
             w.Visible(graph.Stages.gameObject, () => g.ShowPhases);
 
-            nodeLines = Marker("Nodes", new Markers(Plan.NodeBoundaries), new Color(0.5f, 0.5f, 0.5f, 0.35f));
+            nodeLines = Marker("Nodes", new Markers(Plan.NodeBoundaries), NodeColor);
             w.Visible(nodeLines.gameObject, () => g.ShowNodes);
-            knotLines = Marker("Knots", new Markers(Plan.Knots), new Color(0.95f, 0.85f, 0.3f, 0.6f));
+            knotLines = Marker("Knots", new Markers(Plan.Knots), KnotColor);
             w.Visible(knotLines.gameObject, () => g.ShowKnots);
+
+            // the pad Solution first, under the others
+            for (int i = 0; i < Infos.Length; i++)
+            {
+                int k = i;
+                SeriesInfo info = Infos[i];
+                padLines[i] = graph.AddSeries(new TraceSeries(() => g.PadPlan, info), PadShade(info.Color));
+                padLines[i].Thickness = PadThickness;
+                w.Visible(padLines[i].gameObject, () => g.Displayed(k) && !g.PlanIsPad);
+            }
 
             for (int i = 0; i < Infos.Length; i++)
             {
                 int k = i;
                 SeriesInfo info = Infos[i];
-                planLines[i] = graph.AddSeries(new PlanSeries(this, info), info.Color);
-                w.Visible(planLines[i].gameObject, () => g.Displayed(k));
-
-                // opaque, since overlapping translucent quads bead a thin line: the series' colour darkened
-                Color faded = Color.Lerp(info.Color, Color.black, 0.35f);
-                flownLines[i] = graph.AddSeries(info.Flown.HasValue ? new FlownSeries(this, info.Flown.Value, info.Factor) : null, faded);
-                flownLines[i].Thickness = 1.5f;
+                flownLines[i] = graph.AddSeries(info.Flown.HasValue ? new FlownSeries(this, info.Flown.Value, info.Factor) : null,
+                    FlownShade(info.Color));
+                flownLines[i].Thickness = FlownThickness;
                 w.Visible(flownLines[i].gameObject, () => g.ShowFlown && g.Displayed(k));
+
+                planLines[i] = graph.AddSeries(new TraceSeries(() => g.Plan, info), info.Color);
+                planLines[i].Thickness = PlanThickness;
+                w.Visible(planLines[i].gameObject, () => g.Displayed(k));
             }
 
-            nowLine = Marker("Now", now, new Color(1, 1, 1, 0.6f));
+            nowLine = Marker("Now", now, NowColor);
             extraMarkers = new[] { nodeLines, knotLines, nowLine };
             BuildScaleCombo(w);
+        }
+
+        // what each line and mark is, drawn as on the plot; the marks that can be hidden carry their switch
+        void BuildLegend(KodeWindow w, UIObject r)
+        {
+            var white = new Color(0.95f, 0.95f, 0.95f);
+
+            Layout lines = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
+            LegendItem(lines, white, PlanThickness, false, "Current solution");
+            LegendItem(lines, PadShade(white), PadThickness, false, "Pad solution (the one it lifted off with)");
+            w.Toggle(LegendCell(lines, FlownShade(white), FlownThickness, false), "Flown", () => g.ShowFlown, v => g.ShowFlown = v);
+
+            Layout marks = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
+            w.Toggle(LegendCell(marks, PhaseColor, 1, true), "Phase start/end", () => g.ShowPhases, v => g.ShowPhases = v);
+            w.Toggle(LegendCell(marks, NodeColor, 1, true), "Node edge", () => g.ShowNodes, v => g.ShowNodes = v);
+            w.Toggle(LegendCell(marks, KnotColor, 1, true), "Collocation point", () => g.ShowKnots, v => g.ShowKnots = v);
+            LegendItem(marks, NowColor, 1, true, "Vessel's MET");
+
+            UIText hint = w.Wrap(KodeWindow.Label(r,
+                "Each phase is a chain of nodes, each a cubic through two collocation points: the optimizer enforces the Qα and Q limits " +
+                "only at those points.", true));
+            KodeWindow.ToneText(hint, KodeWindow.Tone.Dim);
+        }
+
+        // a swatch then a label, kept together when the row wraps
+        static void LegendItem(UIObject parent, Color color, float thickness, bool vertical, string text) =>
+            KodeWindow.Label(LegendCell(parent, color, thickness, vertical), text);
+
+        static Layout LegendCell(UIObject parent, Color color, float thickness, bool vertical)
+        {
+            Layout cell = KodeWindow.Row(parent);
+            cell.FlexibleLayout(0f, 0f);
+            cell.Spacing(4);
+            RectTransform swatch = Graphs.Surface(cell, 18, 14, "Swatch");
+            var bar = Graphs.Fill<Image>(swatch, "Bar");
+            bar.color = color;
+            bar.raycastTarget = false;
+            RectTransform rt = bar.rectTransform;
+            if (vertical)
+            {
+                rt.anchorMin = new Vector2(0.5f, 0);
+                rt.anchorMax = new Vector2(0.5f, 1);
+                rt.sizeDelta = new Vector2(Math.Max(thickness, 1.5f), 0);
+            }
+            else
+            {
+                rt.anchorMin = new Vector2(0, 0.5f);
+                rt.anchorMax = new Vector2(1, 0.5f);
+                rt.sizeDelta = new Vector2(0, thickness);
+            }
+
+            return cell;
         }
 
         LineSeriesGraphic Marker(string name, IGraphSource source, Color color)

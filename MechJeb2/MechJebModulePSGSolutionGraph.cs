@@ -74,10 +74,15 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int ScaleIdx;
 
-        // the plot's height in 128 px steps
+        // the window's width, set by its resize grip, and 0 for its narrowest
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public int VSize = 2;
+        public int Width = 620;
+
+        // the plot's height, set by the resize grip
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int PlotHeight = 256;
 
         // the visible MET span is the whole trajectory over 2^Zoom
         [UsedImplicitly]
@@ -104,14 +109,21 @@ namespace MuMech
         public bool Hold;
 
         internal const int MAX_ZOOM = 8;
-        internal const int MAX_VSIZE = 6;
+        internal const int MIN_PLOT_HEIGHT = 96;
+        internal const int MAX_PLOT_HEIGHT = 1200;
 
         public readonly SolutionTrace Plan = new SolutionTrace();
+
+        // the Solution the vessel lifted off with (MechJebModuleGuidanceController.PadSolution), drawn under the current one
+        public readonly SolutionTrace PadPlan = new SolutionTrace();
 
         // how many Solutions were sampled since the window opened, the last one included
         public int Sampled { get; private set; }
 
-        private Solution? _sampled;
+        private Solution? _sampled, _padSampled;
+
+        // how many pad Solutions were sampled since the window opened
+        public int PadSampled { get; private set; }
 
         public PSGFlownTrack Flown => Core.Guidance.FlownTrack;
 
@@ -122,12 +134,40 @@ namespace MuMech
         internal void ClampSettings()
         {
             Zoom = Mathf.Clamp(Zoom, 0, MAX_ZOOM);
-            VSize = Mathf.Clamp(VSize, 1, MAX_VSIZE);
+            PlotHeight = Mathf.Clamp(PlotHeight, MIN_PLOT_HEIGHT, MAX_PLOT_HEIGHT);
+            Width = Mathf.Clamp(Width, 0, 4000);
             if (ScaleIdx < 0 || ScaleIdx >= Series.Length) ScaleIdx = 0;
         }
 
-        /// <summary>Samples the guidance's Solution when it is a new one and Hold is off. True when the plan changed.</summary>
+        /// <summary>
+        ///     Samples the guidance's Solution when it is a new one and Hold is off, and its pad Solution when that is a new one.
+        ///     True when either changed.
+        /// </summary>
         public bool Refresh()
+        {
+            bool pad = RefreshPad();
+            return RefreshCurrent() || pad;
+        }
+
+        private bool RefreshPad()
+        {
+            Solution? pad = Core.Guidance.PadSolution;
+            if (ReferenceEquals(pad, _padSampled))
+                return false;
+
+            _padSampled = pad;
+            if (pad == null)
+                PadPlan.Clear();
+            else
+            {
+                PadPlan.Sample(pad);
+                PadSampled++;
+            }
+
+            return true;
+        }
+
+        private bool RefreshCurrent()
         {
             Solution? solution = Core.Guidance.Solution;
             if (solution == null || ReferenceEquals(solution, _sampled) || (Hold && Plan.Count > 0))
@@ -142,19 +182,23 @@ namespace MuMech
         // the plan is the Solution guidance flies now (it may be held)
         public bool PlanIsCurrent => ReferenceEquals(Core.Guidance.Solution, _sampled);
 
-        protected override void OnModuleEnabled() => Sampled = 0;
+        // the plan is the pad Solution itself (on the pad, until a Solution computed in flight replaces it)
+        public bool PlanIsPad => _sampled != null && ReferenceEquals(_sampled, _padSampled);
+
+        protected override void OnModuleEnabled() => Sampled = PadSampled = 0;
 
         protected override void OnModuleDisabled()
         {
             // a closed window drops its reference to the Solution
-            _sampled = null;
+            _sampled = _padSampled = null;
             Plan.Clear();
+            PadPlan.Clear();
             Hold = false;
         }
 
         /// <summary>
-        ///     Writes the plan, and the flown track when it has samples, to GameData/MechJeb2/Export/ as
-        ///     &lt;vessel&gt;_PSG_&lt;time&gt;_plan.csv and _flown.csv.  Returns the plan's path, or null with no plan.
+        ///     Writes the plan, the pad plan and the flown track, those that have samples, to GameData/MechJeb2/Export/ as
+        ///     &lt;vessel&gt;_PSG_&lt;time&gt;_plan.csv, _pad.csv and _flown.csv.  Returns the plan's path, or null with no plan.
         /// </summary>
         public string? ExportCsv()
         {
@@ -172,6 +216,14 @@ namespace MuMech
                 Plan.WriteCsv(writer);
 
             string message = "Exported as\n" + planPath;
+            if (PadPlan.Count > 0)
+            {
+                string padPath = stem + "_pad.csv";
+                using (var writer = new StreamWriter(padPath))
+                    PadPlan.WriteCsv(writer);
+                message += "\n" + padPath;
+            }
+
             if (Flown.Count > 0)
             {
                 string flownPath = stem + "_flown.csv";
