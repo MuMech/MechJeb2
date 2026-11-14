@@ -361,7 +361,10 @@ namespace MuMech.UI
 
             Layout top = KodeWindow.Row(r);
             w.BoundLabel(top, "Solution 999: MET 9999 to 9999 s, 99 phases (held, guidance has a newer one)", StatusText, true);
-            w.Toggle(top, "Hold", () => g.Hold, v => g.Hold = v);
+            UnityEngine.UI.Toggle hold = w.Toggle(top, "Hold", () => g.Hold, v => g.Hold = v);
+            Tooltips.Add(KodeWindow.RowOf(hold),
+                "Keep showing this solution while guidance computes new ones, to study, zoom or export it. The pad solution and " +
+                "the flown track still update. Off: the window follows guidance's newest solution.");
             KodeWindow.Button(top, "CSV", () => g.ExportCsv());
 
             Layout options = KodeWindow.Row(r);
