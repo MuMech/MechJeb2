@@ -152,6 +152,11 @@ namespace MuMech
                 znorm = $"infeasibility: {Core.PSGSimulation.LastInfeasibility:G5}";
                 if (Core.PSGSimulation.LastFailureMessage != null)
                     label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}";
+                ReachWarning = PsgReachWarning();
+            }
+            else
+            {
+                ReachWarning = null;
             }
 
             if (_launchingToPlane) launchTimer = CachedLocalizer.Instance.MechJebAscentMsg2; //Launching to target plane
@@ -165,6 +170,25 @@ namespace MuMech
             autopilotStatusLevel = _autopilot.Status.Severity;
             UpdatePhaseLines();
             Profiler.EndSample();
+        }
+
+        /// <summary>Why the PSG plan can't reach orbit with this rocket, in words, or null.</summary>
+        internal string ReachWarning;
+
+        // the burn lines round a shortfall under 2.5 m/s to zero as noise, so this does too
+        private string PsgReachWarning()
+        {
+            MechJebModulePSGSimulation sim = Core.PSGSimulation;
+
+            if (sim.DeltaVShortfall >= 2.5)
+                return $"Not enough Δv: the rocket is {sim.DeltaVShortfall:F0} m/s short of the target orbit and will run out of " +
+                    "propellant before reaching it. Add propellant or lower the target.";
+
+            if (!double.IsNaN(sim.SuborbitalPeriapsis))
+                return $"Not enough Δv for orbit: the planned orbit's periapsis is {sim.SuborbitalPeriapsis / 1000:F0} km, " +
+                    (MainBody.atmosphere ? "inside the atmosphere." : "under the surface.");
+
+            return null;
         }
 
         // The PSG status lines (one per burn/coast phase, then the terminal conditions, one per line), for the new UI whose rows are fixed

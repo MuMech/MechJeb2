@@ -202,6 +202,33 @@ namespace MechJebLib.PSG
             return Phases[n].DeltaVFromMass(M(n, t), M(n, _tmax[n]));
         }
 
+        /// <summary>
+        ///     How much delta-v the trajectory burns beyond the propellant the rocket has, in this solution's velocity units, or zero
+        ///     when the rocket can reach the target.  The optimizer lets the last stage it may shut down burn past its propellant
+        ///     (PhaseCollection.FixLastShutdownStage), so a rocket without enough delta-v still converges, on a trajectory whose
+        ///     last burn ends below that stage's empty mass.  A burn-coast-burn of one stage counts once, from its second burn.
+        /// </summary>
+        public double DeltaVShortfall()
+        {
+            double shortfall = 0;
+
+            for (int p = 0; p < Segments; p++)
+            {
+                Phase phase = Phases[p];
+                if (phase.Coast)
+                    continue;
+
+                double mEnd = M(p, _tmax[p]);
+                if (mEnd >= phase.Mf)
+                    continue;
+
+                // the mass can't reach zero (MinM is Sqrt(EPS)), but keep the log finite whatever the interpolant gives
+                shortfall = Max(shortfall, phase.DeltaVFromMass(phase.Mf, Max(mEnd, phase.Mf * 1e-9)));
+            }
+
+            return shortfall;
+        }
+
         // the time left in the burn before the coast, in the coast, and in the burn after it (each may be multi-stage); without
         // a coast every burn counts as the burn after it
         public (double burn1, double coast, double burn2) TgoSplit(double t)
