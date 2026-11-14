@@ -365,7 +365,9 @@ namespace MuMech
                 // if we have only inertially guided stages we can't run the optimizer
                 if (FlightPlan.AllUnguidedStages())
                 {
-                    SetState(OptimizerState.UNGUIDED_ONLY);
+                    // also true once no stage is left at all, as in terminal guidance on the last stage: name that instead
+                    SetState(!Core.Guidance.IsReady() ? Core.Guidance.IsTerminal() ? OptimizerState.TERMINAL : OptimizerState.FINISHED
+                        : UnguidedBurnLeft() ? OptimizerState.UNGUIDED_ONLY : OptimizerState.NO_PLAN);
                     return;
                 }
             }
@@ -526,6 +528,14 @@ namespace MuMech
 
             Block(1, OptimizerState.READY);
             SetState(OptimizerState.SOLVING);
+        }
+
+        private bool UnguidedBurnLeft()
+        {
+            foreach (FlightPlanStage stage in FlightPlan!.Stages)
+                if (!stage.Done && stage is { StageType: StageType.BURN, Unguided: true })
+                    return true;
+            return false;
         }
 
         private int FindStartingIndex()

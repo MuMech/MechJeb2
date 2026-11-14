@@ -154,7 +154,7 @@ namespace MuMech
                     label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}";
                 // the optimizer only runs while the autopilot (or kOS) uses it: no line before the autopilot is engaged
                 optimizerState = Core.PSGSimulation.Enabled
-                    ? OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null)
+                    ? OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting())
                     : null;
             }
 
@@ -174,7 +174,7 @@ namespace MuMech
         /// <summary>"Optimizer: …": what the PSG optimizer is doing, or why it is not solving, so that a climbing staleness reads as a pause.</summary>
         internal string optimizerState;
 
-        internal static string OptimizerStateText(OptimizerState state, double seconds, bool noSolution)
+        internal static string OptimizerStateText(OptimizerState state, double seconds, bool noSolution, bool coasting = false)
         {
             switch (state)
             {
@@ -184,7 +184,10 @@ namespace MuMech
                 case OptimizerState.NO_PLAN:
                     return "Optimizer: no flight plan, no stages to optimize";
                 case OptimizerState.STAGE_ENDING:
-                    return $"Optimizer: paused, the stage ends in {Math.Ceiling(seconds):F0} s";
+                    // the freeze comes before the end of each phase: a burn's end or, in a coast, the burn after it
+                    return coasting
+                        ? $"Optimizer: paused, the burn starts in {Math.Ceiling(seconds):F0} s"
+                        : $"Optimizer: paused, the stage ends in {Math.Ceiling(seconds):F0} s";
                 case OptimizerState.AFTER_STAGING:
                     return $"Optimizer: paused after staging, {Math.Ceiling(seconds):F0} s";
                 case OptimizerState.COAST_PAUSE:
