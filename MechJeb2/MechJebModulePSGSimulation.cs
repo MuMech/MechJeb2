@@ -8,6 +8,7 @@ extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation;
+using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using MechJebLibBindings.PSG;
@@ -99,6 +100,21 @@ namespace MuMech
         public int LastLmIterations;
 
         public string? LastFailureMessage;
+
+        /// <summary>
+        ///     How much delta-v, in m/s, the last converged solution needs beyond what the rocket has (Solution.DeltaVShortfall), or
+        ///     zero.  Guidance still flies that solution, so the rocket runs out of propellant before the target.
+        /// </summary>
+        public double DeltaVShortfall;
+
+        /// <summary>
+        ///     For a rocket with only fixed burn times and a burnout altitude above the atmosphere, the periapsis altitude in m of the
+        ///     orbit the last converged solution ends on when that periapsis is under the atmosphere (or the surface on an airless body),
+        ///     else NaN.  Such a rocket maximizes its
+        ///     energy instead of aiming at an orbit, so running short shows up here and not as a DeltaVShortfall.
+        /// </summary>
+        public double SuborbitalPeriapsis = double.NaN;
+
         public double Staleness;
         public double LastInfeasibility;
         private double _lastTime;
@@ -153,6 +169,29 @@ namespace MuMech
             LastLmStatus = LastLmIterations = 0;
             Staleness = LastInfeasibility = _lastTime = 0;
             LastFailureMessage = null;
+            DeltaVShortfall = 0;
+            SuborbitalPeriapsis = double.NaN;
+        }
+
+        private void CheckReach(Solution solution)
+        {
+            DeltaVShortfall = solution.DeltaVShortfall();
+
+            SuborbitalPeriapsis = double.NaN;
+            if (_optimizeStageFlag)
+                return;
+
+            // the target of such a rocket is its burnout altitude: one inside the atmosphere is a suborbital flight on purpose (a
+            // sounding rocket), with no orbit to fall short of
+            double floor = MainBody.atmosphere ? MainBody.atmosphereDepth : 0;
+            if (BurnoutAltitude < floor)
+                return;
+
+            (V3 rf, V3 vf) = solution.TerminalStateVectors();
+            (double sma, double ecc, _, _, _, _, _) = Astro.KeplerianFromStateVectors(MainBody.gravParameter, rf, vf);
+            double pe = Astro.PeriapsisFromKeplerian(sma, ecc) - MainBody.Radius;
+            if (pe < floor)
+                SuborbitalPeriapsis = pe;
         }
 
         /// <summary>
@@ -220,7 +259,9 @@ namespace MuMech
                 if (psg.Success() && psg.Solution != null)
                 {
                     _solution = psg.Solution;
-                    Core.Guidance.SetSolution(psg.Solution.DeNormalized());
+                    Solution flown = psg.Solution.DeNormalized();
+                    CheckReach(flown);
+                    Core.Guidance.SetSolution(flown);
                     SuccessfulConverges += 1;
                     _lastTime = VesselState.Time;
                     Staleness = 0;

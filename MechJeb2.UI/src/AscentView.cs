@@ -318,6 +318,10 @@ namespace MuMech.UI
             w.BoundLabel(tgo, "tgo: 999.999", () => menu.tgo ?? " ");
             w.BoundLabel(tgo, "pitch: -90.0", () => menu.pitch ?? " ", true);
 
+            UIText reach = w.Wrap(w.BoundLabel(box, () => menu.ReachWarning ?? " ", true));
+            KodeWindow.ToneText(reach, Tone.Bad);
+            w.Visible(reach, () => menu.ReachWarning != null);
+
             UIText status = w.BoundLabel(box, () => menu.label26 ?? " ", true); //Guidance Status:
             w.ToneText(status, GuidanceTone);
 
