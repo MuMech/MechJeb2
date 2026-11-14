@@ -43,12 +43,13 @@ namespace MuMech.UI
             closestApproachTime = guidance.Orbit.MinimumSeparationTime(target, now);
         }
 
-        // a burn that can't be computed says so, where it would otherwise only reach the log
-        static System.Action Plan(System.Action plan) => () =>
+        // a burn that can't be planned says why; one that can't be computed says so, where it would otherwise only reach the log
+        static System.Action Plan(System.Func<string> plan) => () =>
         {
             try
             {
-                plan();
+                string problem = plan();
+                if (problem != null) ScreenMessages.PostScreenMessage(problem, 5);
             }
             catch (System.Exception e)
             {

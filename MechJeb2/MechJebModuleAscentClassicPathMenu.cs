@@ -16,14 +16,12 @@ namespace MuMech
 
         public override bool ShowInMenu => false;
 
-        private MechJebModuleAscentClassicAutopilot _path;
         private double _lastMaxAtmosphereAltitude = -1;
 
         public override void OnStart(PartModule.StartState state)
         {
             Recorder = Core.GetComputerModule<MechJebModuleFlightRecorder>();
-            AscentSettings = Core.GetComputerModule<MechJebModuleAscentSettings>();
-            _path = Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
+            Autopilot = Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         }
 
         // redraw the atmosphere picture when the body's atmosphere changed (shared with the new UI)
@@ -33,12 +31,12 @@ namespace MuMech
             if (_lastMaxAtmosphereAltitude != MainBody.RealMaxAtmosphereAltitude())
             {
                 _lastMaxAtmosphereAltitude = MainBody.RealMaxAtmosphereAltitude();
-                UpdateAtmoTexture(PathTexture, MainBody,
-                    AscentSettings.AutoPath ? AscentSettings.AutoTurnEndAltitude : AscentSettings.TurnEndAltitude);
+                UpdateAtmoTexture(PathTexture, MainBody, PathEndAltitude);
             }
         }
 
-        internal MechJebModuleAscentSettings AscentSettings { get; private set; }
+        // the classic autopilot holds the path settings this window edits
+        internal MechJebModuleAscentClassicAutopilot Autopilot { get; private set; }
 
         // Round the slider's value (0..1) to sliderPrecision decimal places.
         private const int SLIDER_PRECISION = 3;
@@ -47,7 +45,7 @@ namespace MuMech
         {
             if (Math.Round(Math.Abs(sliderTurnShapeExponent - oldTurnShapeExponent), SLIDER_PRECISION) > 0)
             {
-                AscentSettings.TurnShapeExponent.Val = Math.Round(sliderTurnShapeExponent, SLIDER_PRECISION);
+                Autopilot.TurnShapeExponent.Val = Math.Round(sliderTurnShapeExponent, SLIDER_PRECISION);
             }
         }
 
@@ -104,7 +102,7 @@ namespace MuMech
             int guard = 0;
             while (alt < endAltitude && downrange < width * scale && guard++ < 100000)
             {
-                float desiredAngle = (float)(alt < _path.VerticalAscentEnd() ? 90 : _path.FlightPathAngle(alt, 0));
+                float desiredAngle = (float)(alt < Autopilot.VerticalAscentEnd() ? 90 : Autopilot.FlightPathAngle(alt, 0));
 
                 alt += scale * Mathf.Sin(desiredAngle * Mathf.Deg2Rad);
                 downrange += scale * Mathf.Cos(desiredAngle * Mathf.Deg2Rad);
@@ -120,7 +118,7 @@ namespace MuMech
             }
         }
 
-        internal double PathEndAltitude => AscentSettings.AutoPath ? AscentSettings.AutoTurnEndAltitude : AscentSettings.TurnEndAltitude;
+        internal double PathEndAltitude => Autopilot.AutoPath ? Autopilot.AutoTurnEndAltitude : Autopilot.TurnEndAltitude;
 
         internal static Texture2D PathTexture { get; } = new Texture2D(400, 100);
 
@@ -145,14 +143,14 @@ namespace MuMech
             double end = PathEndAltitude;
             return new PathSignature
             {
-                Auto = AscentSettings.AutoPath,
+                Auto = Autopilot.AutoPath,
                 EndAltitude = end,
-                VerticalEnd = _path.VerticalAscentEnd(),
+                VerticalEnd = Autopilot.VerticalAscentEnd(),
                 // the turn also depends on where the autopilot started the turn: sample the angle half way up
-                Probe = _path.FlightPathAngle(end * 0.5, 0),
-                EndAngle = AscentSettings.TurnEndAngle,
-                Exponent = AscentSettings.TurnShapeExponent,
-                StartVelocity = AscentSettings.AutoPath ? AscentSettings.AutoTurnStartVelocity : AscentSettings.TurnStartVelocity
+                Probe = Autopilot.FlightPathAngle(end * 0.5, 0),
+                EndAngle = Autopilot.TurnEndAngle,
+                Exponent = Autopilot.TurnShapeExponent,
+                StartVelocity = Autopilot.AutoPath ? Autopilot.AutoTurnStartVelocity : Autopilot.TurnStartVelocity
             };
         }
 

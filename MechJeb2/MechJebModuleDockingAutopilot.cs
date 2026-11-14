@@ -66,6 +66,18 @@ namespace MuMech
 
         public DockingStep dockingStep = DockingStep.OFF;
 
+        // Why the last run ended: NONE while it runs, or before the first one.
+        public enum StopReasons
+        {
+            NONE, DOCKED, AT_PORT, TARGET_LOST, DISENGAGED, NOT_A_VESSEL, CONTROL_LOST, SPINNING, NO_CAPTURE, GAVE_UP, STOPPED_SHORT, PORT_CLOSED,
+            INCOMPATIBLE, CONTACT, STUCK
+        }
+
+        public StopReasons StopReason { get; private set; }
+
+        // The message posted when it stopped on a problem, or "" (it's only shown on the active vessel).
+        public string StopMessage { get; private set; } = "";
+
         public struct Box3d
         {
             public Vector3 center;
@@ -78,6 +90,10 @@ namespace MuMech
 
         private ITargetable lastTarget;
         private ModuleDockingNode wantedPort;
+
+        // The port to dock with while KSP has its vessel as the target instead (see RestoreWantedPort), or null.
+        internal ModuleDockingNode WantedPort => Enabled ? wantedPort : null;
+
         private Transform referenceTransform;
         private ModuleDockingNode referencePort;
         private bool controlledFromPort;
@@ -157,7 +173,7 @@ namespace MuMech
             {
                 if (ev.from.vessel == Vessel || ev.to.vessel == Vessel)
                 {
-                    EndDocking();
+                    EndDocking(StopReasons.DOCKED);
                 }
             }
         }
@@ -169,6 +185,8 @@ namespace MuMech
             dockingStep = DockingStep.INIT;
             status = "";
             statusKey = null;
+            StopReason = StopReasons.NONE;
+            StopMessage = "";
             ownMeasured = false;
             targetMeasured = false;
             retries = 0;
@@ -186,6 +204,10 @@ namespace MuMech
             Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, rcsWasOn);
             Vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, sasWasOn);
             dockingStep = DockingStep.OFF;
+
+            // turned off by its users: the window's switch, closing the window, or kOS
+            if (StopReason == StopReasons.NONE)
+                StopReason = StopReasons.DISENGAGED;
         }
 
         private double FixSpeed(double s)
@@ -236,7 +258,7 @@ namespace MuMech
         {
             if (!Core.Target.NormalTargetExists)
             {
-                EndDocking();
+                EndDocking(StopReasons.TARGET_LOST);
                 return;
             }
 
@@ -337,14 +359,14 @@ namespace MuMech
             bool inMagnets = Math.Abs(zSep) < acquireRange && lateralSep.magnitude < acquireRange;
             if (stopOnContact && !inMagnets && TouchingTarget())
             {
-                StopWithMessage("#MechJeb_Docking_contact"); //Docking autopilot stopped: the vessel touched the target.
+                StopWithMessage(StopReasons.CONTACT, "#MechJeb_Docking_contact"); //Docking autopilot stopped: the vessel touched the target.
                 return;
             }
 
             Vector3d velocityError = targetVel + adjustment - VesselState.OrbitalVelocity;
             if (stuck.Update(velocityError.ToV3(), (VesselState.OrbitalVelocity - targetVel).ToV3(), ThrustAcceleration(velocityError), TimeWarp.fixedDeltaTime,
                     Core.RCS.Saturated && !inMagnets))
-                StopWithMessage("#MechJeb_Docking_stuck"); //Docking autopilot stopped: the vessel isn't moving as commanded, and may be against the target.
+                StopWithMessage(StopReasons.STUCK, "#MechJeb_Docking_stuck"); //Docking autopilot stopped: the vessel isn't moving as commanded, and may be against the target.
         }
 
         // Speeds are shown as they are: which way they go is in the text.
@@ -362,13 +384,13 @@ namespace MuMech
         {
             if (!Core.Target.NormalTargetExists)
             {
-                EndDocking();
+                EndDocking(StopReasons.TARGET_LOST);
                 return;
             }
 
             if (Core.Target.Target.GetVessel() == null)
             {
-                StopWithMessage("#MechJeb_Docking_notAVessel"); //Docking autopilot stopped: the target isn't a vessel.
+                StopWithMessage(StopReasons.NOT_A_VESSEL, "#MechJeb_Docking_notAVessel"); //Docking autopilot stopped: the target isn't a vessel.
                 return;
             }
 
@@ -377,7 +399,7 @@ namespace MuMech
 
             if (controlledFromPort && referencePort == null)
             {
-                StopWithMessage("#MechJeb_Docking_controlLost"); //Docking autopilot stopped: the vessel is no longer controlled from a docking port.
+                StopWithMessage(StopReasons.CONTROL_LOST, "#MechJeb_Docking_controlLost"); //Docking autopilot stopped: the vessel is no longer controlled from a docking port.
                 return;
             }
 
@@ -401,7 +423,7 @@ namespace MuMech
             // The axis of a turning target sweeps round the vessel, and past this the thrust can't hold it there.
             if (dockingStep != DockingStep.INIT && targetVessel != null && TargetSpinsTooFast(targetVessel))
             {
-                StopWithMessage("#MechJeb_Docking_spinning"); //Docking autopilot stopped: the target is spinning too fast to follow.
+                StopWithMessage(StopReasons.SPINNING, "#MechJeb_Docking_spinning"); //Docking autopilot stopped: the target is spinning too fast to follow.
                 return;
             }
 
@@ -445,7 +467,7 @@ namespace MuMech
                     timeInAcquireRange = zSep < acquireRange && lateralSep.magnitude < acquireRange ? timeInAcquireRange + TimeWarp.fixedDeltaTime : 0;
                     if (timeInAcquireRange > captureTimeLimit)
                     {
-                        StopWithMessage("#MechJeb_Docking_noCapture"); //Docking autopilot stopped: the ports are together but didn't capture.
+                        StopWithMessage(StopReasons.NO_CAPTURE, "#MechJeb_Docking_noCapture"); //Docking autopilot stopped: the ports are together but didn't capture.
                         break;
                     }
 
@@ -456,10 +478,10 @@ namespace MuMech
                     {
                         // The speed law has run out by here, so this brakes what's left: RCS is off afterwards, and the target isn't far.
                         if (portTarget)
-                            EndDocking();
+                            EndDocking(StopReasons.AT_PORT);
                         // stopped against the point the loop holds: a turning target's CoM moves relative to it
                         else if ((VesselState.OrbitalVelocity - TargetPointVelocity()).magnitude < stoppedSpeed)
-                            StopWithMessage("#MechJeb_Docking_stoppedShort"); //Docking autopilot stopped short of the target: choose a docking port and start it again.
+                            StopWithMessage(StopReasons.STOPPED_SHORT, "#MechJeb_Docking_stoppedShort"); //Docking autopilot stopped short of the target: choose a docking port and start it again.
                     }
 
                     break;
@@ -488,7 +510,7 @@ namespace MuMech
         private void Retry()
         {
             if (++retries > maxRetries)
-                StopWithMessage("#MechJeb_Docking_gaveUp"); //Docking autopilot stopped: it couldn't stay on the docking axis.
+                StopWithMessage(StopReasons.GAVE_UP, "#MechJeb_Docking_gaveUp"); //Docking autopilot stopped: it couldn't stay on the docking axis.
             else
                 dockingStep = DockingStep.INIT;
         }
@@ -606,7 +628,7 @@ namespace MuMech
         private void Leave(V3 here, double need)
         {
             if (++retries > maxRetries)
-                StopWithMessage("#MechJeb_Docking_gaveUp"); //Docking autopilot stopped: it couldn't stay on the docking axis.
+                StopWithMessage(StopReasons.GAVE_UP, "#MechJeb_Docking_gaveUp"); //Docking autopilot stopped: it couldn't stay on the docking axis.
             else if (targetShape.Exit(here, need, out exitPoint))
                 dockingStep = DockingStep.LEAVING_TARGET;
             else
@@ -659,13 +681,13 @@ namespace MuMech
 
             if (port != null && port.state.Contains("Disabled"))
             {
-                StopWithMessage("#MechJeb_Docking_portClosed"); //Docking autopilot stopped: the target port is closed.
+                StopWithMessage(StopReasons.PORT_CLOSED, "#MechJeb_Docking_portClosed"); //Docking autopilot stopped: the target port is closed.
                 return;
             }
 
             if (port != null && referencePort != null && !MechJebModuleDockingGuidance.ArePortsCompatible(referencePort, port))
             {
-                StopWithMessage("#MechJeb_Docking_incompatible"); //Docking autopilot stopped: the ports can't dock with each other.
+                StopWithMessage(StopReasons.INCOMPATIBLE, "#MechJeb_Docking_incompatible"); //Docking autopilot stopped: the ports can't dock with each other.
                 return;
             }
 
@@ -696,23 +718,29 @@ namespace MuMech
             return false;
         }
 
-        private void StopWithMessage(string message)
+        private void StopWithMessage(StopReasons reason, string message)
         {
+            string text = Localizer.Format(message);
             if (Vessel.isActiveVessel)
             {
                 string speed = Localizer.Format("#MechJeb_Docking_relativeSpeed", Core.Target.RelativeVelocity.magnitude.ToString("F2")); //Relative speed <<1>> m/s.
-                ScreenMessages.PostScreenMessage(Localizer.Format(message) + "\n" + speed, 8, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(text + "\n" + speed, 8, ScreenMessageStyle.UPPER_CENTER);
             }
 
-            EndDocking();
+            if (StopReason == StopReasons.NONE)
+                StopMessage = text;
+            EndDocking(reason);
 
             // Something went wrong close to the target, so this hands over a vessel that's holding still, and not one left tumbling from a hit.
             Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
             Vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
         }
 
-        private void EndDocking()
+        // The first reason given counts: clearing the users runs OnModuleDisabled, which would call it DISENGAGED.
+        private void EndDocking(StopReasons reason)
         {
+            if (StopReason == StopReasons.NONE)
+                StopReason = reason;
             dockingStep = DockingStep.OFF;
             Users.Clear();
             Enabled = false;

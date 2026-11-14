@@ -7,6 +7,13 @@
         <ProjectGuid>{E8CBCDDD-BCFC-4F03-9309-F58395CA4762}</ProjectGuid>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+        <!--
+            Always compile optimized, Debug and Debug-kOS included: an unoptimized alglib (whose DebuggableAttribute also
+            turns off the JIT optimizer) makes Debug test runs and in-game Debug builds much slower, and nobody steps
+            through alglib. Debug output still goes to bin/Debug with a pdb. To debug inside alglib, build with
+            -p:Optimize=false (in Debug every other project is unoptimized already).
+        -->
+        <Optimize>true</Optimize>
     </PropertyGroup>
 
 </Project>
