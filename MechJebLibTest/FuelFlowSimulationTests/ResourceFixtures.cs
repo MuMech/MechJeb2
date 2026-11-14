@@ -43,6 +43,13 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public const double LEAD_BALLAST_DENSITY = 0.011339999735355377;
         public const double TEATEB_DENSITY = 0.00070030998904258013;
 
+        // the Titan II's hypergolic propellants, from the MyTitanII capture
+        public const int AEROZINE50 = -258938826;
+        public const int NTO = -1844636135;
+
+        public const double AEROZINE50_DENSITY = 0.00089999998454004526;
+        public const double NTO_DENSITY = 0.0014329999685287476;
+
         // made up, since no capture has the RD-108's or the RS-68's propellants.  the densities are the RealismOverhaul and
         // Community Resource Pack values, which KSP holds in single precision.
         public const int KEROSENE = 3;

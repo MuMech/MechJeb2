@@ -189,7 +189,7 @@ namespace MuMech.UI
             w.Badge(row, autoKey, KodeWindow.Tone.Warn);
             object shownUser = null;
             string text = Localizer.Format("#MechJeb_NewUI_OtherInControl"); //Another autopilot is in control
-            w.BoundLabel(row, () =>
+            w.Wrap(w.BoundLabel(row, () =>
             {
                 object u = controller();
                 if (ReferenceEquals(u, shownUser)) return text;
@@ -197,7 +197,7 @@ namespace MuMech.UI
                 string name = UserName(u);
                 text = name != null ? Localizer.Format("#MechJeb_NewUI_InControl", name) : Localizer.Format("#MechJeb_NewUI_OtherInControl"); //<<1>> is in control
                 return text;
-            }, true);
+            }, true));
             w.Visible(bar.gameObject, auto);
 
             CanvasGroup group = body.GetComponent<CanvasGroup>() ?? body.AddComponent<CanvasGroup>();
@@ -214,16 +214,26 @@ namespace MuMech.UI
             return bar;
         }
 
-        /// <summary>A module's name for the player: its window title, or its type name in words ("Node Executor").</summary>
+        /// <summary>
+        /// A module's name for the player: its window title, or its type name in words ("Node Executor"). An acronym
+        /// stays whole and is split from the word after it ("Ascent PSG Autopilot").
+        /// </summary>
         public static string UserName(object user)
         {
             if (user is DisplayModule d) return d.GetName();
             if (!(user is ComputerModule)) return null;
-            string type = user.GetType().Name.Replace("MechJebModule", "");
+            return SplitWords(user.GetType().Name.Replace("MechJebModule", ""));
+        }
+
+        /// <summary>A PascalCase name in words: "AscentPSGAutopilot" → "Ascent PSG Autopilot".</summary>
+        private static string SplitWords(string type)
+        {
             var sb = new System.Text.StringBuilder(type.Length + 4);
             for (int i = 0; i < type.Length; i++)
             {
-                if (i > 0 && char.IsUpper(type[i]) && !char.IsUpper(type[i - 1])) sb.Append(' ');
+                if (i > 0 && char.IsUpper(type[i]) &&
+                    (!char.IsUpper(type[i - 1]) || (i + 1 < type.Length && char.IsLower(type[i + 1]))))
+                    sb.Append(' ');
                 sb.Append(type[i]);
             }
             return sb.ToString();
