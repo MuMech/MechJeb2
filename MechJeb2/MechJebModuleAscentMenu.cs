@@ -157,6 +157,13 @@ namespace MuMech
                     ? OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting(),
                         Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0)
                     : null;
+                // the figures belong to the last solve: kept in flight after the ascent ended (they say why), but not on the pad with the
+                // autopilot off, where the player may have changed the rocket or the target since
+                ReachWarning = Core.PSGSimulation.Enabled || (Vessel != null && !Vessel.LandedOrSplashed) ? PsgReachWarning() : null;
+            }
+            else
+            {
+                ReachWarning = null;
             }
 
             if (_launchingToPlane) launchTimer = CachedLocalizer.Instance.MechJebAscentMsg2; //Launching to target plane
@@ -214,6 +221,24 @@ namespace MuMech
                 default:
                     return null;
             }
+        }
+
+        /// <summary>Why the PSG plan can't reach orbit with this rocket, in words, or null.</summary>
+        internal string ReachWarning;
+
+        // the burn lines round a shortfall under 2.5 m/s to zero as noise, so this does too
+        private string PsgReachWarning()
+        {
+            MechJebModulePSGSimulation sim = Core.PSGSimulation;
+
+            if (sim.DeltaVShortfall >= 2.5)
+                return $"Not enough Δv: the rocket is {sim.DeltaVShortfall:F0} m/s short of the target orbit.";
+
+            if (!double.IsNaN(sim.SuborbitalPeriapsis))
+                return $"Not enough Δv for orbit: the planned orbit's periapsis is {sim.SuborbitalPeriapsis / 1000:F0} km, " +
+                    (MainBody.atmosphere ? "inside the atmosphere." : "under the surface.");
+
+            return null;
         }
 
         // The PSG status lines (one per burn/coast phase, then the terminal conditions, one per line), for the new UI whose rows are fixed

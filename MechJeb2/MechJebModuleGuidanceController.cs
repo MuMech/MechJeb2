@@ -6,6 +6,7 @@
 
 extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
@@ -76,6 +77,7 @@ namespace MuMech
             Solution = null;
             _allowExecution = false;
             hasCoasted = false;
+            _spentSince = double.NaN;
             Tgo = Vgo = CurrentPhaseTgo = 0;
             Pitch = Heading = 0;
             _inertial = V3.zero;
@@ -152,7 +154,11 @@ namespace MuMech
                 return;
 
             if (!IsThrustOn())
+            {
+                // the spent stage's second is counted while thrust is asked for: a coast starts it again
+                _spentSince = double.NaN;
                 return;
+            }
 
             if (IsGrounded())
                 return;
@@ -160,6 +166,16 @@ namespace MuMech
             // if we've gone past the last stage we need to just stop
             if (Vessel.currentStage < Solution.TerminalKSPStage())
             {
+                Done();
+                return;
+            }
+
+            // the last stage has nothing left to burn, so the target is out of reach (a rocket short of delta-v runs dry before
+            // it, burning or in terminal guidance).  Nothing would stage it off, so stop here, once it has lasted a second so that
+            // an engine that is lighting does not count.
+            if (TerminalStageSpent())
+            {
+                Debug.Log($"[MechJebModuleGuidanceController] the last stage ran dry {Solution.Tgo(VesselState.MET):F1} s before the end of the burn.");
                 Done();
                 return;
             }
@@ -183,7 +199,7 @@ namespace MuMech
             // precise shutdown stage and so never gets terminal guidance (due to residuals Tgo may go less than zero so we wait for natural
             // termination of thrust).   no support for RCS terminal trim.
             if (Solution.OptimizeKSPStage() != Solution.TerminalKSPStage() && Vessel.currentStage <= Solution.TerminalKSPStage() && Solution.Tgo(VesselState.MET) <= 0 &&
-                VesselState.ThrustAvailable == 0)
+                NoThrust(VesselState.ThrustAvailable))
             {
                 Done();
                 return;
@@ -240,13 +256,6 @@ namespace MuMech
 
             bool shouldEndTerminal = false;
 
-            // this handles ending TERMINAL guidance (but not TERMINAL_RCS) due to thrust fault in the last stage
-            if (Status == PSGStatus.TERMINAL && VesselState.ThrustCurrent == 0 && Vessel.currentStage < Solution.TerminalKSPStage())
-            {
-                Debug.Log("[MechJebModuleGuidanceController] no thrust in last stage.");
-                shouldEndTerminal = true;
-            }
-
             if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), VesselState.MET, Vessel.currentStage))
                 shouldEndTerminal = true;
 
@@ -265,6 +274,53 @@ namespace MuMech
                     TerminalDone();
                 }
             }
+        }
+
+        // Thrust in kN too small to matter: under 1 mm/s² on this vessel.  Not an exact zero: with the engines out and the RCS group
+        // on, ThrustAvailable is the RCS thrust along the vessel's axis, which on a rocket with no RCS pushing forward is rounding
+        // noise of 1e-7 kN rather than 0.
+        private bool NoThrust(double thrust) => thrust < 1e-3 * VesselState.Mass;
+
+        private double _spentSince = double.NaN;
+
+        // On the terminal stage with no thrust left to give: the engines are out (a flamed-out engine adds nothing to
+        // ThrustAvailable, which also counts the RCS when the engines are out and the RCS group is on), or in the RCS trim the
+        // RCS is.  Only true once that has held for a second.
+        // under 1 m/s left in the current stage by the stage stats; not empty while they have nothing for it
+        private bool CurrentStageEmpty()
+        {
+            List<FuelStats> vac = Core.StageStats.VacStats;
+            bool found = false;
+            double dv = 0;
+            for (int i = 0; i < vac.Count; i++)
+                if (vac[i].KSPStage == Vessel.currentStage)
+                {
+                    found = true;
+                    dv += vac[i].DeltaV;
+                }
+
+            return found && dv < 1;
+        }
+
+        private bool TerminalStageSpent()
+        {
+            // a RealFuels engine that has not lit yet (MechJeb holding its ignition until the propellant settles) has no
+            // ThrustAvailable either, but still has its propellant: in a burn the stage stats must say it is empty too
+            bool spent = Solution != null && Vessel.currentStage == Solution.TerminalKSPStage() &&
+                (Status == PSGStatus.TERMINAL_RCS
+                    ? NoThrust(VesselState.RCSThrustAvailable.Up)
+                    : NoThrust(VesselState.ThrustAvailable) && CurrentStageEmpty());
+
+            if (!spent)
+            {
+                _spentSince = double.NaN;
+                return false;
+            }
+
+            if (double.IsNaN(_spentSince))
+                _spentSince = VesselState.Time;
+
+            return VesselState.Time - _spentSince >= 1;
         }
 
         private void HandleSpinup()
