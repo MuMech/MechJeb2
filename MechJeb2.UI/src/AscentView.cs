@@ -326,7 +326,8 @@ namespace MuMech.UI
             w.BoundLabel(conv, "staleness: 99d 99h 99m 99s", () => menu.label29 ?? " ", true); //staleness:
             UIText optimizer = w.Wrap(w.BoundLabel(box, () => menu.optimizerState ?? " ", true));
             w.Visible(optimizer, () => menu.optimizerState != null);
-            w.ToneText(optimizer, () => Psgs.State == OptimizerState.NO_PLAN || Psgs.State == OptimizerState.RETRYING ? Tone.Bad : Tone.Normal);
+            w.ToneText(optimizer, () => Psgs.State == OptimizerState.NO_PLAN || Psgs.State == OptimizerState.RETRYING ? Tone.Bad
+                : Psgs.LastFailureMessage != null && Psgs.Staleness > 3 && Core.Guidance.Solution != null ? Tone.Warn : Tone.Normal);
 
             Layout n = KodeWindow.Row(box);
             w.BoundLabel(n, "n: 100(100)", () => menu.n ?? " ");

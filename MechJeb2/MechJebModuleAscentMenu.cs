@@ -154,7 +154,8 @@ namespace MuMech
                     label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}";
                 // the optimizer only runs while the autopilot (or kOS) uses it: no line before the autopilot is engaged
                 optimizerState = Core.PSGSimulation.Enabled
-                    ? OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting())
+                    ? OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting(),
+                        Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0)
                     : null;
             }
 
@@ -174,13 +175,19 @@ namespace MuMech
         /// <summary>"Optimizer: …": what the PSG optimizer is doing, or why it is not solving, so that a climbing staleness reads as a pause.</summary>
         internal string optimizerState;
 
-        internal static string OptimizerStateText(OptimizerState state, double seconds, bool noSolution, bool coasting = false)
+        /// <param name="failingFor">
+        ///     the plan's age while the re-solves fail (a failure is kept until the next success), else 0: guidance keeps flying the
+        ///     last plan, and its age says how stale it is
+        /// </param>
+        internal static string OptimizerStateText(OptimizerState state, double seconds, bool noSolution, bool coasting = false, double failingFor = 0)
         {
             switch (state)
             {
                 case OptimizerState.SOLVING:
                 case OptimizerState.READY:
-                    return noSolution ? "Optimizer: computing the ascent…" : "Optimizer: running";
+                    if (noSolution) return failingFor > 0 ? "Optimizer: no plan yet, the solves are failing" : "Optimizer: computing the ascent…";
+                    // a re-solve or two can fail and the next succeed: only a plan older than a few seconds is worth a line
+                    return failingFor > 3 ? $"Optimizer: re-solves failing, flying the plan from {GuiUtils.TimeToDHMS(failingFor)} ago" : "Optimizer: running";
                 case OptimizerState.NO_PLAN:
                     return "Optimizer: no flight plan, no stages to optimize";
                 case OptimizerState.STAGE_ENDING:
