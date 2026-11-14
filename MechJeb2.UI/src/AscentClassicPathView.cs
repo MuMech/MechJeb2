@@ -22,7 +22,7 @@ namespace MuMech.UI
         protected override float MinWidth => 300;
 
         MechJebCore Core => menu.Core;
-        MechJebModuleAscentSettings Settings => menu.AscentSettings;
+        MechJebModuleAscentClassicAutopilot Autopilot => menu.Autopilot;
 
         bool HasVessel => Core.vessel != null && Core.vessel.mainBody != null;
 
@@ -70,25 +70,25 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            w.Toggle(r, "#MechJeb_AscentPathEd_auto", () => Settings.AutoPath, v => Settings.AutoPath = v); //Automatic Altitude Turn
+            w.Toggle(r, "#MechJeb_AscentPathEd_auto", () => Autopilot.AutoPath, v => Autopilot.AutoPath = v); //Automatic Altitude Turn
 
             // automatic path: sliders
             Layout sliders = KodeWindow.Panel(r);
-            w.Visible(sliders.gameObject, () => Settings.AutoPath);
+            w.Visible(sliders.gameObject, () => Autopilot.AutoPath);
             Layout altitude = KodeWindow.Row(sliders);
             KodeWindow.Label(altitude, "#MechJeb_AscentPathEd_label1"); //"Altitude: "
             // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
-            w.Slider(altitude, () => Settings.AutoTurnPerc * 200f, v => Settings.AutoTurnPerc = Mathf.Floor(v) / 200f, 1f, 210.5f);
+            w.Slider(altitude, () => Autopilot.AutoTurnPerc * 200f, v => Autopilot.AutoTurnPerc = Mathf.Floor(v) / 200f, 1f, 210.5f);
             Layout velocity = KodeWindow.Row(sliders);
             KodeWindow.Label(velocity, "#MechJeb_AscentPathEd_label2"); //"Velocity: "
-            w.Slider(velocity, () => Settings.AutoTurnSpdFactor * 2f, v => Settings.AutoTurnSpdFactor = Mathf.Floor(v) / 2f, 8f, 160f);
+            w.Slider(velocity, () => Autopilot.AutoTurnSpdFactor * 2f, v => Autopilot.AutoTurnSpdFactor = Mathf.Floor(v) / 2f, 8f, 160f);
 
             // automatic path: the resulting turn
             Layout auto = KodeWindow.Panel(r);
-            w.Visible(auto.gameObject, () => Settings.AutoPath);
-            var startAlt = new SiText(() => Settings.AutoTurnStartAltitude, 2, "m ") { Available = () => HasVessel };
-            var startVel = new SiText(() => Settings.AutoTurnStartVelocity, 3, "m/s") { Available = () => HasVessel };
-            var endAlt = new SiText(() => Settings.AutoTurnEndAltitude, 2, "m") { Available = () => HasVessel };
+            w.Visible(auto.gameObject, () => Autopilot.AutoPath);
+            var startAlt = new SiText(() => Autopilot.AutoTurnStartAltitude, 2, "m ") { Available = () => HasVessel };
+            var startVel = new SiText(() => Autopilot.AutoTurnStartVelocity, 3, "m/s") { Available = () => HasVessel };
+            var endAlt = new SiText(() => Autopilot.AutoTurnEndAltitude, 2, "m") { Available = () => HasVessel };
             Layout start = KodeWindow.Row(auto);
             KodeWindow.Label(start, "#MechJeb_AscentPathEd_label3"); //"Turn start when Altitude is "
             w.BoundLabel(start, "999.99km ", startAlt.Get);
@@ -100,15 +100,15 @@ namespace MuMech.UI
 
             // manual path: the three fields
             Layout manual = KodeWindow.Panel(r);
-            w.Visible(manual.gameObject, () => !Settings.AutoPath);
-            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label6", Settings.TurnStartAltitude, "km"); //"Turn start altitude:"
-            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label7", Settings.TurnStartVelocity, "m/s"); //"Turn start velocity:"
-            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label8", Settings.TurnEndAltitude, "km"); //"Turn end altitude:"
+            w.Visible(manual.gameObject, () => !Autopilot.AutoPath);
+            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label6", Autopilot.TurnStartAltitude, "km"); //"Turn start altitude:"
+            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label7", Autopilot.TurnStartVelocity, "m/s"); //"Turn start velocity:"
+            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label8", Autopilot.TurnEndAltitude, "km"); //"Turn end altitude:"
 
-            AscentUi.SimpleBox(w, r, "#MechJeb_AscentPathEd_label9", Settings.TurnEndAngle, "°"); //"Final flight path angle:"
-            AscentUi.SimpleBox(w, r, "#MechJeb_AscentPathEd_label10", Settings.TurnShapeExponent, "%"); //"Turn shape:"
+            AscentUi.SimpleBox(w, r, "#MechJeb_AscentPathEd_label9", Autopilot.TurnEndAngle, "°"); //"Final flight path angle:"
+            AscentUi.SimpleBox(w, r, "#MechJeb_AscentPathEd_label10", Autopilot.TurnShapeExponent, "%"); //"Turn shape:"
 
-            w.Slider(r, () => (float)Settings.TurnShapeExponent, v => menu.ApplyTurnShapeSlider(v, Settings.TurnShapeExponent), 0f, 1f);
+            w.Slider(r, () => (float)Autopilot.TurnShapeExponent, v => menu.ApplyTurnShapeSlider(v, Autopilot.TurnShapeExponent), 0f, 1f);
 
             BuildPathPicture(w, r);
         }
