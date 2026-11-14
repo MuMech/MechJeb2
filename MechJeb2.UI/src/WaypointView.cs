@@ -306,13 +306,8 @@ namespace MuMech.UI
             settingsScroll = KodeWindow.ScrollList(page, ListHeight, out Layout content, 2);
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 
-            // the settings pages: navigation, so tabs in the modern layout
-            if (KodeWindow.ModernLayout) w.Segmented(content, m._settingPages, () => m._settingPageIndex, i => m._settingPageIndex = i, ChoiceStyle.Tabs);
-            else w.SelectionGrid(content, m._settingPages, () => m._settingPageIndex, i => m._settingPageIndex = i);
-
             // rover: PID and traction
             Layout rover = KodeWindow.Row(content);
-            w.Visible(rover.gameObject, () => m._settingPageIndex == 0);
             Layout left = KodeWindow.Panel(rover);
             RoverUi.EditableRow(w, left, ed, "Editable:RoverController.hPIDp");
             RoverUi.EditableRow(w, left, ed, "Editable:RoverController.hPIDi");
@@ -325,16 +320,6 @@ namespace MuMech.UI
             RoverUi.EditableRow(w, right, ed, "Editable:RoverController.sPIDd");
             RoverUi.EditableRow(w, right, ed, "Editable:RoverController.turnSpeed");
             RoverUi.ValueRow(w, right, ed, "Value:RoverController.traction", () => Ap?.traction ?? 0, "100 %");
-
-            // waypoints: map route heights per body
-            Layout maps = KodeWindow.Row(content);
-            w.Visible(maps.gameObject, () => m._settingPageIndex == 1);
-            Layout mapsLeft = KodeWindow.Panel(maps);
-            foreach (string body in new[] { "Moho", "Eve", "Gilly", "Kerbin", "Mun", "Minmus", "Duna", "Ike" })
-                RoverUi.EditableRow(w, mapsLeft, ed, "Editable:WaypointWindow." + body + "Mapdist");
-            Layout mapsRight = KodeWindow.Panel(maps);
-            foreach (string body in new[] { "Dres", "Jool", "Laythe", "Vall", "Tylo", "Bop", "Pol", "Eeloo" })
-                RoverUi.EditableRow(w, mapsRight, ed, "Editable:WaypointWindow." + body + "Mapdist");
 
             Layout buttons = KodeWindow.Row(page);
             KodeWindow.Button(buttons, "Waypoints", m.ShowWaypointsPage, true);
