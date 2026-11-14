@@ -459,14 +459,12 @@ namespace MuMech.UI
             var white = new Color(0.95f, 0.95f, 0.95f);
 
             Layout lines = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
-            KodeWindow.ToneText(KodeWindow.Label(lines, "Curves:"), KodeWindow.Tone.Dim);
             w.Toggle(LegendCell(lines, white, PlanThickness, false), "Current solution", () => g.ShowCurrent, v => g.ShowCurrent = v);
             w.Toggle(LegendCell(lines, PadShade(white), PadThickness, false, true), "Pad solution (the one it lifted off with)",
                 () => g.ShowPad, v => g.ShowPad = v);
             w.Toggle(LegendCell(lines, FlownShade(white), FlownThickness, false), "Flown", () => g.ShowFlown, v => g.ShowFlown = v);
 
             Layout marks = KodeWindow.FlowWrap(KodeWindow.Row(r), 10);
-            KodeWindow.ToneText(KodeWindow.Label(marks, "Vertical lines:"), KodeWindow.Tone.Dim);
             w.Toggle(LegendCell(marks, PhaseColor, 1, true), "Phase start/end", () => g.ShowPhases, v => g.ShowPhases = v);
             w.Toggle(LegendCell(marks, NodeColor, 1, true), "Node edge", () => g.ShowNodes, v => g.ShowNodes = v);
             UnityEngine.UI.Toggle knots = w.Toggle(LegendCell(marks, KnotColor, 1, true), "Collocation point", () => g.ShowKnots, v => g.ShowKnots = v);
