@@ -14,7 +14,7 @@ namespace MuMech.UI
 {
     /// <summary>
     /// MechJebModulePSGSolutionGraph ("PSG Solution"): PSG's Solutions against MET, on a KodeKit LineGraph. Each quantity has its
-    /// own Y range, and the drop-down in the plot's top-right corner picks the one the Y labels show. Three lines per quantity, which the
+    /// own Y range, and the drop-down above the plot's right end picks the one the Y labels show. Three lines per quantity, which the
     /// legend under the plot draws: the Solution guidance flies now (bright), the one the vessel lifted off with (washed out,
     /// hidden while it is the current one) and what the vessel flew (dark). Vertical marks: the current Solution's phase
     /// boundaries, its interpolant nodes' edges, its collocation points (where the optimizer enforces the Qα and Q limits),
@@ -387,6 +387,7 @@ namespace MuMech.UI
         {
             int height = g.PlotHeight;
             builtLabels = LabelsFor(height);
+            BuildScaleCombo(w, r);
             Layout plotRow = KodeWindow.Row(r);
             plotRow.Padding(0, 0, 5, 5);
             Layout left = plotRow.Add<Layout>("Plot");
@@ -432,7 +433,6 @@ namespace MuMech.UI
 
             nowLine = Marker("Now", now, NowColor);
             extraMarkers = new[] { nodeLines, knotLines, nowLine };
-            BuildScaleCombo(w);
         }
 
         // what each line and mark is, drawn as on the plot; the marks that can be hidden carry their switch
@@ -510,7 +510,7 @@ namespace MuMech.UI
             KodeWindow.Button(row, "+", plus);
         }
 
-        // ---- the drop-down in the plot's top-right corner: the displayed series, whose Y labels are shown ----
+        // ---- the drop-down above the plot: the displayed series, whose Y labels are shown ----
 
         readonly List<int> scaleSeries = new List<int>();
         string[] scaleNames;
@@ -541,14 +541,14 @@ namespace MuMech.UI
             return p < 0 ? 0 : p;
         }
 
-        void BuildScaleCombo(KodeWindow w)
+        // a row of its own above the plot, at its right end, so it hides none of the lines
+        void BuildScaleCombo(KodeWindow w, UIObject r)
         {
-            // over the plot, after the series: the Plot surface has no layout group, so a new selection stays out of the window's layout
-            Layout corner = KodeWindow.Row(graph.Plot.GetComponent<UIObject>());
-            corner.PreferredSizeFitter(true, true).Anchor(AnchorPresets.TopRight).Pivot(PivotPresets.TopRight);
-            corner.rectTransform.anchoredPosition = new Vector2(-6, -6);
-            new ComboBox(w, corner, ScalePosition, i => g.ScaleIdx = scaleSeries[i], ScaleNames, false, i => Infos[scaleSeries[i]].Color);
-            w.Visible(corner.gameObject, () => ScaleNames().Length > 0);
+            Layout row = KodeWindow.Row(r);
+            KodeWindow.FlexibleSpace(row);
+            KodeWindow.Label(row, "Y axis");
+            new ComboBox(w, row, ScalePosition, i => g.ScaleIdx = scaleSeries[i], ScaleNames, false, i => Infos[scaleSeries[i]].Color);
+            w.Visible(row.gameObject, () => ScaleNames().Length > 0);
         }
     }
 }
