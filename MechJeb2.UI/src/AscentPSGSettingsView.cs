@@ -56,6 +56,55 @@ namespace MuMech.UI
         {
             hasStages = menu.HasStages;
             stageCount = StageList?.Count ?? 0;
+            UpdateSkipped();
+        }
+
+        // the burns Min ΔV leaves out of the plan: some Δv, but under Min ΔV. Rebuilt only when that set changes, as the
+        // label reads it every frame.
+        string skipped;
+        double skippedKey = double.NaN;
+
+        void UpdateSkipped()
+        {
+            System.Collections.Generic.List<MechJebLib.FuelFlowSimulation.FuelStats> vac = Core.StageStats.VacStats;
+            double min = Psgs.MinDeltaV;
+            int top = Settings.LastStage;
+            double key = min * 7919 + top;
+            int count = 0;
+            for (int i = 0; i < vac.Count; i++)
+                if (vac[i].KSPStage >= top && vac[i].DeltaV >= 0.5 && vac[i].DeltaV < min)
+                {
+                    count++;
+                    key = key * 31 + vac[i].KSPStage * 100003 + Math.Round(vac[i].DeltaV);
+                }
+
+            if (key == skippedKey) return;
+            skippedKey = key;
+            if (count == 0)
+            {
+                skipped = null;
+                return;
+            }
+
+            var sb = new System.Text.StringBuilder(count == 1 ? "Stage left out of the plan, under Min ΔV: " : "Stages left out of the plan, under Min ΔV: ");
+            bool first = true;
+            for (int i = 0; i < vac.Count; i++)
+                if (vac[i].KSPStage >= top && vac[i].DeltaV >= 0.5 && vac[i].DeltaV < min)
+                {
+                    if (!first) sb.Append(", ");
+                    first = false;
+                    sb.Append(vac[i].KSPStage).Append(" (").Append(Math.Round(vac[i].DeltaV).ToString("F0")).Append(" m/s)");
+                }
+
+            skipped = sb.ToString();
+        }
+
+        // under the stage table: which burns the plan leaves out, in the caution colour
+        void BuildSkipped(KodeWindow w, UIObject parent)
+        {
+            UIText note = w.Wrap(w.BoundLabel(parent, () => skipped ?? " ", true));
+            KodeWindow.ToneText(note, Tone.Caution);
+            w.Visible(note, () => skipped != null);
         }
 
         int stageCount;
@@ -181,6 +230,7 @@ namespace MuMech.UI
 
             Layout stages = KodeWindow.Panel(r);
             BuildStageTable(w, stages);
+            BuildSkipped(w, stages);
             w.Visible(stages.gameObject, () => hasStages);
 
             LayoutPanel box = KodeWindow.Box(r);
@@ -246,6 +296,7 @@ namespace MuMech.UI
             Layout stages = KodeWindow.Panel(r);
             KodeWindow.Header(stages, "#MechJeb_NewUI_Stages"); //Stages
             BuildStageTable(w, stages);
+            BuildSkipped(w, stages);
             w.Visible(stages.gameObject, () => hasStages);
 
             KodeWindow.PropertyGrid plan = w.Properties(r);
