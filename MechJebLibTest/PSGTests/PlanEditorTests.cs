@@ -114,8 +114,8 @@ namespace MechJebLibTest.PSGTests
             var editor = new PlanEditor(new LogicalPlan(), rows, MIN_DV);
 
             Assert.Equal(new[] { 3, 2, 1, 0 }, editor.Rows.Select(r => r.KSPStage));
-            Assert.Equal(new[] { PlanEditor.RowKind.BURN, PlanEditor.RowKind.UNDER_MIN, PlanEditor.RowKind.NO_ENGINE, PlanEditor.RowKind.BURN },
-                editor.Rows.Select(r => r.Kind));
+            // by name: Mono's xunit sees an enum array as Int32 and calls it a different collection
+            Assert.Equal(new[] { "BURN", "UNDER_MIN", "NO_ENGINE", "BURN" }, editor.Rows.Select(r => r.Kind.ToString()));
             Assert.Equal(new[] { 3, 0 }, editor.BurnRows.Select(r => r.KSPStage));
             // an empty plan plans every burn row, all optimized and guided
             Assert.Equal(2, editor.PlannedCount);
