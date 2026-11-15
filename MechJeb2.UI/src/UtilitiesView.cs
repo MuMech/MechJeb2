@@ -34,6 +34,13 @@ namespace MuMech.UI
             // own minimum throttle and keeps the general other limits, so only that row greys then
             limits.Dim(limits.Table.gameObject, null, () => Thrust.LimitsOverrideUser != null && !(Thrust.Limits is ThrustLimitsWithOwnMinThrottle));
             limits.Dim(minThrottle.gameObject, null, () => Thrust.Limits is ThrustLimitsWithOwnMinThrottle);
+            // not one of the limits an autopilot replaces: its own grid, never greyed
+            KodeWindow.PropertyGrid diff = w.Properties(g);
+            OptionRows.Switch(diff, "#MechJeb_Ascent_checkbox19", () => Thrust.DifferentialThrottle, LimiterTones.SetDifferential(Thrust),
+                tone: () => LimiterTones.Differential(Thrust)); //"Differential throttle"
+            Layout diffBar = w.StatusBar(g, () => KodeWindow.Tone.Warn);
+            OpUi.DynamicParagraph(w, diffBar, DifferentialStatus());
+            w.Visible(diffBar.gameObject, DifferentialFailed);
 
             g = w.Group(r, "#MechJeb_NewUI_Jets"); //Jet engines
             KodeWindow.PropertyGrid jets = w.Properties(g);
@@ -42,19 +49,12 @@ namespace MuMech.UI
             OptionRows.Switch(jets, "#MechJeb_Utilities_checkbox3", () => Thrust.ManageIntakes, v => Thrust.ManageIntakes = v);
             OptionRows.Field(jets, "#MechJeb_Utilities_label2", Thrust.FlameoutSafetyPct, "%", 50);
 
-            g = w.Group(r, "#MechJeb_NewUI_Other"); //Other
-            KodeWindow.PropertyGrid other = w.Properties(g);
-            OptionRows.Switch(other, "#MechJeb_Ascent_checkbox19", () => Thrust.DifferentialThrottle, LimiterTones.SetDifferential(Thrust),
-                tone: () => LimiterTones.Differential(Thrust)); //"Differential throttle"
-            Layout diffBar = w.StatusBar(g, () => KodeWindow.Tone.Warn);
-            OpUi.DynamicParagraph(w, diffBar, DifferentialStatus());
-            w.Visible(diffBar.gameObject, DifferentialFailed);
-
             if (Core.Solarpanel != null || Core.AntennaControl != null)
             {
                 g = w.Group(r, "#MechJeb_NewUI_Deployment"); //Deployment
-                DeployRow(w, g, Core.Solarpanel, "#MechJeb_SolarPanelDeployButton"); //"Auto-deploy solar panels"
-                DeployRow(w, g, Core.AntennaControl, "#MechJeb_Autodeployantennas"); //"Auto-deploy antennas"
+                string extend = KSP.Localization.Localizer.Format("#MechJeb_NewUI_Extend"), retract = KSP.Localization.Localizer.Format("#MechJeb_NewUI_Retract");
+                DeployRow(w, g, Core.Solarpanel, "#MechJeb_SolarPanelDeployButton", extend, retract); //"Auto-deploy solar panels"
+                DeployRow(w, g, Core.AntennaControl, "#MechJeb_Autodeployantennas", extend, retract); //"Auto-deploy antennas"
             }
 
             g = w.Group(r, "#MechJeb_NewUI_Autostage"); //Autostage
@@ -70,31 +70,32 @@ namespace MuMech.UI
             UIButton once = KodeWindow.Button(auto, "#MechJeb_Utilities_button1", () => Core.Staging.AutostageOnce(window)); //"Autostage once"
             w.Visible(once.gameObject, () => !Core.Staging.Enabled);
 
-            Layout settings = KodeWindow.Panel(g);
+            // the rules can be set before autostage is turned on; folded, the window keeps its size when it turns on
+            Layout settings = w.Section(g, KSP.Localization.Localizer.Format("#MechJeb_NewUI_AutostageRules"), false, "UtilitiesAutostageRules"); //Autostage rules
             KodeWindow.PropertyGrid rules = OptionRows.AutostageSettings(w, settings, Core.Staging, Core.Staging);
             // greyed while an autopilot stages by its own rules
             rules.Dim(rules.Table.gameObject, null, () => Core.Staging.RulesOverrideUser != null);
-            w.Visible(settings.gameObject, () => Core.Staging.Enabled);
 
             Layout statusBar = w.StatusBar(g, () => KodeWindow.Tone.Normal);
             w.BoundLabel(statusBar, AutostageStatus(), true);
             w.Visible(statusBar.gameObject, () => Core.Staging.Enabled);
         }
 
-        /// <summary>[switch] Auto-deploy ..., and the "Toggle ... (currently ...)" button under it (beside it, the window would double in width).</summary>
-        static void DeployRow(KodeWindow w, UIObject parent, MechJebModuleDeployableController c, string autoKey)
+        /// <summary>[switch] Auto-deploy ... [Extend | Retract]: the button says what a press does now.</summary>
+        static void DeployRow(KodeWindow w, UIObject parent, MechJebModuleDeployableController c, string autoKey, string extend, string retract)
         {
             // a part's blacklist can leave the core without the controller
             if (c == null) return;
-            w.SwitchRow(parent, autoKey, () => c.AutoDeploy, v => c.AutoDeploy = v);
-            UIButton b = KodeWindow.Button(parent, c.CurrentButtonText ?? " ", c.ToggleDeploy, true);
-            string shown = c.CurrentButtonText;
+            Layout row = KodeWindow.Row(parent);
+            w.SwitchRow(row, autoKey, () => c.AutoDeploy, v => c.AutoDeploy = v);
+            bool retracts = c.ToggleRetracts;
+            UIButton b = KodeWindow.Button(row, retracts ? retract : extend, c.ToggleDeploy);
             w.AddSync(() =>
             {
-                string s = c.CurrentButtonText;
-                if ((object)s == shown) return; // the controller swaps between cached strings
-                shown = s;
-                b.Text(s ?? " ");
+                bool now = c.ToggleRetracts;
+                if (now == retracts) return;
+                retracts = now;
+                b.Text(now ? retract : extend);
             });
         }
 
