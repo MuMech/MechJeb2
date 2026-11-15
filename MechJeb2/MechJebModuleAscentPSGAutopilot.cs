@@ -1,5 +1,6 @@
 extern alias JetBrainsAnnotations;
 using System;
+using System.Collections.Generic;
 using KSP.Localization;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -243,6 +244,11 @@ namespace MuMech
                 return;
             }
 
+            // another mod has locked the steering without taking MechJeb's controls: the steering does nothing, and a spin-up never
+            // reaches its rate, so it holds autostaging for good
+            if (SetLockStatus())
+                return;
+
             if (!Core.Guidance.IsStable())
             {
                 double pitch = Math.Min(Math.Min(90, SrfvelPitch()), VesselState.Pitch);
@@ -256,6 +262,60 @@ namespace MuMech
                 Status.Set($"Stable Guidance: {ang:F}° deviation", severity);
                 Core.Attitude.LimitedAttitudeTo(Core.Guidance.Inertial, AscentSettings.ForceRoll, AscentSettings.TurnRoll, ApplyAoALimiter, this);
             }
+        }
+
+        private string  _lockStatus, _lockStatusId;
+        private bool    _lockStatusSpinup, _lockStatusTaken;
+
+        // Drive doesn't run while another mod has taken MechJeb's controls (DeactivateControl: RP-1 sets it when the avionics on
+        // board can't support the vessel, RemoteTech without a connection), so the status would freeze on its last value
+        public override void OnFixedUpdate()
+        {
+            if (_mode == AscentMode.GUIDANCE && Core.DeactivateControl)
+                SetLockStatus();
+        }
+
+        // says why MechJeb can't fly the vessel when another mod has taken its controls or locked the steering, and returns
+        // whether it did; the string is rebuilt only when the reason changes
+        private bool SetLockStatus()
+        {
+            bool taken = Core.DeactivateControl;
+            string lockId = SteeringLockId();
+            if (!taken && lockId == null)
+                return false;
+
+            bool spinupHeld = !taken && Core.Spinup.Enabled && Vessel.currentStage == AscentSettings.SpinupStage;
+            if (lockId != _lockStatusId || spinupHeld != _lockStatusSpinup || taken != _lockStatusTaken || _lockStatus == null)
+            {
+                _lockStatusId     = lockId;
+                _lockStatusSpinup = spinupHeld;
+                _lockStatusTaken  = taken;
+                string who = lockId ?? "another mod";
+                _lockStatus = spinupHeld
+                    ? $"Controls locked by {who}: the spin-up can't start, so staging is held"
+                    : $"Controls locked by {who}: MechJeb can't steer or throttle";
+            }
+
+            Status.Set(_lockStatus, AscentStatusLevel.ERROR);
+            return true;
+        }
+
+        /// <summary>
+        ///     The id of an input lock that blocks steering on the vessel, or null (MechJeb sets none: its own lock only blocks clicks). RP-1's is
+        ///     "RP0ControlLocker". Walks the lock dictionary with its struct enumerator, so no garbage.
+        /// </summary>
+        internal static string SteeringLockId()
+        {
+            if (!InputLockManager.IsLocked(ControlTypes.PITCH))
+                return null;
+
+            foreach (KeyValuePair<string, ulong> entry in InputLockManager.lockStack)
+            {
+                if ((entry.Value & (ulong)ControlTypes.PITCH) != 0)
+                    return entry.Key;
+            }
+
+            return null;
         }
 
         private Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
