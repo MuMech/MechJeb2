@@ -440,6 +440,10 @@ namespace MuMech
                 if (hasCoasted)
                     Core.PSGSimulation.MarkCoastDone();
 
+                // a solve started during the coast still has it ahead, which would start it again
+                if (IsCoasting())
+                    Core.PSGSimulation.CancelSolve("the coast ended");
+
                 ThrottleOn();
 
                 Status = PSGStatus.BURNING;
@@ -576,6 +580,9 @@ namespace MuMech
 
         private void DoCoast()
         {
+            // a solve started before the coast plans the burn before it, so it must never arrive now
+            Core.PSGSimulation.CancelSolve("the coast started");
+
             StartCoast = VesselState.Time;
             // force RCS on at the state transition
             if (!Vessel.ActionGroups[KSPActionGroup.RCS])
@@ -593,6 +600,11 @@ namespace MuMech
         public void SetSolution(Solution solution)
         {
             Check.False(solution.Normalized, "guidance needs a DeNormalized() Solution");
+
+            // PSGSimulation cancels the solve in progress when the coast starts and when it ends (CancelSolve), so a solution
+            // that arrives during the coast starts with it, and one that arrives after it has no coast
+            CheckDebug.True(!IsCoasting() || solution.CoastPhase(0));
+            CheckDebug.True(!hasCoasted || IsCoasting() || solution.CoastKSPStage() < 0);
 
             Solution = solution;
             if (solution.T0 <= 0)
