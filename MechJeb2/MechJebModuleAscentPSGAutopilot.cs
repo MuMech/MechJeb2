@@ -246,11 +246,6 @@ namespace MuMech
                 return;
             }
 
-            // another mod has locked the steering without taking MechJeb's controls: the steering does nothing, and a spin-up never
-            // reaches its rate, so it holds autostaging for good
-            if (SetLockStatus())
-                return;
-
             if (!Core.Guidance.IsStable())
             {
                 double pitch = Math.Min(Math.Min(90, SrfvelPitch()), VesselState.Pitch);
@@ -266,8 +261,7 @@ namespace MuMech
             }
         }
 
-        private string  _lockStatus, _lockStatusId;
-        private bool    _lockStatusSpinup, _lockStatusTaken;
+        private string _lockStatus, _lockStatusId;
 
         // Drive doesn't run while another mod has taken MechJeb's controls (DeactivateControl: RP-1 sets it when the avionics on
         // board can't support the vessel, RemoteTech without a connection), so the status would freeze on its last value
@@ -277,26 +271,18 @@ namespace MuMech
                 SetLockStatus();
         }
 
-        // says why MechJeb can't fly the vessel when another mod has taken its controls or locked the steering, and returns
-        // whether it did; the string is rebuilt only when the reason changes
-        private bool SetLockStatus()
+        // says why MechJeb can't fly the vessel while another mod has taken its controls; the string is rebuilt only when the lock
+        // named changes
+        private void SetLockStatus()
         {
-            bool taken = Core.DeactivateControl;
             string lockId = PSGFeedback.SteeringLockId();
-            if (!taken && lockId == null)
-                return false;
-
-            bool spinupHeld = !taken && Core.Spinup.Enabled && Vessel.currentStage == AscentSettings.SpinupStage;
-            if (lockId != _lockStatusId || spinupHeld != _lockStatusSpinup || taken != _lockStatusTaken || _lockStatus == null)
+            if (lockId != _lockStatusId || _lockStatus == null)
             {
-                _lockStatusId     = lockId;
-                _lockStatusSpinup = spinupHeld;
-                _lockStatusTaken  = taken;
-                _lockStatus       = PSGFeedback.LockStatus(lockId, spinupHeld);
+                _lockStatusId = lockId;
+                _lockStatus   = PSGFeedback.LockStatus(lockId);
             }
 
             Status.Set(_lockStatus, AscentStatusLevel.ERROR);
-            return true;
         }
 
         private Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
