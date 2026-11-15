@@ -311,6 +311,9 @@ namespace MuMech
         // The length (m) of CoM - CoT under which ThrustForward moves from CoM - CoT to the direction of the thrust.
         private const double ThrustAxisLength = 1.0;
 
+        // The fraction of the engines' total thrust their vector sum must keep for its direction to count (see AnalyzeParts).
+        private const double ThrustCancelRatio = 0.01;
+
         // Thrust is a vector.  These are in the same frame of reference as forward and other vectors.
         public Vector3d ThrustVectorLastFrame;
         public Vector3d ThrustVectorMaxThrottle;
@@ -1162,9 +1165,12 @@ namespace MuMech
                 // height, or a CoM that moves down as the tanks drain) a small sideways offset turns it far off.  Adding the
                 // direction of the summed thrust, scaled by ThrustAxisLength, keeps CoM - CoT when it is long and moves smoothly
                 // to the thrust direction when it is short.
-                Vector3d thrustDirection = einfo.ThrustMax.normalized;
-                if (thrustDirection.sqrMagnitude > 0.5)
+                // CoTWeightSum is the sum of the nozzles' max thrusts: when their vector sum keeps less than ThrustCancelRatio
+                // of it, the thrusts nearly cancel out and the direction of the sum is noise.
+                double thrustLength = einfo.ThrustMax.magnitude;
+                if (thrustLength > ThrustCancelRatio * CoTWeightSum)
                 {
+                    Vector3d thrustDirection = einfo.ThrustMax / thrustLength;
                     ThrustForward = (CoM - CoT + ThrustAxisLength * thrustDirection).normalized;
                     // With the CoT ahead of the CoM (engines pulling from the front, or hot staging while the previous stage
                     // is still attached) CoM - CoT points backwards: the thrust direction is then the axis.
@@ -1173,7 +1179,7 @@ namespace MuMech
                 }
                 else
                 {
-                    // engines whose thrusts cancel out: no thrust direction, so keep the geometric axis
+                    // engines whose thrusts (nearly) cancel out: no thrust direction, so keep the geometric axis
                     ThrustForward = (CoM - CoT).normalized;
                     if (Vector3d.Dot(ThrustForward, Forward) < 0)
                         ThrustForward = Forward;
