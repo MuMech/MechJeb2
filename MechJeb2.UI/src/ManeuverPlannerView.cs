@@ -30,7 +30,10 @@ namespace MuMech.UI
             NodeUi.ExecuteButtons(w, parent, Core, planner, "#MechJeb_Maneu_button4", "#MechJeb_Maneu_button5", "#MechJeb_Maneu_button6",
                 () => planner.PlannerNodeCount() > 0,
                 () => planner.PlannerNodeCount() > 0 && (HasVessel && planner.Vessel.patchedConicSolver.maneuverNodes.Count > 1 || ReflectionUtils.IsLoadedPrincipia),
-                true); //Execute next node, Execute all nodes, Abort node execution
+                true, ButtonRole.Normal, "#MechJeb_NewUI_NoNodeCreateAbove"); //Execute next node, Execute all nodes, Abort node execution
+        // "No maneuver node: create one above."
+
+        bool AnyNode => HasVessel && planner.Vessel.patchedConicSolver.maneuverNodes.Count > 0;
 
         // before the bindings: forced "create" mode without nodes, and the selected operation's per-frame work
         protected override void BeforeSync()
@@ -74,13 +77,14 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            string[] modes = { Localizer.Format("#MechJeb_Maneu_createNodeBtn01"), Localizer.Format("#MechJeb_Maneu_createNodeBtn02") };
+            // with nodes: add a node or change the last one; a new node goes after the last one
+            string[] modes = { Localizer.Format("#MechJeb_NewUI_NodeNew"), Localizer.Format("#MechJeb_NewUI_NodeChangeLast") }; //New node, Change the last node
             Layout mode = KodeWindow.Row(r);
             w.Segmented(mode, modes, () => planner.CreateNodeMode ? 0 : 1, i => planner.CreateNodeMode = i == 0);
-            KodeWindow.Label(mode, "#MechJeb_Maneu_createlab1"); //"maneuver node to:"
             w.Visible(mode.gameObject, () => planner.PlannerNodeCount() > 0);
-            UIText noNode = KodeWindow.Label(r, "#MechJeb_Maneu_createlab2"); //"Create a new maneuver node to:"
-            w.Visible(noNode.gameObject, () => planner.PlannerNodeCount() == 0);
+            UIText after = KodeWindow.Paragraph(r, "#MechJeb_NewUI_NodeGoesAfterLast"); //The new node goes after the last one.
+            KodeWindow.ToneText(after, KodeWindow.Tone.Dim);
+            w.Visible(after.gameObject, () => planner.PlannerNodeCount() > 0 && planner.CreateNodeMode);
 
             // the operations sorted by group (stable), so each group is listed once under its header
             Operation[] operations = planner.Operations;
@@ -104,16 +108,14 @@ namespace MuMech.UI
 
             OperationPanelsFor(w, r);
 
-            UIText after = KodeWindow.Label(r, "#MechJeb_Maneu_createlab3"); //"after the last maneuver node."
-            w.Visible(after.gameObject, () => planner.PlannerNodeCount() > 0);
-
             Layout problem = w.StatusBar(r, () => KodeWindow.Tone.Warn);
             OpUi.DynamicParagraph(w, problem, () => planner.CurrentOperation.GetErrorMessage() ?? "");
             w.Visible(problem.gameObject, () => !string.IsNullOrEmpty(planner.CurrentOperation.GetErrorMessage()));
 
             // destructive on the left, the main action last on the right
             KodeWindow.ActionBarRow bar = KodeWindow.ActionBar(r);
-            bar.Danger("#MechJeb_Maneu_button3", () => planner.Vessel.RemoveAllManeuverNodes()); //Remove ALL nodes
+            UIButton removeAll = bar.Danger("#MechJeb_Maneu_button3", () => planner.Vessel.RemoveAllManeuverNodes()); //Remove ALL nodes
+            GuidanceUi.Enable(w, removeAll, () => AnyNode);
             UIButton createExecute = bar.Normal("#MechJeb_Maneu_button2", () => CreateNodes(true)); //"Create and execute"
             w.Visible(createExecute.gameObject, () => HasNode);
             bar.Primary("#MechJeb_Maneu_button1", () => CreateNodes(false)); //"Create node"
@@ -140,7 +142,8 @@ namespace MuMech.UI
                 if (HasNode) Core.Node.LeadTime.Text = s;
             }, d => LeadTime.Val += d, () => 1, 45, () => LeadTime.IsParsed);
             KodeWindow.Label(lead, "s");
-            KodeWindow.Button(lead, "R", () => LeadTime.Val = 3); // back to the default 3 s
+            UIButton reset = KodeWindow.Button(lead, "#MechJeb_NewUI_Reset", () => LeadTime.Val = 3); //Reset
+            Tooltips.Add(reset.gameObject, "#MechJeb_NewUI_LeadTimeResetTip"); //Back to the default lead time, 3 s.
         }
 
         /// <summary>
