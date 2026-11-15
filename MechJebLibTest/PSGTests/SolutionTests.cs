@@ -526,18 +526,18 @@ namespace MechJebLibTest.PSGTests
          * trajectories start in flight at MET 4096 s (normalized 32), so the segments' tbar is the normalized time since then.
          */
 
-        private const double LENGTH_SCALE   = 1 << 20;
-        private const double VELOCITY_SCALE = 1 << 13;
-        private const double MASS_SCALE     = 1 << 10;
-        private const double TIME_SCALE     = LENGTH_SCALE / VELOCITY_SCALE;
-        private const double T0             = 4096;
+        internal const double LENGTH_SCALE   = 1 << 20;
+        internal const double VELOCITY_SCALE = 1 << 13;
+        internal const double MASS_SCALE     = 1 << 10;
+        internal const double TIME_SCALE     = LENGTH_SCALE / VELOCITY_SCALE;
+        internal const double T0             = 4096;
         private const double TBAR0          = T0 / TIME_SCALE;
         private const double MU             = 4e14;
         private const double RBODY          = 6e6;
 
         private static readonly Scale _scale = new Scale(LENGTH_SCALE, VELOCITY_SCALE, MASS_SCALE);
 
-        private static readonly V3 _xHat = new V3(1, 0, 0);
+        internal static readonly V3 _xHat = new V3(1, 0, 0);
         private static readonly V3 _yHat = new V3(0, 1, 0);
         private static readonly V3 _zHat = new V3(0, 0, 1);
 
@@ -555,7 +555,7 @@ namespace MechJebLibTest.PSGTests
         private static V3 ExpectedV(double t) => VBarAt(Tbar(t)) * VELOCITY_SCALE;
 
         // a normalized burn phase for a stage that burns from m0 to mf (kg) in bt seconds at full throttle
-        private static Phase NewBurn(int kspStage, int mjPhase, double m0, double mf, double isp, double bt, bool allowShutdown = true,
+        internal static Phase NewBurn(int kspStage, int mjPhase, double m0, double mf, double isp, double bt, bool allowShutdown = true,
             bool unguided = false, double minThrottle = 1.0)
         {
             using var phase = Phase.NewStage(m0, mf, Astro.ThrustFromMassesIspBurntime(m0, mf, isp, bt), isp, kspStage, mjPhase,
@@ -563,13 +563,13 @@ namespace MechJebLibTest.PSGTests
             return phase.Rescale(_scale);
         }
 
-        private static Phase NewCoast(int kspStage, int mjPhase, double m)
+        internal static Phase NewCoast(int kspStage, int mjPhase, double m)
         {
             using var phase = Phase.NewCoast(m, m, 0, 1000, kspStage, mjPhase);
             return phase.Rescale(_scale);
         }
 
-        private readonly struct Seg
+        internal readonly struct Seg
         {
             public readonly Phase             Phase;
             public readonly double            Tbar0;
@@ -599,7 +599,7 @@ namespace MechJebLibTest.PSGTests
         }
 
         // the SI copy of the normalized solution
-        private static Solution Build(params Seg[] segs)
+        internal static Solution Build(params Seg[] segs)
         {
             using Solution normalized = BuildNormalized(segs);
             return normalized.DeNormalized();

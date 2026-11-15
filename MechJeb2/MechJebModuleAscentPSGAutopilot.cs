@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
+using MechJebLib.PSG;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 

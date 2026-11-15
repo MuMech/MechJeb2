@@ -19,8 +19,6 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    public enum PSGStatus { ENABLED, INITIALIZED, BURNING, COASTING, TERMINAL, TERMINAL_RCS, TERMINAL_STAGING, FINISHED }
-
     /// <summary>
     ///     The guidance controller for PSG (responsible for taking a Solution from PSG and flying it)
     /// </summary>
@@ -44,13 +42,20 @@ namespace MuMech
         public double Tgo;
         public double Vgo;
         public double CurrentPhaseTgo;
-        public double StartCoast;
-        public bool hasCoasted;
+
+        // the decisions: which part of the Solution is flown, when burns end, when to coast, stage and finish
+        private readonly GuidanceStateMachine _machine = new GuidanceStateMachine();
+
+        // the universal time the last coast started
+        public double StartCoast => _machine.StartCoast;
+
+        // a coast has been started since guidance was engaged
+        public bool hasCoasted => _machine.HasCoasted;
 
         // guidance's private copy (the solver warm starts from its own), main thread only.  Its clock is MET (VesselState.MET).
-        public Solution? Solution;
+        public Solution? Solution => _machine.Solution;
 
-        public PSGStatus Status = PSGStatus.ENABLED;
+        public PSGStatus Status => _machine.Status;
 
         // what guidance does with RCS (PSGFeedback), said once at each change
         private ScreenMessage _rcsCoastMessage = null!, _rcsTrimMessage = null!, _rcsOffMessage = null!;
@@ -88,12 +93,9 @@ namespace MuMech
         // so the values it publishes have to be cleared here or the UI and kOS would keep showing the old ones.
         private void ResetToAwaitingSolution()
         {
-            Status = PSGStatus.ENABLED;
-            Solution = null;
+            _machine.Reset();
             PadSolution = null;
             _allowExecution = false;
-            hasCoasted = false;
-            _spentSince = double.NaN;
             Tgo = Vgo = CurrentPhaseTgo = 0;
             Pitch = Heading = 0;
             _inertial = V3.zero;
@@ -110,8 +112,7 @@ namespace MuMech
             Core.Thrust.Users.Remove(this);
             Core.Staging.AutoStageLimitRemove(this);
             Core.Spinup.Users.Remove(this);
-            Solution = null;
-            Status = PSGStatus.FINISHED;
+            _machine.Finish();
         }
 
         private bool _allowExecution;
@@ -135,188 +136,106 @@ namespace MuMech
             if (Solution != null && !IsGrounded())
                 FlownTrack.Record(Core);
 
-            if (Status == PSGStatus.FINISHED)
-            {
-                Done();
-                return;
-            }
-
             // RO/RF: if we are spooling up engines, then flush the PID integrators to prevent windup
             if (Status == PSGStatus.BURNING || Status == PSGStatus.TERMINAL)
                 if (VesselState.ThrustCurrent < VesselState.ThrustMinimum * 0.98)
                     Core.Attitude.Controller.Reset();
 
-            HandleTerminal();
+            bool wasCoasting = _machine.IsCoasting();
+
+            GuidanceCommand cmd = _machine.Step(GatherInputs());
+
+            if (cmd.Finished)
+            {
+                Done();
+                return;
+            }
 
             HandleSpinup();
 
-            HandleThrottle();
+            Apply(cmd);
+
+            // a solve started before the coast plans the burn before it, and one started during the coast still has it ahead:
+            // neither must arrive once the coast has started or ended
+            if (!wasCoasting && _machine.IsCoasting())
+                Core.PSGSimulation.CoastStarted();
+            else if (wasCoasting && !_machine.IsCoasting())
+                Core.PSGSimulation.CoastEnded();
         }
 
-        private bool WillDoRCSButNotYet()
+        private GuidanceInputs GatherInputs() =>
+            new GuidanceInputs
+            {
+                Met             = VesselState.MET,
+                Time            = VesselState.Time,
+                Dt              = TimeWarp.fixedDeltaTime,
+                KSPStage        = Vessel.currentStage,
+                Grounded        = IsGrounded(),
+                AllowExecution  = _allowExecution,
+                Mass            = VesselState.Mass,
+                ThrustAvailable = VesselState.ThrustAvailable,
+                RCSThrustUp     = VesselState.RCSThrustAvailable.Up,
+                ForwardRCS      = HasForwardRCS(),
+                RCSGroup        = Vessel.ActionGroups[KSPActionGroup.RCS],
+                StageDeltaV     = CurrentStageDeltaV(),
+                R               = VesselState.OrbitalPosition.WorldToV3Rotated(),
+                V               = VesselState.OrbitalVelocity.WorldToV3Rotated(),
+                A               = Vessel.acceleration_immediate.WorldToV3Rotated(),
+                UllageLeadTime  = UllageLeadTime,
+                CoastDuring     = Core.PSGSimulation.PlannedCoast().Kind == StageType.COAST_DURING
+            };
+
+        private void Apply(in GuidanceCommand cmd)
         {
-            if (Solution == null)
-                return false;
+            if ((cmd.Messages & GuidanceMessages.RCS_OFF) != 0)
+                ScreenMessages.PostScreenMessage(_rcsOffMessage);
+            if ((cmd.Messages & GuidanceMessages.RCS_TRIM) != 0)
+                ScreenMessages.PostScreenMessage(_rcsTrimMessage);
+            if ((cmd.Messages & GuidanceMessages.RCS_COAST) != 0)
+                ScreenMessages.PostScreenMessage(_rcsCoastMessage);
 
-            // We might have wonky transforms and have a tiny bit of fore RCS, so require at least 10% of the max RCS thrust to be
-            // in the pointy direction (which should be "up" / y-axis per KSP/Unity semantics). VesselState counts the RCS thrust with the
-            // group off too: an ascent flown with RCS off ends without the RCS trim, as it always has.
-            bool hasRCS = HasForwardRCS() && Vessel.ActionGroups[KSPActionGroup.RCS];
+            if (cmd.RCSGroupOn && !Vessel.ActionGroups[KSPActionGroup.RCS])
+                Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
 
-            return hasRCS && Status != PSGStatus.TERMINAL_RCS && Vessel.currentStage == Solution.TerminalKSPStage();
+            if (cmd.MinimumWarp)
+                Core.Warp.MinimumWarp();
+
+            if (cmd.AutoStageLimit >= 0)
+                Core.Staging.AutoStageLimitRequest(cmd.AutoStageLimit, this);
+
+            switch (cmd.Throttle)
+            {
+                case GuidanceThrottle.SOLUTION:
+                    ThrottleOn();
+                    break;
+                case GuidanceThrottle.OFF:
+                    ThrustOff();
+                    break;
+                case GuidanceThrottle.RCS_FORWARD:
+                    RCSOn();
+                    break;
+            }
+
+            switch (cmd.Staging)
+            {
+                case GuidanceStaging.STAGE:
+                    Core.Staging.Stage();
+                    break;
+                case GuidanceStaging.IMMEDIATE:
+                    Core.Staging.ImmediateStage();
+                    break;
+            }
+
+            if (cmd.MarkCoastDone)
+                Core.PSGSimulation.MarkCoastDone();
         }
 
         // at least 10 % of the RCS thrust pushes the vessel forward (the RCS group off counts too)
         private bool HasForwardRCS() =>
             Vessel.hasEnabledRCSModules() && VesselState.RCSThrustAvailable.Up > 0.1 * VesselState.RCSThrustAvailable.MaxMagnitude();
 
-        private void HandleTerminal()
-        {
-            if (Solution == null)
-                return;
-
-            if (!IsThrustOn())
-            {
-                // the spent stage's second is counted while thrust is asked for: a coast starts it again
-                _spentSince = double.NaN;
-                return;
-            }
-
-            if (IsGrounded())
-                return;
-
-            // if we've gone past the last stage we need to just stop
-            if (Vessel.currentStage < Solution.TerminalKSPStage())
-            {
-                Done();
-                return;
-            }
-
-            // the last stage has nothing left to burn, so the target is out of reach (a rocket short of delta-v runs dry before
-            // it, burning or in terminal guidance).  Nothing would stage it off, so stop here, once it has lasted a second so that
-            // an engine that is lighting does not count.
-            if (TerminalStageSpent())
-            {
-                Debug.Log($"[MechJebModuleGuidanceController] the last stage ran dry {Solution.Tgo(VesselState.MET):F1} s before the end of the burn.");
-                Done();
-                return;
-            }
-
-            /*
-             * FIXME: consider liquid booster()s + unguided beehive cluster
-             *
-             * 1. we should enter terminal guidance on the top liquid booster and shut it down precisely and suspend the optimizer
-             *    there because we CANNOT use the residuals because we're about to loose our degrees of freedom.  but the optimizer should
-             *    have burned this stage to completion.  we also don't want to use TERMINAL_RCS here.
-             * 2. we should still enter terminal guidance on the top aerobee stage and precisely shut it down to actually hit the target as
-             *    best as possible, and this burntime should have been tuned by the optimizer.  we do want to use TERMINAL_RCS here.
-             *
-             * Right now we only support one OptimizeKSPStage() and really the SolutionBuilder needs to know to slap a PreciseShutdown flag
-             * onto the last liquid booster segment (even though the optimizer didn't optimize it) and likely could use the same flag for
-             * precise shutdown of engines before a coast.  Although maybe there should be two different flags (for precise shutdown with
-             * and without RCS cleanup).
-             */
-
-            // this handles termination of thrust for final stages of "fixed" burntime rockets, or any rocket where the terminal stage is not the
-            // precise shutdown stage and so never gets terminal guidance (due to residuals Tgo may go less than zero so we wait for natural
-            // termination of thrust).   no support for RCS terminal trim.
-            if (Solution.OptimizeKSPStage() != Solution.TerminalKSPStage() && Vessel.currentStage <= Solution.TerminalKSPStage() && Solution.Tgo(VesselState.MET) <= 0 &&
-                NoThrust(VesselState.ThrustAvailable))
-            {
-                Done();
-                return;
-            }
-
-            // TERMINAL_STAGING is set on a non-upper stage optimized stage, once we are no longer in the optimized stage
-            // then we have staged, so we need to reset that condition.  Otherwise we need to wait for staging.
-            if (Status == PSGStatus.TERMINAL_STAGING)
-            {
-                if (Vessel.currentStage == Solution.OptimizeKSPStage())
-                    return;
-
-                Status = PSGStatus.BURNING;
-            }
-
-            // we need to have an optimizable stage to run terminal guidance
-            if (Vessel.currentStage != Solution.OptimizeKSPStage())
-                return;
-
-            // we need to be within 10 seconds of the end of the stage to run terminal guidance
-            if (Solution.TgoForKSPStage(VesselState.MET, Vessel.currentStage) > 10)
-                return;
-
-            // if we are in a coast then don't enter terminal guidance
-            if (IsCoasting())
-                return;
-
-            // if we are coast-during then prevent coasting if we will be coasting this stage (first burn of burn-coast-burn)
-            if (Core.PSGSimulation.PlannedCoast().Kind == StageType.COAST_DURING && Vessel.currentStage == Solution.CoastKSPStage() &&
-                Solution.WillCoast(VesselState.MET))
-                return;
-
-            if (Status != PSGStatus.TERMINAL_RCS)
-            {
-                if (Status != PSGStatus.TERMINAL && HasForwardRCS() && !Vessel.ActionGroups[KSPActionGroup.RCS] &&
-                    Vessel.currentStage == Solution.TerminalKSPStage())
-                    ScreenMessages.PostScreenMessage(_rcsOffMessage);
-                Status = PSGStatus.TERMINAL;
-            }
-
-            Core.Warp.MinimumWarp();
-
-            if (Status == PSGStatus.TERMINAL_RCS && !Vessel.ActionGroups[KSPActionGroup.RCS]) // if someone manually disables RCS
-            {
-                Debug.Log("[MechJebModuleGuidanceController] terminating guidance due to manual deactivation of RCS.");
-                TerminalDone();
-                return;
-            }
-
-            // stopping one tick short is more accurate for rockets without RCS, but sometimes we overshoot with only one tick
-            int ticks = WillDoRCSButNotYet() ? 2 : 1;
-
-            // bit of a hack to predict velocity + position in the next tick or two
-            // FIXME: what exactly does KSP do to integrate over timesteps?
-            Vector3d a0 = Vessel.acceleration_immediate;
-
-            double dt = ticks * TimeWarp.fixedDeltaTime;
-            Vector3d v1 = VesselState.OrbitalVelocity + a0 * dt;
-            Vector3d x1 = VesselState.OrbitalPosition + VesselState.OrbitalVelocity * dt + 0.5 * a0 * dt * dt;
-
-            bool shouldEndTerminal = false;
-
-            if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), VesselState.MET, Vessel.currentStage))
-                shouldEndTerminal = true;
-
-            if (shouldEndTerminal)
-            {
-                if (WillDoRCSButNotYet())
-                {
-                    Debug.Log("[MechJebModuleGuidanceController] transition to RCS terminal guidance.");
-                    ScreenMessages.PostScreenMessage(_rcsTrimMessage);
-                    Status = PSGStatus.TERMINAL_RCS;
-                    if (!Vessel.ActionGroups[KSPActionGroup.RCS])
-                        Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
-                }
-                else
-                {
-                    Debug.Log("[MechJebModuleGuidanceController] terminal guidance completed.");
-                    TerminalDone();
-                }
-            }
-        }
-
-        // Thrust in kN too small to matter: under 1 mm/s² on this vessel.  Not an exact zero: with the engines out and the RCS group
-        // on, ThrustAvailable is the RCS thrust along the vessel's axis, which on a rocket with no RCS pushing forward is rounding
-        // noise of 1e-7 kN rather than 0.
-        private bool NoThrust(double thrust) => thrust < 1e-3 * VesselState.Mass;
-
-        private double _spentSince = double.NaN;
-
-        // On the terminal stage with no thrust left to give: the engines are out (a flamed-out engine adds nothing to
-        // ThrustAvailable, which also counts the RCS when the engines are out and the RCS group is on), or in the RCS trim the
-        // RCS is.  Only true once that has held for a second.
-        // under 1 m/s left in the current stage by the stage stats; not empty while they have nothing for it
-        private bool CurrentStageEmpty()
+        // the delta-v left in the current stage by the stage stats, NaN while they have nothing for it
+        private double CurrentStageDeltaV()
         {
             List<FuelStats> vac = Core.StageStats.VacStats;
             bool found = false;
@@ -328,28 +247,7 @@ namespace MuMech
                     dv += vac[i].DeltaV;
                 }
 
-            return found && dv < 1;
-        }
-
-        private bool TerminalStageSpent()
-        {
-            // a RealFuels engine that has not lit yet (MechJeb holding its ignition until the propellant settles) has no
-            // ThrustAvailable either, but still has its propellant: in a burn the stage stats must say it is empty too
-            bool spent = Solution != null && Vessel.currentStage == Solution.TerminalKSPStage() &&
-                (Status == PSGStatus.TERMINAL_RCS
-                    ? NoThrust(VesselState.RCSThrustAvailable.Up)
-                    : NoThrust(VesselState.ThrustAvailable) && CurrentStageEmpty());
-
-            if (!spent)
-            {
-                _spentSince = double.NaN;
-                return false;
-            }
-
-            if (double.IsNaN(_spentSince))
-                _spentSince = VesselState.Time;
-
-            return VesselState.Time - _spentSince >= 1;
+            return found ? dv : double.NaN;
         }
 
         // the plan's spin-up rides on its coast: the vessel spins up while it coasts, and staging waits for the spin
@@ -362,7 +260,7 @@ namespace MuMech
             Core.Spinup.RollAngularVelocity = _ascentSettings.SpinupAngularVelocity;
         }
 
-        public bool IsTerminal() => Status == PSGStatus.TERMINAL_RCS || Status == PSGStatus.TERMINAL_STAGING || Status == PSGStatus.TERMINAL;
+        public bool IsTerminal() => _machine.IsTerminal();
 
         /* is guidance usable? */
         public bool IsStable() => IsNormal() || IsTerminal();
@@ -371,86 +269,12 @@ namespace MuMech
         public bool IsReady() => Status == PSGStatus.ENABLED || IsNormal();
 
         // not TERMINAL guidance or TERMINAL_RCS -- when we should be running the optimizer
-        public bool IsNormal() => Status == PSGStatus.INITIALIZED || Status == PSGStatus.BURNING || Status == PSGStatus.COASTING;
+        public bool IsNormal() => _machine.IsNormal();
 
-        public bool IsCoasting() => Status == PSGStatus.COASTING;
-
-        private bool IsThrustOn() => IsBurning() || IsTerminal();
-
-        private bool IsBurning() => Status == PSGStatus.BURNING;
+        public bool IsCoasting() => _machine.IsCoasting();
 
         /* normal pre-states but not usefully converged */
         public bool IsInitializing() => Status == PSGStatus.ENABLED || Status == PSGStatus.INITIALIZED;
-
-        private void HandleThrottle()
-        {
-            if (Solution == null)
-                return;
-
-            if (!_allowExecution)
-                return;
-
-            if (Status == PSGStatus.TERMINAL_RCS)
-            {
-                RCSOn();
-                return;
-            }
-
-            if (Status == PSGStatus.TERMINAL || Status == PSGStatus.TERMINAL_STAGING)
-            {
-                ThrottleOn();
-                return;
-            }
-
-            int coastStage = Solution.CoastKSPStage();
-
-            //Debug.Log($"coast stage: {coastStage} current stage: {Vessel.currentStage} will coast: {Solution.WillCoast(VesselState.time)}");
-
-
-            // Stop autostaging if we need to do a coast.  Also, we need to affirmatively set the termination
-            // of autostaging to the top of the rocket.  If we don't, then when we cut the engines and do the
-            // RCS trim, autostaging will stage off the spent engine if there's no relights.  This is unwanted
-            // since the insertion stage may still have RCS which is necessary to complete the mission.
-            if (coastStage >= 0 && Vessel.currentStage >= coastStage && Solution.WillCoast(VesselState.MET))
-                Core.Staging.AutoStageLimitRequest(coastStage, this);
-            else
-                Core.Staging.AutoStageLimitRequest(Solution.TerminalKSPStage(), this);
-
-            // terminal guidance may have shut down the burn before the coast slightly ahead of the (frozen) solution's planned
-            // coast start, so stay in the coast until the solution's coast is behind us instead of relighting and marking it done.
-            bool solutionCoast = Solution.Coast(VesselState.MET);
-
-            if (solutionCoast || (IsCoasting() && Solution.WillCoast(VesselState.MET)))
-            {
-                if (!IsCoasting())
-                    DoCoast();
-
-                if (solutionCoast && Solution.StageTimeLeft(VesselState.MET) < UllageLeadTime)
-                    RCSOn();
-
-                ThrustOff();
-
-                // We have to cut throttle precisely when a coast is planned in order to not overshoot.  If we have a relightable
-                // engine at that point we need to jettison it manually and auto-staging will not do that.  The gate here obviously
-                // should not do a jettison for coast-after/during because the stages should match, this affects coast-before/dedicated.
-                if (Vessel.currentStage > coastStage)
-                    Core.Staging.Stage();
-            }
-            else
-            {
-                // FIXME: edge trigger this instead of beating on it constantly
-                if (hasCoasted)
-                    Core.PSGSimulation.MarkCoastDone();
-
-                // a solve started during the coast still has it ahead, which would start it again
-                if (IsCoasting())
-                    Core.PSGSimulation.CoastEnded();
-
-                ThrottleOn();
-
-                Status = PSGStatus.BURNING;
-            }
-        }
 
         private bool IsGrounded() =>
             Vessel.situation == Vessel.Situations.LANDED ||
@@ -471,7 +295,7 @@ namespace MuMech
             // the Solution's clock is MET, which stays at zero until liftoff, so on the ground this flies its first point
             int idx = Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
 
-            if (Status != PSGStatus.TERMINAL_RCS) // don't update vgo/tgo if we're in RCS
+            if (!_machine.IsRCSTrim()) // don't update vgo/tgo if we're in RCS
             {
                 Tgo = Solution.Tgo(VesselState.MET);
                 Vgo = Solution.Vgo(VesselState.MET);
@@ -541,61 +365,12 @@ namespace MuMech
 
         private void ThrustOff() => Core.Thrust.ThrustOff();
 
-        private void TerminalDone()
-        {
-            if (Solution == null)
-            {
-                Done();
-                return;
-            }
-
-            // if the burn we just shut down is followed by the coast, start the coast.  for a coast in a lower KSP stage
-            // (coast-before/dedicated) HandleThrottle then stages off the spent booster, as it does for a timed coast start.
-            if (Solution.CoastFollows(VesselState.MET))
-            {
-                ThrustOff();
-                DoCoast();
-                return;
-            }
-
-            // if we have more un-optimized upper stages to burn, stage and use the TERMINAL_STAGING state
-            if (Solution.TerminalKSPStage() != Vessel.currentStage && Solution.OptimizeKSPStage() == Vessel.currentStage)
-            {
-                ThrustOff();
-                Core.Staging.ImmediateStage();
-                Status = PSGStatus.TERMINAL_STAGING;
-                return;
-            }
-
-            // otherwise we just have normal termination
-            Done();
-        }
-
         private void Done()
         {
             Users.Clear();
             ThrustOff();
-            Status = PSGStatus.FINISHED;
-            Solution = null;
+            _machine.Finish();
             Enabled = false;
-        }
-
-        private void DoCoast()
-        {
-            // a solve started before the coast plans the burn before it, so it must never arrive now
-            Core.PSGSimulation.CoastStarted();
-
-            StartCoast = VesselState.Time;
-            // force RCS on at the state transition
-            if (!Vessel.ActionGroups[KSPActionGroup.RCS])
-            {
-                Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
-                ScreenMessages.PostScreenMessage(_rcsCoastMessage);
-            }
-
-            Status = PSGStatus.COASTING;
-
-            hasCoasted = true;
         }
 
         // guidance flies in SI units and MET seconds, so this takes a DeNormalized() Solution
@@ -608,11 +383,9 @@ namespace MuMech
             CheckDebug.True(!IsCoasting() || solution.CoastPhase(0));
             CheckDebug.True(!hasCoasted || IsCoasting() || solution.CoastKSPStage() < 0);
 
-            Solution = solution;
+            _machine.SetSolution(solution);
             if (solution.T0 <= 0)
                 PadSolution = solution;
-            if (Status == PSGStatus.ENABLED)
-                Status = PSGStatus.INITIALIZED;
         }
 
         /// <summary>
