@@ -184,7 +184,7 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Target"); //Target
+            KodeWindow.Header(r, "#MechJeb_NewUI_LandingTarget"); //Target
             SiteRow(w, r);
             TargetButtons(w, r, true);
 
