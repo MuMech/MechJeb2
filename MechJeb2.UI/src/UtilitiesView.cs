@@ -28,9 +28,12 @@ namespace MuMech.UI
             UIObject r = w.Root;
 
             UIObject g = w.Group(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
-            KodeWindow.PropertyGrid limits = OptionRows.ThrustLimits(w, g, Thrust, Thrust, OptionRows.GeneralLimitsApply(Thrust), null, false);
-            // greyed while an autopilot flies with its own throttle limits: these apply again when it stops
-            limits.Dim(limits.Table.gameObject, null, () => Thrust.LimitsOverrideUser != null);
+            KodeWindow.PropertyGrid limits = OptionRows.ThrustLimits(w, g, Thrust, Thrust, OptionRows.GeneralLimitsApply(Thrust),
+                out Layout minThrottle, null, false);
+            // greyed while an autopilot flies with its own throttle limits: these apply again when it stops. The landing has only its
+            // own minimum throttle and keeps the general other limits, so only that row greys then
+            limits.Dim(limits.Table.gameObject, null, () => Thrust.LimitsOverrideUser != null && !(Thrust.Limits is ThrustLimitsWithOwnMinThrottle));
+            limits.Dim(minThrottle.gameObject, null, () => Thrust.Limits is ThrustLimitsWithOwnMinThrottle);
 
             g = w.Group(r, "#MechJeb_NewUI_Jets"); //Jet engines
             KodeWindow.PropertyGrid jets = w.Properties(g);

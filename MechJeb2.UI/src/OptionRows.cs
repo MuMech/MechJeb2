@@ -31,7 +31,11 @@ namespace MuMech.UI
         /// <paramref name="psg"/>: PSG ascents fly without the throttle and electric limits, so those rows hide.
         /// </summary>
         public static KodeWindow.PropertyGrid ThrustLimits(KodeWindow w, UIObject parent, MechJebModuleThrustController t, IThrustLimits l,
-            Func<bool> applies, Func<bool> psg = null, bool jets = true)
+            Func<bool> applies, Func<bool> psg = null, bool jets = true) => ThrustLimits(w, parent, t, l, applies, out _, psg, jets);
+
+        /// <summary>As above, with the "Keep limited throttle over" row in <paramref name="minThrottle"/>.</summary>
+        public static KodeWindow.PropertyGrid ThrustLimits(KodeWindow w, UIObject parent, MechJebModuleThrustController t, IThrustLimits l,
+            Func<bool> applies, out Layout minThrottle, Func<bool> psg = null, bool jets = true)
         {
             KodeWindow.PropertyGrid g = w.Properties(parent);
             Switch(g, "#MechJeb_Ascent_checkbox12", () => l.LimitToPreventOverheats, v => l.LimitToPreventOverheats = v,
@@ -42,7 +46,7 @@ namespace MuMech.UI
                 LimiterTones.For(t, LimitMode.ACCELERATION, applies)); //"Limit acceleration to"
             Layout throttle = Switch(g, "#MechJeb_Ascent_checkbox17", () => l.LimitThrottle, v => l.LimitThrottle = v, l.MaxThrottle, "%", 55,
                 () => LimiterTones.Throttle(t, l, applies)); //"Limit throttle to"
-            MinThrottle(g, t, l, applies, 55); //"Keep limited throttle over"
+            minThrottle = MinThrottle(g, t, l, applies, 55); //"Keep limited throttle over"
 
             // electric: [switch] Electric limit Lo [lo] % Hi [hi] %, the "% Hi [hi] %" in the unit column
             Layout electric = Switch(g, "#MechJeb_Ascent_checkbox20", () => l.ElectricThrottle, v => l.ElectricThrottle = v,
