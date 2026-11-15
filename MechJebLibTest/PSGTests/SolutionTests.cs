@@ -707,6 +707,22 @@ namespace MechJebLibTest.PSGTests
                 new Seg(burn, 0.5, 1, 512, 256, _yHat, _yHat, 1, 1));
         }
 
+        // a coast-during that the optimizer shortened to nothing: the burn before it (4096-4160 s), the coast of no length at 4160 s,
+        // and the precise shutdown burn after it (4160-4224 s), all in KSP stage 1
+        private static Solution ZeroCoastDuring()
+        {
+            Phase burn1 = NewBurn(1, 1, 1024, 768, 300, 64);
+            Phase coast = NewCoast(1, 1, 768);
+            Phase burn2 = NewBurn(1, 1, 768, 512, 300, 64);
+            burn2.PreciseShutdown = true;
+            burn2.TerminalStage   = true;
+
+            return Build(
+                new Seg(burn1, 0, 0.5, 1024, 768, _xHat, _xHat, 1, 1),
+                new Seg(coast, 0.5, 0.5, 768, 768, _xHat, _xHat, 0, 0),
+                new Seg(burn2, 0.5, 1, 768, 512, _xHat, _xHat, 1, 1));
+        }
+
         // a single burn that ends in the state (rf, vf), in m and m/s
         private static Solution EndingAt(V3 rf, V3 vf)
         {
@@ -975,6 +991,25 @@ namespace MechJebLibTest.PSGTests
                 allFixed.WillCoast(t).ShouldBeFalse();
                 allFixed.CoastFollows(t).ShouldBeFalse();
             }
+        }
+
+        // a coast the optimizer shortened to nothing is no coast: guidance flies the burns either side of it as one burn, and
+        // its coast-during hold mustn't keep terminal guidance off for a coast that never comes
+        [Fact]
+        public void ZeroLengthCoastIsNoCoast()
+        {
+            using Solution solution = ZeroCoastDuring();
+
+            foreach (double t in new double[] { T0, 4128, 4159.9, 4160, 4192, 4224 })
+            {
+                solution.Coast(t).ShouldBeFalse();
+                solution.WillCoast(t).ShouldBeFalse();
+                solution.CoastFollows(t).ShouldBeFalse();
+            }
+
+            // the stage's burn time left counts both burns, so terminal guidance comes at the end of the second
+            solution.TgoForKSPStage(4128, 1).ShouldEqual(96, 1e-9);
+            solution.TerminalKSPStage().ShouldEqual(1);
         }
 
         [Fact]

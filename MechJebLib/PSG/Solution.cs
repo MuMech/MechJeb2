@@ -324,24 +324,32 @@ namespace MechJebLib.PSG
 
         public bool Coast(double t) => Phases[IndexFor(t)].Coast;
 
+        // the fraction of the whole trajectory under which a coast counts as none
+        private const double ZERO_COAST = 1e-6;
+
+        // A coast phase with a length.  With a minimum coast of zero the optimizer may shorten the coast to nothing, when burning
+        // straight through is better: the burns either side of it are then one burn, and guidance must fly them as one (no
+        // coast to wait for, and terminal guidance at the end of the second).
+        private bool FlownCoast(int i) => Phases[i].Coast && _tmax[i] - _tmin[i] > ZERO_COAST * (Tf - T0);
+
         // Specialized API to determine if we still have the coast in our future or not
-        // (or if we're in a coast right now)
+        // (or if we're in a coast right now).  A coast of no length doesn't count.
         public bool WillCoast(double t)
         {
             for (int i = IndexFor(t); i < Phases.Count; i++)
-                if (Phases[i].Coast)
+                if (FlownCoast(i))
                     return true;
 
             return false;
         }
 
         // true if we're in a coast, or the phase after the current one is a coast.  Unlike WillCoast this is false for a burn
-        // which is followed by other burns before the coast.
+        // which is followed by other burns before the coast.  A coast of no length doesn't count.
         public bool CoastFollows(double t)
         {
             int idx = IndexFor(t);
 
-            return Phases[idx].Coast || (idx + 1 < Phases.Count && Phases[idx + 1].Coast);
+            return FlownCoast(idx) || (idx + 1 < Phases.Count && FlownCoast(idx + 1));
         }
 
         public int CoastKSPStage()
