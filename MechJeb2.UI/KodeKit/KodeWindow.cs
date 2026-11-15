@@ -429,6 +429,7 @@ namespace KodeKit
                 cb.highlightedColor = new Color(1, 1, 1, 0.12f);
                 cb.pressedColor = new Color(1, 1, 1, 0.2f);
                 cb.selectedColor = cb.normalColor;
+                cb.disabledColor = DisabledTint(cb.normalColor);
                 button.colors = cb;
                 th.ApplyText(label, bar.gameObject.activeSelf ? bar.color : th.Text);
                 line.color = new Color(1, 1, 1, 0.07f);
