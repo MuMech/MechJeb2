@@ -69,11 +69,23 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool stages;
 
+        // the plot's size in steps of 128 px, from older settings: plotWidth and plotHeight start from them
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int hSize = 4;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int vSize = 2;
+
+        // the plot's size in px, set by the window's resize grip and its - and + buttons; -1 until started from hSize and vSize
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int plotWidth = -1;
+
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int plotHeight = -1;
+
+        internal const int SIZE_STEP = 128;
+        internal const int MIN_PLOT_WIDTH = 128, MAX_PLOT_WIDTH = 20 * SIZE_STEP;
+        internal const int MIN_PLOT_HEIGHT = 96, MAX_PLOT_HEIGHT = 10 * SIZE_STEP;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoScale = true;
@@ -87,13 +99,35 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int scaleIdx;
 
+        // the graph of the Y labels on the right of the plot (modern layout), -1 for none
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int rightScaleIdx = -1;
+
+        // graphs of one unit share a Y range (see drawnStates); off, each graph keeps its own
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool sharedScales = true;
+
         public bool ascentPath = false;
 
         internal static Texture2D backgroundTexture;
         private CelestialBody oldMainBody;
         internal static readonly int typeCount = Enum.GetValues(typeof(RecordType)).Length;
 
+        // each graph's own Y range, grown from what it recorded since the mark
         internal readonly graphState[] graphStates;
+
+        // the Y range each graph is drawn and labelled with. With sharedScales, graphs of one unit share the widest range
+        // among the displayed graphs of their group (or among all of them when none is displayed), so the same value is
+        // drawn at the same height whichever of them the Y labels show
+        internal readonly graphState[] drawnStates;
+
+        private static readonly RecordType[][] rangeGroups =
+        {
+            new[] { RecordType.ALTITUDE_ASL, RecordType.ALTITUDE_TRUE },
+            new[] { RecordType.SPEED_SURFACE, RecordType.SPEED_ORBITAL },
+            new[] { RecordType.GRAVITY_LOSSES, RecordType.DRAG_LOSSES, RecordType.STEERING_LOSSES },
+            new[] { RecordType.AO_A, RecordType.AO_S, RecordType.AO_D }
+        };
 
         // the recorder's mark the scales were last reset for
         internal double scaleMarkUT;
@@ -120,6 +154,7 @@ namespace MuMech
         {
             Priority = 2000;
             graphStates = new graphState[typeCount];
+            drawnStates = new graphState[typeCount];
             displayed = new bool[typeCount];
         }
 
@@ -163,8 +198,8 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
                 return;
 
-            width = 128 * hSize;
-            height = 128 * vSize;
+            ClampSizes();
+            ApplySizes();
             recorder = Core.GetComputerModule<MechJebModuleFlightRecorder>();
             ResetScale();
         }
@@ -174,11 +209,11 @@ namespace MuMech
         // keeps the atmosphere background texture (and the scales it depends on) up to date
         internal void UpdateBackground()
         {
-            if (oldMainBody != MainBody || lastMaximumAltitude != graphStates[(int)RecordType.ALTITUDE_ASL].maximum ||
+            if (oldMainBody != MainBody || lastMaximumAltitude != drawnStates[(int)RecordType.ALTITUDE_ASL].maximum ||
                 height != backgroundTexture.height)
             {
                 UpdateScale();
-                lastMaximumAltitude = graphStates[(int)RecordType.ALTITUDE_ASL].maximum;
+                lastMaximumAltitude = drawnStates[(int)RecordType.ALTITUDE_ASL].maximum;
 
                 if (backgroundTexture == null || height != backgroundTexture.height)
                 {
@@ -198,14 +233,16 @@ namespace MuMech
         {
             timeScale = Mathf.Clamp(timeScale, 0, 20);
             downrangeScale = Mathf.Clamp(downrangeScale, 0, 20);
-            hSize = Mathf.Clamp(hSize, 1, 20);
-            vSize = Mathf.Clamp(vSize, 1, 10);
+            if (plotWidth < 0) plotWidth = SIZE_STEP * Mathf.Clamp(hSize, 1, 20);
+            if (plotHeight < 0) plotHeight = SIZE_STEP * Mathf.Clamp(vSize, 1, 10);
+            plotWidth = Mathf.Clamp(plotWidth, MIN_PLOT_WIDTH, MAX_PLOT_WIDTH);
+            plotHeight = Mathf.Clamp(plotHeight, MIN_PLOT_HEIGHT, MAX_PLOT_HEIGHT);
         }
 
         internal void ApplySizes()
         {
-            width = 128 * hSize;
-            height = 128 * vSize;
+            width = plotWidth;
+            height = plotHeight;
         }
 
         // x units (m or s) per pixel, and the largest x recorded since the mark
@@ -253,17 +290,47 @@ namespace MuMech
                 }
 
                 if (change)
-                {
-                    double maximum = graphStates[t].maximum;
-                    double minimum = graphStates[t].minimum;
-                    double range = heckbertNiceNum(maximum - minimum, false);
-                    double step = heckbertNiceNum(range / (ScaleTicks - 1), true);
+                    RoundLimits(ref graphStates[t]);
+            }
 
-                    minimum = Math.Floor(minimum / step) * step;
-                    maximum = Math.Ceiling(maximum / step) * step;
-                    graphStates[t].minimum = minimum;
-                    graphStates[t].maximum = maximum;
+            ShareRanges();
+        }
+
+        // widens the range to multiples of a nice tick step
+        private void RoundLimits(ref graphState state)
+        {
+            double range = heckbertNiceNum(state.maximum - state.minimum, false);
+            double step = heckbertNiceNum(range / (ScaleTicks - 1), true);
+
+            state.minimum = Math.Floor(state.minimum / step) * step;
+            state.maximum = Math.Ceiling(state.maximum / step) * step;
+        }
+
+        // fills drawnStates from graphStates
+        private void ShareRanges()
+        {
+            Array.Copy(graphStates, drawnStates, typeCount);
+            if (!sharedScales) return;
+
+            foreach (RecordType[] group in rangeGroups)
+            {
+                bool anyDisplayed = false;
+                foreach (RecordType type in group)
+                    anyDisplayed |= displayed[(int)type];
+
+                var shared = new graphState { minimum = double.MaxValue, maximum = double.MinValue, limitsRounded = true };
+                foreach (RecordType type in group)
+                {
+                    if (anyDisplayed && !displayed[(int)type]) continue;
+                    shared.minimum = Math.Min(shared.minimum, graphStates[(int)type].minimum);
+                    shared.maximum = Math.Max(shared.maximum, graphStates[(int)type].maximum);
                 }
+
+                // each range is already rounded; rounding their union keeps the tick step a nice number
+                RoundLimits(ref shared);
+
+                foreach (RecordType type in group)
+                    drawnStates[(int)type] = shared;
             }
         }
 
@@ -304,6 +371,8 @@ namespace MuMech
             graphStates[(int)RecordType.GRAVITY_LOSSES].maximum = 100;
             graphStates[(int)RecordType.DRAG_LOSSES].maximum = 100;
             graphStates[(int)RecordType.STEERING_LOSSES].maximum = 100;
+
+            ShareRanges();
         }
 
         private double heckbertNiceNum(double x, bool round)

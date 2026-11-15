@@ -74,11 +74,14 @@ namespace KodeKit
         public readonly RectTransform Plot;
         public readonly List<LineSeriesGraphic> Series = new List<LineSeriesGraphic>();
         public readonly LineSeriesGraphic Stages;
-        readonly CharText[] yChars;
-        readonly RectTransform[] yCells;
-        readonly RectTransform yColumn;
+        readonly LabelColumn yLabels;
+        readonly Layout area;
         readonly float builtHeight;
         const float LabelHeight = 18;
+
+        /// <summary>The Y labels on the right of the plot, for a second graph: null until AddRightLabels.</summary>
+        public RectTransform RightLabels => rightLabels?.Column;
+        LabelColumn rightLabels;
         public readonly Scrollbar Scroll;
         public bool Follow = true;
         public double VisibleWidth = 100;   // data units across the plot
@@ -98,10 +101,9 @@ namespace KodeKit
         /// <param name="labelCount">The most Y labels shown: how many the height has room for.</param>
         public LineGraph(KodeWindow w, UIObject parent, float width, float height, int labelCount = 5, UIObject scrollbarParent = null)
         {
-            Layout area = KodeWindow.Row(parent);
+            area = KodeWindow.Row(parent);
             // Y labels column, fixed width, absolute positions
             RectTransform labels = Graphs.Surface(area, 70, height, "YLabels");
-            yColumn = labels;
             builtHeight = height;
             Plot = Graphs.Surface(area, width, height, "Plot");
             Plot.gameObject.AddComponent<RectMask2D>();
@@ -120,20 +122,7 @@ namespace KodeKit
             Stages.color = new Color(0.5f, 0.5f, 0.5f);
             Stages.raycastTarget = false;
 
-            yChars = new CharText[labelCount];
-            yCells = new RectTransform[labelCount];
-            for (int i = 0; i < labelCount; i++)
-            {
-                // the labels column is a KodeUI UIEmpty without layout group: Labels() places the cells, from the bottom
-                UIText t = KodeWindow.LiveLabel(labels.GetComponent<UIObject>(), "-000.0 k", false);
-                RectTransform cell = (RectTransform)t.transform.parent;
-                cell.anchorMin = cell.anchorMax = new Vector2(1, 0);
-                cell.pivot = new Vector2(1, 0.5f);
-                cell.sizeDelta = new Vector2(66, LabelHeight);
-                t.tmpText.alignment = TextAlignmentOptions.Right;
-                yChars[i] = new CharText(t.tmpText);
-                yCells[i] = cell;
-            }
+            yLabels = new LabelColumn(labels, labelCount, height, false);
 
             Layout bottom = KodeWindow.Row(scrollbarParent ?? parent);
             if (scrollbarParent == null) KodeWindow.Space(bottom, 74);
@@ -149,6 +138,22 @@ namespace KodeKit
             var followCell = follow.transform.parent.GetComponent<LayoutElement>() ?? follow.transform.parent.gameObject.AddComponent<LayoutElement>();
             followCell.flexibleWidth = 0;
             w.AddSync(Tick);
+        }
+
+        /// <summary>A second column of Y labels on the right of the plot, for another graph's range: see RefreshRight.</summary>
+        public RectTransform AddRightLabels(int labelCount)
+        {
+            RectTransform column = Graphs.Surface(area, 70, builtHeight, "YLabelsRight");
+            rightLabels = new LabelColumn(column, labelCount, builtHeight, true);
+            return column;
+        }
+
+        /// <summary>The right labels for this Y range, in this colour (no allocation in steady state).</summary>
+        public void RefreshRight(double yMin, double yMax, Color color)
+        {
+            if (rightLabels == null) return;
+            rightLabels.Show(yMin, yMax, LabelFormat);
+            rightLabels.Tint(color);
         }
 
         public LineSeriesGraphic AddSeries(IGraphSource source, Color color)
@@ -174,40 +179,80 @@ namespace KodeKit
             Apply(Stages, 0, 1);
             pending = Series.Count + 1;
 
-            Labels(yMin, yMax);
+            yLabels.Show(yMin, yMax, LabelFormat);
         }
 
         static readonly int[] stepMultiples = { 1, 2, 5 };
-        double labelledMin = double.NaN, labelledMax = double.NaN;
-        float labelledHeight = -1;
 
-        // A label at each whole multiple of the step in the range. The cells left over are hidden. A range with no
-        // extent, or one that is not a number, has one label: its lower limit.
-        void Labels(double yMin, double yMax)
+        // a column of Y labels beside the plot: right-aligned against its left edge, or left-aligned against its right edge
+        sealed class LabelColumn
         {
-            float height = yColumn.rect.height > 0 ? yColumn.rect.height : builtHeight;
-            if (yMin.Equals(labelledMin) && yMax.Equals(labelledMax) && height == labelledHeight) return;
-            labelledMin = yMin;
-            labelledMax = yMax;
-            labelledHeight = height;
+            public readonly RectTransform Column;
+            readonly CharText[] chars;
+            readonly TMP_Text[] texts;
+            readonly RectTransform[] cells;
+            readonly float builtHeight;
+            readonly bool right;
+            double labelledMin = double.NaN, labelledMax = double.NaN;
+            float labelledHeight = -1;
 
-            double range = yMax - yMin;
-            bool ticked = Ticks(yMin, yMax, yChars.Length, out double step, out double first, out int count, out int sigFigs);
-            if (!ticked) count = Math.Min(1, yChars.Length);
-
-            for (int i = 0; i < yChars.Length; i++)
+            public LabelColumn(RectTransform column, int count, float builtHeight, bool right)
             {
-                GameObject cell = yCells[i].gameObject;
-                if (cell.activeSelf != i < count) cell.SetActive(i < count);
-                if (i >= count) continue;
+                Column = column;
+                this.builtHeight = builtHeight;
+                this.right = right;
+                chars = new CharText[count];
+                texts = new TMP_Text[count];
+                cells = new RectTransform[count];
+                for (int i = 0; i < count; i++)
+                {
+                    // the column is a KodeUI UIEmpty without layout group: Show() places the cells, from the bottom
+                    UIText t = KodeWindow.LiveLabel(column.GetComponent<UIObject>(), "-000.0 k", false);
+                    RectTransform cell = (RectTransform)t.transform.parent;
+                    cell.anchorMin = cell.anchorMax = new Vector2(right ? 0 : 1, 0);
+                    cell.pivot = new Vector2(right ? 0 : 1, 0.5f);
+                    cell.sizeDelta = new Vector2(66, LabelHeight);
+                    t.tmpText.alignment = right ? TextAlignmentOptions.Left : TextAlignmentOptions.Right;
+                    chars[i] = new CharText(t.tmpText);
+                    texts[i] = t.tmpText;
+                    cells[i] = cell;
+                }
+            }
 
-                double v = ticked ? (first + i) * step : yMin;
-                // centred on its tick, an end label would stick out over the rows around the plot
-                float y = ticked ? (float)((v - yMin) / range) * height : 0;
-                yCells[i].anchoredPosition = new Vector2(-4, Mathf.Clamp(y, LabelHeight / 2, height - LabelHeight / 2));
-                if (LabelFormat != null) LabelFormat(yChars[i].Clear(), v, ticked ? step : 0);
-                else yChars[i].Clear().AppendSI(v, sigFigs);
-                yChars[i].Commit();
+            // A label at each whole multiple of the step in the range. The cells left over are hidden. A range with no
+            // extent, or one that is not a number, has one label: its lower limit.
+            public void Show(double yMin, double yMax, Action<CharText, double, double> format)
+            {
+                float height = Column.rect.height > 0 ? Column.rect.height : builtHeight;
+                if (yMin.Equals(labelledMin) && yMax.Equals(labelledMax) && height == labelledHeight) return;
+                labelledMin = yMin;
+                labelledMax = yMax;
+                labelledHeight = height;
+
+                double range = yMax - yMin;
+                bool ticked = Ticks(yMin, yMax, chars.Length, out double step, out double first, out int count, out int sigFigs);
+                if (!ticked) count = Math.Min(1, chars.Length);
+
+                for (int i = 0; i < chars.Length; i++)
+                {
+                    GameObject cell = cells[i].gameObject;
+                    if (cell.activeSelf != i < count) cell.SetActive(i < count);
+                    if (i >= count) continue;
+
+                    double v = ticked ? (first + i) * step : yMin;
+                    // centred on its tick, an end label would stick out over the rows around the plot
+                    float y = ticked ? (float)((v - yMin) / range) * height : 0;
+                    cells[i].anchoredPosition = new Vector2(right ? 4 : -4, Mathf.Clamp(y, LabelHeight / 2, height - LabelHeight / 2));
+                    if (format != null) format(chars[i].Clear(), v, ticked ? step : 0);
+                    else chars[i].Clear().AppendSI(v, sigFigs);
+                    chars[i].Commit();
+                }
+            }
+
+            public void Tint(Color color)
+            {
+                foreach (TMP_Text t in texts)
+                    if (t.color != color) t.color = color;
             }
         }
 
