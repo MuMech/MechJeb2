@@ -9,7 +9,8 @@ using MechJebLib.FuelFlowSimulation;
 namespace MechJebLib.PSG
 {
     /// <summary>
-    ///     A LogicalPlan as the stage editor shows and edits it: the vessel's stage stats as rows in flight order, the burn rows
+    ///     A LogicalPlan as the stage editor shows and edits it, the plan being the only description of which stages burn, how,
+    ///     and where the coast goes: the vessel's stage stats as rows in flight order, the burn rows
     ///     the plan covers with their Guided and Full burn flags, and the plan's one coast as a slot among the places a coast
     ///     can go.  Every edit rebuilds the LogicalPlan from that description (Plan), so the plan stays valid by construction.
     ///     The plan's burns cover the bottom-most burn rows (VacStats rows with at least MinDeltaV), as FlightPlan maps them:
@@ -51,10 +52,6 @@ namespace MechJebLib.PSG
             // fixed burn time: the whole stage burns (no optimized shutdown)
             public bool FullBurn;
 
-            // a burn row the vessel stages into: the first row of its KSP stage, after the first burn. The options that act when
-            // a stage is entered (spin-up before it, hot staging into it, RCS ullage before it lights) belong to these rows.
-            public bool Staged;
-
             public int KSPStage => Stats.KSPStage;
         }
 
@@ -90,6 +87,9 @@ namespace MechJebLib.PSG
 
         public bool CoastGuided { get; private set; } = true;
 
+        // spin the vessel up during the coast, before the stage after it: only on a guided coast
+        public bool CoastSpinup { get; private set; }
+
         // false when the LogicalPlan it was read from can't be mapped onto these stage stats (the vessel changed)
         public bool Fits { get; private set; } = true;
 
@@ -110,7 +110,6 @@ namespace MechJebLib.PSG
                 else
                     row.Kind = s.EngineSignatures.Count > 0 ? RowKind.UNDER_MIN : RowKind.NO_ENGINE;
 
-                row.Staged = row.BurnIndex > 0 && Rows.Count > 0 && Rows[Rows.Count - 1].KSPStage != row.KSPStage;
                 Rows.Add(row);
             }
 
@@ -159,8 +158,9 @@ namespace MechJebLib.PSG
                     continue;
                 }
 
-                Coast = new CoastSlot(KindOf(stage.StageType), at.MJStage);
+                Coast       = new CoastSlot(KindOf(stage.StageType), at.MJStage);
                 CoastGuided = !stage.Unguided;
+                CoastSpinup = stage.Spinup && CoastGuided;
             }
 
             PlannedCount = planned;
@@ -210,7 +210,7 @@ namespace MechJebLib.PSG
             }
 
             if (Coast.HasValue && SlotIndex(Coast.Value) < 0)
-                Coast = null;
+                RemoveCoast();
         }
 
         public IReadOnlyList<CoastSlot> Slots => _slots;
@@ -247,11 +247,30 @@ namespace MechJebLib.PSG
             if (_slots.Count == 0) return;
             Row last = BurnRows[PlannedCount - 1];
             var before = new CoastSlot(CoastKind.BEFORE, last.VacIndex);
-            Coast = SlotIndex(before) >= 0 ? before : _slots[_slots.Count - 1];
+            Coast       = SlotIndex(before) >= 0 ? before : _slots[_slots.Count - 1];
             CoastGuided = true;
+            CoastSpinup = false;
         }
 
-        public void RemoveCoast() => Coast = null;
+        /// <summary>Puts the coast in slot, one of Slots; false (and no change) for a slot the plan doesn't have.</summary>
+        public bool SetCoast(CoastSlot slot)
+        {
+            if (SlotIndex(slot) < 0) return false;
+            if (!Coast.HasValue)
+            {
+                CoastGuided = true;
+                CoastSpinup = false;
+            }
+
+            Coast = slot;
+            return true;
+        }
+
+        public void RemoveCoast()
+        {
+            Coast       = null;
+            CoastSpinup = false;
+        }
 
         /// <summary>Moves the coast to the previous (-1, earlier in the flight) or next (+1) slot. False at the ends.</summary>
         public bool MoveCoast(int direction)
@@ -263,7 +282,20 @@ namespace MechJebLib.PSG
             return true;
         }
 
-        public void SetCoastGuided(bool guided) => CoastGuided = guided;
+        /// <summary>An unguided coast holds one attitude, so it can't spin up: turning Guided off turns the spin-up off too.</summary>
+        public void SetCoastGuided(bool guided)
+        {
+            CoastGuided = guided;
+            if (!guided) CoastSpinup = false;
+        }
+
+        /// <summary>The spin-up needs a guided coast: turning it on makes the coast guided.</summary>
+        public void SetCoastSpinup(bool spinup)
+        {
+            if (!Coast.HasValue) return;
+            CoastSpinup = spinup;
+            if (spinup) CoastGuided = true;
+        }
 
         /// <summary>The LogicalPlan this description makes, top-down like VacStats, sanitized.</summary>
         public LogicalPlan Plan()
@@ -313,6 +345,10 @@ namespace MechJebLib.PSG
             new LogicalPlanStage { StageType = StageType.BURN, Unguided = !r.Guided, AllowShutdown = !r.FullBurn };
 
         private LogicalPlanStage CoastStage(StageType type, Row r) =>
-            new LogicalPlanStage { StageType = type, Unguided = !CoastGuided, AllowShutdown = !r.FullBurn };
+            new LogicalPlanStage { StageType = type, Unguided = !CoastGuided, Spinup = CoastSpinup, AllowShutdown = !r.FullBurn };
+
+        /// <summary>The plan of a vessel nobody planned yet: every burn row, guided and optimized, with no coast.</summary>
+        public static LogicalPlan DefaultPlan(List<FuelStats> vacStats, double minDeltaV) =>
+            new PlanEditor(new LogicalPlan(), vacStats, minDeltaV).Plan();
     }
 }

@@ -352,9 +352,10 @@ namespace MuMech
             return VesselState.Time - _spentSince >= 1;
         }
 
+        // the plan's spin-up rides on its coast: the vessel spins up while it coasts, and staging waits for the spin
         private void HandleSpinup()
         {
-            if (Vessel.currentStage != _ascentSettings.SpinupStage)
+            if (!IsCoasting() || Vessel.currentStage != Core.PSGSimulation.PlannedSpinupStage())
                 return;
 
             Core.Spinup.AssertStart();
@@ -424,8 +425,7 @@ namespace MuMech
                 if (!IsCoasting())
                     DoCoast();
 
-                if (solutionCoast && Solution.StageTimeLeft(VesselState.MET) < UllageLeadTime &&
-                    !Core.Thrust.NoRcsUllageStages.Val.Contains(Solution.NextBurnKSPStage(VesselState.MET)))
+                if (solutionCoast && Solution.StageTimeLeft(VesselState.MET) < UllageLeadTime)
                     RCSOn();
 
                 ThrustOff();

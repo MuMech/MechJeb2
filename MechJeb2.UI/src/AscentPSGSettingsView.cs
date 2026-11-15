@@ -81,9 +81,9 @@ namespace MuMech.UI
             MechJebModuleAscentPSGStagesMenu editor = Core.GetComputerModule<MechJebModuleAscentPSGStagesMenu>();
             Layout row = KodeWindow.Row(parent);
             KodeWindow.FlexibleSpace(row);
-            UIButton reset = KodeWindow.Button(row, "Reset plan", editor.ResetToSettings);
+            UIButton reset = KodeWindow.Button(row, "Reset plan", editor.ResetPlan);
             Tooltips.Add(reset.gameObject, ResetTooltip);
-            w.Visible(reset.gameObject, () => Psgs.PlanEdited);
+            w.Visible(reset.gameObject, () => Psgs.PlanEdited && !Psgs.PlanLocked);
             KodeWindow.Button(row, "Stage editor", () => editor.Enabled = !editor.Enabled);
         }
 
