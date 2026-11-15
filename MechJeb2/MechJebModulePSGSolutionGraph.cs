@@ -34,7 +34,8 @@ namespace MuMech
             // a range the Y labels keep, widened by the data when it goes outside; NaN for one from the data alone
             public readonly double Min, Max;
 
-            // series of one group share their Y range, so that the same value is at the same height (0: a range of its own)
+            // with SharedScales, series of one group share their Y range, so that the same value is at the same height
+            // (0: a range of its own)
             public readonly int Group;
 
             public SeriesInfo(string label, Column column, FlownColumn? flown, Color color, double factor = 1, double min = double.NaN,
@@ -80,6 +81,16 @@ namespace MuMech
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int ScaleIdx;
+
+        // the series of the Y labels on the right of the plot, -1 for none
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int RightScaleIdx = -1;
+
+        // series of one group share a Y range (see SeriesInfo.Group); off, each series keeps its own
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool SharedScales = true;
 
         // the window's width, set by its resize grip, and 0 for its narrowest
         [UsedImplicitly]
@@ -152,6 +163,7 @@ namespace MuMech
             PlotHeight = Mathf.Clamp(PlotHeight, MIN_PLOT_HEIGHT, MAX_PLOT_HEIGHT);
             Width = Mathf.Clamp(Width, 0, 4000);
             if (ScaleIdx < 0 || ScaleIdx >= Series.Length) ScaleIdx = 0;
+            if (RightScaleIdx < -1 || RightScaleIdx >= Series.Length) RightScaleIdx = -1;
         }
 
         /// <summary>

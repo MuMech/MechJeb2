@@ -14,7 +14,9 @@ namespace MuMech.UI
 {
     /// <summary>
     /// MechJebModulePSGSolutionGraph ("PSG Solution"): PSG's Solutions against MET, on a KodeKit LineGraph. Each quantity has its
-    /// own Y range, and the drop-down above the plot's right end picks the one the Y labels show. Three lines per quantity, which the
+    /// own Y range, shared with the others of its unit while Shared scales is on. The row above the plot is laid out as the Flight
+    /// Recorder's: a drop-down on its left picks the quantity of the Y labels, one on its right can give a second quantity Y labels
+    /// on the plot's right, in its colour, and the Shared scales switch sits between them. Three lines per quantity, which the
     /// legend under the plot draws: the Solution guidance flies now (bright, solid), the one the vessel lifted off with (dashed,
     /// hidden while it is the current one) and what the vessel flew (dark). Vertical marks: the current Solution's phase
     /// boundaries, its interpolant nodes' edges, its collocation points (where the optimizer enforces the Qα and Q limits),
@@ -122,7 +124,7 @@ namespace MuMech.UI
         readonly double[] yMin = new double[Infos.Length], yMax = new double[Infos.Length];
 
         // the sizes the resize grip sets
-        LayoutElement rootSize, plotSize, labelsSize;
+        LayoutElement rootSize, plotSize, labelsSize, rightLabelsSize;
         ResizeGrip grip;
         int builtLabels, shownWidth = -1, shownPlotHeight = -1;
         float dragStartHeight;
@@ -130,8 +132,8 @@ namespace MuMech.UI
 
         int lastRefreshFrame = int.MinValue / 2;
         float lastRefreshTime;
-        int lastMask = -1, lastZoom = -1, lastScaleIdx = -1, lastSampled = -1, lastPadSampled = -1, lastFlownCount = -1;
-        bool lastFlown, lastCurrent, lastPad, lastNodes, lastKnots;
+        int lastMask = -1, lastZoom = -1, lastScaleIdx = -1, lastRightIdx = -2, lastSampled = -1, lastPadSampled = -1, lastFlownCount = -1;
+        bool lastFlown, lastCurrent, lastPad, lastNodes, lastKnots, lastShared;
         double span = 1;
 
         static int LabelsFor(int height) => Mathf.Clamp(height / 24 + 1, 3, 11);
@@ -152,10 +154,16 @@ namespace MuMech.UI
 
             now.Met = g.Vessel != null ? g.VesselState.MET : double.NaN;
 
+            // the right labels show while their series is displayed: the plot takes their room back otherwise
+            int rightIdx = RightShown();
+            if (graph.RightLabels.gameObject.activeSelf != rightIdx >= 0)
+                graph.RightLabels.gameObject.SetActive(rightIdx >= 0);
+
             int mask = g.DisplayedMask;
-            bool shownChanged = g.ShowFlown != lastFlown || g.ShowCurrent != lastCurrent || g.ShowPad != lastPad;
-            bool force = planChanged || mask != lastMask || g.Zoom != lastZoom || g.ScaleIdx != lastScaleIdx || shownChanged ||
-                         g.ShowNodes != lastNodes || g.ShowKnots != lastKnots;
+            bool shownChanged = g.ShowFlown != lastFlown || g.ShowCurrent != lastCurrent || g.ShowPad != lastPad ||
+                                g.SharedScales != lastShared;
+            bool force = planChanged || mask != lastMask || g.Zoom != lastZoom || g.ScaleIdx != lastScaleIdx || rightIdx != lastRightIdx ||
+                         shownChanged || g.ShowNodes != lastNodes || g.ShowKnots != lastKnots;
             // LineGraph rebuilds one mesh per frame after a Refresh: don't refresh again before it has gone through them all
             bool due = Time.frameCount - lastRefreshFrame >= graph.Series.Count + 2 && Time.unscaledTime - lastRefreshTime >= 0.5f;
             if (!force && !due) return;
@@ -165,6 +173,8 @@ namespace MuMech.UI
             lastPadSampled = g.PadSampled;
             lastMask = mask;
             lastScaleIdx = g.ScaleIdx;
+            lastRightIdx = rightIdx;
+            lastShared = g.SharedScales;
             lastFlown = g.ShowFlown;
             lastCurrent = g.ShowCurrent;
             lastPad = g.ShowPad;
@@ -191,6 +201,7 @@ namespace MuMech.UI
             graph.ViewMin = Math.Max(0, Math.Min(graph.ViewMin, span - visible));
 
             graph.Refresh(yMin[g.ScaleIdx], yMax[g.ScaleIdx]);
+            if (rightIdx >= 0) graph.RefreshRight(yMin[rightIdx], yMax[rightIdx], Infos[rightIdx].Color);
             for (int i = 0; i < Infos.Length; i++)
             {
                 planLines[i].YMin = padLines[i].YMin = flownLines[i].YMin = yMin[i];
@@ -225,9 +236,12 @@ namespace MuMech.UI
             if (g.PlotHeight != shownPlotHeight)
             {
                 shownPlotHeight = g.PlotHeight;
-                plotSize.preferredHeight = labelsSize.preferredHeight = g.PlotHeight;
+                plotSize.preferredHeight = labelsSize.preferredHeight = rightLabelsSize.preferredHeight = g.PlotHeight;
             }
         }
+
+        // the right labels' series while it is displayed, -1 otherwise
+        int RightShown() => g.RightScaleIdx >= 0 && g.Displayed(g.RightScaleIdx) ? g.RightScaleIdx : -1;
 
         void Resized(float width, float height)
         {
@@ -290,6 +304,8 @@ namespace MuMech.UI
                 yMax[i] = groupMax[i] = hi;
             }
 
+            if (!g.SharedScales) return;
+
             // a group's series share the widest of their ranges, taken over those displayed (all of them when none is)
             for (int i = 0; i < Infos.Length; i++)
             {
@@ -313,18 +329,6 @@ namespace MuMech.UI
 
         // the ranges each series would have alone, before the groups share theirs
         readonly double[] groupMin = new double[Infos.Length], groupMax = new double[Infos.Length];
-
-        // a Y label at the precision of the step between labels: whole numbers for a step of 1 or more, and k or M for large
-        // values (altitude, mass)
-        static void StepLabel(CharText t, double v, double step)
-        {
-            double unit = Math.Abs(step) >= 1e6 ? 1e6 : Math.Abs(step) >= 1e3 ? 1e3 : 1;
-            double scaled = step > 0 ? step / unit : 0.1;
-            int decimals = Math.Max(0, (int)Math.Ceiling(-Math.Log10(scaled) - 1e-9));
-            t.Append(v / unit, decimals);
-            if (unit == 1e6) t.Append(" M");
-            else if (unit == 1e3) t.Append(" k");
-        }
 
         // ---- texts, computed when what they show changes ----
 
@@ -397,6 +401,7 @@ namespace MuMech.UI
             UIObject r = w.Root;
             g.ClampSettings();
             lastSampled = lastPadSampled = lastMask = lastZoom = lastScaleIdx = lastFlownCount = -1;
+            lastRightIdx = -2;
             shownWidth = shownPlotHeight = -1;
             dragStartPlotHeight = -1;
             traces = new[] { Plan, Pad };
@@ -443,10 +448,13 @@ namespace MuMech.UI
             Layout left = plotRow.Add<Layout>("Plot");
             left.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false);
             left.Finish();
-            graph = new LineGraph(w, left, 512, height, builtLabels, r) { Follow = false, LabelFormat = StepLabel };
+            graph = new LineGraph(w, left, 512, height, builtLabels, r) { Follow = false, LabelFormat = LineGraph.StepLabel };
             plotSize = graph.Plot.GetComponent<LayoutElement>();
             plotSize.flexibleWidth = 1;
             labelsSize = graph.Plot.parent.Find("YLabels").GetComponent<LayoutElement>();
+            RectTransform right = graph.AddRightLabels(builtLabels);
+            rightLabelsSize = right.GetComponent<LayoutElement>();
+            right.gameObject.SetActive(RightShown() >= 0);
 
             graph.Stages.Source = new Markers(Plan.PhaseBoundaries);
             graph.Stages.color = PhaseColor;
@@ -579,10 +587,10 @@ namespace MuMech.UI
             KodeWindow.Button(row, "+", plus);
         }
 
-        // ---- the drop-down above the plot: the displayed series, whose Y labels are shown ----
+        // ---- the drop-downs above the plot: the displayed series, whose Y labels are shown on the left and on the right ----
 
         readonly List<int> scaleSeries = new List<int>();
-        string[] scaleNames;
+        string[] scaleNames, rightNames;
         int scaleNamesMask = -1;
 
         string[] ScaleNames()
@@ -596,8 +604,10 @@ namespace MuMech.UI
                 if (g.Displayed(i)) scaleSeries.Add(i);
 
             scaleNames = new string[scaleSeries.Count];
+            rightNames = new string[scaleSeries.Count + 1];
+            rightNames[0] = KodeWindow.Loc("#MechJeb_Flightrecord_Label5"); //None
             for (int i = 0; i < scaleNames.Length; i++)
-                scaleNames[i] = Infos[scaleSeries[i]].Label;
+                rightNames[i + 1] = scaleNames[i] = Infos[scaleSeries[i]].Label;
             // the Y labels must belong to a displayed series
             if (scaleSeries.Count > 0 && !scaleSeries.Contains(g.ScaleIdx)) g.ScaleIdx = scaleSeries[0];
             return scaleNames;
@@ -610,14 +620,48 @@ namespace MuMech.UI
             return p < 0 ? 0 : p;
         }
 
-        // a row of its own above the plot, at its right end, so it hides none of the lines
+        string[] RightNames()
+        {
+            ScaleNames();
+            return rightNames;
+        }
+
+        // 0 is None
+        int RightPosition()
+        {
+            ScaleNames();
+            return scaleSeries.IndexOf(g.RightScaleIdx) + 1;
+        }
+
+        // a row of its own above the plot, as the Flight Recorder's: the left Y labels' drop-down on the left, the right labels'
+        // one on the right, the Shared scales switch in the middle. The two sides take equal shares of the row (no preferred
+        // width of their own), so the switch is centred
         void BuildScaleCombo(KodeWindow w, UIObject r)
         {
-            Layout row = KodeWindow.Row(r);
-            KodeWindow.FlexibleSpace(row);
-            KodeWindow.Label(row, "Y axis");
-            new ComboBox(w, row, ScalePosition, i => g.ScaleIdx = scaleSeries[i], ScaleNames, false, i => Infos[scaleSeries[i]].Color);
-            w.Visible(row.gameObject, () => ScaleNames().Length > 0);
+            Layout axisRow = KodeWindow.Row(r);
+            axisRow.gameObject.name = "AxisRow";
+            Layout leftSide = KodeWindow.Row(axisRow);
+            leftSide.gameObject.name = "LeftAxis";
+            leftSide.PreferredWidth(0);
+            Layout leftPick = KodeWindow.Row(leftSide);
+            leftPick.FlexibleLayout(0f, 0f);
+            new ComboBox(w, leftPick, ScalePosition, i => g.ScaleIdx = scaleSeries[i], ScaleNames, false, i => Infos[scaleSeries[i]].Color);
+            w.Visible(leftPick.gameObject, () => ScaleNames().Length > 0);
+
+            KodeWindow.RowOf(w.SwitchRow(axisRow, "#MechJeb_Flightrecord_checkbox32", () => g.SharedScales, v => g.SharedScales = v)) //Shared scales
+                .GetComponent<LayoutElement>().flexibleWidth = 0;
+
+            // the right labels: none, or one of the displayed series
+            Layout rightSide = KodeWindow.Row(axisRow);
+            rightSide.gameObject.name = "RightAxis";
+            rightSide.PreferredWidth(0);
+            rightSide.ChildAlignment(TextAnchor.MiddleRight);
+            Layout rightPick = KodeWindow.Row(rightSide);
+            rightPick.FlexibleLayout(0f, 0f);
+            new ComboBox(w, rightPick, RightPosition, i => g.RightScaleIdx = i == 0 ? -1 : scaleSeries[i - 1], RightNames, false,
+                i => i == 0 ? Color.clear : Infos[scaleSeries[i - 1]].Color);
+            w.Visible(rightPick.gameObject, () => ScaleNames().Length > 0);
+            w.Behaviour.AddRelocalize(() => scaleNamesMask = -1);
         }
     }
 }

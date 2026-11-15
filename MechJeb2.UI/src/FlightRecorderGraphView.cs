@@ -558,7 +558,8 @@ namespace MuMech.UI
             left.Finish();
             builtLabels = LabelsFor(g.height);
             // the scrollbar row spans the window, as IMGUI's HorizontalScrollbar does
-            graph = new LineGraph(w, left, g.width, g.height, builtLabels, r);
+            // Y labels at the precision of their step, as the PSG Solution window's
+            graph = new LineGraph(w, left, g.width, g.height, builtLabels, r) { LabelFormat = LineGraph.StepLabel };
             plotSize = graph.Plot.GetComponent<LayoutElement>();
             labelsSize = graph.Plot.parent.Find("YLabels").GetComponent<LayoutElement>();
 
