@@ -530,7 +530,7 @@ namespace MechJebLib.PSG
             //alglib.minnlcsetalgogipm2(_state);
             alglib.minnlcsetcond3(_state, Epsf, SQPTrustRegionLimit, Maxits);
 
-#if DEBUG
+#if DEBUG && !NO_OPTGUARD
             alglib.minnlcoptguardgradient(_state, Diffstep);
             alglib.minnlcoptguardsmoothness(_state, 1);
 #endif
