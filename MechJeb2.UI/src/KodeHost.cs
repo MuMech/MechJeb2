@@ -242,7 +242,7 @@ namespace MuMech.UI
             }
         }
 
-        string layoutKey;
+        bool? layoutKey;
 
         /// <summary>
         /// The new UI's layout settings → KodeKit's switches. Views read them when they build, so a change rebuilds every
@@ -250,9 +250,8 @@ namespace MuMech.UI
         /// </summary>
         void ApplyLayout()
         {
-            KodeWindow.ModernLayout = settings.UiModernLayout;
             KodeWindow.ShowHeaders = settings.UiSectionHeaders;
-            string key = KodeWindow.ModernLayout + "|" + KodeWindow.ShowHeaders;
+            bool key = KodeWindow.ShowHeaders;
             if (layoutKey != null && key != layoutKey) DestroyViews();
             layoutKey = key;
         }

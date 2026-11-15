@@ -16,7 +16,7 @@ namespace MuMech.UI
     /// one decimated mesh per graph (rebuilt a few times a second, one per frame), a mesh for the stage markers, Y labels for the selected graph.
     /// The model work (scales, background texture, sizes) runs in BeforeSync through the module's shared methods.
     /// Differences: the Y labels are as many as the plot's height has room for, a grip in the window's corner resizes the plot, and the
-    /// graph is clipped to the plot instead of skipping the points outside it. In the modern layout the plot fills the
+    /// graph is clipped to the plot instead of skipping the points outside it. The plot fills the
     /// window's width, a drop-down above it picks the graph of the Y labels, not the column beside it, and another one can
     /// give a second graph Y labels on the plot's right, in its colour.
     /// </summary>
@@ -292,8 +292,8 @@ namespace MuMech.UI
                 return;
             }
 
-            // the modern plot fills its row: the X scale and the size shown go by the width it has
-            if (KodeWindow.ModernLayout) g.width = Math.Max(g.width, Mathf.RoundToInt(graph.Plot.rect.width));
+            // the plot fills its row: the X scale and the size shown go by the width it has
+            g.width = Math.Max(g.width, Mathf.RoundToInt(graph.Plot.rect.width));
 
             curScaleX = g.CurrentScaleX(out float maxX);
             if (float.IsNaN(maxX) || maxX < 0) maxX = 0;
@@ -347,7 +347,7 @@ namespace MuMech.UI
             if (yLabels.alpha != alpha) yLabels.alpha = alpha;
         }
 
-        // the right labels' graph when the modern layout shows it, -1 otherwise
+        // the right labels' graph when they are shown, -1 otherwise
         int RightShown() => graph.RightLabels != null && g.rightScaleIdx >= 0 && g.displayed[g.rightScaleIdx] ? g.rightScaleIdx : -1;
 
         static Color ColorOf(int type)
@@ -366,20 +366,6 @@ namespace MuMech.UI
             return mask;
         }
 
-        // GUI.color = the graph's colour around IMGUI's toggle tints the box and the text
-        static void Colorize(KodeWindow w, Toggle toggle, Color color)
-        {
-            TMP_Text label = KodeWindow.LabelOf(toggle);
-            Graphic box = toggle.targetGraphic;
-            void Paint()
-            {
-                label.color = color;
-                box.color = color;
-            }
-            Paint();
-            w.Behaviour.AddRestyle(Paint);
-        }
-
         protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
@@ -391,63 +377,7 @@ namespace MuMech.UI
             scannedStages = 0;
             seenMarkUT = Rec.MarkUT;
 
-            if (KodeWindow.ModernLayout)
-            {
-                BuildModernControls(w, r);
-                BuildPlot(w, r);
-                AddGrip(w);
-                return;
-            }
-
-            string resume = KodeWindow.Loc("#MechJeb_Flightrecord_Button1_1"), pause = KodeWindow.Loc("#MechJeb_Flightrecord_Button1_2"); //"Resume""Pause"
-            string downrange = KodeWindow.Loc("#MechJeb_Flightrecord_Button2_1"), time = KodeWindow.Loc("#MechJeb_Flightrecord_Button2_2"); //"Downrange""Time"
-
-            // row 1: pause, downrange/time, time and range readouts, mark, reset scale
-            Layout top = KodeWindow.Row(r);
-            MiscViewKit.BoundButton(w, top, () => g.paused ? resume : pause, () => g.paused = !g.paused);
-            MiscViewKit.BoundButton(w, top, () => g.downrange ? downrange : time, () => g.downrange = !g.downrange);
-            w.BoundLabel(top, Localizer.Format("#MechJeb_Flightrecord_Label1", "999d 99h 99m 99s"), TimeText);
-            w.BoundLabel(top, Localizer.Format("#MechJeb_Flightrecord_Label2", "-999.9M") + "m", RangeText);
-            KodeWindow.FlexibleSpace(top);
-            KodeWindow.Button(top, "#MechJeb_Flightrecord_Button3", Mark); //"Mark"
-            KodeWindow.Button(top, "#MechJeb_Flightrecord_Button4", g.ResetScale); //"Reset Scale"
-
-            // row 2: scale, plot size, real atmo, csv, storage
-            Layout options = KodeWindow.Row(r);
-            w.Toggle(options, "#MechJeb_Flightrecord_checkbox1", () => g.autoScale, v => g.autoScale = v); //Auto Scale
-            UIButton scaleDown = KodeWindow.Button(options, "-", () => ScaleBy(-1));
-            w.Visible(scaleDown.gameObject, () => !g.autoScale);
-            w.BoundLabel(options, "999.99Mm/px", ScaleText);
-            UIButton scaleUp = KodeWindow.Button(options, "+", () => ScaleBy(1));
-            w.Visible(scaleUp.gameObject, () => !g.autoScale);
-
-            KodeWindow.Button(options, "-", () => Resize(-1, 0));
-            w.BoundLabel(options, "9999", () => Number(g.width));
-            KodeWindow.Button(options, "+", () => Resize(1, 0));
-            KodeWindow.Label(options, "x");
-            KodeWindow.Button(options, "-", () => Resize(0, -1));
-            w.BoundLabel(options, "9999", () => Number(g.height));
-            KodeWindow.Button(options, "+", () => Resize(0, 1));
-
-            w.Toggle(options, "#MechJeb_Flightrecord_checkbox2", () => g.realAtmo, SetRealAtmo); //Real Atmo
-            w.Toggle(options, "#MechJeb_Flightrecord_checkbox32", () => g.sharedScales, v => g.sharedScales = v); //Shared scales
-            KodeWindow.FlexibleSpace(options);
-            KodeWindow.Button(options, "#MechJeb_Flightrecord_Button5", () => Rec.DumpCsv()); //CSV
-            w.BoundLabel(options, Localizer.Format("#MechJeb_Flightrecord_Label3", "100.0"), StorageText);
-
-            // row 3: which graphs to show, in their colours
-            Layout toggles = KodeWindow.Row(r);
-            w.Toggle(toggles, "#MechJeb_Flightrecord_checkbox3", () => g.stages, v => g.stages = v); //"Stages"
-            foreach (MechJebModuleFlightRecorderGraph.GraphInfo info in MechJebModuleFlightRecorderGraph.graphInfos)
-            {
-                if (info.NewRow) toggles = KodeWindow.Row(r);
-                RecordType type = info.Type;
-                Colorize(w, w.Toggle(toggles, info.Label, () => g.displayed[(int)type], v => g.displayed[(int)type] = v), info.Color);
-            }
-
-            KodeWindow.FlexibleSpace(toggles);
-            HistorySizeField(w, toggles);
-
+            BuildControls(w, r);
             BuildPlot(w, r);
             AddGrip(w);
         }
@@ -483,7 +413,7 @@ namespace MuMech.UI
                 dragStartWidth = width;
                 dragStartHeight = height;
                 // the width the plot has, which filling its row can have made larger than the setting's
-                dragStartPlotWidth = KodeWindow.ModernLayout ? Math.Max(g.plotWidth, Mathf.RoundToInt(graph.Plot.rect.width)) : g.plotWidth;
+                dragStartPlotWidth = Math.Max(g.plotWidth, Mathf.RoundToInt(graph.Plot.rect.width));
                 dragStartPlotHeight = g.plotHeight;
             }
 
@@ -499,7 +429,7 @@ namespace MuMech.UI
             g.Dirty = true;
         }
 
-        // ---- the controls' actions, in both layouts ----
+        // ---- the controls' actions ----
 
         void Mark() => Rec.Mark();
 
@@ -513,7 +443,7 @@ namespace MuMech.UI
         void Resize(int dh, int dv)
         {
             // step from the width the plot has, which filling its row can have made larger than the setting's
-            if (dh != 0) g.plotWidth = Step(KodeWindow.ModernLayout ? g.width : g.plotWidth, dh);
+            if (dh != 0) g.plotWidth = Step(g.width, dh);
             if (dv != 0) g.plotHeight = Step(g.plotHeight, dv);
             g.ClampSizes();
             g.Dirty = true;
@@ -532,8 +462,8 @@ namespace MuMech.UI
             if (MechJebModuleFlightRecorderGraph.backgroundTexture != null && g.Vessel != null) g.RefreshAtmoTexture();
         }
 
-        // modern layout: Downrange / Time as one choice, switches, and the 16 series as a legend of chips in their colours
-        void BuildModernControls(KodeWindow w, UIObject r)
+        // Downrange / Time as one choice, switches, and the 16 series as a legend of chips in their colours
+        void BuildControls(KodeWindow w, UIObject r)
         {
             string resume = KodeWindow.Loc("#MechJeb_Flightrecord_Button1_1"), pause = KodeWindow.Loc("#MechJeb_Flightrecord_Button1_2"); //"Resume""Pause"
             string[] axis = { KodeWindow.Loc("#MechJeb_Flightrecord_Button2_1"), KodeWindow.Loc("#MechJeb_Flightrecord_Button2_2") }; //"Downrange""Time"
@@ -618,7 +548,7 @@ namespace MuMech.UI
             return row;
         }
 
-        // the plot and which graph the Y labels belong to (both layouts)
+        // the plot, its Y labels and the right labels
         void BuildPlot(KodeWindow w, UIObject r)
         {
             Layout plotRow = KodeWindow.Row(r);
@@ -645,31 +575,13 @@ namespace MuMech.UI
                 w.Visible(series.gameObject, () => g.displayed[(int)type]);
             }
 
-            if (KodeWindow.ModernLayout)
-            {
-                plotSize.flexibleWidth = 1;
-                RectTransform right = graph.AddRightLabels(builtLabels);
-                rightLabelsSize = right.GetComponent<LayoutElement>();
-                right.gameObject.SetActive(RightShown() >= 0);
-                return;
-            }
-
-            rightLabelsSize = null;
-
-            Layout scales = KodeWindow.Panel(plotRow);
-            foreach (MechJebModuleFlightRecorderGraph.GraphInfo info in MechJebModuleFlightRecorderGraph.graphInfos)
-            {
-                RecordType type = info.Type;
-                Toggle pick = w.Toggle(scales, info.ScaleLabel, () => g.scaleIdx == (int)type, v =>
-                {
-                    if (v) g.scaleIdx = (int)type;
-                });
-                Colorize(w, pick, info.Color);
-                w.Visible(pick, () => g.displayed[(int)type]);
-            }
+            plotSize.flexibleWidth = 1;
+            RectTransform right = graph.AddRightLabels(builtLabels);
+            rightLabelsSize = right.GetComponent<LayoutElement>();
+            right.gameObject.SetActive(RightShown() >= 0);
         }
 
-        // ---- the modern layout's drop-down above the plot: the displayed graphs ----
+        // ---- the drop-down above the plot: the displayed graphs ----
 
         readonly List<MechJebModuleFlightRecorderGraph.GraphInfo> scaleGraphs = new List<MechJebModuleFlightRecorderGraph.GraphInfo>();
         string[] scaleNames, rightNames;

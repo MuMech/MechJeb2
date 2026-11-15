@@ -24,8 +24,6 @@ namespace MuMech.UI
 
         protected override float MinWidth => 180;
 
-        static readonly Color ActiveTint = new Color(0.5f, 1f, 0.5f);
-
         // the IMGUI window ran this before drawing
         protected override void BeforeSync()
         {
@@ -37,69 +35,13 @@ namespace MuMech.UI
 
         bool PatchedConics => ss.Vessel != null && ss.Vessel.patchedConicsUnlocked();
 
-        // ---- private helpers (IMGUI's btNormal/btActive styles, bare checkbox, vertical panel) ----
+        // ---- private helpers ----
 
-        /// <summary>A button drawn with IMGUI's btActive look (green text and tint) while active() is true.</summary>
-        static UIButton StateButton(KodeWindow w, UIObject parent, string text, Action click, Func<bool> active)
-        {
-            UIButton b = KodeWindow.Padded(KodeWindow.Button(parent, text, click, true)); // btNormal: padding 8
-            var img = b.GetComponent<Image>();
-            bool shown = active();
-            void Tint(Theme th) => img.color = shown ? ActiveTint : th.Button.Tint;
-            KodeWindow.Styled(b.gameObject, Tint);
-            w.AddSync(() =>
-            {
-                bool a = active();
-                if (a == shown) return;
-                shown = a;
-                Tint(KodeWindow.ThemeOf(b.gameObject));
-            });
-            w.ToneText(b.GetComponentInChildren<TMP_Text>(), () => active() ? KodeWindow.Tone.Good : KodeWindow.Tone.Normal, true);
-            return b;
-        }
-
-        UIButton TargetButton(KodeWindow w, UIObject parent, Target bt, bool engage = true) =>
-            StateButton(w, parent, TargetKey(bt), () =>
-            {
-                ss.target = bt;
-                if (engage) ss.Engage();
-            }, () => ss.target == bt);
-
-        UIButton ModeButton(KodeWindow w, UIObject parent, Mode bt) =>
-            StateButton(w, parent, ModeKey(bt), () => ss.mode = bt, () => ss.mode == bt);
-
-        /// <summary>GUILayout.Toggle(value, "", NoExpandWidth): a checkbox with no label (a switch in the modern layout).</summary>
+        /// <summary>GUILayout.Toggle(value, "", NoExpandWidth): a switch with no label.</summary>
         static void CheckBox(KodeWindow w, UIObject parent, Func<bool> get, Action<bool> set)
         {
-            if (KodeWindow.ModernLayout)
-            {
-                w.Switch(parent, get, set);
-                return;
-            }
-            UIToggle t = parent.Add<UIToggle>();
-            t.PreferredSize(16, 16).Finish();
-            t.CheckMark.Scale(0.625f);
-            Toggle toggle = t.GetComponent<Toggle>();
-            toggle.SetIsOnWithoutNotify(get());
-            set = w.Edits(set);
-            toggle.onValueChanged.AddListener(v => set(v));
-            var box = t.GetComponent<Image>();
-            var check = (Image)toggle.graphic;
-            KodeWindow.Styled(t.gameObject, th =>
-            {
-                th.Toggle.ApplySelectable(toggle, box);
-                th.Check.ApplyImage(check);
-                t.PreferredSize(th.FontSize + 2, th.FontSize + 2);
-            });
-            w.AddSync(() =>
-            {
-                bool v = get();
-                if (toggle.isOn != v) toggle.SetIsOnWithoutNotify(v);
-            });
+            w.Switch(parent, get, set);
         }
-
-        // GUILayout.ExpandHeight(true) on every button of the row
-        static Layout ButtonRow(UIObject parent) => KodeWindow.EqualHeights(KodeWindow.Row(parent));
 
         // ---- rows ----
 
@@ -160,76 +102,7 @@ namespace MuMech.UI
             }
         }
 
-        protected override void BuildContents(KodeWindow w)
-        {
-            if (KodeWindow.ModernLayout)
-            {
-                BuildModern(w);
-                return;
-            }
-
-            UIObject r = w.Root;
-
-            // another autopilot uses the attitude controller: just the red "AUTO"
-            Layout autoPanel = KodeWindow.Panel(r);
-            UIButton auto = KodeWindow.Padded(KodeWindow.Button(autoPanel, "#MechJeb_SmartASS_button57", () => { }, true)); // btAuto
-            KodeWindow.ToneText(auto.GetComponentInChildren<TMP_Text>(), KodeWindow.Tone.Bad);
-            w.Visible(autoPanel.gameObject, () => otherUsers);
-
-            Layout main = KodeWindow.Panel(r);
-            w.Visible(main.gameObject, () => !otherUsers);
-
-            Layout top = ButtonRow(main);
-            TargetButton(w, top, Target.OFF);
-            TargetButton(w, top, Target.KILLROT);
-            UIButton node = TargetButton(w, top, Target.NODE);
-            w.Visible(node.gameObject, () => PatchedConics);
-            UIButton noNode = KodeWindow.Button(top, "-", () => { }, true);
-            w.Visible(noNode.gameObject, () => !PatchedConics);
-
-            KodeWindow.Label(main, "#MechJeb_SmartASS_label1"); //"Mode:"
-            Layout modes = ButtonRow(main);
-            ModeButton(w, modes, Mode.ORBITAL);
-            ModeButton(w, modes, Mode.SURFACE);
-            ModeButton(w, modes, Mode.TARGET);
-            ModeButton(w, modes, Mode.ADVANCED);
-
-            // one panel per mode, each built the first time its mode is selected
-            w.LazyPanel(main, () => ss.mode == Mode.ORBITAL, p => BuildOrbital(w, p));
-            w.LazyPanel(main, () => ss.mode == Mode.SURFACE, p => BuildSurface(w, p));
-            w.LazyPanel(main, () => ss.mode == Mode.TARGET, p => BuildTarget(w, p));
-            w.LazyPanel(main, () => ss.mode == Mode.ADVANCED, p => BuildAdvanced(w, p));
-            // Mode.AUTO shows nothing
-        }
-
-        void BuildOrbital(KodeWindow w, Layout p)
-        {
-            Layout a = ButtonRow(p);
-            TargetButton(w, a, Target.PROGRADE);
-            TargetButton(w, a, Target.NORMAL_PLUS);
-            TargetButton(w, a, Target.RADIAL_PLUS);
-            Layout b = ButtonRow(p);
-            TargetButton(w, b, Target.RETROGRADE);
-            TargetButton(w, b, Target.NORMAL_MINUS);
-            TargetButton(w, b, Target.RADIAL_MINUS);
-            ForceRoll(w, p);
-        }
-
-        void BuildSurface(KodeWindow w, Layout p)
-        {
-
-            Layout a = ButtonRow(p);
-            TargetButton(w, a, Target.SURFACE_PROGRADE);
-            TargetButton(w, a, Target.SURFACE_RETROGRADE);
-            TargetButton(w, a, Target.SURFACE, false); // TargetButtonNoEngage
-            Layout b = ButtonRow(p);
-            TargetButton(w, b, Target.HORIZONTAL_PLUS);
-            TargetButton(w, b, Target.HORIZONTAL_MINUS);
-            TargetButton(w, b, Target.VERTICAL_PLUS);
-            SurfaceAngles(w, p);
-        }
-
-        /// <summary>The surface targets' angle rows, smooth control and EXECUTE (both layouts).</summary>
+        /// <summary>The surface targets' angle rows, smooth control and EXECUTE.</summary>
         void SurfaceAngles(KodeWindow w, UIObject p)
         {
             // target == SURFACE: heading, pitch, roll
@@ -258,32 +131,13 @@ namespace MuMech.UI
             w.Toggle(smooth, "Smooth Control:", () => ss.smoothControl, v => ss.smoothControl = v);
             EditUi.Field(w, smooth, () => ss.degreesPerSecond, 40);
             KodeWindow.Label(smooth, "°/s");
-            KodeWindow.Button(common, "#MechJeb_SmartASS_button58", () => ss.Engage(), ButtonRole.Primary, KodeWindow.ModernLayout); // "EXECUTE"
+            KodeWindow.Button(common, "#MechJeb_SmartASS_button58", () => ss.Engage(), ButtonRole.Primary, true); // "EXECUTE"
             w.Visible(common.gameObject, () => ss.ShowsSurfaceAngles);
-        }
-
-        void BuildTarget(KodeWindow w, Layout p)
-        {
-
-            Layout has = KodeWindow.Panel(p);
-            Layout a = ButtonRow(has);
-            TargetButton(w, a, Target.TARGET_PLUS);
-            TargetButton(w, a, Target.RELATIVE_PLUS);
-            TargetButton(w, a, Target.PARALLEL_PLUS);
-            Layout b = ButtonRow(has);
-            TargetButton(w, b, Target.TARGET_MINUS);
-            TargetButton(w, b, Target.RELATIVE_MINUS);
-            TargetButton(w, b, Target.PARALLEL_MINUS);
-            ForceRoll(w, has);
-            w.Visible(has.gameObject, TargetExists);
-
-            UIText none = KodeWindow.Label(p, "#MechJeb_SmartASS_label2"); //"Please select a target"
-            w.Visible(none.gameObject, () => !TargetExists());
         }
 
         bool TargetExists() => ss.Core.Target != null && ss.Core.Target.NormalTargetExists;
 
-        // ---- modern layout: tiles with navball markers, the navball cross, a joined mode bar, an AUTO status bar ----
+        // ---- Tiles with navball markers, the navball cross, a joined mode bar, an AUTO status bar ----
 
         /// <summary>A target tile, selected while it is SmartASS's target; with its navball marker when it has one.</summary>
         UIButton Tile(KodeWindow w, UIObject parent, Target bt, Sprites.Marker? marker = null, bool engage = true)
@@ -313,7 +167,7 @@ namespace MuMech.UI
 
         static readonly string[] modeKeys = { ModeKey(Mode.ORBITAL), ModeKey(Mode.SURFACE), ModeKey(Mode.TARGET), ModeKey(Mode.ADVANCED) };
 
-        void BuildModern(KodeWindow w)
+        protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
             Layout body = KodeWindow.Panel(r);
@@ -388,22 +242,5 @@ namespace MuMech.UI
                 () => GuidanceUi.OtherUser(ss.Core.Attitude.Users, ss));
         }
 
-        void BuildAdvanced(KodeWindow w, Layout p)
-        {
-
-            KodeWindow.Label(p, "#MechJeb_SmartASS_label3"); //"Reference:"
-            new ComboBox(w, p, () => (int)ss.advReference, i => ss.advReference = (AttitudeReference)i, () => ReferenceTexts);
-
-            KodeWindow.Label(p, "#MechJeb_SmartASS_label4"); //"Direction:"
-            new ComboBox(w, p, () => (int)ss.advDirection, i => ss.advDirection = (Vector6.Direction)i, () => directionTexts);
-
-            ForceRoll(w, p);
-
-            KodeWindow.Button(p, "#MechJeb_SmartASS_button58", () => //"EXECUTE"
-            {
-                ss.target = Target.ADVANCED;
-                ss.Engage();
-            }, true);
-        }
     }
 }

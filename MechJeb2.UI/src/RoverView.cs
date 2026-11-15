@@ -34,26 +34,12 @@ namespace MuMech.UI
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.ControlHeading", () => Ap != null && Ap.ControlHeading);
-            // modern layout: steppers (Shift: ×10) instead of a field and two 18 px buttons
-            Layout heading = KodeWindow.ModernLayout
-                ? RoverUi.StepperRow(w, r, ed, "Editable:RoverController.heading", d => Ap.heading.Val += d)
-                : RoverUi.EditableRow(w, r, ed, "Editable:RoverController.heading");
-            if (heading != null && !KodeWindow.ModernLayout)
-            {
-                KodeWindow.Button(heading, "-", () => Ap.heading.Val -= Alt ? 5 : 1).PreferredWidth(18);
-                KodeWindow.Button(heading, "+", () => Ap.heading.Val += Alt ? 5 : 1).PreferredWidth(18);
-            }
+            // steppers (Shift: ×10)
+            RoverUi.StepperRow(w, r, ed, "Editable:RoverController.heading", d => Ap.heading.Val += d);
 
             RoverUi.ValueRow(w, r, ed, "Value:RoverController.headingErr", () => Ap?.headingErr ?? 0, "-180.0 °");
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.ControlSpeed", () => Ap != null && Ap.ControlSpeed);
-            Layout speed = KodeWindow.ModernLayout
-                ? RoverUi.StepperRow(w, r, ed, "Editable:RoverController.speed", d => Ap.speed.Val += d)
-                : RoverUi.EditableRow(w, r, ed, "Editable:RoverController.speed");
-            if (speed != null && !KodeWindow.ModernLayout)
-            {
-                KodeWindow.Button(speed, "-", () => Ap.speed.Val -= Alt ? 5 : 1).PreferredWidth(18);
-                KodeWindow.Button(speed, "+", () => Ap.speed.Val += Alt ? 5 : 1).PreferredWidth(18);
-            }
+            RoverUi.StepperRow(w, r, ed, "Editable:RoverController.speed", d => Ap.speed.Val += d);
 
             RoverUi.ValueRow(w, r, ed, "Value:RoverController.speedErr", () => Ap?.speedErr ?? 0, "-999.9 m/s");
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.StabilityControl", () => Ap != null && Ap.StabilityControl);
@@ -153,7 +139,7 @@ namespace MuMech.UI
             return KodeWindow.RowOf(t);
         }
 
-        /// <summary>The modern layout's EditableInfoItem with nudges: label [−][field][+] unit; − and + add ∓1 (×10 with Shift).</summary>
+        /// <summary>An EditableInfoItem with nudges: label [−][field][+] unit; − and + add ∓1 (×10 with Shift).</summary>
         public static Layout StepperRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Action<double> add)
         {
             if (!(Find(ed, id) is EditableInfoItem item) || item.Editable == null) return null;

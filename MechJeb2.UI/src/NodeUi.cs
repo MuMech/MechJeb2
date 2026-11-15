@@ -12,8 +12,8 @@ namespace MuMech.UI
     {
         /// <summary>
         /// "Execute next node" while the executor is idle and <paramref name="canOne"/> holds, "Execute all nodes" while
-        /// idle and <paramref name="canAll"/> holds, "Abort node execution" while it runs. Primary, normal and danger
-        /// buttons in the modern layout.
+        /// idle and <paramref name="canAll"/> holds, "Abort node execution" while it runs, as primary, normal and danger
+        /// buttons.
         /// </summary>
         public static void ExecuteButtons(KodeWindow w, UIObject parent, MechJebCore core, object controller, string oneKey, string allKey,
             string abortKey, Func<bool> canOne, Func<bool> canAll, bool flexible)
@@ -34,7 +34,7 @@ namespace MuMech.UI
             if (core.Node != null) core.Node.Autowarp = v;
         }
 
-        /// <summary>The executor's "Auto-warp" toggle (a switch in the modern layout); <paramref name="key"/> is the window's own label.</summary>
+        /// <summary>The executor's "Auto-warp" switch; <paramref name="key"/> is the window's own label.</summary>
         public static UnityEngine.UI.Toggle AutowarpToggle(KodeWindow w, UIObject parent, MechJebCore core, string key) =>
             w.Toggle(parent, key, () => Autowarp(core), v => Autowarp(core, v));
     }

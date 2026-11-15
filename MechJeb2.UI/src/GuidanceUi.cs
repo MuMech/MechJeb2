@@ -179,7 +179,7 @@ namespace MuMech.UI
         }
 
         /// <summary>
-        /// The modern layout's "AUTO": while <paramref name="auto"/> holds, <paramref name="body"/> stays in view but greyed
+        /// The "AUTO" state: while <paramref name="auto"/> holds, <paramref name="body"/> stays in view but greyed
         /// and inert, and a status bar under it says which module is in control (<paramref name="controller"/>).
         /// </summary>
         public static Layout AutoBar(KodeWindow w, UIObject parent, GameObject body, string autoKey, Func<bool> auto, Func<object> controller)

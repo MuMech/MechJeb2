@@ -8,10 +8,10 @@ using static MuMech.MechJebModuleThrustController;
 namespace MuMech.UI
 {
     /// <summary>
-    /// The modern layout's option blocks shared by several windows: the thrust limiters (Utilities, Ascent Settings) and
+    /// The option blocks shared by several windows: the thrust limiters (Utilities, Ascent Settings) and
     /// the autostage settings, as property grids with the switches on the left.
     /// </summary>
-    internal static class ModernRows
+    internal static class OptionRows
     {
         /// <summary>[switch] label [field] unit on an IEditable; the field dims while the switch is off.</summary>
         public static Layout Switch(KodeWindow.PropertyGrid g, string label, Func<bool> get, Action<bool> set, IEditable ed = null,

@@ -153,23 +153,15 @@ namespace MuMech.UI
             BuildStatus(w, r);
             BuildAutoWarp(w, r);
 
-            // the modern layout puts the autopilot's state and the avionics warning in status bars
-            UIObject statusParent = r, disabledParent = r;
-            if (KodeWindow.ModernLayout)
-            {
-                Layout statusBar = w.StatusBar(r, StatusTone);
-                w.Visible(statusBar.gameObject, () => menu._autopilot.Enabled);
-                statusParent = statusBar;
-                Layout disabledBar = w.StatusBar(r, () => KodeWindow.Tone.Bad);
-                w.Visible(disabledBar.gameObject, () => Core.DeactivateControl);
-                disabledParent = disabledBar;
-            }
-            UIText apStatus = w.Wrap(w.BoundLabel(statusParent, () => menu.autopilotStatus ?? " ", true)); //Autopilot status:
-            w.Visible(apStatus, () => menu._autopilot.Enabled);
+            // the autopilot's state and the avionics warning, in status bars
+            Layout statusBar = w.StatusBar(r, StatusTone);
+            w.Visible(statusBar.gameObject, () => menu._autopilot.Enabled);
+            UIText apStatus = w.Wrap(w.BoundLabel(statusBar, () => menu.autopilotStatus ?? " ", true)); //Autopilot status:
             w.ToneText(apStatus, StatusTone);
 
-            UIText disabled = AscentUi.ToneText(disabledParent, "#MechJeb_Ascent_label36", Tone.Bad); //CONTROL DISABLED (AVIONICS)
-            w.Visible(disabled.gameObject, () => Core.DeactivateControl);
+            Layout disabledBar = w.StatusBar(r, () => KodeWindow.Tone.Bad);
+            w.Visible(disabledBar.gameObject, () => Core.DeactivateControl);
+            AscentUi.ToneText(disabledBar, "#MechJeb_Ascent_label36", Tone.Bad); //CONTROL DISABLED (AVIONICS)
 
             UIText noTracking = KodeWindow.Paragraph(r, "#MechJeb_Ascent_label37"); //unable to circularize without an upgraded Tracking Station
             w.Visible(noTracking.gameObject, () => HasVessel && !Core.vessel.patchedConicsUnlocked() && !psg);
@@ -181,19 +173,8 @@ namespace MuMech.UI
                 Enabled = () => !menu._autopilot.Enabled
             };
 
-            if (KodeWindow.ModernLayout)
-            {
-                UIButton path = WindowButton(w, r, "#MechJeb_Ascent_checkbox10", menu._classicPathMenu); //Edit ascent path
-                w.Visible(path.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
-            }
-            else
-            {
-                // looked up once: the menu's getter scans every module
-                MechJebModuleAscentClassicPathMenu pathMenu = menu._classicPathMenu;
-                UnityEngine.UI.Toggle classicPath = w.Toggle(r, "#MechJeb_Ascent_checkbox10", () => pathMenu.Enabled,
-                    v => pathMenu.Enabled = v); //Edit ascent path
-                w.Visible(KodeWindow.RowOf(classicPath), () => Settings.AscentType == AscentType.CLASSIC);
-            }
+            UIButton path = WindowButton(w, r, "#MechJeb_Ascent_checkbox10", menu._classicPathMenu); //Edit ascent path
+            w.Visible(path.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
 
             // RefreshRateGUI
             Layout refresh = KodeWindow.Row(r);
@@ -274,33 +255,14 @@ namespace MuMech.UI
         // the "Ascent Settings" and "PSG Settings" window toggles
         void BuildSettingsToggles(KodeWindow w, UIObject r)
         {
-            // modern layout: buttons that open the windows, drawn selected while their window is open
-            if (KodeWindow.ModernLayout)
-            {
-                Layout buttons = KodeWindow.Row(r);
-                WindowButton(w, buttons, "Ascent Settings", menu._settingsMenu);
-                UIButton psgButton = WindowButton(w, buttons, "PSG Settings", menu._psgSettingsMenu);
-                w.Visible(psgButton.gameObject, () => psg);
-                w.Badge(psgButton, () => PsgAttention.Any(Core));
-                UIButton solutionButton = WindowButton(w, buttons, "PSG Solution", Core.GetComputerModule<MechJebModulePSGSolutionGraph>());
-                w.Visible(solutionButton.gameObject, () => psg);
-                return;
-            }
-
-            // looked up once: the menu's getters scan every module
-            MechJebModuleAscentSettingsMenu settingsMenu = menu._settingsMenu;
-            MechJebModuleAscentPSGSettingsMenu psgSettingsMenu = menu._psgSettingsMenu;
-            LayoutPanel box = KodeWindow.Box(r);
-            Layout row = KodeWindow.Row(box);
-            w.Toggle(row, "Ascent Settings", () => settingsMenu.Enabled, v => settingsMenu.Enabled = v);
-            UnityEngine.UI.Toggle psgSettings = w.Toggle(row, "PSG Settings", () => psgSettingsMenu.Enabled, v => psgSettingsMenu.Enabled = v);
-            w.Visible(KodeWindow.RowOf(psgSettings), () => psg);
-            // the classic layout has a toggle, not a button, to carry a badge: its label turns orange instead
-            w.ToneText(KodeWindow.RowOf(psgSettings).GetComponentInChildren<TMPro.TMP_Text>(true),
-                () => PsgAttention.Any(Core) ? Tone.Caution : Tone.Normal);
-            MechJebModulePSGSolutionGraph solutionGraph = Core.GetComputerModule<MechJebModulePSGSolutionGraph>();
-            UnityEngine.UI.Toggle solution = w.Toggle(row, "PSG Solution", () => solutionGraph.Enabled, v => solutionGraph.Enabled = v);
-            w.Visible(KodeWindow.RowOf(solution), () => psg);
+            // buttons that open the windows, drawn selected while their window is open
+            Layout buttons = KodeWindow.Row(r);
+            WindowButton(w, buttons, "Ascent Settings", menu._settingsMenu);
+            UIButton psgButton = WindowButton(w, buttons, "PSG Settings", menu._psgSettingsMenu);
+            w.Visible(psgButton.gameObject, () => psg);
+            w.Badge(psgButton, () => PsgAttention.Any(Core));
+            UIButton solutionButton = WindowButton(w, buttons, "PSG Solution", Core.GetComputerModule<MechJebModulePSGSolutionGraph>());
+            w.Visible(solutionButton.gameObject, () => psg);
         }
 
         /// <summary>A button that opens or closes another window, selected while that window is open.</summary>

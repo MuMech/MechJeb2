@@ -110,40 +110,11 @@ namespace MuMech.UI
             columns.Finish();
 
             List<DisplayModule> modules = Core.GetDisplayModules(MechJebModuleMenu.DisplayOrder.instance);
-            if (KodeWindow.ModernLayout)
-            {
-                GroupedColumns(w, columns, modules);
-                BuildEdge(w, r);
-                return;
-            }
-
-            int count = 0;
-            for (int i = 0; i < modules.Count; i++)
-                if (InMenu(modules[i])) count++;
-            int step = Mathf.CeilToInt((float)(count + 1) / menu.columns);
-
-            Layout column = KodeWindow.Panel(columns);
-            int inColumn = 0;
-            for (int i = 0; i < modules.Count; i++)
-            {
-                DisplayModule module = modules[i];
-                if (!InMenu(module)) continue;
-                if (inColumn == step)
-                {
-                    column = KodeWindow.Panel(columns);
-                    inColumn = 0;
-                }
-
-                w.Toggle(column, module.GetName(), () => module.Enabled, v => module.Enabled = v, () => ModuleTone(module));
-                inColumn++;
-            }
-
-            KodeWindow.Button(column, "#MechJeb_OnlineManualbutton", () => Application.OpenURL("https://github.com/MuMech/MechJeb2/wiki")); //"Online Manual"
-
+            GroupedColumns(w, columns, modules);
             BuildEdge(w, r);
         }
 
-        /// <summary>The locked-modules note and the "MechJeb" button on the screen edge (both layouts).</summary>
+        /// <summary>The locked-modules note and the "MechJeb" button on the screen edge.</summary>
         void BuildEdge(KodeWindow w, UIObject r)
         {
             UIText locked = GuidanceUi.Wrapped(r, "#MechJeb_ModuleAreLocked"); //"Some modules are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station."
@@ -164,7 +135,7 @@ namespace MuMech.UI
             w.Visible(button.gameObject, () => !menu.HideMenuButton);
         }
 
-        // ---- modern layout: the windows grouped by task ----
+        // ---- the windows grouped by task ----
 
         static readonly string[] groupKeys =
         {

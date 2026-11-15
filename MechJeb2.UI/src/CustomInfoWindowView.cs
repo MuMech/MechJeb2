@@ -73,20 +73,14 @@ namespace MuMech.UI
                 title.text = shownTitle;
             });
 
-            // "E": edit this window, "C": copy its sharing string; the modern layout draws them as icons beside the close button
-            void TitleAction(UnityEngine.Sprite icon, string letter, string tooltipKey, System.Action click)
-            {
-                if (KodeWindow.ModernLayout) w.TitleIcon(icon, tooltipKey, click);
-                else Tooltips.Add(w.TitleButton(letter, click).gameObject, tooltipKey); // localized when shown
-            }
-
+            // edit this window, copy its sharing string: icons beside the close button
             if (window.Core.GetComputerModule<MechJebModuleCustomWindowEditor>() is { TechLocked: false } editor)
-                TitleAction(Sprites.Edit, "E", "#MechJeb_NewUI_EditWindow_tooltip", () => //Edit this window
+                w.TitleIcon(Sprites.Edit, "#MechJeb_NewUI_EditWindow_tooltip", () => //Edit this window
                 {
                     editor.Enabled = true;
                     editor.editedWindow = window;
                 });
-            TitleAction(Sprites.Copy, "C", "#MechJeb_NewUI_CopyWindow_tooltip", () => //Copy this window's configuration
+            w.TitleIcon(Sprites.Copy, "#MechJeb_NewUI_CopyWindow_tooltip", () => //Copy this window's configuration
             {
                 MuUtils.SystemClipboard = window.ToSharingString();
                 ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg1", window.GetName()), 3.0f,

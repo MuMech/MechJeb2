@@ -9,7 +9,7 @@ namespace MuMech.UI
     /// <summary>
     /// The colours of the thrust limiter labels, as MechJebModuleThrustController's info items draw them: green while
     /// that limiter acts, with the extra states of the throttle, min-throttle, electric and differential rows. Shared by
-    /// the classic builders (GeneralItemBuilders) and the modern rows (ModernRows, Landing, Utilities).
+    /// OptionRows, Landing and Utilities.
     /// </summary>
     internal static class LimiterTones
     {

@@ -61,12 +61,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool UiCompact = true;
 
-        /// <summary>New UI: the modern layout (steppers, switches, segmented choices...) instead of IMGUI's layout.</summary>
-        // a new key: configs from before it was the default say False, which nobody chose
-        [Persistent(pass = (int)Pass.GLOBAL, name = "UiModernLayoutChoice")]
-        public bool UiModernLayout = true;
-
-        /// <summary>New UI, modern layout: the section headers it adds to long windows.</summary>
+        /// <summary>New UI: the section headers it adds to long windows.</summary>
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool UiSectionHeaders = true;
 

@@ -187,79 +187,6 @@ namespace MuMech.UI
                 t.AppendInt(v);
         }
 
-        void CoastToggle(KodeWindow w, UIObject row, string text, int location) =>
-            w.Toggle(row, text, () => Settings.CoastLocation == location, v =>
-            {
-                if (v) Settings.CoastLocation = location;
-            });
-
-        protected override void BuildContents(KodeWindow w)
-        {
-            if (KodeWindow.ModernLayout)
-            {
-                BuildModern(w);
-                return;
-            }
-
-            UIObject r = w.Root;
-
-            Layout stages = KodeWindow.Panel(r);
-            BuildStageTable(w, stages);
-            BuildSkipped(w, stages);
-            w.Visible(stages.gameObject, () => hasStages);
-
-            LayoutPanel box = KodeWindow.Box(r);
-            AscentUi.SimpleBox(w, box, "Min ΔV: ", Psgs.MinDeltaV, "m/s", 30);
-            AscentUi.SimpleBox(w, box, "Last Stage: ", Settings.LastStage);
-            AscentUi.ToggledBox(w, box, "Fixed Burn Stages: ", () => Settings.FixedStagesFlag, v => Settings.FixedStagesFlag = v,
-                Settings.FixedStagesInternal, null, 100);
-            AscentUi.ToggledBox(w, box, "Unguided Stages: ", () => Settings.UnguidedStagesFlag, v => Settings.UnguidedStagesFlag = v,
-                Settings.UnguidedStagesInternal, null, 100);
-
-            box = KodeWindow.Box(r);
-            w.Attention(AscentUi.ToggledBox(w, box, "Coast Stage: ", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v,
-                Settings.CoastStageInternal, null, 100), () => PsgAttention.CoastNoRelight(Core));
-            UIText relight = AscentUi.ToneText(box, RelightNote, Tone.Caution, true);
-            KodeWindow.WrapToWidth(relight);
-            w.Visible(relight.gameObject, () => PsgAttention.CoastNoRelight(Core));
-            Layout coast = KodeWindow.Row(box);
-            CoastToggle(w, coast, "Coast Before", -1);
-            CoastToggle(w, coast, "Coast During", 0);
-            CoastToggle(w, coast, "Coast After", 1);
-            Layout coastTimes = KodeWindow.Row(box);
-            w.Attention(AscentUi.SimpleBox(w, coastTimes, "Min Coast:", Psgs.MinCoast, "s", 40), () => PsgAttention.CoastTimesInverted(Core));
-            w.Attention(AscentUi.SimpleBox(w, coastTimes, "Max Coast:", Psgs.MaxCoast, "s", 40), () => PsgAttention.CoastTimesInverted(Core));
-            AscentUi.SimpleBox(w, box, "Ullage lead time: ", Core.Guidance.UllageLeadTime, "s", 60);
-
-            box = KodeWindow.Box(r);
-            Layout spinup = KodeWindow.Row(box);
-            AscentUi.ToggledBox(w, spinup, "Spinup stage: ", () => Settings.SpinupStageFlag, v => Settings.SpinupStageFlag = v,
-                Settings.SpinupStageInternal, null, 30);
-            AscentUi.SimpleBox(w, spinup, "ω: ", Settings.SpinupAngularVelocity, "rpm", 30);
-            AscentUi.SimpleBox(w, box, "Spinup lead time: ", Settings.SpinupLeadTime, "s", 60);
-
-            box = KodeWindow.Box(r);
-            Layout drag = KodeWindow.Row(box);
-            AscentUi.SimpleBox(w, drag, "Cd:", Psgs.Cd, "", 40);
-            w.Attention(AscentUi.SimpleBox(w, drag, "Aref:", Psgs.Aref, "m²", 40), () => PsgAttention.ArefUnset(Core));
-            UIText arefNote = AscentUi.ToneText(box, ArefNote, Tone.Caution, true);
-            KodeWindow.WrapToWidth(arefNote);
-            w.Visible(arefNote.gameObject, () => PsgAttention.ArefUnset(Core));
-            AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 40); //Booster Pitch start:
-            AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 40); //Booster Pitch rate:
-
-            box = KodeWindow.Box(r);
-            w.Attention(AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad"), () => PsgAttention.QaClamped(Core)); //Qα limit
-            UIText clamped = AscentUi.ToneText(box, "Qα limit has been clamped to between 0 and 10000 Pa-rad", Tone.Bad, true);
-            KodeWindow.WrapToWidth(clamped);
-            w.Visible(clamped.gameObject, () => OutsideRecommended && (Psgs.LimitQa < 0 || Psgs.LimitQa > 10000));
-            UIText recommended = AscentUi.ToneText(box, "#MechJeb_Ascent_label20", Tone.Warn, true); //Qα limit is recommended to be 1000 to 4000 Pa-rad
-            KodeWindow.WrapToWidth(recommended);
-            w.Visible(recommended.gameObject, () => OutsideRecommended && !(Psgs.LimitQa < 0 || Psgs.LimitQa > 10000));
-
-            w.Toggle(box, "Draw Trajectory on Map", () => Core.Guidance.ShouldDrawTrajectory, v => Core.Guidance.ShouldDrawTrajectory = v);
-        }
-
         bool OutsideRecommended => Psgs.LimitQa < 1000 || Psgs.LimitQa > 4000;
 
         const string RelightNote = "An engine of the coast stage can't light again after the coast (no restart, or no ignitions left).";
@@ -268,8 +195,8 @@ namespace MuMech.UI
 
         static readonly string[] coastLocations = { "Before", "During", "After" };
 
-        // modern layout: titled groups of aligned fields, the coast location as one choice, the Qα warnings in a status bar
-        void BuildModern(KodeWindow w)
+        // Titled groups of aligned fields, the coast location as one choice, the Qα warnings in a status bar
+        protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
 
@@ -280,15 +207,15 @@ namespace MuMech.UI
             w.Visible(stages.gameObject, () => hasStages);
 
             KodeWindow.PropertyGrid plan = w.Properties(r);
-            ModernRows.Field(plan, "Min ΔV", Psgs.MinDeltaV, "m/s", 50);
-            ModernRows.Field(plan, "Last Stage", Settings.LastStage, "", 50);
-            ModernRows.Switch(plan, "Fixed Burn Stages", () => Settings.FixedStagesFlag, v => Settings.FixedStagesFlag = v, Settings.FixedStagesInternal, "", 100);
-            ModernRows.Switch(plan, "Unguided Stages", () => Settings.UnguidedStagesFlag, v => Settings.UnguidedStagesFlag = v,
+            OptionRows.Field(plan, "Min ΔV", Psgs.MinDeltaV, "m/s", 50);
+            OptionRows.Field(plan, "Last Stage", Settings.LastStage, "", 50);
+            OptionRows.Switch(plan, "Fixed Burn Stages", () => Settings.FixedStagesFlag, v => Settings.FixedStagesFlag = v, Settings.FixedStagesInternal, "", 100);
+            OptionRows.Switch(plan, "Unguided Stages", () => Settings.UnguidedStagesFlag, v => Settings.UnguidedStagesFlag = v,
                 Settings.UnguidedStagesInternal, "", 100);
 
             UIObject g = w.Group(r, "#MechJeb_NewUI_Coast"); //Coast
             KodeWindow.PropertyGrid coast = w.Properties(g);
-            w.Attention(ModernRows.Switch(coast, "Coast Stage", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v, Settings.CoastStageInternal, "", 100),
+            w.Attention(OptionRows.Switch(coast, "Coast Stage", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v, Settings.CoastStageInternal, "", 100),
                 () => PsgAttention.CoastNoRelight(Core));
             UIText relight = coast.Note(RelightNote);
             KodeWindow.ToneText(relight, Tone.Caution);
@@ -297,22 +224,22 @@ namespace MuMech.UI
             Layout where = KodeWindow.Row(g);
             w.Segmented(where, coastLocations, () => Settings.CoastLocation + 1, i => Settings.CoastLocation = i - 1);
             KodeWindow.PropertyGrid coastTimes = w.Properties(g);
-            w.Attention(ModernRows.Field(coastTimes, "Min Coast", Psgs.MinCoast, "s", 50), () => PsgAttention.CoastTimesInverted(Core));
-            w.Attention(ModernRows.Field(coastTimes, "Max Coast", Psgs.MaxCoast, "s", 50), () => PsgAttention.CoastTimesInverted(Core));
-            ModernRows.Field(coastTimes, "Ullage lead time", Core.Guidance.UllageLeadTime, "s", 50);
+            w.Attention(OptionRows.Field(coastTimes, "Min Coast", Psgs.MinCoast, "s", 50), () => PsgAttention.CoastTimesInverted(Core));
+            w.Attention(OptionRows.Field(coastTimes, "Max Coast", Psgs.MaxCoast, "s", 50), () => PsgAttention.CoastTimesInverted(Core));
+            OptionRows.Field(coastTimes, "Ullage lead time", Core.Guidance.UllageLeadTime, "s", 50);
 
             g = w.Group(r, "#MechJeb_NewUI_Spinup"); //Spinup
             KodeWindow.PropertyGrid spin = w.Properties(g);
-            ModernRows.Switch(spin, "Spinup stage", () => Settings.SpinupStageFlag, v => Settings.SpinupStageFlag = v, Settings.SpinupStageInternal, "", 50);
-            ModernRows.Field(spin, "ω", Settings.SpinupAngularVelocity, "rpm", 50);
-            ModernRows.Field(spin, "Spinup lead time", Settings.SpinupLeadTime, "s", 50);
+            OptionRows.Switch(spin, "Spinup stage", () => Settings.SpinupStageFlag, v => Settings.SpinupStageFlag = v, Settings.SpinupStageInternal, "", 50);
+            OptionRows.Field(spin, "ω", Settings.SpinupAngularVelocity, "rpm", 50);
+            OptionRows.Field(spin, "Spinup lead time", Settings.SpinupLeadTime, "s", 50);
 
             g = w.Group(r, "#MechJeb_NewUI_BoosterDrag"); //Booster and drag
             KodeWindow.PropertyGrid aero = w.Properties(g);
-            ModernRows.Field(aero, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
-            ModernRows.Field(aero, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
-            ModernRows.Field(aero, "Cd", Psgs.Cd, "", 50);
-            w.Attention(ModernRows.Field(aero, "Aref", Psgs.Aref, "m²", 50), () => PsgAttention.ArefUnset(Core));
+            OptionRows.Field(aero, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
+            OptionRows.Field(aero, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
+            OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50);
+            w.Attention(OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50), () => PsgAttention.ArefUnset(Core));
             UIText arefNote = aero.Note(ArefNote);
             KodeWindow.ToneText(arefNote, Tone.Caution);
             KodeWindow.WrapToWidth(arefNote);
@@ -320,7 +247,7 @@ namespace MuMech.UI
 
             g = w.Group(r, "#MechJeb_NewUI_Limits"); //Limits
             KodeWindow.PropertyGrid limits = w.Properties(g);
-            w.Attention(ModernRows.Field(limits, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60), () => PsgAttention.QaClamped(Core)); //Qα limit
+            w.Attention(OptionRows.Field(limits, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60), () => PsgAttention.QaClamped(Core)); //Qα limit
             bool Clamped() => Psgs.LimitQa < 0 || Psgs.LimitQa > 10000;
             Layout qa = w.StatusBar(g, () => Clamped() ? Tone.Bad : Tone.Warn);
             UIText clamped = GuidanceUi.Wrapped(qa, "Qα limit has been clamped to between 0 and 10000 Pa-rad");

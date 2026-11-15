@@ -118,33 +118,13 @@ namespace MuMech.UI
 
             if (Edited != null) BuildEditedWindow(w, r);
 
-            if (KodeWindow.ModernLayout)
-            {
-                // modern layout: every preset in a dropdown, and a button to create the chosen one
-                KodeWindow.Header(r, "#MechJeb_WindowEd_label5"); //Window presets:
-                var presetNames = new string[CustomWindowPresets.presets.Length];
-                for (int i = 0; i < presetNames.Length; i++) presetNames[i] = CustomWindowPresets.presets[i].name;
-                Layout pick = KodeWindow.Row(r);
-                new ComboBox(w, pick, () => ed.presetIndex, i => ed.presetIndex = i, () => presetNames);
-                KodeWindow.Button(pick, "#MechJeb_NewUI_Create", CreateFromPreset, ButtonRole.Primary); //Create
-                return;
-            }
-
-            // presets
-            UIText presets = KodeWindow.Label(r, "#MechJeb_WindowEd_label5", true); //Window presets:
-            presets.tmpText.alignment = TextAlignmentOptions.Center;
-            Layout presetRow = KodeWindow.Row(r);
-            int count = CustomWindowPresets.presets.Length;
-            KodeWindow.Button(presetRow, "<", () => ed.presetIndex = (ed.presetIndex - 1 + count) % count);
-            UIButton preset = KodeWindow.Button(presetRow, CustomWindowPresets.presets[ed.presetIndex].name, CreateFromPreset, true);
-            int shownPreset = ed.presetIndex;
-            w.AddSync(() =>
-            {
-                if (ed.presetIndex == shownPreset) return;
-                shownPreset = ed.presetIndex;
-                preset.Text(CustomWindowPresets.presets[shownPreset].name);
-            });
-            KodeWindow.Button(presetRow, ">", () => ed.presetIndex = (ed.presetIndex + 1) % count);
+            // every preset in a dropdown, and a button to create the chosen one
+            KodeWindow.Header(r, "#MechJeb_WindowEd_label5"); //Window presets:
+            var presetNames = new string[CustomWindowPresets.presets.Length];
+            for (int i = 0; i < presetNames.Length; i++) presetNames[i] = CustomWindowPresets.presets[i].name;
+            Layout pick = KodeWindow.Row(r);
+            new ComboBox(w, pick, () => ed.presetIndex, i => ed.presetIndex = i, () => presetNames);
+            KodeWindow.Button(pick, "#MechJeb_NewUI_Create", CreateFromPreset, ButtonRole.Primary); //Create
         }
 
         void ExportEdited()
@@ -191,31 +171,16 @@ namespace MuMech.UI
             return titles;
         }
 
-        /// <summary>IMGUI's title row: Title: [&lt;] [title field] [&gt;], stepping through the custom windows.</summary>
-        void TitleRow(KodeWindow w, UIObject r, MechJebModuleCustomInfoWindow edited, List<ComputerModule> all)
-        {
-            Layout title = KodeWindow.Row(r);
-            KodeWindow.Label(title, "#MechJeb_WindowEd_Edtitle"); //Title:
-            KodeWindow.Button(title, "<", () => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[(all.IndexOf(edited) - 1 + all.Count) % all.Count]);
-            TitleField(w, title, edited);
-            KodeWindow.Button(title, ">", () => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[(all.IndexOf(edited) + 1) % all.Count]);
-        }
-
         void BuildEditedWindow(KodeWindow w, UIObject r)
         {
             MechJebModuleCustomInfoWindow edited = Edited;
             List<ComputerModule> all = AllWindows;
 
-            if (KodeWindow.ModernLayout)
-            {
-                // modern layout: the edited window picked from a dropdown, its title in a field
-                KodeWindow.Header(r, "#MechJeb_WindowEd_Edtitle"); //Title:
-                Layout pick = KodeWindow.Row(r);
-                new ComboBox(w, pick, () => all.IndexOf(edited), i => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[i], WindowTitles);
-                TitleField(w, pick, edited);
-            }
-            else
-                TitleRow(w, r, edited, all);
+            // the edited window picked from a dropdown, its title in a field
+            KodeWindow.Header(r, "#MechJeb_WindowEd_Edtitle"); //Title:
+            Layout pick = KodeWindow.Row(r);
+            new ComboBox(w, pick, () => all.IndexOf(edited), i => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[i], WindowTitles);
+            TitleField(w, pick, edited);
 
             Layout showIn = KodeWindow.Row(r);
             KodeWindow.Label(showIn, "#MechJeb_WindowEd_label1"); //Show in:

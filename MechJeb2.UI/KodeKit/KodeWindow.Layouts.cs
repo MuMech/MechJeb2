@@ -14,17 +14,13 @@ namespace KodeKit
     public enum Dir { NW, N, NE, W, C, E, SW, S, SE }
 
     /// <summary>
-    /// The modern layout's widgets and layouts (LAYOUTS.md): switches, segmented choices, steppers, chips, badges,
-    /// section headers, status bars, action bars, uniform grids, the compass, flow wrap, property grids, tabs and
-    /// master-detail. Views use them only when <see cref="ModernLayout"/> is on; the IMGUI-faithful widgets stay the
-    /// default. Like the other widgets, all of them follow the theme and make no garbage once built.
+    /// The layout widgets (LAYOUTS.md): switches, segmented choices, steppers, chips, badges, section headers, status
+    /// bars, action bars, uniform grids, the compass, flow wrap, property grids, tabs and master-detail. Like the other
+    /// widgets, all of them follow the theme and make no garbage once built.
     /// </summary>
     public partial class KodeWindow
     {
-        /// <summary>Views build the modern layout instead of IMGUI's (set before the windows are built; a change rebuilds them).</summary>
-        public static bool ModernLayout;
-
-        /// <summary>The section headers the modern layout adds (read when a window is built).</summary>
+        /// <summary>The section headers the views add (read when a window is built).</summary>
         public static bool ShowHeaders = true;
 
         Theme Th => Behaviour.Theme ?? T;
@@ -110,10 +106,10 @@ namespace KodeKit
         public static UIButton Button(UIObject parent, string text, Action onClick, ButtonRole role, bool flexible = false) =>
             Role(Button(parent, text, onClick, flexible), role);
 
-        /// <summary>Gives a button a fixed role (primary, danger) in the modern layout; the classic layout keeps IMGUI's plain buttons.</summary>
+        /// <summary>Gives a button a fixed role (primary, danger).</summary>
         public static UIButton Role(UIButton b, ButtonRole role)
         {
-            if (ModernLayout && role != ButtonRole.Normal) Styled(b.gameObject, th => PaintRole(th, b, role));
+            if (role != ButtonRole.Normal) Styled(b.gameObject, th => PaintRole(th, b, role));
             return b;
         }
 
@@ -261,9 +257,9 @@ namespace KodeKit
         public Toggle SwitchRow(UIObject parent, string text, Func<bool> get, Action<bool> set) => SwitchToggle(parent, text, get, set, null);
 
         /// <summary>
-        /// The modern layout's <see cref="Toggle(UIObject, string, Func{bool}, Action{bool}, Func{bool})"/>: a switch and its
-        /// label, green while <paramref name="green"/> holds. The label flips it through ToggleLabelClick, as the checkbox's
-        /// does, so code that looks up a toggle's label works with both.
+        /// <see cref="Toggle(UIObject, string, Func{bool}, Action{bool}, Func{bool})"/>: a switch and its label, green while
+        /// <paramref name="green"/> holds. The label flips it through ToggleLabelClick, as the checkbox's does, so code that
+        /// looks up a toggle's label works with both.
         /// </summary>
         Toggle SwitchToggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green)
         {
@@ -284,14 +280,14 @@ namespace KodeKit
         // ---- folding groups ----
 
         /// <summary>
-        /// A folding group the modern layout adds to long windows: a header with a chevron that shows or hides the panel it
+        /// A folding group the views add to long windows: a header with a chevron that shows or hides the panel it
         /// returns, remembered per window and title for the session. With the "Section headers" setting off there is no
         /// header, and the panel always shows.
         /// </summary>
         public Layout Group(UIObject parent, string title, bool open = true) =>
             ShowHeaders ? FoldSection(parent, title, open, Root.name + "/" + title, false) : Panel(parent);
 
-        /// <summary>The modern look of <see cref="Section"/> and <see cref="Group"/>: a chevron (down: open, right: folded) and a header.</summary>
+        /// <summary>The look of <see cref="Section"/> and <see cref="Group"/>: a chevron (down: open, right: folded) and a header.</summary>
         Layout FoldSection(UIObject parent, string title, bool open, string key, bool lazy)
         {
             if (sectionState.TryGetValue(key, out bool saved)) open = saved;
@@ -891,7 +887,7 @@ namespace KodeKit
         // ---- title bar ----
 
         /// <summary>
-        /// A flat icon button in the title bar, before the close button (the modern layout's edit and copy). The tooltip
+        /// A flat icon button in the title bar, before the close button (the custom windows' edit and copy). The tooltip
         /// is a text or a '#key'.
         /// </summary>
         public UIButton TitleIcon(Sprite icon, string tooltip, Action onClick)

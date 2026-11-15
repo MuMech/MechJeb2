@@ -87,24 +87,8 @@ namespace MuMech.UI
             EditUi.Field(w, row, () => angle().Seconds, 30);
             KodeWindow.Label(row, "\"");
 
-            if (KodeWindow.ModernLayout)
-            {
-                string[] hemispheres = direction == EditableAngle.Direction.NS ? northSouth : eastWest;
-                w.Segmented(row, hemispheres, () => angle().Negative ? 1 : 0, i => angle().Negative = i == 1).FlexibleLayout(0f, 0f);
-                return;
-            }
-
-            string Dir(EditableAngle a) => direction == EditableAngle.Direction.NS ? a.Negative ? "S" : "N" : a.Negative ? "W" : "E";
-            UIButton button = KodeWindow.Button(row, Dir(angle()), () => angle().Negative = !angle().Negative);
-            GuidanceUi.MinWidth(button, 25); // GUILayout.Width(25)
-            string shown = Dir(angle());
-            w.AddSync(() =>
-            {
-                string d = Dir(angle()); // literals: no allocation
-                if ((object)d == shown) return;
-                shown = d;
-                button.Text(d);
-            });
+            string[] hemispheres = direction == EditableAngle.Direction.NS ? northSouth : eastWest;
+            w.Segmented(row, hemispheres, () => angle().Negative ? 1 : 0, i => angle().Negative = i == 1).FlexibleLayout(0f, 0f);
         }
 
         /// <summary>A wrapping text that changes (warnings, descriptions); re-laid out only when the text changes.</summary>

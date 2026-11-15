@@ -46,13 +46,13 @@ namespace MuMech.UI
             }
         }
 
-        // the modern layout puts each run of toggles and fields in one property grid, so their labels and fields line up
+        // each run of toggles and fields goes in one property grid, so their labels and fields line up
         KodeWindow.PropertyGrid grid;
         UIObject gridParent;
 
         public void Add(UIObject parent, InfoItem item)
         {
-            if (KodeWindow.ModernLayout && (item is ToggleInfoItem || item is EditableInfoItem))
+            if (item is ToggleInfoItem || item is EditableInfoItem)
             {
                 AddOption(parent, item);
                 return;
@@ -66,14 +66,6 @@ namespace MuMech.UI
                     break;
                 case ValueInfoItem v:
                     AddValue(parent, v);
-                    break;
-                case ToggleInfoItem t:
-                    UnityEngine.UI.Toggle toggle = w.Toggle(parent, item.localizedName, () => t.Value, x => t.Value = x);
-                    Tooltip(KodeWindow.LabelOf(toggle).gameObject, item);
-                    ApplyColor(KodeWindow.LabelOf(toggle));
-                    break;
-                case EditableInfoItem e:
-                    AddEditable(parent, e);
                     break;
                 case ActionInfoItem a:
                     UIButton b = KodeWindow.Button(parent, item.localizedName, a.Invoke, true);
@@ -103,33 +95,24 @@ namespace MuMech.UI
             if (!string.IsNullOrEmpty(item.localizedTooltip)) Tooltips.Add(go, item.localizedTooltip);
         }
 
-        /// <summary>A header item: its text (bold; the modern layout's header style) over a hairline, or the line alone.</summary>
+        /// <summary>A header item: its text (the header style) over a hairline, or the line alone.</summary>
         void AddHeader(UIObject parent, HeaderInfoItem h)
         {
-            UIText text;
-            if (KodeWindow.ModernLayout)
-                text = KodeWindow.Header(parent, h.Text, true);
-            else
-            {
-                text = KodeWindow.Label(parent, h.Text);
-                KodeWindow.Styled(text.gameObject, th => text.tmpText.fontStyle = FontStyles.Bold);
-                ApplyColor(text.tmpText);
-            }
+            UIText text = KodeWindow.Header(parent, h.Text, true);
             text.gameObject.SetActive(h.Text.Length > 0);
-            // the editor changes the text in place (the modern header drops a trailing colon, as when it was built)
+            // the editor changes the text in place (the header drops a trailing colon, as when it was built)
             string shown = h.Text;
-            bool modern = KodeWindow.ModernLayout;
             w.AddSync(() =>
             {
                 if (ReferenceEquals(h.Text, shown)) return;
                 shown = h.Text;
-                text.tmpText.text = modern ? shown.TrimEnd(':', ' ', ' ') : shown;
+                text.tmpText.text = shown.TrimEnd(':', ' ', ' ');
                 text.gameObject.SetActive(shown.Length > 0);
             });
             KodeWindow.Rule(parent);
         }
 
-        /// <summary>The modern layout's option row of a toggle ([switch] label) or a field (label [field] unit).</summary>
+        /// <summary>The option row of a toggle ([switch] label) or a field (label [field] unit).</summary>
         void AddOption(UIObject parent, InfoItem item)
         {
             if (grid == null || gridParent != parent)
@@ -155,19 +138,6 @@ namespace MuMech.UI
             Tooltip(cells.GetChild(1).gameObject, item);
             ApplyColor(cells.GetChild(1).GetComponentInChildren<TMP_Text>());
             if (cells.childCount > 3) ApplyColor(cells.GetChild(3).GetComponentInChildren<TMP_Text>());
-        }
-
-        void AddEditable(UIObject parent, EditableInfoItem e)
-        {
-            IEditable ed = e.Editable;
-            if (ed == null) return;
-            Layout row = KodeWindow.Row(parent);
-            UIText label = KodeWindow.Label(row, e.localizedName, true);
-            Tooltip(label.gameObject, e);
-            ApplyColor(label.tmpText);
-            Func<bool> valid = ed is EditableDoubleMult m ? (Func<bool>)(() => m.IsParsed) : null;
-            EditFields.Field(w, row, () => ed.Text, s => ed.Text = s, e.width, valid);
-            if (!string.IsNullOrEmpty(e.rightLabel)) KodeWindow.Label(row, e.rightLabel);
         }
 
         // ---- values ----

@@ -128,7 +128,7 @@ namespace MuMech.UI
             }).transform.parent.GetComponent<UnityEngine.UI.LayoutElement>().preferredWidth = 40;
             Tooltips.Add(opacity.gameObject, "How opaque the new UI's window backgrounds are. Lower lets more of the scene show through.");
 
-            // the new UI's look: its skin, and the modern layout (KodeHost rebuilds the windows when the layout changes)
+            // the new UI's look: its skin, spacing and section headers (KodeHost rebuilds the windows when the headers change)
             Layout skin = KodeWindow.Row(r);
             KodeWindow.Label(skin, "#MechJeb_NewUI_Skin");
             string[] skins = Locs("#MechJeb_NewUI_SkinClassic", "#MechJeb_NewUI_SkinFlat", "#MechJeb_NewUI_SkinGlass", "#MechJeb_NewUI_SkinZTheme");
@@ -144,17 +144,11 @@ namespace MuMech.UI
                 Changed();
             });
 
-            w.Toggle(r, "#MechJeb_NewUI_ModernLayout", () => settings.UiModernLayout, v =>
-            {
-                settings.UiModernLayout = v;
-                Changed();
-            });
-            GameObject headers = w.Toggle(r, "#MechJeb_NewUI_SectionHeaders", () => settings.UiSectionHeaders, v =>
+            w.Toggle(r, "#MechJeb_NewUI_SectionHeaders", () => settings.UiSectionHeaders, v =>
             {
                 settings.UiSectionHeaders = v;
                 Changed();
-            }).transform.parent.gameObject;
-            w.Visible(headers, () => settings.UiModernLayout);
+            });
         }
 
         static string[] Locs(params string[] keys)

@@ -47,79 +47,7 @@ namespace MuMech.UI
 
         EditableDouble LeadTime => HasNode ? Core.Node.LeadTime : noLeadTime;
 
-        protected override void BuildContents(KodeWindow w)
-        {
-            if (KodeWindow.ModernLayout)
-            {
-                BuildModern(w);
-                return;
-            }
-
-            UIObject r = w.Root;
-
-            // "Create a new" / "Change the last" [maneuver node to:], or just "Create a new maneuver node to:"
-            Layout mode = KodeWindow.Row(r);
-            string shownMode = Localizer.Format("#MechJeb_Maneu_createNodeBtn01");
-            UIButton modeButton = KodeWindow.Button(mode, shownMode, () => planner.CreateNodeMode = !planner.CreateNodeMode);
-            KodeWindow.Label(mode, "#MechJeb_Maneu_createlab1", true); //"maneuver node to:"
-            bool lastCreate = true;
-            w.AddSync(() =>
-            {
-                bool create = planner.CreateNodeMode;
-                if (create == lastCreate) return;
-                lastCreate = create;
-                modeButton.Text(Localizer.Format(create ? "#MechJeb_Maneu_createNodeBtn01" : "#MechJeb_Maneu_createNodeBtn02"));
-            });
-            w.Visible(mode.gameObject, () => planner.PlannerNodeCount() > 0);
-            UIText noNode = KodeWindow.Label(r, "#MechJeb_Maneu_createlab2"); //"Create a new maneuver node to:"
-            w.Visible(noNode.gameObject, () => planner.PlannerNodeCount() == 0);
-
-            new ComboBox(w, r, () => planner.OperationId, i => planner.OperationId = i, () => planner.OperationNames);
-
-            OperationPanelsFor(w, r);
-
-            UIText after = KodeWindow.Label(r, "#MechJeb_Maneu_createlab3"); //"after the last maneuver node."
-            w.Visible(after.gameObject, () => planner.PlannerNodeCount() > 0);
-
-            Layout create = KodeWindow.Row(r);
-            KodeWindow.Button(create, "#MechJeb_Maneu_button1", () => CreateNodes(false), true); //"Create node"
-            UIButton createExecute = KodeWindow.Button(create, "#MechJeb_Maneu_button2", () => CreateNodes(true), true); //"Create and execute"
-            w.Visible(createExecute.gameObject, () => HasNode);
-
-            // the operation's error / warning message
-            UIText error = OpUi.DynamicParagraph(w, r, () => planner.CurrentOperation.GetErrorMessage() ?? "", true);
-            w.Visible(error.gameObject, () => !string.IsNullOrEmpty(planner.CurrentOperation.GetErrorMessage()));
-
-            KodeWindow.Button(r, "#MechJeb_Maneu_button3", () => planner.Vessel.RemoveAllManeuverNodes(), true); //Remove ALL nodes
-
-            ExecuteButtons(w, r);
-
-            Layout options = KodeWindow.Row(r);
-            NodeUi.AutowarpToggle(w, options, Core, "#MechJeb_Maneu_Autowarp"); //"Auto-warp"
-            w.Toggle(options, "RCS Burn", () => HasNode && Core.Node.RCSOnly, v =>
-            {
-                if (HasNode) Core.Node.RCSOnly = v;
-            });
-            w.Toggle(options, "#MechJeb_SmartASS_button35", () => HasNode && Core.Node.KillRollRotation, v =>
-            {
-                if (HasNode) Core.Node.KillRollRotation = v;
-            });
-            w.Visible(options.gameObject, () => HasNode);
-
-            Layout lead = KodeWindow.Row(r);
-            KodeWindow.Label(lead, "#MechJeb_Maneu_Lead_time"); //Lead time:
-            EditFields.Field(w, lead, () => LeadTime.Text, s =>
-            {
-                if (HasNode) Core.Node.LeadTime.Text = s;
-            }, 35, () => LeadTime.IsParsed);
-            KodeWindow.Label(lead, "s");
-            KodeWindow.Button(lead, "+", () => LeadTime.Val += 1);
-            KodeWindow.Button(lead, "-", () => LeadTime.Val -= 1);
-            KodeWindow.Button(lead, "R", () => LeadTime.Val = 3);
-            w.Visible(lead.gameObject, () => HasNode);
-        }
-
-        // ---- modern layout: a grouped operation dropdown, an action bar, a lead time stepper ----
+        // ---- A grouped operation dropdown, an action bar, a lead time stepper ----
 
         static readonly string[] groupKeys = { "#MechJeb_NewUI_OpOrbit", "#MechJeb_NewUI_OpTarget", "#MechJeb_NewUI_OpPlanets" };
 
@@ -142,7 +70,7 @@ namespace MuMech.UI
             }
         }
 
-        void BuildModern(KodeWindow w)
+        protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
 
