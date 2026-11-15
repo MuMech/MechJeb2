@@ -56,6 +56,55 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool _lastSettingsMenuEnabled;
 
+        /// <summary>The launches Engage can start from the ground (LaunchChoice).</summary>
+        internal enum LaunchKind { NOW, PLANE_OF_TARGET, TARGET_LAN, LAN }
+
+        // the launch Ascent Guidance's Engage starts while landed (a LaunchKind)
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int LaunchChoice;
+
+        // whether Ascent Guidance's GUIDANCE DETAILS fold is open
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool GuidanceDetailsOpen;
+
+        /// <summary>The launch choices the current ascent type has: a launch to the target's LAN or to a LAN is PSG's.</summary>
+        internal bool LaunchChoiceAvailable(LaunchKind kind) =>
+            kind == LaunchKind.NOW || kind == LaunchKind.PLANE_OF_TARGET || _ascentSettings.AscentType == AscentType.PSG;
+
+        /// <summary>The choice Engage starts: Now off the ground, or when the saved one is not one of this ascent type's.</summary>
+        internal LaunchKind EffectiveLaunchChoice =>
+            Vessel != null && Vessel.LandedOrSplashed && LaunchChoiceAvailable((LaunchKind)LaunchChoice) ? (LaunchKind)LaunchChoice : LaunchKind.NOW;
+
+        /// <summary>Whether Engage can start the chosen launch: the two target choices need a target around this body.</summary>
+        internal bool LaunchChoiceReady => EffectiveLaunchChoice switch
+        {
+            LaunchKind.PLANE_OF_TARGET => AutoWarpTargetExists,
+            LaunchKind.TARGET_LAN      => AutoWarpTargetExists,
+            _                          => true
+        };
+
+        /// <summary>Starts the chosen launch's countdown, if it is a timed one, and engages the ascent autopilot.</summary>
+        internal void Engage()
+        {
+            if (!LaunchChoiceReady) return;
+            switch (EffectiveLaunchChoice)
+            {
+                case LaunchKind.PLANE_OF_TARGET:
+                    LaunchToPlaneOfTarget();
+                    break;
+                case LaunchKind.TARGET_LAN:
+                    LaunchToTargetLan();
+                    break;
+                case LaunchKind.LAN:
+                    LaunchToLan();
+                    break;
+            }
+
+            _autopilot.Users.Add(this);
+        }
+
         protected override void OnModuleEnabled()
         {
             _psgSettingsMenu.Enabled = _lastPSGSettingsEnabled;
