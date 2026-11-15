@@ -52,8 +52,20 @@ namespace KodeKit
             cb.normalColor = cb.selectedColor = normal;
             cb.highlightedColor = hover;
             cb.pressedColor = press;
+            cb.disabledColor = DisabledTint(normal);
             cb.fadeDuration = 0.05f;
             s.colors = cb;
+        }
+
+        /// <summary>
+        /// The disabled tint of a selectable whose tint at rest is <paramref name="normal"/>: Unity's grey, as see-through
+        /// as <paramref name="normal"/>. A cell drawn clear at rest (a tab, a flat segment) stays clear when disabled
+        /// instead of filling with grey; the window dims it with the rest of its row.
+        /// </summary>
+        internal static Color DisabledTint(Color normal)
+        {
+            Color d = ColorBlock.defaultColorBlock.disabledColor;
+            return Alpha(d, d.a * normal.a);
         }
 
         static Color Alpha(Color c, float a) => new Color(c.r, c.g, c.b, a);
