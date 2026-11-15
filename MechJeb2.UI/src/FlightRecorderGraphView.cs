@@ -17,7 +17,8 @@ namespace MuMech.UI
     /// The model work (scales, background texture, sizes) runs in BeforeSync through the module's shared methods.
     /// Differences: the Y labels are as many as the plot's height has room for, a grip in the window's corner resizes the plot, and the
     /// graph is clipped to the plot instead of skipping the points outside it. In the modern layout the plot fills the
-    /// window's width, and a drop-down above it picks the graph of the Y labels, not the column beside it.
+    /// window's width, a drop-down above it picks the graph of the Y labels, not the column beside it, and another one can
+    /// give a second graph Y labels on the plot's right, in its colour.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleFlightRecorderGraph))]
     public class FlightRecorderGraphView : KodeView
@@ -237,7 +238,7 @@ namespace MuMech.UI
         CanvasGroup yLabels;
         int builtLabels, shownWidth = -1, shownHeight = -1;
         // the sizes the resize grip and the - and + buttons set
-        LayoutElement plotSize, labelsSize;
+        LayoutElement plotSize, labelsSize, rightLabelsSize;
         ResizeGrip grip;
         float dragStartWidth, dragStartHeight;
         int dragStartPlotWidth = -1, dragStartPlotHeight;
@@ -247,7 +248,7 @@ namespace MuMech.UI
         float lastRefreshTime;
         double lastScaleX = double.NaN;
         bool lastDownrange;
-        int lastScaleIdx = -1, lastMask = -1;
+        int lastScaleIdx = -1, lastMask = -1, lastRightIdx = -2;
 
         protected override void BeforeSync()
         {
@@ -270,6 +271,13 @@ namespace MuMech.UI
                     newIdx = 0;
                 g.scaleIdx = newIdx;
             }
+
+            if (g.rightScaleIdx < -1 || g.rightScaleIdx >= MechJebModuleFlightRecorderGraph.typeCount)
+                g.rightScaleIdx = -1;
+            // the right labels show while their graph is displayed: the plot takes their room back otherwise
+            int rightIdx = RightShown();
+            if (graph.RightLabels != null && graph.RightLabels.gameObject.activeSelf != rightIdx >= 0)
+                graph.RightLabels.gameObject.SetActive(rightIdx >= 0);
 
             CheckMark();
             // what IMGUI's Repaint pass did
@@ -297,7 +305,8 @@ namespace MuMech.UI
             if (g.stages) mask |= 1 << 30;
             if (g.sharedScales) mask |= 1 << 29;
 
-            bool force = !curScaleX.Equals(lastScaleX) || g.downrange != lastDownrange || g.scaleIdx != lastScaleIdx || mask != lastMask;
+            bool force = !curScaleX.Equals(lastScaleX) || g.downrange != lastDownrange || g.scaleIdx != lastScaleIdx || mask != lastMask ||
+                rightIdx != lastRightIdx;
             // LineGraph rebuilds one mesh per frame after a Refresh: don't refresh again before it has gone through them all
             bool due = Time.frameCount - lastRefreshFrame >= graph.Series.Count + 2 && Time.unscaledTime - lastRefreshTime >= 0.2f;
             if (force || due)
@@ -305,6 +314,7 @@ namespace MuMech.UI
                 lastScaleX = curScaleX;
                 lastDownrange = g.downrange;
                 lastScaleIdx = g.scaleIdx;
+                lastRightIdx = rightIdx;
                 lastMask = mask;
                 lastRefreshFrame = Time.frameCount;
                 lastRefreshTime = Time.unscaledTime;
@@ -318,6 +328,12 @@ namespace MuMech.UI
                     graph.Series[i].YMin = s.minimum;
                     graph.Series[i].YMax = s.maximum;
                 }
+
+                if (rightIdx >= 0)
+                {
+                    MechJebModuleFlightRecorderGraph.graphState right = g.drawnStates[rightIdx];
+                    graph.RefreshRight(right.minimum, right.maximum, ColorOf(rightIdx));
+                }
             }
 
             // the atmosphere behind the altitude graphs, an opaque dark backdrop otherwise
@@ -329,6 +345,16 @@ namespace MuMech.UI
 
             float alpha = g.scaleIdx != 0 ? 1 : 0;
             if (yLabels.alpha != alpha) yLabels.alpha = alpha;
+        }
+
+        // the right labels' graph when the modern layout shows it, -1 otherwise
+        int RightShown() => graph.RightLabels != null && g.rightScaleIdx >= 0 && g.displayed[g.rightScaleIdx] ? g.rightScaleIdx : -1;
+
+        static Color ColorOf(int type)
+        {
+            foreach (MechJebModuleFlightRecorderGraph.GraphInfo info in MechJebModuleFlightRecorderGraph.graphInfos)
+                if ((int)info.Type == type) return info.Color;
+            return Color.white;
         }
 
         // one bit per entry of graphInfos
@@ -445,6 +471,7 @@ namespace MuMech.UI
             {
                 shownHeight = g.height;
                 plotSize.preferredHeight = labelsSize.preferredHeight = g.height;
+                if (rightLabelsSize != null) rightLabelsSize.preferredHeight = g.height;
             }
         }
 
@@ -558,6 +585,13 @@ namespace MuMech.UI
             KodeWindow.Label(axisPick, KodeWindow.Loc("#MechJeb_Flightrecord_Label5")); //Y axis
             new ComboBox(w, axisPick, ScalePosition, i => g.scaleIdx = (int)scaleGraphs[i].Type, ScaleNames, false, i => scaleGraphs[i].Color);
             w.Visible(axisPick.gameObject, () => ScaleNames().Length > 0);
+            // the right labels: none, or one of the displayed graphs
+            Layout rightPick = KodeWindow.Row(axisRow);
+            rightPick.FlexibleLayout(0f, 0f);
+            KodeWindow.Label(rightPick, KodeWindow.Loc("#MechJeb_Flightrecord_Label6")); //Right axis
+            new ComboBox(w, rightPick, RightPosition, i => g.rightScaleIdx = i == 0 ? -1 : (int)scaleGraphs[i - 1].Type, RightNames, false,
+                i => i == 0 ? Color.clear : scaleGraphs[i - 1].Color);
+            w.Visible(rightPick.gameObject, () => ScaleNames().Length > 0);
             w.Behaviour.AddRelocalize(() => scaleNamesMask = -1);
             KodeWindow.RowOf(w.SwitchRow(axisRow, "#MechJeb_Flightrecord_checkbox32", () => g.sharedScales, v => g.sharedScales = v)) //Shared scales
                 .GetComponent<LayoutElement>().flexibleWidth = 0;
@@ -607,8 +641,13 @@ namespace MuMech.UI
             if (KodeWindow.ModernLayout)
             {
                 plotSize.flexibleWidth = 1;
+                RectTransform right = graph.AddRightLabels(builtLabels);
+                rightLabelsSize = right.GetComponent<LayoutElement>();
+                right.gameObject.SetActive(RightShown() >= 0);
                 return;
             }
+
+            rightLabelsSize = null;
 
             Layout scales = KodeWindow.Panel(plotRow);
             foreach (MechJebModuleFlightRecorderGraph.GraphInfo info in MechJebModuleFlightRecorderGraph.graphInfos)
@@ -626,7 +665,7 @@ namespace MuMech.UI
         // ---- the modern layout's drop-down above the plot: the displayed graphs ----
 
         readonly List<MechJebModuleFlightRecorderGraph.GraphInfo> scaleGraphs = new List<MechJebModuleFlightRecorderGraph.GraphInfo>();
-        string[] scaleNames;
+        string[] scaleNames, rightNames;
         int scaleNamesMask = -1;
 
         // the combo box reads this every frame: a new array only when the displayed graphs change
@@ -641,9 +680,25 @@ namespace MuMech.UI
                 if (g.displayed[(int)info.Type]) scaleGraphs.Add(info);
 
             scaleNames = new string[scaleGraphs.Count];
+            rightNames = new string[scaleGraphs.Count + 1];
+            rightNames[0] = KodeWindow.Loc("#MechJeb_Flightrecord_Label7"); //None
             for (int i = 0; i < scaleNames.Length; i++)
-                scaleNames[i] = KodeWindow.Loc(scaleGraphs[i].ScaleLabel);
+                rightNames[i + 1] = scaleNames[i] = KodeWindow.Loc(scaleGraphs[i].ScaleLabel);
             return scaleNames;
+        }
+
+        string[] RightNames()
+        {
+            ScaleNames();
+            return rightNames;
+        }
+
+        // 0 is None
+        int RightPosition()
+        {
+            for (int i = 0; i < scaleGraphs.Count; i++)
+                if ((int)scaleGraphs[i].Type == g.rightScaleIdx) return i + 1;
+            return 0;
         }
 
         int ScalePosition()

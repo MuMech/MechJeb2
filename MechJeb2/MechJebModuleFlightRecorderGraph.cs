@@ -99,6 +99,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int scaleIdx;
 
+        // the graph of the Y labels on the right of the plot (modern layout), -1 for none
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int rightScaleIdx = -1;
+
         // graphs of one unit share a Y range (see drawnStates); off, each graph keeps its own
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool sharedScales = true;
