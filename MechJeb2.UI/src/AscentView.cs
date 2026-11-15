@@ -368,16 +368,16 @@ namespace MuMech.UI
             w.Visible(failure, () => psg && Psgs.LastFailureMessage != null);
         }
 
-        // the windows of the ascent: Settings for both types, PSG Settings, Stages and Solution for PSG, Path for Classic
+        // the windows of the ascent: Settings for both types, Stages and Solution for PSG, Path for Classic
         void BuildWindowButtons(KodeWindow w, UIObject r)
         {
             Layout buttons = KodeWindow.FlowWrap(KodeWindow.Row(r), 4);
-            WindowButton(w, buttons, "#MechJeb_NewUI_AscentSettingsButton", menu._settingsMenu); //Settings
-            UIButton psgButton = WindowButton(w, buttons, "PSG Settings", menu._psgSettingsMenu);
-            w.Visible(psgButton.gameObject, () => psg);
-            w.Badge(psgButton, () => PsgAttention.Any(Core));
+            // the PSG warnings on the button of the window that has their setting
+            UIButton settingsButton = WindowButton(w, buttons, "#MechJeb_NewUI_AscentSettingsButton", menu._settingsMenu); //Settings
+            w.Badge(settingsButton, () => psg && (PsgAttention.ArefUnset(Core) || PsgAttention.QaClamped(Core)));
             UIButton stages = WindowButton(w, buttons, "#MechJeb_NewUI_Stages", Core.GetComputerModule<MechJebModuleAscentPSGStagesMenu>()); //Stages
             w.Visible(stages.gameObject, () => psg);
+            w.Badge(stages, () => PsgAttention.CoastTimesInverted(Core) || PsgAttention.CoastNoRelight(Core));
             UIButton solution = WindowButton(w, buttons, "#MechJeb_NewUI_SolutionButton", Core.GetComputerModule<MechJebModulePSGSolutionGraph>()); //Solution
             w.Visible(solution.gameObject, () => psg);
             UIButton path = WindowButton(w, buttons, "#MechJeb_NewUI_PathButton", menu._classicPathMenu); //Path

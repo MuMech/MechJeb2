@@ -24,6 +24,9 @@ namespace MuMech.UI
         MechJebModuleAscentSettings Settings => Core.AscentSettings;
         MechJebModuleAscentClassicAutopilot Classic => classic ??= Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         MechJebModuleThrustController Thrust => Core.Thrust;
+        MechJebModulePSGSimulation Psgs => Core.PSGSimulation;
+
+        const string ArefNote = "Aref is 0: PSG plans the ascent with no drag. Set the rocket's cross-section area.";
 
         bool psg;
 
@@ -86,6 +89,32 @@ namespace MuMech.UI
             w.Visible(corrective.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
             w.Visible(gain.gameObject, () => Settings.AscentType == AscentType.CLASSIC && Classic.CorrectiveSteering);
 
+            // PSG: the Qα limit (PSG's angle-of-attack limit, beside Classic's) and the pitch-over before guidance takes over
+            Layout qaRow = OptionRows.Field(steer, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60); //Qα limit
+            w.Attention(qaRow, () => PsgAttention.QaClamped(Core));
+            Layout pitchStart = OptionRows.Field(steer, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
+            Layout pitchRate = OptionRows.Field(steer, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
+            foreach (Layout row in new[] { qaRow, pitchStart, pitchRate })
+                w.Visible(row.gameObject, () => psg);
+            bool Clamped() => Psgs.LimitQa < 0 || Psgs.LimitQa > 10000;
+            Layout qa = w.StatusBar(g, () => Clamped() ? Tone.Bad : Tone.Warn);
+            UIText clamped = GuidanceUi.Wrapped(qa, "Qα limit has been clamped to between 0 and 10000 Pa-rad");
+            w.Visible(clamped.gameObject, Clamped);
+            UIText recommended = GuidanceUi.Wrapped(qa, "#MechJeb_Ascent_label20"); //Qα limit is recommended to be 1000 to 4000 Pa-rad
+            w.Visible(recommended.gameObject, () => !Clamped());
+            w.Visible(qa.gameObject, () => psg && (Psgs.LimitQa < 1000 || Psgs.LimitQa > 4000));
+
+            // PSG: the drag model it plans with
+            g = w.Group(r, "#MechJeb_NewUI_DragModel"); //Drag model
+            w.Visible(g.gameObject, () => psg);
+            KodeWindow.PropertyGrid aero = w.Properties(g);
+            OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50);
+            w.Attention(OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50), () => PsgAttention.ArefUnset(Core));
+            UIText arefNote = aero.Note(ArefNote);
+            KodeWindow.ToneText(arefNote, Tone.Caution);
+            KodeWindow.WrapToWidth(arefNote);
+            w.Visible(arefNote.transform.parent.gameObject, () => PsgAttention.ArefUnset(Core));
+
             g = w.Group(r, "#MechJeb_NewUI_Autostage"); //Autostage
             w.SwitchRow(g, "#MechJeb_Ascent_checkbox5", () => Settings.Autostage, v => Settings.Autostage = v); //Autostage
             Layout autostage = KodeWindow.Panel(g);
@@ -101,6 +130,9 @@ namespace MuMech.UI
             UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Classic.SkipCircularization,
                 v => Classic.SkipCircularization = v); //Skip Circularization
             w.Visible(skip, () => !psg);
+            UnityEngine.UI.Toggle trajectory = w.SwitchRow(g, "Draw Trajectory on Map", () => Core.Guidance.ShouldDrawTrajectory,
+                v => Core.Guidance.ShouldDrawTrajectory = v);
+            w.Visible(trajectory, () => psg);
             UnityEngine.UI.Toggle rss = w.SwitchRow(g, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
             w.Visible(rss, () => psg);
         }

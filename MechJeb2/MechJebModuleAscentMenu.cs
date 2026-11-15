@@ -43,18 +43,17 @@ namespace MuMech
         protected override bool AutopilotEngaged => Core.Ascent != null && Core.Ascent.Enabled;
         internal MechJebModuleAscentSettings        _ascentSettings  => Core.AscentSettings;
         internal MechJebModuleAscentClassicPathMenu _classicPathMenu => Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
-        internal MechJebModuleAscentPSGSettingsMenu _psgSettingsMenu => Core.GetComputerModule<MechJebModuleAscentPSGSettingsMenu>();
         internal MechJebModuleAscentSettingsMenu    _settingsMenu    => Core.GetComputerModule<MechJebModuleAscentSettingsMenu>();
 
         internal EditableDouble InclinationSetting => Core.LaunchCountdown.InclinationSetting;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool _lastPSGSettingsEnabled;
-
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool _lastSettingsMenuEnabled;
+
+        // the kOS bindings still set it with the ascent type; there is no PSG Settings window to open any more
+        [UsedImplicitly]
+        public bool _lastPSGSettingsEnabled;
 
         /// <summary>The launches Engage can start from the ground (LaunchChoice).</summary>
         internal enum LaunchKind { NOW, PLANE_OF_TARGET, TARGET_LAN, LAN }
@@ -107,16 +106,13 @@ namespace MuMech
 
         protected override void OnModuleEnabled()
         {
-            _psgSettingsMenu.Enabled = _lastPSGSettingsEnabled;
             _settingsMenu.Enabled = _lastSettingsMenuEnabled;
         }
 
         // a closed window leaves the launch mode alone: the countdown and the guidance still fly it
         protected override void OnModuleDisabled()
         {
-            _lastPSGSettingsEnabled = _psgSettingsMenu.Enabled;
             _lastSettingsMenuEnabled = _settingsMenu.Enabled;
-            _psgSettingsMenu.Enabled = false;
             _settingsMenu.Enabled = false;
         }
 

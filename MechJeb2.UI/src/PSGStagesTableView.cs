@@ -69,7 +69,7 @@ namespace MuMech.UI
             if (m.PlanEdited && m.CanEdit)
             {
                 UIButton reset = KodeWindow.Button(top, "Reset plan", () => { m.ResetPlan(); nextRead = 0; });
-                Tooltips.Add(reset.gameObject, AscentPSGSettingsView.ResetTooltip);
+                Tooltips.Add(reset.gameObject, ResetTooltip);
             }
 
             // only while the plan can be edited, on the ground: in flight the stages already flown are gone from the stage stats,
@@ -91,8 +91,8 @@ namespace MuMech.UI
                 "which PSG picks, e.g. for a spin-stabilised stage. The coast row has its own: off, the coast holds its attitude too.");
             Header(head, "Full", OptionWidth, "Full burn: the stage burns until it's empty, a fixed burn time, for solids or engines " +
                 "that can't be shut down. Off: PSG may cut it off early to reach the orbit.");
-            Header(head, "Spin", OptionWidth, "On the coast: spin the vessel up while it coasts, at the spin-up rate (ω in PSG " +
-                "Settings), and wait for the spin before staging, for spin-stabilised upper stages. Only on a guided coast.");
+            Header(head, "Spin", OptionWidth, "On the coast: spin the vessel up while it coasts, at the spin-up rate (ω under Plan " +
+                "options), and wait for the spin before staging, for spin-stabilised upper stages. Only on a guided coast.");
             Cell(head, "", ActionWidth);
             KodeWindow.FlexibleSpace(head);
 
@@ -107,6 +107,30 @@ namespace MuMech.UI
 
             if (!ed.Coast.HasValue && m.CanEdit && ed.Slots.Count > 0)
                 KodeWindow.Button(KodeWindow.Row(r), "Add coast", () => Edit(e => e.AddCoast()));
+
+            BuildPlanOptions(w, r);
+        }
+
+        public const string ResetTooltip = "Forget the edits: the default plan, every burn guided, with no coast.";
+
+        const string RelightNote = "An engine of the coast stage can't light again after the coast (no restart, or no ignitions left).";
+
+        // the numbers that belong with the table: which burns it keeps, the coast's bounds and ullage, the spin rate
+        void BuildPlanOptions(KodeWindow w, UIObject r)
+        {
+            MechJebCore core = m.Core;
+            MechJebModulePSGSimulation psgs = core.PSGSimulation;
+            KodeWindow.Header(r, "#MechJeb_NewUI_PlanOptions"); //Plan options
+            KodeWindow.PropertyGrid g = w.Properties(r);
+            OptionRows.Field(g, "Min ΔV", psgs.MinDeltaV, "m/s", 50);
+            w.Attention(OptionRows.Field(g, "Min Coast", psgs.MinCoast, "s", 50), () => PsgAttention.CoastTimesInverted(core));
+            w.Attention(OptionRows.Field(g, "Max Coast", psgs.MaxCoast, "s", 50), () => PsgAttention.CoastTimesInverted(core));
+            OptionRows.Field(g, "Ullage lead time", core.Guidance.UllageLeadTime, "s", 50);
+            OptionRows.Field(g, "ω", core.AscentSettings.SpinupAngularVelocity, "rpm", 50);
+            UIText relight = g.Note(RelightNote);
+            KodeWindow.ToneText(relight, Tone.Caution);
+            KodeWindow.WrapToWidth(relight);
+            w.Visible(relight.transform.parent.gameObject, () => PsgAttention.CoastNoRelight(core));
         }
 
         // a coast flown after this burn (AFTER, or DURING it) is drawn above its row; one flown before it (BEFORE) below
@@ -233,7 +257,7 @@ namespace MuMech.UI
             Blank(line, 1);
             UnityEngine.UI.Toggle spin = Option(w, line, () => ed.CoastSpinup, v => Edit(e => e.SetCoastSpinup(v)));
             Tooltips.Add(KodeWindow.RowOf(spin), $"Spin the vessel up during the coast, in stage {row.KSPStage}: staging waits until it " +
-                "spins at the spin-up rate (PSG Settings). Turning it on makes the coast guided.");
+                "spins at the spin-up rate (ω under Plan options). Turning it on makes the coast guided.");
 
             int at = ed.SlotIndex(c);
             Layout buttons = Action(line);

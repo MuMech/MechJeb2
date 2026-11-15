@@ -288,7 +288,6 @@ namespace MuMech
 
             // open the PSG ascent settings windows for new users
             MechJebModuleAscentMenu ascentMenu = Core.GetComputerModule<MechJebModuleAscentMenu>();
-            ascentMenu._lastPSGSettingsEnabled = true;
             ascentMenu._lastSettingsMenuEnabled = true;
 
             // long stats
