@@ -353,8 +353,9 @@ namespace MuMech.UI
         // PSG: guidance's status and its last failure stay in view; the solver's numbers fold away (BuildGuidanceDetails)
         void BuildGuidanceStatus(KodeWindow w, UIObject r)
         {
+            // only while the ascent flies, or when guidance failed: on the pad, before anything runs, it has nothing to say
             Layout bar = w.StatusBar(r, GuidanceTone);
-            w.Visible(bar.gameObject, () => psg);
+            w.Visible(bar.gameObject, () => psg && (menu._autopilot.Enabled || Psgs.LastFailureMessage != null));
             UIText status = w.BoundLabel(bar, () => menu.label26 ?? " ", true); //Guidance Status:
             w.ToneText(status, GuidanceTone);
 
