@@ -231,7 +231,9 @@ namespace MuMech.UI
                     for (int i = 0; i < c.Cells.Count; i++)
                     {
                         bool on = i < rows;
-                        if (c.Cells[i].gameObject.activeSelf != on) c.Cells[i].gameObject.SetActive(on);
+                        // the cell, not its text: the cell holds the row's height in the column
+                        GameObject cell = KodeWindow.CellOf(c.Cells[i]);
+                        if (cell.activeSelf != on) cell.SetActive(on);
                     }
                 }
                 // only once every column has its cells: a rebuild that threw half way is tried again at the next refresh
