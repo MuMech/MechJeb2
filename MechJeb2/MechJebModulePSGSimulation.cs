@@ -150,6 +150,10 @@ namespace MuMech
 
         public MechJebModulePSGSimulation(MechJebCore core) : base(core) { }
 
+        // OptGuard's gradient check makes a Debug build's first solve several times slower, and a check of PSG's own
+        // derivatives belongs in the unit tests, not in flight
+        static MechJebModulePSGSimulation() => Optimizer.OptGuard = false;
+
         private Ascent? _ascent;
 
         // The solver's own copy of the last converged solution, in normalized units to warm start the next solve; guidance flies
