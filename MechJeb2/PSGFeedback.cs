@@ -118,20 +118,18 @@ namespace MuMech
             return ($"{step} ({time})", detail);
         }
 
-        /// <summary>The autopilot's status when another mod has taken MechJeb's controls or locked the steering.</summary>
-        /// <param name="lockId">the input lock blocking the steering, or null when only DeactivateControl is set</param>
-        /// <param name="spinupHeld">a spin-up waits on the current stage, holding autostaging</param>
-        internal static string LockStatus(string? lockId, bool spinupHeld)
-        {
-            string who = lockId ?? "another mod";
-            return spinupHeld
-                ? $"Controls locked by {who}: the spin-up can't start, so staging is held"
-                : $"Controls locked by {who}: MechJeb can't steer or throttle";
-        }
+        /// <summary>The autopilot's status when another mod has taken MechJeb's controls (DeactivateControl).</summary>
+        /// <param name="lockId">the input lock that mod put on the steering, to name it, or null</param>
+        internal static string LockStatus(string? lockId) => $"Controls locked by {lockId ?? "another mod"}: MechJeb can't steer or throttle";
+
+        // KSP's own lock while its window is out of focus: it blocks the keyboard and joystick, not MechJeb, which steers through
+        // OnFlyByWire, so it never names the mod that took the controls
+        private const string FOCUS_LOCK = "flightDriver_ApplicationFocus";
 
         /// <summary>
-        ///     The id of an input lock that blocks steering on the vessel, or null (MechJeb sets none: its own lock only blocks
-        ///     clicks). RP-1's is "RP0ControlLocker". Walks the lock dictionary with its struct enumerator, so no garbage.
+        ///     The id of an input lock that blocks steering on the vessel, or null, to name the mod that took MechJeb's controls: an
+        ///     input lock alone only blocks the player's input. RP-1's is "RP0ControlLocker". MechJeb's own lock only blocks clicks,
+        ///     and KSP's focus lock is skipped. Walks the lock dictionary with its struct enumerator, so no garbage.
         /// </summary>
         internal static string? SteeringLockId()
         {
@@ -140,7 +138,7 @@ namespace MuMech
 
             foreach (KeyValuePair<string, ulong> entry in InputLockManager.lockStack)
             {
-                if ((entry.Value & (ulong)ControlTypes.PITCH) != 0)
+                if ((entry.Value & (ulong)ControlTypes.PITCH) != 0 && entry.Key != FOCUS_LOCK)
                     return entry.Key;
             }
 
