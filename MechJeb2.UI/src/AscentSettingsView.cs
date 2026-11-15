@@ -91,14 +91,17 @@ namespace MuMech.UI
 
             // PSG: the Qα limit (PSG's angle-of-attack limit, beside Classic's) and the pitch-over before guidance takes over
             Layout qaRow = OptionRows.Field(steer, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60); //Qα limit
+            Tooltips.Add(qaRow.gameObject, "#MechJeb_NewUI_PsgQaLimit_tooltip");
             w.Attention(qaRow, () => PsgAttention.QaClamped(Core));
             Layout pitchStart = OptionRows.Field(steer, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
             Layout pitchRate = OptionRows.Field(steer, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
+            Tooltips.Add(pitchStart.gameObject, "#MechJeb_NewUI_PsgPitchStart_tooltip");
+            Tooltips.Add(pitchRate.gameObject, "#MechJeb_NewUI_PsgPitchRate_tooltip");
             foreach (Layout row in new[] { qaRow, pitchStart, pitchRate })
                 w.Visible(row.gameObject, () => psg);
             bool Clamped() => Psgs.LimitQa < 0 || Psgs.LimitQa > 10000;
             Layout qa = w.StatusBar(g, () => Clamped() ? Tone.Bad : Tone.Warn);
-            UIText clamped = GuidanceUi.Wrapped(qa, "Qα limit has been clamped to between 0 and 10000 Pa-rad");
+            UIText clamped = GuidanceUi.Wrapped(qa, "#MechJeb_NewUI_PsgQaClamped"); //Qα limit has been clamped to between 0 and 10000 Pa-rad
             w.Visible(clamped.gameObject, Clamped);
             UIText recommended = GuidanceUi.Wrapped(qa, "#MechJeb_Ascent_label20"); //Qα limit is recommended to be 1000 to 4000 Pa-rad
             w.Visible(recommended.gameObject, () => !Clamped());
@@ -109,8 +112,10 @@ namespace MuMech.UI
             w.Visible(dragModel.gameObject, () => psg);
             g = w.Group(dragModel, "#MechJeb_NewUI_DragModel"); //Drag model
             KodeWindow.PropertyGrid aero = w.Properties(g);
-            OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50);
-            w.Attention(OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50), () => PsgAttention.ArefUnset(Core));
+            Tooltips.Add(OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50).gameObject, "#MechJeb_NewUI_PsgCd_tooltip");
+            Layout aref = OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50);
+            Tooltips.Add(aref.gameObject, "#MechJeb_NewUI_PsgAref_tooltip");
+            w.Attention(aref, () => PsgAttention.ArefUnset(Core));
             UIText arefNote = aero.Note(ArefNote);
             KodeWindow.ToneText(arefNote, Tone.Caution);
             KodeWindow.WrapToWidth(arefNote);
@@ -131,7 +136,7 @@ namespace MuMech.UI
             UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Classic.SkipCircularization,
                 v => Classic.SkipCircularization = v); //Skip Circularization
             w.Visible(skip, () => !psg);
-            UnityEngine.UI.Toggle trajectory = w.SwitchRow(g, "Draw Trajectory on Map", () => Core.Guidance.ShouldDrawTrajectory,
+            UnityEngine.UI.Toggle trajectory = w.SwitchRow(g, "#MechJeb_NewUI_PsgDrawTrajectory", () => Core.Guidance.ShouldDrawTrajectory, //Draw trajectory on map
                 v => Core.Guidance.ShouldDrawTrajectory = v);
             w.Visible(trajectory, () => psg);
             UnityEngine.UI.Toggle rss = w.SwitchRow(g, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
