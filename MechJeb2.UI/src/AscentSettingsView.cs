@@ -134,8 +134,9 @@ namespace MuMech.UI
             UnityEngine.UI.Toggle trajectory = w.SwitchRow(g, "Draw Trajectory on Map", () => Core.Guidance.ShouldDrawTrajectory,
                 v => Core.Guidance.ShouldDrawTrajectory = v);
             w.Visible(trajectory, () => psg);
-            UnityEngine.UI.Toggle rss = w.SwitchRow(g, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
-            w.Visible(rss, () => psg);
+            // the global setting (also in Settings), read by both ascent types: shown for both, its label says it is global
+            UnityEngine.UI.Toggle rss = w.SwitchRow(g, "#MechJeb_NewUI_RssModeGlobal", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v); //Module disabling does not kill throttle (RSS/RO), global
+            Tooltips.Add(rss.transform.parent.gameObject, "#MechJeb_NewUI_RssModeGlobal_tooltip");
         }
     }
 }
