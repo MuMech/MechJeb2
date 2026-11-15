@@ -376,7 +376,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Update()
         {
-            ISP = ISPAtConditions();
+            ISP = ISPAtConditions(FlowFraction(_throttle * 0.01 * ThrottleLimiter));
             FlowMultiplier = FlowMultiplierAtConditions();
             MassFlowRate = FlowRateAtConditions();
             RefreshThrust();
@@ -393,6 +393,23 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         private double EffectiveMaxFuelFlow() =>
             MaxFuelFlow == 0 && MaxThrust > 0 ? MaxThrust / (AtmosphereCurve.Evaluate(0f) * G) : MaxFuelFlow;
 
+        // the fuel flow at a throttle (the main throttle times the limiter, 0 to 1), as a fraction of the max flow: where the
+        // throttle Isp curve is read, as KSP's ModuleEngines and RealFuels' solver read it
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double FlowFraction(double throttle)
+        {
+            double maxFlow = EffectiveMaxFuelFlow();
+            return maxFlow > 0 ? Lerp(EffectiveMinFuelFlow(), maxFlow, throttle) / maxFlow : 0;
+        }
+
+        // the thrust at a throttle (0 to 1), with the Isp at that throttle (the same at any throttle without a throttle Isp curve)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double ThrustAtThrottle(double throttle)
+        {
+            double isp = UseThrottleIspCurve ? ISPAtConditions(FlowFraction(throttle)) : ISP;
+            return Lerp(EffectiveMinFuelFlow(), EffectiveMaxFuelFlow(), throttle) * FlowMultiplier * isp * G * MultIsp * MultFlow;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double FlowRateAtConditions() =>
             // as in KSP's ModuleEngines.RequiredPropellantMass, multFlow (TestFlight's thrust-loss failures) scales the mass flow
@@ -408,11 +425,9 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
             double thrustLimiter = ThrottleLimiter / 100f;
 
-            double maxThrust = EffectiveMaxFuelFlow() * FlowMultiplier * ISP * G * MultIsp * MultFlow;
-            double minThrust = EffectiveMinFuelFlow() * FlowMultiplier * ISP * G * MultIsp * MultFlow;
-
-            double eMaxThrust = minThrust + (maxThrust - minThrust) * thrustLimiter;
-            double eMinThrust = ThrottleLocked ? eMaxThrust : minThrust;
+            // each at its own throttle's Isp: the throttle Isp curve lowers the Isp at low flow
+            double eMaxThrust = ThrustAtThrottle(thrustLimiter);
+            double eMinThrust = ThrottleLocked ? eMaxThrust : ThrustAtThrottle(0);
             // the MassFlowRate already carries the FlowMultiplier and MultFlow
             double eCurrentThrust = MassFlowRate * ISP * G * MultIsp;
 
@@ -466,11 +481,11 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
         // for a single EngineModule, evaluate its ISP, subject to all the different possible curves
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double ISPAtConditions()
+        private double ISPAtConditions(double flowFraction)
         {
             double isp = AtmosphereCurve.Evaluate(_atmPressure);
             if (UseThrottleIspCurve)
-                isp *= Lerp(1f, ThrottleIspCurve.Evaluate(_throttle), ThrottleIspCurveAtmStrength.Evaluate(_atmPressure));
+                isp *= Lerp(1f, ThrottleIspCurve.Evaluate(flowFraction), ThrottleIspCurveAtmStrength.Evaluate(_atmPressure));
             if (UseAtmCurveIsp)
                 isp *= ATMCurveIsp.Evaluate(_atmDensity * 40 / 49);
             if (UseVelCurveIsp)

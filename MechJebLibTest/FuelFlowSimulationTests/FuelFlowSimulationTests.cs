@@ -1067,6 +1067,38 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             segments[0].MinThrust.ShouldEqual(2 * MERLIN_MIN_FUEL_FLOW * MERLIN_VACUUM_ISP * G0, 1e-6);
         }
 
+        // a throttle Isp curve is read at the fuel flow's fraction of the max flow, as KSP's ModuleEngines and RealFuels' solver
+        // read it: the flow of the main throttle times the thrust limiter.  here the Merlins' Isp falls linearly to 80 % at no
+        // flow, at full strength, and the limiter is at 50 %: the burn and the max thrust take the Isp at that flow, and the min
+        // thrust the Isp at the min flow.
+        [Fact]
+        public void ThrottleIspCurveReadAtTheFlow()
+        {
+            SimVessel v = SimVesselFixtures.MerlinPair(false, 0);
+            foreach (SimPart merlin in v.Parts.FindAll(p => p.IsEngine))
+            {
+                var e = (SimModuleEngines)merlin.Modules[0];
+                e.ThrottleLimiter = 50;
+                e.UseThrottleIspCurve = true;
+                e.ThrottleIspCurve.Clear();
+                PartFixtures.AppendCubicPolynomial(e.ThrottleIspCurve, 0, 1, 0, 1, 0.8, 0.2, 0, 0);
+                e.ThrottleIspCurveAtmStrength.Clear();
+                PartFixtures.AppendConstant(e.ThrottleIspCurveAtmStrength, 0, 1, 1);
+            }
+
+            double flow = MERLIN_MIN_FUEL_FLOW + 0.5 * (MERLIN_MAX_FUEL_FLOW - MERLIN_MIN_FUEL_FLOW);
+            double isp = MERLIN_VACUUM_ISP * (0.8 + 0.2 * flow / MERLIN_MAX_FUEL_FLOW);
+            double minIsp = MERLIN_VACUUM_ISP * (0.8 + 0.2 * MERLIN_MIN_FUEL_FLOW / MERLIN_MAX_FUEL_FLOW);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Single(segments);
+            AssertBurn(segments[0], 0, MerlinPairMass(0), 2 * (1 - MERLIN_RESIDUALS) * MERLIN_PAIR_PROPELLANT, flow, isp, 1, engines: 2,
+                tolerance: 1e-4);
+            segments[0].MaxThrust.ShouldEqual(2 * flow * isp * G0, 1e-6);
+            segments[0].MinThrust.ShouldEqual(2 * MERLIN_MIN_FUEL_FLOW * minIsp * G0, 1e-6);
+        }
+
         // MechJeb2 efde192d and 4ad4ecd9: canted engines push the vessel along with only the cosine of their thrust, their
         // sideways thrusts cancel out.  the "include cosine losses" option (DVLinearThrust) gives the delta-v of what is left,
         // without it the delta-v is that of the engines' whole thrust.  the maximum thrust is the vessel's either way.

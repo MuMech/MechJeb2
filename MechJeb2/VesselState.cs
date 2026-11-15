@@ -1344,6 +1344,8 @@ namespace MuMech
             public readonly Vector6 TorqueDifferentialThrottle = new Vector6();
             private float _atmP0; // pressure now
             private float _atmP1; // pressure after one timestep
+            private float _atmDensityIsp; // the density as the engines' atmCurveIsp reads it
+            private float _mach;
 
             private Vector3d _com;
 
@@ -1373,6 +1375,9 @@ namespace MuMech
                 _atmP0 = (float)(vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres);
                 float alt1 = (float)(vessel.altitude + TimeWarp.fixedDeltaTime * vessel.verticalSpeed);
                 _atmP1 = (float)(FlightGlobals.getStaticPressure(alt1, vessel.mainBody) * PhysicsGlobals.KpaToAtmospheres);
+                // as ModuleEngines.RequiredPropellantMass: the density over 1.225 kg/m³
+                _atmDensityIsp = (float)(vessel.atmDensity * 40.0 / 49.0);
+                _mach = (float)vessel.mach;
             }
 
             // the wrappers this tick did not use go: they must not keep a staged engine's module alive
@@ -1445,8 +1450,30 @@ namespace MuMech
                 float thrustLimiter = e.thrustPercentage / 100f;
 
                 // multFlow and multIsp are 1 in stock; mods (TestFlight's failures) lower them, and stock applies them
-                double maxThrust = e.maxFuelFlow * e.flowMultiplier * e.multFlow * isp * e.multIsp * e.g;
-                double minThrust = e.minFuelFlow * e.flowMultiplier * e.multFlow * isp * e.multIsp * e.g;
+                double ispMult = e.multIsp;
+                if (e.useAtmCurveIsp)
+                    ispMult *= e.atmCurveIsp.Evaluate(_atmDensityIsp);
+                if (e.useVelCurveIsp)
+                    ispMult *= e.velCurveIsp.Evaluate(_mach);
+
+                // The thrust at a fuel flow, with the Isp multipliers of ModuleEngines.RequiredPropellantMass (and RealFuels'
+                // solver): the density and Mach curves above, and the throttle curve, read at the flow's fraction of the max
+                // flow.  The throttle curve is 1 at full flow in the configs that use it, and lowers the Isp at low flow.
+                double ThrustAtFlow(double flow)
+                {
+                    double thrust = flow * e.flowMultiplier * e.multFlow * isp * ispMult * e.g;
+                    if (e.useThrottleIspCurve && e.maxFuelFlow > 0)
+                    {
+                        float fraction = (float)(flow / e.maxFuelFlow);
+                        // the worse of now and after one timestep, as for the Isp
+                        thrust *= Math.Min(e.GetThrottlingMult(_atmP0, fraction), e.GetThrottlingMult(_atmP1, fraction));
+                    }
+
+                    return thrust;
+                }
+
+                double maxThrust = ThrustAtFlow(e.maxFuelFlow);
+                double minThrust = ThrustAtFlow(e.minFuelFlow);
 
                 // RealFuels engines reports as operational even when they are shutdown
                 // REMOVED: this definitively screws up the 1kN thruster in RO/RF and sets minThrust/maxThrust
@@ -1456,7 +1483,7 @@ namespace MuMech
 
                 //MechJebCore.print(maxThrust.ToString("F2") + " " + minThrust.ToString("F2") + " " + e.minFuelFlow.ToString("F2") + " " + e.maxFuelFlow.ToString("F2") + " " + e.flowMultiplier.ToString("F2") + " " + Isp.ToString("F2") + " " + thrustLimiter.ToString("F3"));
 
-                double eMaxThrust = minThrust + (maxThrust - minThrust) * thrustLimiter;
+                double eMaxThrust = ThrustAtFlow(e.minFuelFlow + (e.maxFuelFlow - e.minFuelFlow) * thrustLimiter);
                 double eMinThrust = e.throttleLocked ? eMaxThrust : minThrust;
                 double eCurrentThrust = e.finalThrust;
 
