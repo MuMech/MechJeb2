@@ -153,7 +153,7 @@ namespace MuMech.UI
         Layout TargetGate(KodeWindow w, UIObject r)
         {
             Layout none = KodeWindow.Panel(r);
-            GuidanceUi.Wrapped(none, "#MechJeb_Docking_label1"); //"Choose a target to dock with"
+            KodeWindow.ToneText(GuidanceUi.Wrapped(none, "#MechJeb_Docking_label1"), KodeWindow.Tone.Dim); //"No target: select a vessel or docking port."
             w.Visible(none.gameObject, () => !HasTarget);
 
             Layout main = KodeWindow.Panel(r);

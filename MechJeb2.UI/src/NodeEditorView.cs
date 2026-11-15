@@ -97,7 +97,7 @@ namespace MuMech.UI
             UIObject r = w.Root;
 
             Layout none = KodeWindow.Panel(r);
-            KodeWindow.Label(none, "#MechJeb_NodeEd_Label1"); //"No maneuver nodes to edit."
+            KodeWindow.ToneText(KodeWindow.Paragraph(none, "#MechJeb_NodeEd_Label1"), KodeWindow.Tone.Dim); //"No maneuver node: create one in the Maneuver Planner."
             Relativity(w, none);
             w.Visible(none.gameObject, () => Count == 0);
 

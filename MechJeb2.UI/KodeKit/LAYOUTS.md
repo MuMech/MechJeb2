@@ -335,6 +335,17 @@ Custom Window Editor's window and preset selectors are dropdowns too (proposal 6
 | Ascent Guidance | Buttons by role, buttons that open the settings windows (selected while open), status bars |
 | Rover, Waypoint Help, Rendezvous, Warp Helper | Steppers, switches, the topic choice, buttons by role |
 
+## Conventions
+
+- **Switch or checkbox.** A switch for a setting on a row of its own (`Switch`, `SwitchRow`, a `PropertyGrid` switch row); a
+  checkbox (`Toggle`) for a choice in a list or a table (the menu, the PSG Stages table, the debug arrows).
+- **Labels.** No colon after a label: the grid lines up label and field. Sentence case ("Lead time", "Speed"); capitals only
+  for names that are capitals everywhere (Smart A.S.S.'s modes).
+- **Empty states.** "No X: do Y." in the dim tone ("No target: select a vessel or docking port.").
+- **Headers.** A header over two controls or more; one control needs none.
+- **Buttons.** One Primary per window, the main action. A disabled button is grey whatever its role: give it the Primary role
+  only while it can be pressed, and say why it is off on a dim line under it.
+
 ## Rules learned
 
 - A `LayoutElement` with `flexibleWidth = -1` does not stop a layout group's own flexible width: -1 means "no opinion".
