@@ -497,6 +497,7 @@ namespace MuMech.UI
             Nudge(w, options, "9999", () => Number(g.width), () => Resize(-1, 0), () => Resize(1, 0));
             KodeWindow.Label(options, "×");
             Nudge(w, options, "9999", () => Number(g.height), () => Resize(0, -1), () => Resize(0, 1));
+            KodeWindow.Label(options, "px");
             UIText storage = w.BoundLabel(options, Localizer.Format("#MechJeb_Flightrecord_Label3", "100.0"), StorageText);
             KodeWindow.ToneText(storage, KodeWindow.Tone.Dim);
 
