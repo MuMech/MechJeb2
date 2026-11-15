@@ -20,7 +20,7 @@ namespace MuMech
                 return this;
                 /*double minalt = Math.Min(VesselState.altitudeBottom, Math.Min(VesselState.altitudeASL, VesselState.altitudeTrue));
 
-                if (!Core.Node.Autowarp || _aggressivePolicy == null) return this;
+                if (!Core.Landing.Autowarp || _aggressivePolicy == null) return this;
 
                 double maxVel = 1.02 * _aggressivePolicy.MaxAllowedSpeed(VesselState.CoM - MainBody.position, VesselState.surfaceVelocity);
 

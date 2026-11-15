@@ -147,4 +147,39 @@ namespace MuMech
         public bool LimitToPreventUnstableIgnition { get => _inner.LimitToPreventUnstableIgnition; set => _inner.LimitToPreventUnstableIgnition = value; }
         public bool AutoRCSUllaging { get => _inner.AutoRCSUllaging; set => _inner.AutoRCSUllaging = value; }
     }
+
+    /// <summary>
+    ///     Another set's limits with a module's own minimum throttle ("Keep limited throttle over"): the landing autopilot keeps its
+    ///     own and takes the general others. Writes to the minimum throttle go to the module's values, the rest to the other set.
+    /// </summary>
+    public class ThrustLimitsWithOwnMinThrottle : IThrustLimits
+    {
+        private readonly IThrustLimits      _inner;
+        private readonly System.Func<bool>   _getMin;
+        private readonly System.Action<bool> _setMin;
+        private readonly EditableDoubleMult _min;
+
+        public ThrustLimitsWithOwnMinThrottle(IThrustLimits inner, System.Func<bool> getMin, System.Action<bool> setMin, EditableDoubleMult min)
+        {
+            _inner  = inner;
+            _getMin = getMin;
+            _setMin = setMin;
+            _min    = min;
+        }
+
+        public bool LimitToPreventOverheats { get => _inner.LimitToPreventOverheats; set => _inner.LimitToPreventOverheats = value; }
+        public bool LimitDynamicPressure { get => _inner.LimitDynamicPressure; set => _inner.LimitDynamicPressure = value; }
+        public EditableDouble MaxDynamicPressure => _inner.MaxDynamicPressure;
+        public bool LimitAcceleration { get => _inner.LimitAcceleration; set => _inner.LimitAcceleration = value; }
+        public EditableDouble MaxAcceleration => _inner.MaxAcceleration;
+        public bool LimitThrottle { get => _inner.LimitThrottle; set => _inner.LimitThrottle = value; }
+        public EditableDoubleMult MaxThrottle => _inner.MaxThrottle;
+        public bool LimiterMinThrottle { get => _getMin(); set => _setMin(value); }
+        public EditableDoubleMult MinThrottle => _min;
+        public bool ElectricThrottle { get => _inner.ElectricThrottle; set => _inner.ElectricThrottle = value; }
+        public EditableDoubleMult ElectricThrottleLo => _inner.ElectricThrottleLo;
+        public EditableDoubleMult ElectricThrottleHi => _inner.ElectricThrottleHi;
+        public bool LimitToPreventUnstableIgnition { get => _inner.LimitToPreventUnstableIgnition; set => _inner.LimitToPreventUnstableIgnition = value; }
+        public bool AutoRCSUllaging { get => _inner.AutoRCSUllaging; set => _inner.AutoRCSUllaging = value; }
+    }
 }
