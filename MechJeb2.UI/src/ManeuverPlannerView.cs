@@ -144,7 +144,7 @@ namespace MuMech.UI
             }, d => LeadTime.Val += d, () => 1, 45, () => LeadTime.IsParsed);
             KodeWindow.Label(lead, "s");
             UIButton reset = KodeWindow.Button(lead, "#MechJeb_NewUI_Reset", () => LeadTime.Val = 3); //Reset
-            Tooltips.Add(reset.gameObject, "#MechJeb_NewUI_LeadTimeResetTip"); //Back to the default lead time, 3 s.
+            Tooltips.Add(reset.gameObject, "#MechJeb_NewUI_LeadTimeReset_tooltip"); //Back to the default lead time, 3 s.
         }
 
         /// <summary>

@@ -127,12 +127,12 @@ namespace MuMech.UI
             Layout shift = KodeWindow.Row(edit);
             KodeWindow.Label(shift, "#MechJeb_NodeEd_Label6", true); //"Shift time"
             UIButton earlier = KodeWindow.Button(shift, "-o", () => ed.ShiftNodeOrbits(-1));
-            Tooltips.Add(earlier.gameObject, "#MechJeb_NewUI_OrbitEarlierTip"); //Move the node one orbit earlier.
+            Tooltips.Add(earlier.gameObject, "#MechJeb_NewUI_OrbitEarlier_tooltip"); //Move the node one orbit earlier.
             // the field is the shift; − and + move the node by it
             w.Stepper(shift, () => ed.timeOffset.Text, s => ed.timeOffset.Text = s, ed.ShiftNode,
                 () => ed.timeOffset, 90);
             UIButton later = KodeWindow.Button(shift, "+o", () => ed.ShiftNodeOrbits(1));
-            Tooltips.Add(later.gameObject, "#MechJeb_NewUI_OrbitLaterTip"); //Move the node one orbit later.
+            Tooltips.Add(later.gameObject, "#MechJeb_NewUI_OrbitLater_tooltip"); //Move the node one orbit later.
 
             Layout snap = KodeWindow.Row(edit);
             KodeWindow.Button(snap, "#MechJeb_NodeEd_button3", ed.SnapNode); //"Snap node to"
