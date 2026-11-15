@@ -114,7 +114,8 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             _settingsMenu.Enabled = _lastSettingsMenuEnabled;
-            _stagesMenu.Enabled = _lastStagesMenuEnabled;
+            // the saved state is global, the ascent type per vessel type: the PSG window only reopens for a PSG ascent
+            _stagesMenu.Enabled = _lastStagesMenuEnabled && Core.AscentSettings.AscentType == AscentType.PSG;
         }
 
         // a closed window leaves the launch mode alone: the countdown and the guidance still fly it
