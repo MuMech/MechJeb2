@@ -104,9 +104,10 @@ namespace MuMech.UI
             w.Visible(recommended.gameObject, () => !Clamped());
             w.Visible(qa.gameObject, () => psg && (Psgs.LimitQa < 1000 || Psgs.LimitQa > 4000));
 
-            // PSG: the drag model it plans with
-            g = w.Group(r, "#MechJeb_NewUI_DragModel"); //Drag model
-            w.Visible(g.gameObject, () => psg);
+            // PSG: the drag model it plans with, header and all in a panel that only PSG shows
+            Layout dragModel = KodeWindow.Panel(r);
+            w.Visible(dragModel.gameObject, () => psg);
+            g = w.Group(dragModel, "#MechJeb_NewUI_DragModel"); //Drag model
             KodeWindow.PropertyGrid aero = w.Properties(g);
             OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50);
             w.Attention(OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50), () => PsgAttention.ArefUnset(Core));
