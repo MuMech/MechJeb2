@@ -56,6 +56,12 @@ namespace MechJebLibTest.PSGTests
             trace[Column.THROTTLE, 17].ShouldEqual(0.25, 1e-12);
             trace[Column.THROTTLE, 31].ShouldEqual(0, 0);
 
+            // the delta-v left runs down to zero at the end, from all of it at the start
+            trace[Column.DELTA_V_LEFT, 0].ShouldEqual(solution.DV(solution.Tf), 1e-9);
+            trace[Column.DELTA_V_LEFT, trace.Count - 1].ShouldEqual(0, 1e-9);
+            for (int row = 0; row < trace.Count; row++)
+                (trace[Column.DELTA_V, row] + trace[Column.DELTA_V_LEFT, row]).ShouldEqual(solution.DV(solution.Tf), 1e-9);
+
             // no atmosphere, no limits
             Assert.Equal((0.0, 0.0), trace.Range(Column.Q_ALPHA_FRACTION));
             Assert.Equal((0.0, 0.0), trace.Range(Column.Q_FRACTION));

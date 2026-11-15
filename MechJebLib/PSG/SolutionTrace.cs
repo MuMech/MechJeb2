@@ -39,6 +39,7 @@ namespace MechJebLib.PSG
             THROTTLE,
             MASS,
             DELTA_V,
+            DELTA_V_LEFT,
             AOA,
             Q_ALPHA_FRACTION,
             Q_FRACTION
@@ -87,7 +88,8 @@ namespace MechJebLib.PSG
         /// <summary>
         ///     Replaces the trace with solution's.  Pitch and heading are those of the thrust direction at the solution's own
         ///     position, the angles are in degrees, the throttle is the fraction of full thrust, and the Qα and Q columns are the
-        ///     fractions of their limits (AeroModel), zero without one.
+        ///     fractions of their limits (AeroModel), zero without one.  DELTA_V is the delta-v used since the solution's start,
+        ///     DELTA_V_LEFT what is left to its end, which compares across solutions computed at different times.
         /// </summary>
         public void Sample(Solution solution, int samplesPerNode = DEFAULT_SAMPLES_PER_NODE)
         {
@@ -153,7 +155,9 @@ namespace MechJebLib.PSG
             Add(Column.HEADING, Rad2Deg(heading));
             Add(Column.THROTTLE, phase.Coast ? 0 : x.T);
             Add(Column.MASS, x.M);
-            Add(Column.DELTA_V, solution.DV(Math.Min(Math.Max(t, solution.StartTime(p)), solution.EndTime(p))));
+            double dv = solution.DV(Math.Min(Math.Max(t, solution.StartTime(p)), solution.EndTime(p)));
+            Add(Column.DELTA_V, dv);
+            Add(Column.DELTA_V_LEFT, solution.DV(solution.Tf) - dv);
             Add(Column.AOA, Rad2Deg(aero.AngleOfAttack(x.R, x.V, x.U)));
             Add(Column.Q_ALPHA_FRACTION, aero.QAlphaFraction(x.R, x.V, x.U));
             Add(Column.Q_FRACTION, aero.QFraction(x.R, x.V));

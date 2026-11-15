@@ -66,7 +66,7 @@ namespace MuMech
             new SeriesInfo("Speed m/s", Column.SPEED, FlownColumn.SPEED, XKCDColors.Apricot, 1, 0, double.NaN, SPEED),
             new SeriesInfo("Surface speed m/s", Column.SURFACE_SPEED, FlownColumn.SURFACE_SPEED, XKCDColors.Khaki, 1, 0, double.NaN, SPEED),
             new SeriesInfo("Mass kg", Column.MASS, null, XKCDColors.Pink, 1, 0),
-            new SeriesInfo("Δv m/s", Column.DELTA_V, null, XKCDColors.Beige, 1, 0)
+            new SeriesInfo("Δv left m/s", Column.DELTA_V_LEFT, null, XKCDColors.Beige, 1, 0)
         };
 
         public static int SeriesCount => Series.Length;
