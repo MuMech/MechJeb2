@@ -33,7 +33,7 @@ namespace MuMech.UI
         string Shape(PlanEditor e, bool canEdit, bool edited)
         {
             var sb = new StringBuilder();
-            sb.Append(canEdit).Append(edited).Append(e.Fits).Append(e.PlannedCount).Append(e.Coast?.ToString() ?? "-").Append('|');
+            sb.Append(canEdit).Append(edited).Append(m.BeforeLaunch).Append(e.Fits).Append(e.PlannedCount).Append(e.Coast?.ToString() ?? "-").Append('|');
             sb.Append(m.HotStagingEverywhere).Append(m.RcsUllageOff).Append('|');
             foreach (PlanEditor.Row r in e.Rows) sb.Append(r.VacIndex).Append((int)r.Kind).Append(',');
             return sb.ToString();
@@ -73,9 +73,9 @@ namespace MuMech.UI
                 Tooltips.Add(reset.gameObject, AscentPSGSettingsView.ResetTooltip);
             }
 
-            // in flight the stages already flown are gone from the stage stats, so the saved plan stops mapping onto them: the
-            // plan is frozen for the flight then, and there's nothing to re-fit
-            if (!ed.Fits && m.CanEdit)
+            // after launch the stages already flown are gone from the stage stats, so the saved plan stops mapping onto them, in
+            // flight and once in orbit alike: re-fitting it only means something on the pad
+            if (!ed.Fits && m.CanEdit && m.BeforeLaunch)
             {
                 UIText fit = KodeWindow.Label(r, "The saved plan doesn't fit this vessel any more: pick where it ends to re-fit it.", true);
                 KodeWindow.ToneText(fit, Tone.Caution);

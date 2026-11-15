@@ -28,6 +28,9 @@ namespace MuMech
 
         public bool PlanEdited => Psgs.PlanEdited;
 
+        // the vessel is on the pad: once it has left, the stages flown are gone from the stage stats
+        public bool BeforeLaunch => Vessel != null && Vessel.situation == Vessel.Situations.PRELAUNCH;
+
         // what the window has selected, kept here because a rebuild makes a new view: a burn row's index in flight order, or the
         // coast
         public int SelectedBurn;
