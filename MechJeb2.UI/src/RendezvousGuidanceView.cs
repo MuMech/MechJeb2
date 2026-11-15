@@ -113,16 +113,17 @@ namespace MuMech.UI
             GuidanceUi.Enable(w, KodeWindow.Button(main, "#MechJeb_RZplan_button4", Plan(guidance.MatchVelocitiesAtClosestApproach)), CanPlan); //"Match velocities at closest approach"
             GuidanceUi.Enable(w, KodeWindow.Button(main, "#MechJeb_RZplan_button5", Plan(guidance.GetCloser)), CanPlan); //"Get closer"
 
-            // the executor; Remove ALL nodes beside it, small and off without nodes
+            // the executor, its buttons stacked; Auto-warp, and Remove ALL nodes small at the end of its row, off without nodes
             Layout node = KodeWindow.Panel(main);
             w.Visible(node.gameObject, () => Core.Node != null);
             KodeWindow.Header(node, "#MechJeb_NewUI_Execute"); //Execute
-            Layout execRow = KodeWindow.Row(node);
-            NodeUi.ExecuteButtons(w, execRow, Core, guidance, "#MechJeb_RZplan_button6", "#MechJeb_RZplan_button7", "#MechJeb_RZplan_button8",
+            NodeUi.ExecuteButtons(w, node, Core, guidance, "#MechJeb_RZplan_button6", "#MechJeb_RZplan_button7", "#MechJeb_RZplan_button8",
                 () => NodeCount > 0, () => NodeCount > 1, true); //"Execute next node", "Execute all nodes", "Abort node execution"
-            UIButton removeAll = KodeWindow.Button(execRow, "#MechJeb_RZplan_button9", () => guidance.Vessel.RemoveAllManeuverNodes(), ButtonRole.Danger); //Remove ALL nodes
+            Layout warpRow = KodeWindow.Row(node);
+            NodeUi.AutowarpToggle(w, warpRow, Core, "#MechJeb_RZplan_checkbox"); //"Auto-warp"
+            KodeWindow.FlexibleSpace(warpRow);
+            UIButton removeAll = KodeWindow.Button(warpRow, "#MechJeb_RZplan_button9", () => guidance.Vessel.RemoveAllManeuverNodes(), ButtonRole.Danger); //Remove ALL nodes
             GuidanceUi.Enable(w, removeAll, () => NodeCount > 0);
-            NodeUi.AutowarpToggle(w, node, Core, "#MechJeb_RZplan_checkbox"); //"Auto-warp"
         }
     }
 }

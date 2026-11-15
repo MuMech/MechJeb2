@@ -44,15 +44,14 @@ namespace MuMech.UI
             // "Rendezvous target": name on the right
             GuidanceUi.Pair(w, main, "#MechJeb_RZauto_label3", "Kerbin Station Alpha Mk2", ct => ct.Append(targetName.Get(Core.Target)), () => Mode() == 2);
 
-            // why it can't start, before it is pressed (it would stop at once with the same reason)
-            UIText cant = KodeWindow.WrapToWidth(w.BoundLabel(main, () => problem ?? "", true));
-            KodeWindow.ToneText(cant, KodeWindow.Tone.Warn);
-            w.Visible(cant.gameObject, () => problem != null);
-
             UIButton engage = KodeWindow.Button(main, "#MechJeb_RZauto_button1", () => Autopilot.Users.Add(window)); //"Engage autopilot"
             w.BindRole(engage, () => problem == null ? ButtonRole.Primary : ButtonRole.Normal);
             GuidanceUi.Enable(w, engage, () => problem == null);
             w.Visible(engage.gameObject, () => Autopilot != null && !Autopilot.Enabled);
+            // why it can't start, under it, before it is pressed (it would stop at once with the same reason)
+            UIText cant = KodeWindow.WrapToWidth(w.BoundLabel(main, () => problem ?? "", true));
+            KodeWindow.ToneText(cant, KodeWindow.Tone.Dim);
+            w.Visible(cant.gameObject, () => problem != null);
             UIButton disengage = KodeWindow.Button(main, "#MechJeb_RZauto_button2", () => Autopilot.Users.Clear(), ButtonRole.Danger); //"Disengage autopilot", also a run kOS started
             w.Visible(disengage.gameObject, () => Autopilot != null && Autopilot.Enabled);
 
