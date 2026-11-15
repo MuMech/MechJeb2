@@ -281,13 +281,13 @@ namespace MuMech
                 // for every stage, we need to include a coast for the correct staging delays.
                 if (deltaStage > 0)
                 {
-                    double stagingDelay = Core.Staging.AutostagePreDelay;
+                    double stagingDelay = Core.Staging.Rules.AutostagePreDelay;
 
                     if (deltaStage > 1)
                     {
                         // XXX: tiny bug, if the stage doesn't decouple the next stage doesn't get a post-delay,
                         //      probably not worth the effort to fix.
-                        double nextDelay = Core.Staging.AutostagePreDelay + Core.Staging.AutostagePostDelay;
+                        double nextDelay = Core.Staging.Rules.AutostagePreDelay + Core.Staging.Rules.AutostagePostDelay;
                         if (nextDelay < PhysicsGlobals.StagingCooldownTimer)
                             nextDelay = PhysicsGlobals.StagingCooldownTimer;
 

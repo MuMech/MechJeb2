@@ -143,6 +143,9 @@ namespace MuMech
             return Vessel.patchedConicSolver.maneuverNodes.Where(n => n != predictor.aerobrakeNode).ToList();
         }
 
+        // the node executor flying a node
+        protected override bool AutopilotEngaged => Core.Node != null && Core.Node.Enabled;
+
         public override string GetName() => Localizer.Format("#MechJeb_Maneuver_Planner_title"); //Maneuver Planner
 
         public override string IconName() => "Maneuver Planner";

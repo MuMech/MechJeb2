@@ -266,6 +266,8 @@ namespace MuMech
             }
         }
 
+        protected override bool AutopilotEngaged => Core.Landing != null && Core.Landing.Enabled;
+
         public override string GetName() => Localizer.Format("#MechJeb_LandingGuidance_title"); //Landing Guidance
 
         public override string IconName() => "Landing Guidance";

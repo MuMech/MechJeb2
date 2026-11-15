@@ -216,7 +216,10 @@ namespace MuMech.UI
 
             KodeWindow.PropertyGrid g = w.Properties(p);
             EditUi.Grid(g, "#MechJeb_LandingGuidance_label3", () => Core.Landing?.TouchdownSpeed, "m/s", 50); //Touchdown speed:
-            g.Switch("#MechJeb_LandingGuidance_checkbox1", () => NodeUi.Autowarp(Core), v => NodeUi.Autowarp(Core, v)); //Auto-warp
+            g.Switch("#MechJeb_LandingGuidance_checkbox1", () => Core.Landing != null && Core.Landing.Autowarp, v => //Auto-warp
+            {
+                if (Core.Landing != null) Core.Landing.Autowarp = v;
+            });
             g.Switch("#MechJeb_LandingGuidance_checkbox2", () => Core.Landing != null && Core.Landing.DeployGears, v => //Deploy Landing Gear
             {
                 if (Core.Landing != null) Core.Landing.DeployGears = v;
@@ -238,7 +241,9 @@ namespace MuMech.UI
                 if (Core.Landing != null) Core.Landing.RCSAdjustment = v;
             });
             MechJebModuleThrustController t = Core.Thrust;
-            OptionRows.MinThrottle(g, t, 50); //"Keep limited throttle over"
+            // the landing's own minimum throttle, live while the landing is engaged
+            if (Core.Landing != null)
+                OptionRows.MinThrottle(g, t, Core.Landing.ThrustLimits, () => ReferenceEquals(t.LimitsOverrideUser, Core.Landing), 50); //"Keep limited throttle over"
 
             // while landing: the autopilot's state in a status bar
             Layout running = w.StatusBar(p, () => KodeWindow.Tone.Normal);

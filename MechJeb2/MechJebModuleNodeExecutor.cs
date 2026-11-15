@@ -16,7 +16,32 @@ namespace MuMech
         // set by an autopilot that wants no warp for now, without changing the player's setting
         public bool AutowarpInhibited;
 
-        private bool _autowarp => Autowarp && !AutowarpInhibited;
+        private System.Func<bool> _autowarpOverride;
+
+        /// <summary>The module whose own Auto-warp applies now (SetAutowarpOverride), null while the general one does.</summary>
+        public object AutowarpOverrideUser { get; private set; }
+
+        /// <summary>The Auto-warp that applies now: an engaged autopilot's own, or the general one (Autowarp).</summary>
+        public bool EffectiveAutowarp => _autowarpOverride?.Invoke() ?? Autowarp;
+
+        /// <summary>
+        ///     An autopilot's own Auto-warp applies to the nodes this executor flies until it calls ClearAutowarpOverride. The
+        ///     general setting is not written. The last call wins.
+        /// </summary>
+        public void SetAutowarpOverride(object user, System.Func<bool> autowarp)
+        {
+            AutowarpOverrideUser = user;
+            _autowarpOverride    = autowarp;
+        }
+
+        public void ClearAutowarpOverride(object user)
+        {
+            if (!ReferenceEquals(AutowarpOverrideUser, user)) return;
+            AutowarpOverrideUser = null;
+            _autowarpOverride    = null;
+        }
+
+        private bool _autowarp => EffectiveAutowarp && !AutowarpInhibited;
 
         // how many seconds before a burn to end warp (and start ullaging in RO)
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -219,7 +244,7 @@ namespace MuMech
             if (State != States.LEAD || RCSOnly)
                 return;
 
-            if (!Core.Thrust.AutoRCSUllaging || !ReflectionUtils.IsLoadedRealFuels)
+            if (!Core.Thrust.Limits.AutoRCSUllaging || !ReflectionUtils.IsLoadedRealFuels)
                 return;
 
             // always apply MIN_RCS_TIME of ullage right before the ignition time
@@ -664,9 +689,9 @@ namespace MuMech
                     {
                         // We staged again before autostagePreDelay is elapsed.
                         // Add the remaining wait time
-                        double delay = Core.Staging.AutostagePreDelay;
-                        if (burnTime - lastStageBurnTime < Core.Staging.AutostagePreDelay && mjPhase != stats.VacStats.Count - 1)
-                            delay += Core.Staging.AutostagePreDelay - (burnTime - lastStageBurnTime);
+                        double delay = Core.Staging.Rules.AutostagePreDelay;
+                        if (burnTime - lastStageBurnTime < Core.Staging.Rules.AutostagePreDelay && mjPhase != stats.VacStats.Count - 1)
+                            delay += Core.Staging.Rules.AutostagePreDelay - (burnTime - lastStageBurnTime);
                         burnTime += delay;
                         // the node is the middle of the burn: delays before it also move the ignition
                         if (halfDvLeft > 0)

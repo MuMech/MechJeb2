@@ -37,7 +37,17 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_Autostage", InfoItem.Category.Misc)] //Autostage
         public void Autostage() { }
 
-        public override bool IsActive() => Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.NONE;
+        /// <summary>
+        ///     Active while one of its own settings acts: a limiter of the general throttle limits (not an autopilot's own, which
+        ///     apply instead while it flies), the jet flameout limiter, or its Autostage switch.
+        /// </summary>
+        public override bool IsActive()
+        {
+            MechJebModuleThrustController.LimitMode limiter = Core.Thrust.Limiter;
+            if (limiter == MechJebModuleThrustController.LimitMode.FLAMEOUT) return true;
+            if (limiter != MechJebModuleThrustController.LimitMode.NONE && Core.Thrust.LimitsOverrideUser == null) return true;
+            return Core.Staging.Enabled && Core.Staging.Users.Contains(this);
+        }
 
         public override string GetName() => Localizer.Format("#MechJeb_Utilities_title"); //"Utilities"
 

@@ -20,7 +20,7 @@ namespace MuMech
                 return this;
                 /*double minalt = Math.Min(VesselState.altitudeBottom, Math.Min(VesselState.altitudeASL, VesselState.altitudeTrue));
 
-                if (!Core.Node.Autowarp || _aggressivePolicy == null) return this;
+                if (!Core.Landing.Autowarp || _aggressivePolicy == null) return this;
 
                 double maxVel = 1.02 * _aggressivePolicy.MaxAllowedSpeed(VesselState.CoM - MainBody.position, VesselState.surfaceVelocity);
 
@@ -61,14 +61,14 @@ namespace MuMech
                         // if we have positive vertical velocity, point up and follow min thrust limiter:
                         Core.Attitude.AttitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, Core.Landing);
                         Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
-                        Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
+                        Core.Thrust.TransSpdAct = Core.Thrust.Limits.LimiterMinThrottle ? 100 * (float)Core.Thrust.Limits.MinThrottle : 0;
                     }
                     else if (VesselState.SurfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.Forward, -VesselState.SurfaceVelocity) > 45)
                     {
                         // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
                         Core.Attitude.AttitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, Core.Landing);
                         Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
-                        Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
+                        Core.Thrust.TransSpdAct = Core.Thrust.Limits.LimiterMinThrottle ? 100 * (float)Core.Thrust.Limits.MinThrottle : 0;
                     }
                     else
                     {

@@ -39,6 +39,8 @@ namespace MuMech
         internal bool _launchingWithAnyPlaneControl => _launchingToPlane || _launchingToMatchLan || _launchingToLan;
 
         internal IAscentAutopilot                   _autopilot       => Core.Ascent;
+
+        protected override bool AutopilotEngaged => Core.Ascent != null && Core.Ascent.Enabled;
         internal MechJebModuleAscentSettings        _ascentSettings  => Core.AscentSettings;
         internal MechJebModuleAscentClassicPathMenu _classicPathMenu => Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
         internal MechJebModuleAscentPSGSettingsMenu _psgSettingsMenu => Core.GetComputerModule<MechJebModuleAscentPSGSettingsMenu>();

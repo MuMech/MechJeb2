@@ -28,7 +28,12 @@ namespace MuMech.UI
             UIObject r = w.Root;
 
             UIObject g = w.Group(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
-            OptionRows.ThrustLimits(w, g, Thrust, null, false);
+            KodeWindow.PropertyGrid limits = OptionRows.ThrustLimits(w, g, Thrust, Thrust, OptionRows.GeneralLimitsApply(Thrust),
+                out Layout minThrottle, null, false);
+            // greyed while an autopilot flies with its own throttle limits: these apply again when it stops. The landing has only its
+            // own minimum throttle and keeps the general other limits, so only that row greys then
+            limits.Dim(limits.Table.gameObject, null, () => Thrust.LimitsOverrideUser != null && !(Thrust.Limits is ThrustLimitsWithOwnMinThrottle));
+            limits.Dim(minThrottle.gameObject, null, () => Thrust.Limits is ThrustLimitsWithOwnMinThrottle);
 
             g = w.Group(r, "#MechJeb_NewUI_Jets"); //Jet engines
             KodeWindow.PropertyGrid jets = w.Properties(g);
@@ -66,7 +71,9 @@ namespace MuMech.UI
             w.Visible(once.gameObject, () => !Core.Staging.Enabled);
 
             Layout settings = KodeWindow.Panel(g);
-            OptionRows.AutostageSettings(w, settings, Core.Staging);
+            KodeWindow.PropertyGrid rules = OptionRows.AutostageSettings(w, settings, Core.Staging, Core.Staging);
+            // greyed while an autopilot stages by its own rules
+            rules.Dim(rules.Table.gameObject, null, () => Core.Staging.RulesOverrideUser != null);
             w.Visible(settings.gameObject, () => Core.Staging.Enabled);
 
             Layout statusBar = w.StatusBar(g, () => KodeWindow.Tone.Normal);
@@ -98,7 +105,7 @@ namespace MuMech.UI
         Func<string> DifferentialStatus() => Memo.Of(() => (int)Thrust.DifferentialThrottleSuccess, _ => DifferentialStatusText());
 
         Func<string> AutostageStatus() =>
-            Memo.Of(() => (Core.Staging.Enabled, Core.Staging.AutostagingOnce, (int)Core.Staging.AutostageLimit), _ => Core.Staging.AutostageStatus());
+            Memo.Of(() => (Core.Staging.Enabled, Core.Staging.AutostagingOnce, (int)Core.Staging.Rules.AutostageLimit), _ => Core.Staging.AutostageStatus());
 
         string DifferentialStatusText()
         {

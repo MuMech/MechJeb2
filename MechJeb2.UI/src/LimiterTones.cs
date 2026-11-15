@@ -17,27 +17,34 @@ namespace MuMech.UI
 
         public static Func<Tone> For(MechJebModuleThrustController t, LimitMode mode) => () => Of(t, mode);
 
+        /// <summary>
+        ///     Green while that limiter acts and the limits shown are the ones that apply now (<paramref name="applies" />): the
+        ///     general ones while no autopilot has its own, or that autopilot's.
+        /// </summary>
+        public static Func<Tone> For(MechJebModuleThrustController t, LimitMode mode, Func<bool> applies) =>
+            () => applies() ? Of(t, mode) : Tone.Normal;
+
         /// <summary>Red while the throttle limit acts at 0 %.</summary>
-        public static Tone Throttle(MechJebModuleThrustController t) =>
-            t.Limiter == LimitMode.THROTTLE ? t.MaxThrottle > 0d ? Tone.Good : Tone.Bad : Tone.Normal;
+        public static Tone Throttle(MechJebModuleThrustController t, IThrustLimits l, Func<bool> applies) =>
+            applies() && t.Limiter == LimitMode.THROTTLE ? l.MaxThrottle > 0d ? Tone.Good : Tone.Bad : Tone.Normal;
 
         /// <summary>Yellow when the setting looks wrong for the fuel model.</summary>
-        public static Tone MinThrottle(MechJebModuleThrustController t)
+        public static Tone MinThrottle(MechJebModuleThrustController t, IThrustLimits l, Func<bool> applies)
         {
-            if (t.Limiter == LimitMode.MIN_THROTTLE) return Tone.Good;
+            if (applies() && t.Limiter == LimitMode.MIN_THROTTLE) return Tone.Good;
             // RF users should almost always have this set, "stock" users should almost always never have this set
-            bool warn = ReflectionUtils.IsLoadedRealFuels ? !t.LimiterMinThrottle || t.MinThrottle <= 0d : t.LimiterMinThrottle && t.MinThrottle > 0d;
+            bool warn = ReflectionUtils.IsLoadedRealFuels ? !l.LimiterMinThrottle || l.MinThrottle <= 0d : l.LimiterMinThrottle && l.MinThrottle > 0d;
             return warn ? Tone.Warn : Tone.Normal;
         }
 
         /// <summary>Red or yellow while limiting, green while an electric engine runs (checked every 0.25 s: it scans the parts).</summary>
-        public static Func<Tone> Electric(MechJebModuleThrustController t)
+        public static Func<Tone> Electric(MechJebModuleThrustController t, Func<bool> applies)
         {
             float nextCheck = 0;
             bool running = false;
             return () =>
             {
-                if (t.Limiter == LimitMode.ELECTRIC) return t.ThrottleLimit < 0.001 ? Tone.Bad : Tone.Warn;
+                if (applies() && t.Limiter == LimitMode.ELECTRIC) return t.ThrottleLimit < 0.001 ? Tone.Bad : Tone.Warn;
                 if (Time.unscaledTime >= nextCheck)
                 {
                     nextCheck = Time.unscaledTime + 0.25f;

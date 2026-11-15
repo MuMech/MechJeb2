@@ -657,7 +657,7 @@ namespace MuMech
                     double cd = Cd;
                     double aRef = Aref;
                     double qAlphaMax = QAlphaLimit;
-                    double qMax = Core.Thrust.LimitDynamicPressure ? Core.Thrust.MaxDynamicPressure.Val : 0.0;
+                    double qMax = Core.AscentSettings.ThrustLimits.LimitDynamicPressure ? Core.AscentSettings.ThrustLimits.MaxDynamicPressure.Val : 0.0;
                     V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
 
                     ascentBuilder.AerodynamicConstants(cd, aRef, rho0, qAlphaMax, qMax, h0, w);

@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class MechJebModuleThrustController : ComputerModule
+    public class MechJebModuleThrustController : ComputerModule, IThrustLimits
     {
         public enum DifferentialThrottleStatus
         {
@@ -138,6 +138,47 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL)]
         public readonly EditableDoubleMult ElectricThrottleHi = new EditableDoubleMult(0.15, 0.01);
 
+        // the fields above are the general throttle limits (Utilities): the controller is also their IThrustLimits
+        bool IThrustLimits.LimitToPreventOverheats { get => LimitToPreventOverheats; set => LimitToPreventOverheats = value; }
+        bool IThrustLimits.LimitDynamicPressure { get => LimitDynamicPressure; set => LimitDynamicPressure = value; }
+        EditableDouble IThrustLimits.MaxDynamicPressure => MaxDynamicPressure;
+        bool IThrustLimits.LimitAcceleration { get => LimitAcceleration; set => LimitAcceleration = value; }
+        EditableDouble IThrustLimits.MaxAcceleration => MaxAcceleration;
+        bool IThrustLimits.LimitThrottle { get => LimitThrottle; set => LimitThrottle = value; }
+        EditableDoubleMult IThrustLimits.MaxThrottle => MaxThrottle;
+        bool IThrustLimits.LimiterMinThrottle { get => LimiterMinThrottle; set => LimiterMinThrottle = value; }
+        EditableDoubleMult IThrustLimits.MinThrottle => MinThrottle;
+        bool IThrustLimits.ElectricThrottle { get => ElectricThrottle; set => ElectricThrottle = value; }
+        EditableDoubleMult IThrustLimits.ElectricThrottleLo => ElectricThrottleLo;
+        EditableDoubleMult IThrustLimits.ElectricThrottleHi => ElectricThrottleHi;
+        bool IThrustLimits.LimitToPreventUnstableIgnition { get => LimitToPreventUnstableIgnition; set => LimitToPreventUnstableIgnition = value; }
+        bool IThrustLimits.AutoRCSUllaging { get => AutoRCSUllaging; set => AutoRCSUllaging = value; }
+
+        private IThrustLimits _limitsOverride;
+
+        /// <summary>The module whose own throttle limits apply now (SetLimitsOverride), null while the general ones do.</summary>
+        public object LimitsOverrideUser { get; private set; }
+
+        /// <summary>The throttle limits that apply now: an engaged autopilot's own set, or the general ones (this controller's fields).</summary>
+        public IThrustLimits Limits => _limitsOverride ?? this;
+
+        /// <summary>
+        ///     An autopilot's own throttle limits apply instead of the general ones until it calls ClearLimitsOverride. The general
+        ///     values are not written. The last call wins.
+        /// </summary>
+        public void SetLimitsOverride(object user, IThrustLimits limits)
+        {
+            LimitsOverrideUser = user;
+            _limitsOverride    = limits;
+        }
+
+        public void ClearLimitsOverride(object user)
+        {
+            if (!ReferenceEquals(LimitsOverrideUser, user)) return;
+            LimitsOverrideUser = null;
+            _limitsOverride    = null;
+        }
+
         [GeneralInfoItem("#MechJeb_ElectricLimit", InfoItem.Category.Thrust)] //Electric limit
         public void LimitElectricInfoItem() { }
 
@@ -227,11 +268,12 @@ namespace MuMech
 
         public void RequestActiveThrottle(float target, bool enforceMinimum = true, bool allowZero = false)
         {
-            if (enforceMinimum && LimiterMinThrottle)
+            IThrustLimits limits = Limits;
+            if (enforceMinimum && limits.LimiterMinThrottle)
                 if (allowZero && target == 0)
                     TargetThrottle = 0;
                 else
-                    TargetThrottle = Mathf.Max(target, (float)MinThrottle);
+                    TargetThrottle = Mathf.Max(target, (float)limits.MinThrottle);
             else
                 TargetThrottle = target;
         }
@@ -446,15 +488,16 @@ namespace MuMech
 
             Limiter = LimitMode.NONE;
 
-            if (LimitThrottle)
+            IThrustLimits limits = Limits;
+            if (limits.LimitThrottle)
             {
-                if (MaxThrottle < ThrottleLimit)
+                if (limits.MaxThrottle < ThrottleLimit)
                 {
-                    SetFixedLimit((float)MaxThrottle, LimitMode.THROTTLE);
+                    SetFixedLimit((float)limits.MaxThrottle, LimitMode.THROTTLE);
                 }
             }
 
-            if (LimitDynamicPressure && !BrakingToLand)
+            if (limits.LimitDynamicPressure && !BrakingToLand)
             {
                 float limit = MaximumDynamicPressureThrottle();
                 if (limit < ThrottleLimit)
@@ -463,7 +506,7 @@ namespace MuMech
                 }
             }
 
-            if (LimitToPreventOverheats)
+            if (limits.LimitToPreventOverheats)
             {
                 float limit = (float)TemperatureSafetyThrottle();
                 if (limit < ThrottleLimit)
@@ -472,7 +515,7 @@ namespace MuMech
                 }
             }
 
-            if (LimitAcceleration)
+            if (limits.LimitAcceleration)
             {
                 float limit = AccelerationLimitedThrottle();
                 if (limit < ThrottleLimit)
@@ -481,7 +524,7 @@ namespace MuMech
                 }
             }
 
-            if (ElectricThrottle && ElectricEngineRunning())
+            if (limits.ElectricThrottle && ElectricEngineRunning())
             {
                 float limit = ElectricThrottleLimit();
                 if (limit < ThrottleLimit)
@@ -504,23 +547,23 @@ namespace MuMech
             // Any limiters which can limit to non-zero values must come before this, any
             // limiters (like ullage) which enforce zero throttle should come after.  The
             // minThrottle setting has authority over any other limiter that sets non-zero throttle.
-            if (LimiterMinThrottle && Limiter != LimitMode.NONE)
+            if (limits.LimiterMinThrottle && Limiter != LimitMode.NONE)
             {
-                if (MinThrottle > ThrottleFixedLimit)
+                if (limits.MinThrottle > ThrottleFixedLimit)
                 {
-                    SetFixedLimit((float)MinThrottle, LimitMode.MIN_THROTTLE);
+                    SetFixedLimit((float)limits.MinThrottle, LimitMode.MIN_THROTTLE);
                 }
 
-                if (MinThrottle > ThrottleLimit)
+                if (limits.MinThrottle > ThrottleLimit)
                 {
-                    SetTempLimit((float)MinThrottle, LimitMode.MIN_THROTTLE);
+                    SetTempLimit((float)limits.MinThrottle, LimitMode.MIN_THROTTLE);
                 }
             }
 
             ProcessUllage(s);
 
             /* prevent unstable ignitions */
-            if (LimitToPreventUnstableIgnition && s.mainThrottle > 0.0F && ThrottleLimit > 0.0F)
+            if (limits.LimitToPreventUnstableIgnition && s.mainThrottle > 0.0F && ThrottleLimit > 0.0F)
             {
                 if (VesselState.LowestUllage < 0.996) // prevent ignition if there is any chance of failure
                 {
@@ -612,9 +655,10 @@ namespace MuMech
         //A throttle setting that throttles down when the dynamic pressure exceed a set value
         private float MaximumDynamicPressureThrottle()
         {
-            if (MaxDynamicPressure <= 0) return 1.0F;
+            double maxQ = Limits.MaxDynamicPressure;
+            if (maxQ <= 0) return 1.0F;
 
-            double pressureRatio = VesselState.DynamicPressure / MaxDynamicPressure;
+            double pressureRatio = VesselState.DynamicPressure / maxQ;
 
             if (pressureRatio < 1.0) return 1.0F; //full throttle if under maximum dynamic pressure
 
@@ -853,8 +897,8 @@ namespace MuMech
         private float ElectricThrottleLimit()
         {
             double totalElectric = Vessel.MaxResourceAmount(PartResourceLibrary.ElectricityHashcode);
-            double lowJuice = totalElectric * ElectricThrottleLo;
-            double highJuice = totalElectric * ElectricThrottleHi;
+            double lowJuice = totalElectric * Limits.ElectricThrottleLo;
+            double highJuice = totalElectric * Limits.ElectricThrottleHi;
             double curElectric = Vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
 
             if (curElectric <= lowJuice)
@@ -870,7 +914,7 @@ namespace MuMech
         //The throttle setting that will give an acceleration of maxAcceleration
         private float AccelerationLimitedThrottle()
         {
-            double throttleForMaxAccel = (MaxAcceleration - VesselState.MinThrustAcceleration) / (VesselState.MaxThrustAcceleration - VesselState.MinThrustAcceleration);
+            double throttleForMaxAccel = (Limits.MaxAcceleration - VesselState.MinThrustAcceleration) / (VesselState.MaxThrustAcceleration - VesselState.MinThrustAcceleration);
             return Mathf.Clamp((float)throttleForMaxAccel, 0, 1);
         }
 
@@ -990,7 +1034,7 @@ namespace MuMech
             if (!ReflectionUtils.IsLoadedRealFuels)
                 return;
 
-            if (!AutoRCSUllaging || s.mainThrottle <= 0F || ThrottleLimit <= 0F)
+            if (!Limits.AutoRCSUllaging || s.mainThrottle <= 0F || ThrottleLimit <= 0F)
                 return;
 
             if (!Vessel.hasEnabledRCSModules())

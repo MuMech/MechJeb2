@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class MechJebModuleStagingController : ComputerModule
+    public class MechJebModuleStagingController : ComputerModule, IStagingRules
     {
         public MechJebModuleStagingController(MechJebCore core)
             : base(core)
@@ -65,6 +65,49 @@ namespace MuMech
         // (Space shuttle actual value was something close to 37%)
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult DropSolidsTwrPct = new EditableDoubleMult(0.50, 0.01);
+
+        // the fields above are the general staging rules (Utilities): the controller is also their IStagingRules
+        EditableDouble IStagingRules.AutostagePreDelay => AutostagePreDelay;
+        EditableDouble IStagingRules.AutostagePostDelay => AutostagePostDelay;
+        EditableInt IStagingRules.AutostageLimit => AutostageLimit;
+        bool IStagingRules.FairingMaxDynamicPressureEnabled { get => FairingMaxDynamicPressureEnabled; set => FairingMaxDynamicPressureEnabled = value; }
+        EditableDoubleMult IStagingRules.FairingMaxDynamicPressure => FairingMaxDynamicPressure;
+        bool IStagingRules.FairingMinAltitudeEnabled { get => FairingMinAltitudeEnabled; set => FairingMinAltitudeEnabled = value; }
+        EditableDoubleMult IStagingRules.FairingMinAltitude => FairingMinAltitude;
+        EditableDoubleMult IStagingRules.ClampAutoStageThrustPct => ClampAutoStageThrustPct;
+        bool IStagingRules.FairingMaxAerothermalFluxEnabled { get => FairingMaxAerothermalFluxEnabled; set => FairingMaxAerothermalFluxEnabled = value; }
+        EditableDoubleMult IStagingRules.FairingMaxAerothermalFlux => FairingMaxAerothermalFlux;
+        bool IStagingRules.HotStaging { get => HotStaging; set => HotStaging = value; }
+        EditableDouble IStagingRules.HotStagingLeadTime => HotStagingLeadTime;
+        bool IStagingRules.DropSolids { get => DropSolids; set => DropSolids = value; }
+        EditableDoubleMult IStagingRules.DropSolidsTwrPct => DropSolidsTwrPct;
+
+        private IStagingRules _rulesOverride;
+
+        /// <summary>The module whose own staging rules apply now (SetRulesOverride), null while the general ones do.</summary>
+        public object RulesOverrideUser { get; private set; }
+
+        /// <summary>The staging rules that apply now: an engaged autopilot's own set, or the general ones (this controller's fields).</summary>
+        public IStagingRules Rules => _rulesOverride ?? this;
+
+        /// <summary>
+        ///     An autopilot's own staging rules apply instead of the general ones until it calls ClearRulesOverride. The general
+        ///     values are not written. The last call wins.
+        /// </summary>
+        public void SetRulesOverride(object user, IStagingRules rules)
+        {
+            RulesOverrideUser = user;
+            _rulesOverride    = rules;
+            _shouldDropSolids = null;
+        }
+
+        public void ClearRulesOverride(object user)
+        {
+            if (!ReferenceEquals(RulesOverrideUser, user)) return;
+            RulesOverrideUser = null;
+            _rulesOverride    = null;
+            _shouldDropSolids = null;
+        }
 
         public bool AutostagingOnce;
 
@@ -238,20 +281,11 @@ namespace MuMech
         {
             if (!Enabled) return CachedLocalizer.Instance.MechJebAscentStatus9; //"Autostaging off"
             if (AutostagingOnce) return CachedLocalizer.Instance.MechJebAscentStatus10; //"Will autostage next stage only"
-            return CachedLocalizer.Instance.MechJebAscentStatus11 + (int)AutostageLimit; //"Autostaging until stage #"
+            return CachedLocalizer.Instance.MechJebAscentStatus11 + (int)Rules.AutostageLimit; //"Autostaging until stage #"
         }
 
         [GeneralInfoItem("#MechJeb_ClampAutostageThrust", InfoItem.Category.Misc)] //Clamp Autostage Thrust
         private void ClampAutostageThrust() { }
-
-        /// <summary>Keep ClampAutoStageThrustPct in [0, 1] (done after each edit, by both UIs).</summary>
-        internal void ClampAutostageThrustValue()
-        {
-            double clamped = UtilMath.Clamp(ClampAutoStageThrustPct, 0, 1);
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (clamped != ClampAutoStageThrustPct)
-                ClampAutoStageThrustPct.Val = clamped;
-        }
 
         //internal state:
         private double _lastStageTime;
@@ -280,7 +314,8 @@ namespace MuMech
             }
 
             // enforce hard limits on staging.
-            if (_waitingForFirstStaging || Vessel.currentStage <= 0 || Vessel.currentStage <= AutostageLimit)
+            IStagingRules rules = Rules;
+            if (_waitingForFirstStaging || Vessel.currentStage <= 0 || Vessel.currentStage <= rules.AutostageLimit)
                 return;
 
             // this is for PSG preventing staging doing coasts, possibly it should be more specific of an API
@@ -309,7 +344,7 @@ namespace MuMech
             }
 
             // prevent staging if we have unstable ullage and we have RCS
-            if (InverseStageHasUnstableEngines(Vessel.currentStage - 1) && Core.Thrust.AutoRCSUllaging && Vessel.hasEnabledRCSModules() &&
+            if (InverseStageHasUnstableEngines(Vessel.currentStage - 1) && Core.Thrust.Limits.AutoRCSUllaging && Vessel.hasEnabledRCSModules() &&
                 Core.Thrust.LastThrottle > 0)
             {
                 if (!Vessel.ActionGroups[KSPActionGroup.RCS])
@@ -332,9 +367,9 @@ namespace MuMech
             }
 
             // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
-            if (HotStaging && InverseStageHasEngines(Vessel.currentStage - 1) &&
+            if (rules.HotStaging && InverseStageHasEngines(Vessel.currentStage - 1) &&
                 !InverseStageFiresDecoupler(Vessel.currentStage - 1) && !InverseStageReleasesClamps(Vessel.currentStage - 1) &&
-                LastNonZeroDVStageBurnTime() > HotStagingLeadTime)
+                LastNonZeroDVStageBurnTime() > rules.HotStagingLeadTime)
             {
                 return;
             }
@@ -355,7 +390,7 @@ namespace MuMech
             // only release launch clamps if we're at nearly full thrust and no failed engines. The thrust is the whole thrust, not its
             // part along the control forward, and no thrust at all holds the clamps
             double maxThrust = VesselState.ThrustVectorMaxThrottle.magnitude;
-            bool lowThrust = maxThrust <= 0 || VesselState.ThrustVectorLastFrame.magnitude / maxThrust < ClampAutoStageThrustPct;
+            bool lowThrust = maxThrust <= 0 || VesselState.ThrustVectorLastFrame.magnitude / maxThrust < rules.ClampAutoStageThrustPct;
             if ((lowThrust || AnyFailedEngines(_allModuleEngines)) &&
                 InverseStageReleasesClamps(Vessel.currentStage - 1))
             {
@@ -376,17 +411,18 @@ namespace MuMech
                 return false;
             }
 
-            if (FairingMaxDynamicPressureEnabled && Core.VesselState.DynamicPressure > FairingMaxDynamicPressure)
+            IStagingRules rules = Rules;
+            if (rules.FairingMaxDynamicPressureEnabled && Core.VesselState.DynamicPressure > rules.FairingMaxDynamicPressure)
             {
                 return true;
             }
 
-            if (FairingMinAltitudeEnabled && Core.VesselState.AltitudeASL < FairingMinAltitude)
+            if (rules.FairingMinAltitudeEnabled && Core.VesselState.AltitudeASL < rules.FairingMinAltitude)
             {
                 return true;
             }
 
-            if (FairingMaxAerothermalFluxEnabled && Core.VesselState.FreeMolecularAerothermalFlux > FairingMaxAerothermalFlux)
+            if (rules.FairingMaxAerothermalFluxEnabled && Core.VesselState.FreeMolecularAerothermalFlux > rules.FairingMaxAerothermalFlux)
             {
                 return true;
             }
@@ -450,7 +486,8 @@ namespace MuMech
         {
             // do not stage if:  1. we have no more stages or 2. we've hit the user configured limit or 3. we're still in the post delay
             // (this deliberately duplicates checks from OnFixedUpdate() for other callers)
-            if (Vessel.currentStage <= 0 || Vessel.currentStage <= AutostageLimit || VesselState.Time - _lastStageTime < AutostagePostDelay)
+            IStagingRules rules = Rules;
+            if (Vessel.currentStage <= 0 || Vessel.currentStage <= rules.AutostageLimit || VesselState.Time - _lastStageTime < rules.AutostagePostDelay)
                 return;
 
             // enforce the predelay: the countdown runs while Stage() is asked every tick; a tick without the request (the
@@ -463,7 +500,7 @@ namespace MuMech
 
             _lastStageRequestTime = VesselState.Time;
 
-            if (VesselState.Time - _stageCountdownStart >= AutostagePreDelay)
+            if (VesselState.Time - _stageCountdownStart >= rules.AutostagePreDelay)
                 ImmediateStage();
         }
 
@@ -651,7 +688,7 @@ namespace MuMech
 
         // detect if this part is an SRB, will be dropped in the next stage, and the boosters being dropped are no
         // longer pulling their weight (their TWR has fallen to or below the whole rocket's TWR)
-        private bool IsBurnedOutSrbDecoupledInNextStage(Part p) => DropSolids && p.IsThrottleLockedEngine() && p.IsDecoupledInStage(Vessel.currentStage - 1) && _droppingSolids;
+        private bool IsBurnedOutSrbDecoupledInNextStage(Part p) => Rules.DropSolids && p.IsThrottleLockedEngine() && p.IsDecoupledInStage(Vessel.currentStage - 1) && _droppingSolids;
 
         // Drop boosters once the highest-TWR stack that will be decoupled in the next stage has dropped to or below
         // DropSolidsTwrPct of the whole rocket's current TWR (gravity cancels, so we compare thrust/mass
@@ -660,10 +697,11 @@ namespace MuMech
         // the stacks and the core.
         private bool ShouldDropSolids()
         {
-            if (!DropSolids)
+            IStagingRules rules = Rules;
+            if (!rules.DropSolids)
                 return false;
 
-            double referenceAccel = VesselState.CurrentThrustAcceleration * DropSolidsTwrPct;
+            double referenceAccel = VesselState.CurrentThrustAcceleration * rules.DropSolidsTwrPct;
             double maxStackAccel = 0;
 
             foreach (PartModule pm in _allDecouplers)

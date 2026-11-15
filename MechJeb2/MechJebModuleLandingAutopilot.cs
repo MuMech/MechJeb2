@@ -40,6 +40,45 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public bool JettisonBeforeEntry = false;
 
+        /// <summary>The landing's own Auto-warp: its steps and the burns the node executor flies for it use it while it is engaged.</summary>
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public bool Autowarp = true;
+
+        /// <summary>
+        ///     The landing's own "Keep limited throttle over": the thrust controller uses it while the landing is engaged, with the
+        ///     general values of the other limits.
+        /// </summary>
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public bool LimiterMinThrottle;
+
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDoubleMult MinThrottle = new EditableDoubleMult(0.05, 0.01);
+
+        // false until the landing's own values were first copied from the general ones (InitOwnValuesIfNeeded)
+        [JetBrainsAnnotations::JetBrains.Annotations.UsedImplicitly]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool OwnValuesInitialized;
+
+        /// <summary>The limits the landing flies with: the general ones, with its own minimum throttle.</summary>
+        public IThrustLimits ThrustLimits =>
+            _thrustLimits ??= new ThrustLimitsWithOwnMinThrottle(Core.Thrust, () => LimiterMinThrottle, v => LimiterMinThrottle = v, MinThrottle);
+
+        private IThrustLimits _thrustLimits;
+
+        /// <summary>
+        ///     The landing's own Auto-warp and minimum throttle start as a copy of the general ones, once. The core calls this after
+        ///     its settings reload and saves at once when it returns true.
+        /// </summary>
+        public bool InitOwnValuesIfNeeded()
+        {
+            if (OwnValuesInitialized) return false;
+            Autowarp             = Core.Node.Autowarp;
+            LimiterMinThrottle   = Core.Thrust.LimiterMinThrottle;
+            MinThrottle.Val      = Core.Thrust.MinThrottle.Val;
+            OwnValuesInitialized = true;
+            return true;
+        }
+
         private bool _stageToDrop;
 
         // the jettison has to happen at normal speed
@@ -236,6 +275,8 @@ namespace MuMech
 
         protected override void OnModuleEnabled()
         {
+            Core.Thrust.SetLimitsOverride(this, ThrustLimits);
+            Core.Node.SetAutowarpOverride(this, _autowarp ??= () => Autowarp);
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
         }
@@ -249,10 +290,14 @@ namespace MuMech
             _predictor.noSkipToFreefall = true;
             Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
+            Core.Thrust.ClearLimitsOverride(this);
+            Core.Node.ClearAutowarpOverride(this);
             if (Core.Landing.RCSAdjustment)
                 Core.RCS.Enabled = false;
             SetStep(null);
         }
+
+        private Func<bool> _autowarp;
 
         // Estimate the delta-V of the correction burn that would be required to put us on
         // course for the target

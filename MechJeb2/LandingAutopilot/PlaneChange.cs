@@ -39,7 +39,7 @@ namespace MuMech
                 {
                     Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.MaxThrustAcceleration))));
                 }
-                else if (_planeChangeTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
+                else if (_planeChangeTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.Limits.LimiterMinThrottle)
                 {
                     Core.Thrust.RequestActiveThrottle(0.0f);
                 }
@@ -87,7 +87,7 @@ namespace MuMech
                 }
                 else
                 {
-                    if (Core.Node.Autowarp) Core.Warp.WarpRegularAtRate((float)(Orbit.period / 6));
+                    if (Core.Landing.Autowarp) Core.Warp.WarpRegularAtRate((float)(Orbit.period / 6));
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status15"); //"Moving to low orbit plane change burn point"
                 }
 
