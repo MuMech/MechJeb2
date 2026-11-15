@@ -56,6 +56,13 @@ namespace MuMech
         // RCS only when the RCS group is already on, which otherwise looks like chance
         private ScreenMessage _rcsCoastMessage = null!, _rcsTrimMessage = null!, _rcsOffMessage = null!;
 
+        // what the vessel flew since guidance was engaged, for the PSG Solution window
+        public readonly PSGFlownTrack FlownTrack = new PSGFlownTrack();
+
+        // the last Solution computed on the ground (it starts at MET zero), the one the vessel lifted off with, kept after
+        // Solution moves on, for the PSG Solution window
+        public Solution? PadSolution;
+
         public override void OnStart(PartModule.StartState state)
         {
             _rcsCoastMessage = new ScreenMessage("<color=orange>[MechJeb]: PSG coast, RCS on to hold attitude and settle propellant</color>", 5f,
@@ -75,6 +82,7 @@ namespace MuMech
         {
             Debug.Log("MechJebModuleGuidanceController: Enabled");
             ResetToAwaitingSolution();
+            FlownTrack.Clear();
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
             Core.Spinup.Users.Add(this);
@@ -86,6 +94,7 @@ namespace MuMech
         {
             Status = PSGStatus.ENABLED;
             Solution = null;
+            PadSolution = null;
             _allowExecution = false;
             hasCoasted = false;
             _spentSince = double.NaN;
@@ -126,6 +135,9 @@ namespace MuMech
 
             if (!Enabled || Status == PSGStatus.ENABLED)
                 return;
+
+            if (Solution != null && !IsGrounded())
+                FlownTrack.Record(Core);
 
             if (Status == PSGStatus.FINISHED)
             {
@@ -587,6 +599,8 @@ namespace MuMech
             Check.False(solution.Normalized, "guidance needs a DeNormalized() Solution");
 
             Solution = solution;
+            if (solution.T0 <= 0)
+                PadSolution = solution;
             if (Status == PSGStatus.ENABLED)
                 Status = PSGStatus.INITIALIZED;
         }
