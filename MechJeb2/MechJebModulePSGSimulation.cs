@@ -11,6 +11,7 @@ using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
+using MechJebLib.Utils;
 using MechJebLibBindings.PSG;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -28,9 +29,9 @@ namespace MuMech
         NO_PLAN,       // no flight plan, or nothing left in it to plan
         STAGE_ENDING,  // the current stage is about to end: the solution is frozen through staging
         AFTER_STAGING, // a short wait after staging
-        AFTER_PHASE,   // the same wait after a phase ended without staging (the end of a coast during a stage)
+        AFTER_PHASE,   // the same wait after a phase ended without staging (the start or end of a coast during a stage)
         ON_PAD,        // either wait before liftoff: the stage not lit yet has no phase in the solution, so its time to go reads 0
-        COAST_PAUSE,   // a long coast above the atmosphere: resumes 20 s before the burn
+        COAST_PAUSE,   // a long coast above the atmosphere, once a solve started there has converged: resumes 20 s before the burn
         TERMINAL,      // terminal guidance flies the end of the burn on the frozen solution
         UNGUIDED_ONLY, // only unguided stages are left, which the optimizer can't steer
         FINISHED,      // guidance is done
@@ -122,6 +123,17 @@ namespace MuMech
         ///     COAST_PAUSE, the seconds until it ends (20 s before the burn).
         /// </summary>
         public double StateSeconds { get; private set; }
+
+        /// <summary>
+        ///     Whether this coast is solved above the atmosphere: a solve started in the coast above the atmosphere, once the
+        ///     shutdown and the staging into the coast had settled, has converged and reached guidance.  The optimizer then pauses
+        ///     until 20 s before the burn (COAST_PAUSE, StateSeconds to go), the stretch guidance can warp through.  Cleared when
+        ///     the coast starts or ends, and by staging, whose dispersions the next solve then picks up.
+        /// </summary>
+        public bool VacuumCoastSolved { get; private set; }
+
+        // whether the running job was started in the coast above the atmosphere, staged into the coast and after the last staging
+        private bool _vacuumCoastJob;
 
         public int SuccessfulConverges;
         public int LastLmStatus;
@@ -221,6 +233,7 @@ namespace MuMech
         {
             _ascent?.Cancel();
             _ascent = null;
+            _vacuumCoastJob = false;
         }
 
         private void ResetCounters()
@@ -232,6 +245,7 @@ namespace MuMech
             SetState(OptimizerState.READY);
             DeltaVShortfall = 0;
             SuborbitalPeriapsis = double.NaN;
+            VacuumCoastSolved = false;
         }
 
         private void CheckReach(Solution solution)
@@ -269,11 +283,33 @@ namespace MuMech
         }
 
         /// <summary>
-        ///     Drops the solve in progress, keeping the last converged solution to warm start the next solve. Guidance calls this
-        ///     when the coast starts and when it ends: a solve started before either change plans a part of the flight that has
-        ///     already happened (a burn before the coast, or a coast that is over), and must never reach guidance.
+        ///     Guidance calls this when the coast starts.  A solve started before it plans the burn before the coast, so it is
+        ///     dropped.  The next one waits OptimizerPauseTime for the shutdown to settle (a staging into the coast waits again),
+        ///     and the first to converge that started above the atmosphere solves the coast (VacuumCoastSolved).
         /// </summary>
-        public void CancelSolve(string why)
+        public void CoastStarted()
+        {
+            CancelSolve("the coast started");
+            VacuumCoastSolved = false;
+            // the end of a burn ended by terminal guidance gets no pre-staging freeze (the optimizer stops in terminal guidance), so
+            // without this an engine still tailing off could start the coast's solve
+            Block(OptimizerPauseTime, OptimizerState.AFTER_PHASE);
+        }
+
+        /// <summary>
+        ///     Guidance calls this when the coast ends.  A solve started during the coast still has it ahead, which would start
+        ///     it again, so it is dropped.
+        /// </summary>
+        public void CoastEnded()
+        {
+            CancelSolve("the coast ended");
+            VacuumCoastSolved = false;
+        }
+
+        // Drops the solve in progress, keeping the last converged solution to warm start the next solve: a solve started before
+        // the coast starts or ends plans a part of the flight that has already happened (a burn before the coast, or a coast
+        // that is over), and must never reach guidance.
+        private void CancelSolve(string why)
         {
             if (_ascent is { IsReady: false })
                 Debug.Log($"[MechJebModulePSGSimulation] dropped the solve in progress: {why}");
@@ -284,7 +320,13 @@ namespace MuMech
             CancelJob();
         }
 
-        private void HandleStageEvent(int data) => Block(OptimizerPauseTime, OptimizerState.AFTER_STAGING);
+        private void HandleStageEvent(int data)
+        {
+            Block(OptimizerPauseTime, OptimizerState.AFTER_STAGING);
+
+            // a staging in the coast (into it, or a fairing) moves the vessel: the first solve after the wait solves the coast again
+            VacuumCoastSolved = _vacuumCoastJob = false;
+        }
 
         private void Block(double seconds, OptimizerState reason)
         {
@@ -351,6 +393,15 @@ namespace MuMech
                     Solution flown = psg.Solution.DeNormalized();
                     CheckReach(flown);
                     Core.Guidance.SetSolution(flown);
+
+                    // the coast's start and end cancel the job, so a job started in the coast lands in it
+                    CheckDebug.True(!_vacuumCoastJob || Core.Guidance.IsCoasting());
+                    if (_vacuumCoastJob && !VacuumCoastSolved)
+                    {
+                        VacuumCoastSolved = true;
+                        Debug.Log($"[MechJebModulePSGSimulation] solved the coast above the atmosphere, {flown.Tgo(VesselState.MET, 0):F1} s to the burn");
+                    }
+
                     SuccessfulConverges += 1;
                     _lastTime = VesselState.Time;
                     Staleness = 0;
@@ -474,8 +525,10 @@ namespace MuMech
 
             bool vesselOutsideAtmosphere = !MainBody.atmosphere || VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude();
 
-            // suspend guidance for long coast phases out of the atmosphere
-            if (Core.Guidance.IsCoasting() && Core.Guidance.CurrentPhaseTgo > 20 && vesselOutsideAtmosphere)
+            // Above the atmosphere the coast follows its orbit: once one solve started there has converged (VacuumCoastSolved) the
+            // solves pause until 20 s before the burn.  Until then they run, after the waits, so the coast's length is solved from
+            // where the shutdown, the staging into the coast and the atmosphere left the vessel.
+            if (VacuumCoastSolved && Core.Guidance.IsCoasting() && Core.Guidance.CurrentPhaseTgo > 20 && vesselOutsideAtmosphere)
             {
                 SetState(OptimizerState.COAST_PAUSE, Core.Guidance.CurrentPhaseTgo - 20);
                 return;
@@ -506,6 +559,8 @@ namespace MuMech
             // The PSG clock is MET.  The stage stats snapshot is a little older than now, and one taken before liftoff is at MET
             // zero, so a solution computed on the ground always starts at liftoff.
             double met0 = Max(VesselState.MET - (VesselState.Time - Core.StageStats.VacT), 0);
+
+            bool vacuumCoastJob;
 
             try
             {
@@ -562,6 +617,11 @@ namespace MuMech
                     SetState(OptimizerState.NO_PLAN);
                     return;
                 }
+
+                // While coasting the starting index is the coast's.  Guidance stages into a coast before the burn (or a dedicated
+                // one) only after the autostaging delays, so a solve started before that stage doesn't solve the coast.
+                vacuumCoastJob = Core.Guidance.IsCoasting() && vesselOutsideAtmosphere &&
+                    Vessel.currentStage <= FlightPlan.Stages[startingIndex].KSPStage;
 
                 // walk the rocket from the bottom up
                 // NOTE: if we ever reversed the order the AscentBuilder takes stages this API gets cleaner
@@ -621,6 +681,8 @@ namespace MuMech
 
             if (!_ascent.TryStartJob())
                 throw new Exception("[MechJebModulePSGSimulation] could not start optimizer job");
+
+            _vacuumCoastJob = vacuumCoastJob;
 
             Block(1, OptimizerState.READY);
             SetState(OptimizerState.SOLVING);
