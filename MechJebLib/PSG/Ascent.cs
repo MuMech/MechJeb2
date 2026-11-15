@@ -40,6 +40,7 @@ namespace MechJebLib.PSG
         {
             if (_solution == null)
             {
+                _passCount = CountPasses();
                 _optimizer = _fixedBurnTime
                     ? InitialBootstrappingFixed()
                     : InitialBootstrappingOptimized();
@@ -79,19 +80,21 @@ namespace MechJebLib.PSG
             foreach (Phase p in bootPhases)
                 p.Unguided = false;
 
+            StartPass("every stage guided");
             var psg = NewOptimizer(_problem, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MAX_ENERGY);
             Solution solution = _guesser.InitialGuess(bootPhases, CancelToken);
             psg.TranscribePreviousBootSolution(solution);
-            Solution? solution2 = psg.Run();
+            Solution? solution2 = RunPass(psg);
 
             if (!psg.Success() || solution2 == null)
                 throw Failed(psg, "Target unreachable (fixed bootstrapping)");
 
             PhaseCollection bootphases2 = _phases.DeepCopy();
 
+            StartPass("adding the unguided stages");
             var psg2 = NewOptimizer(_problem, bootphases2, _problem.Terminal, Optimizer.ObjectiveType.MAX_ENERGY);
             psg2.TranscribePreviousBootSolution(solution2);
-            Solution? solution3 = psg2.Run();
+            Solution? solution3 = RunPass(psg2);
 
             if (!psg2.Success() || solution3 == null)
                 throw Failed(psg2, "Target unreachable");
@@ -108,9 +111,10 @@ namespace MechJebLib.PSG
             if (psg.Objective == Optimizer.ObjectiveType.MIN_THRUST_ACCEL || solution == null)
                 return psg;
 
+            StartPass("adding throttling");
             var psg2 = NewOptimizer(_problem, psg.Phases, _problem.Terminal, Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
             psg2.TranscribePreviousBootSolution(solution);
-            Solution? solution2 = psg2.Run();
+            Solution? solution2 = RunPass(psg2);
 
             if (!psg2.Success() || solution2 == null)
                 return psg;
@@ -127,9 +131,10 @@ namespace MechJebLib.PSG
                 return psg;
 
             PrintDebug("*** PHASE 6: Imposing QAlpha Constraints ***");
+            StartPass(_problem.Rho0InvQAlphaMax > 0 ? "adding the Qα limit" : "adding the max Q limit");
             var psg2 = NewOptimizer(_problem, psg.Phases, _problem.Terminal, Optimizer.ObjectiveType.MIN_TIME);
             psg2.TranscribePreviousBootSolution(solution);
-            Solution? solution2 = psg2.Run();
+            Solution? solution2 = RunPass(psg2);
 
             if (!psg2.Success() || solution2 == null)
                 throw Failed(psg2, "Target unreachable within the Qα or max Q limit");
@@ -158,10 +163,11 @@ namespace MechJebLib.PSG
             Problem problemNoQa = _problem.WithoutDynamicPressure();
 
             PrintDebug("*** PHASE 1: DOING INITIAL ALL-GUIDED ROCKET ***");
+            StartPass("every stage guided");
             var psg = NewOptimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_TIME);
             Solution? solution = _guesser.InitialGuess(bootPhases, CancelToken);
             psg.TranscribePreviousBootSolution(solution);
-            solution = psg.Run();
+            solution = RunPass(psg);
 
             if (!psg.Success() || solution == null)
                 throw Failed(psg, "Target unreachable (bootstrapping)");
@@ -180,9 +186,10 @@ namespace MechJebLib.PSG
             if (reConverge)
             {
                 PrintDebug("*** PHASE 4: ADDING BACK UNGUIDED STAGES ***");
+                StartPass("adding the unguided stages");
                 psg = NewOptimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_TIME);
                 psg.TranscribePreviousBootSolution(solution);
-                solution = psg.Run();
+                solution = RunPass(psg);
 
                 if (!psg.Success() || solution == null)
                     throw Failed(psg, "Target unreachable (re-adding unguided stages)");
@@ -196,9 +203,10 @@ namespace MechJebLib.PSG
              */
 
             PrintDebug("*** PHASE 5: RELAXING TO FREE ATTACHMENT ***");
+            StartPass("freeing the orbit insertion point");
             var psg2 = NewOptimizer(problemNoQa, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MIN_TIME);
             psg2.TranscribePreviousBootSolution(solution);
-            Solution? solution2 = psg2.Run();
+            Solution? solution2 = RunPass(psg2);
 
             if (!psg2.Success() || solution2 == null)
             {

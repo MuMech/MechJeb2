@@ -165,7 +165,9 @@ namespace MuMech
                     label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}{UnreachableCause()}";
                 // the optimizer only runs while the autopilot (or kOS) uses it: no line before the autopilot is engaged
                 optimizerState = Core.PSGSimulation.Enabled
-                    ? OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting(),
+                    ? Core.Guidance.Solution == null && Core.PSGSimulation.ProgressDetail != null
+                        ? "Optimizer: " + Core.PSGSimulation.ProgressDetail
+                        : OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting(),
                         Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0)
                     : null;
                 // the figures belong to the last solve: kept in flight after the ascent ended (they say why), but not on the pad with the
