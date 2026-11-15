@@ -104,9 +104,17 @@ namespace MuMech
             _autopilot.Users.Add(this);
         }
 
+        // whether PSG Stages was open when this window closed: it opens again with it, as Ascent Settings does
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool _lastStagesMenuEnabled;
+
+        internal MechJebModuleAscentPSGStagesMenu _stagesMenu => Core.GetComputerModule<MechJebModuleAscentPSGStagesMenu>();
+
         protected override void OnModuleEnabled()
         {
             _settingsMenu.Enabled = _lastSettingsMenuEnabled;
+            _stagesMenu.Enabled = _lastStagesMenuEnabled;
         }
 
         // a closed window leaves the launch mode alone: the countdown and the guidance still fly it
@@ -114,6 +122,8 @@ namespace MuMech
         {
             _lastSettingsMenuEnabled = _settingsMenu.Enabled;
             _settingsMenu.Enabled = false;
+            _lastStagesMenuEnabled = _stagesMenu.Enabled;
+            _stagesMenu.Enabled = false;
         }
 
         // Keeps the PSG LogicalPlan, and the FlightPlan built from it, current while this window is open with PSG selected,
