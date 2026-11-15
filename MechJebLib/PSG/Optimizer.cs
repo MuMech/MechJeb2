@@ -266,14 +266,14 @@ namespace MechJebLib.PSG
             {
                 // pick roughly the midpoint
                 if (k < K / 2)
-                    thisPhase.U.First = Q3.FromToRotation(V3.forward, u.normalized);
+                    thisPhase.U.First = u.normalized;
                 thisPhase.T.First = phase.Coast ? 0.0 : 1.0;
             }
             else
             {
                 if (k % 3 != 0)
                 {
-                    thisPhase.U[k] = Q3.FromToRotation(V3.forward, u.normalized);
+                    thisPhase.U[k] = u.normalized;
                     thisPhase.T[k] = 1.0;
                 }
             }
@@ -397,9 +397,9 @@ namespace MechJebLib.PSG
 
                 if (phase.Unguided)
                 {
-                    (int idxX, int idxY, int idxZ, int idxW) = thisPhase.U.Idx(0);
-                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = bndl[idxW] = -1.2;
-                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = bndu[idxW] = 1.2;
+                    (int idxX, int idxY, int idxZ) = thisPhase.U.Idx(0);
+                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = -1.2;
+                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = 1.2;
                     continue;
                 }
 
@@ -408,10 +408,10 @@ namespace MechJebLib.PSG
                     // skip non-collocated points
                     if (k % 3 == 0)
                         continue;
-                    (int idxX, int idxY, int idxZ, int idxW) = thisPhase.U.Idx(k);
+                    (int idxX, int idxY, int idxZ) = thisPhase.U.Idx(k);
 
-                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = bndl[idxW] = -1.2;
-                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = bndu[idxW] = 1.2;
+                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = -1.2;
+                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = 1.2;
                 }
             }
 
