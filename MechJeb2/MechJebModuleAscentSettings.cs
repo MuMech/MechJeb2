@@ -44,8 +44,28 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult DesiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
 
+        /// <summary>The target inclination, for both ascent types (PSGSimulation.Inc is this one).</summary>
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble DesiredInclination = new EditableDouble(0.0);
+
+        // false until the PSG inclination saved before the two were shared was taken over (ShareInclinationIfNeeded)
+        [UsedImplicitly]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool InclinationShared;
+
+        /// <summary>
+        ///     Classic and PSG had an inclination each; there is one now. Once, a PSG ascent keeps the PSG one it had. The core
+        ///     calls this after its settings reload and saves at once when it returns true.
+        /// </summary>
+        public bool ShareInclinationIfNeeded()
+        {
+            if (InclinationShared) return false;
+            EditableDouble saved = Core.PSGSimulation.SavedPsgInclination;
+            if (AscentType == AscentType.PSG && !double.IsNaN(saved.Val))
+                DesiredInclination.Val = saved.Val;
+            InclinationShared = true;
+            return true;
+        }
 
         // has no effect: nothing reads it. Kept so that kOS scripts setting RELATIVELAN still run.
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]

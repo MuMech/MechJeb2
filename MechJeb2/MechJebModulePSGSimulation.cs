@@ -103,8 +103,12 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult ApoapsisAltitude = new EditableDoubleMult(0, 1000);
 
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble Inc = new EditableDouble(0.0);
+        /// <summary>The target inclination: one for both ascent types, AscentSettings.DesiredInclination.</summary>
+        public EditableDouble Inc => Core.AscentSettings.DesiredInclination;
+
+        // the PSG inclination saved before it was shared, under its old name: read once (AscentSettings.ShareInclinationIfNeeded)
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL), name = "Inc")]
+        internal readonly EditableDouble SavedPsgInclination = new EditableDouble(double.NaN);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LAN = new EditableDouble(0.0);
