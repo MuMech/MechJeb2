@@ -371,7 +371,8 @@ namespace MuMech.UI
         // the windows of the ascent: Settings for both types, Stages and Solution for PSG, Path for Classic
         void BuildWindowButtons(KodeWindow w, UIObject r)
         {
-            Layout buttons = KodeWindow.FlowWrap(KodeWindow.Row(r), 4);
+            // one row across the window, the buttons sharing its width
+            Layout buttons = KodeWindow.Row(r);
             // the PSG warnings on the button of the window that has their setting
             UIButton settingsButton = WindowButton(w, buttons, "#MechJeb_NewUI_AscentSettingsButton", menu._settingsMenu); //Settings
             w.Badge(settingsButton, () => psg && (PsgAttention.ArefUnset(Core) || PsgAttention.QaClamped(Core)));
@@ -387,7 +388,7 @@ namespace MuMech.UI
         /// <summary>A button that opens or closes another window, selected while that window is open.</summary>
         static UIButton WindowButton(KodeWindow w, UIObject parent, string text, DisplayModule window)
         {
-            UIButton b = KodeWindow.Button(parent, text, () => window.Enabled = !window.Enabled);
+            UIButton b = KodeWindow.Button(parent, text, () => window.Enabled = !window.Enabled, true);
             w.BindRole(b, () => window.Enabled ? ButtonRole.Selected : ButtonRole.Normal);
             return b;
         }
