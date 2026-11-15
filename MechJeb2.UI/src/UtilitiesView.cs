@@ -88,11 +88,17 @@ namespace MuMech.UI
             if (c == null) return;
             Layout row = KodeWindow.Row(parent);
             w.SwitchRow(row, autoKey, () => c.AutoDeploy, v => c.AutoDeploy = v);
-            bool retracts = c.ToggleRetracts;
+            // both walk every deployable part: read five times a second
+            bool retracts = c.ToggleRetracts, moving = c.Moving;
+            float next = 0;
             UIButton b = KodeWindow.Button(row, retracts ? retract : extend, c.ToggleDeploy);
+            GuidanceUi.Enable(w, b, () => !moving);
             w.AddSync(() =>
             {
-                bool now = c.ToggleRetracts;
+                if (UnityEngine.Time.unscaledTime < next) return;
+                next = UnityEngine.Time.unscaledTime + 0.2f;
+                moving = c.Moving;
+                bool now = moving ? retracts : c.ToggleRetracts; // while parts move, the button keeps the action that moves them
                 if (now == retracts) return;
                 retracts = now;
                 b.Text(now ? retract : extend);

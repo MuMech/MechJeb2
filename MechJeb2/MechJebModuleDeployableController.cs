@@ -229,6 +229,9 @@ namespace MuMech
         /// <summary>Whether <see cref="ToggleDeploy"/> retracts now (else it extends).</summary>
         internal bool ToggleRetracts => AnyCanRetract();
 
+        /// <summary>Parts are extending or retracting: <see cref="ToggleDeploy"/> does nothing until they stop.</summary>
+        internal bool Moving => ExtendingOrRetracting();
+
         private bool AnyCanRetract()
         {
             foreach (ModuleDeployablePart mdp in CachedPartModules)
