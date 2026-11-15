@@ -85,19 +85,24 @@ namespace MuMech.UI
             Layout lead = KodeWindow.Row(r);
             KodeWindow.Label(lead, "#MechJeb_WarpHelper_label5"); //"Lead time: "
             EditUi.Field(w, lead, () => helper.leadTime, 100);
-            UIButton abort = KodeWindow.Button(lead, "#MechJeb_WarpHelper_button1", helper.AbortWarp, ButtonRole.Danger); //"Abort"
-            w.Visible(abort.gameObject, () => helper.warping);
-            UIButton warp = KodeWindow.Button(lead, "#MechJeb_WarpHelper_button2", helper.StartWarp, ButtonRole.Primary); //"Warp"
-            w.Visible(warp.gameObject, () => !helper.warping);
 
             // useQuickWarpInfoItem()
             w.Toggle(r, "#MechJeb_WarpHelper_checkbox1", () => Core.Warp.useQuickWarp, v => Core.Warp.useQuickWarp = v); //"Quick warp"
 
+            // the main action, and MechJeb's warp pause (ControlWarpButton) beside it as a small secondary button
+            Layout actions = KodeWindow.Row(r);
+            MechJebModuleWarpController warpController = Core.Warp;
+            UIButton resume = KodeWindow.Button(actions, "#MechJeb_WarpHelper_button3", () => warpController.ResumeWarp()); //"Resume MJ Warp"
+            w.Visible(resume.gameObject, () => warpController.WarpPaused);
+            UIButton pauseWarp = KodeWindow.Button(actions, "#MechJeb_WarpHelper_button4", () => warpController.PauseWarp()); //"Pause MJ Warp"
+            w.Visible(pauseWarp.gameObject, () => !warpController.WarpPaused);
+            UIButton abort = KodeWindow.Button(actions, "#MechJeb_WarpHelper_button1", helper.AbortWarp, ButtonRole.Danger, true); //"Abort"
+            w.Visible(abort.gameObject, () => helper.warping);
+            UIButton warp = KodeWindow.Button(actions, "#MechJeb_WarpHelper_button2", helper.StartWarp, ButtonRole.Primary, true); //"Warp"
+            w.Visible(warp.gameObject, () => !helper.warping);
+
             UIText warping = w.BoundLabel(r, "Warping to 99y 999d 99h 99m 99s before atmospheric entry.", WarpingText, true);
             w.Visible(warping, () => helper.warping);
-
-            // ControlWarpButton
-            GeneralItemBuilders.Build(w, r, "General:WarpController.ControlWarpButton", Core.Warp);
         }
     }
 }

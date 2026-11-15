@@ -468,29 +468,35 @@ namespace MuMech.UI
             string resume = KodeWindow.Loc("#MechJeb_Flightrecord_Button1_1"), pause = KodeWindow.Loc("#MechJeb_Flightrecord_Button1_2"); //"Resume""Pause"
             string[] axis = { KodeWindow.Loc("#MechJeb_Flightrecord_Button2_1"), KodeWindow.Loc("#MechJeb_Flightrecord_Button2_2") }; //"Downrange""Time"
 
+            // the view and where the recording is on the left, the actions on the right
             Layout top = KodeWindow.Row(r);
-            MiscViewKit.BoundButton(w, top, () => g.paused ? resume : pause, () => g.paused = !g.paused);
             w.Segmented(top, axis, () => g.downrange ? 0 : 1, i => g.downrange = i == 0).FlexibleLayout(0f, 0f);
             w.BoundLabel(top, Localizer.Format("#MechJeb_Flightrecord_Label1", "999d 99h 99m 99s"), TimeText);
             w.BoundLabel(top, Localizer.Format("#MechJeb_Flightrecord_Label2", "-999.9M") + "m", RangeText);
             KodeWindow.FlexibleSpace(top);
+            MiscViewKit.BoundButton(w, top, () => g.paused ? resume : pause, () => g.paused = !g.paused);
             KodeWindow.Button(top, "#MechJeb_Flightrecord_Button3", Mark); //"Mark"
-            KodeWindow.Button(top, "#MechJeb_Flightrecord_Button4", g.ResetScale); //"Reset Scale"
             KodeWindow.Button(top, "#MechJeb_Flightrecord_Button5", () => Rec.DumpCsv()); //CSV
 
-            Layout options = KodeWindow.Row(r);
-            w.SwitchRow(options, "#MechJeb_Flightrecord_checkbox1", () => g.autoScale, v => g.autoScale = v).transform.parent //Auto Scale
+            // the scale on its own row: automatic or set, and back to the automatic one
+            Layout scaleRow = KodeWindow.Row(r);
+            w.SwitchRow(scaleRow, "#MechJeb_Flightrecord_checkbox1", () => g.autoScale, v => g.autoScale = v).transform.parent //Auto Scale
                 .GetComponent<LayoutElement>().flexibleWidth = 0;
-            Layout scale = Nudge(w, options, "999.99Mm/px", ScaleText, () => ScaleBy(-1), () => ScaleBy(1));
+            Layout scale = Nudge(w, scaleRow, "999.99Mm/px", ScaleText, () => ScaleBy(-1), () => ScaleBy(1));
             // auto scale picks the scale itself: show it, hide its - and +
             w.Visible(scale.transform.GetChild(0).gameObject, () => !g.autoScale);
             w.Visible(scale.transform.GetChild(scale.transform.childCount - 1).gameObject, () => !g.autoScale);
+            KodeWindow.Button(scaleRow, "#MechJeb_Flightrecord_Button4", g.ResetScale); //"Reset Scale"
+            KodeWindow.FlexibleSpace(scaleRow);
+
+            // the plot's size, the options, how full the recording is
+            Layout options = KodeWindow.Row(r);
+            KodeWindow.RowOf(w.SwitchRow(options, "#MechJeb_Flightrecord_checkbox2", () => g.realAtmo, SetRealAtmo)) //Real Atmo
+                .GetComponent<LayoutElement>().flexibleWidth = 0;
             KodeWindow.FlexibleSpace(options);
             Nudge(w, options, "9999", () => Number(g.width), () => Resize(-1, 0), () => Resize(1, 0));
             KodeWindow.Label(options, "×");
             Nudge(w, options, "9999", () => Number(g.height), () => Resize(0, -1), () => Resize(0, 1));
-            KodeWindow.RowOf(w.SwitchRow(options, "#MechJeb_Flightrecord_checkbox2", () => g.realAtmo, SetRealAtmo)) //Real Atmo
-                .GetComponent<LayoutElement>().flexibleWidth = 0;
             UIText storage = w.BoundLabel(options, Localizer.Format("#MechJeb_Flightrecord_Label3", "100.0"), StorageText);
             KodeWindow.ToneText(storage, KodeWindow.Tone.Dim);
 
