@@ -17,6 +17,7 @@ namespace MuMech
         public override bool ShowInMenu => false;
 
         private double _lastMaxAtmosphereAltitude = -1;
+        private double _lastPathEndAltitude = -1;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -24,14 +25,18 @@ namespace MuMech
             Autopilot = Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         }
 
-        // redraw the atmosphere picture when the body's atmosphere changed (shared with the new UI)
+        // redraw the atmosphere picture when the body's atmosphere or the picture's height (the turn end altitude) changed
+        // (shared with the new UI)
         internal void UpdateAtmoTextureIfNeeded()
         {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (_lastMaxAtmosphereAltitude != MainBody.RealMaxAtmosphereAltitude())
+            double endAltitude = PathEndAltitude;
+            // ReSharper disable CompareOfFloatsByEqualityOperator
+            if (_lastMaxAtmosphereAltitude != MainBody.RealMaxAtmosphereAltitude() || _lastPathEndAltitude != endAltitude)
+            // ReSharper restore CompareOfFloatsByEqualityOperator
             {
                 _lastMaxAtmosphereAltitude = MainBody.RealMaxAtmosphereAltitude();
-                UpdateAtmoTexture(PathTexture, MainBody, PathEndAltitude);
+                _lastPathEndAltitude       = endAltitude;
+                UpdateAtmoTexture(PathTexture, MainBody, endAltitude);
             }
         }
 
@@ -102,7 +107,7 @@ namespace MuMech
             int guard = 0;
             while (alt < endAltitude && downrange < width * scale && guard++ < 100000)
             {
-                float desiredAngle = (float)(alt < Autopilot.VerticalAscentEnd() ? 90 : Autopilot.FlightPathAngle(alt, 0));
+                float desiredAngle = (float)Autopilot.PlannedFlightPathAngle(alt);
 
                 alt += scale * Mathf.Sin(desiredAngle * Mathf.Deg2Rad);
                 downrange += scale * Mathf.Cos(desiredAngle * Mathf.Deg2Rad);
@@ -128,10 +133,10 @@ namespace MuMech
         internal struct PathSignature : IEquatable<PathSignature>
         {
             public bool Auto;
-            public double EndAltitude, VerticalEnd, Probe, EndAngle, Exponent, StartVelocity;
+            public double EndAltitude, VerticalEnd, EndAngle, Exponent, StartVelocity;
 
             public bool Equals(PathSignature o) =>
-                Auto == o.Auto && EndAltitude == o.EndAltitude && VerticalEnd == o.VerticalEnd && Probe == o.Probe && EndAngle == o.EndAngle &&
+                Auto == o.Auto && EndAltitude == o.EndAltitude && VerticalEnd == o.VerticalEnd && EndAngle == o.EndAngle &&
                 Exponent == o.Exponent && StartVelocity == o.StartVelocity;
 
             public override bool Equals(object obj) => obj is PathSignature o && Equals(o);
@@ -146,8 +151,6 @@ namespace MuMech
                 Auto = Autopilot.AutoPath,
                 EndAltitude = end,
                 VerticalEnd = Autopilot.VerticalAscentEnd(),
-                // the turn also depends on where the autopilot started the turn: sample the angle half way up
-                Probe = Autopilot.FlightPathAngle(end * 0.5, 0),
                 EndAngle = Autopilot.TurnEndAngle,
                 Exponent = Autopilot.TurnShapeExponent,
                 StartVelocity = Autopilot.AutoPath ? Autopilot.AutoTurnStartVelocity : Autopilot.TurnStartVelocity

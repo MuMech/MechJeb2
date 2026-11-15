@@ -87,11 +87,16 @@ namespace MuMech
 
         private double _actualTurnStart;
 
+        // the altitude above sea level the vessel was engaged at on the ground (0 when engaged in flight): from a site above the
+        // turn start altitude the turn starts there, not from sea level
+        private double _launchAltitude;
+
         protected override void OnModuleEnabled()
         {
             _placedCircularizeNode = false;
             _mode = AscentMode.PRELAUNCH;
-            _actualTurnStart = 0;
+            _launchAltitude = Vessel.LandedOrSplashed ? Math.Max(VesselState.AltitudeASL, 0) : 0;
+            _actualTurnStart = _launchAltitude;
 
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
@@ -119,11 +124,14 @@ namespace MuMech
 
         public double VerticalAscentEnd() => AutoPath ? AutoTurnStartAltitude : TurnStartAltitude;
 
+        // a turn shape of 0 drops the pitch to the end angle the moment the turn starts
+        private const double MIN_TURN_SHAPE_EXPONENT = 0.1;
+
         private double SpeedAscentEnd() => AutoPath ? AutoTurnStartVelocity : TurnStartVelocity;
 
         private bool IsVerticalAscent(double altitude, double velocity)
         {
-            _actualTurnStart = Math.Min(_actualTurnStart, VerticalAscentEnd());
+            _actualTurnStart = Math.Min(_actualTurnStart, Math.Max(VerticalAscentEnd(), _launchAltitude));
             if (altitude < VerticalAscentEnd() && velocity < SpeedAscentEnd())
             {
                 _actualTurnStart = Math.Max(_actualTurnStart, altitude);
@@ -135,16 +143,33 @@ namespace MuMech
 
         public double FlightPathAngle(double altitude, double velocity)
         {
-            double turnEnd = AutoPath ? AutoTurnEndAltitude : TurnEndAltitude;
-
             if (IsVerticalAscent(altitude, velocity)) return 90.0;
+
+            return TurnAngle(altitude, _actualTurnStart);
+        }
+
+        /// <summary>
+        ///     The planned path for the Ascent Path Editor's picture: vertical up to the turn start altitude, then the turn from
+        ///     there. Unlike FlightPathAngle it neither reads nor moves the turn start of a flight in progress.
+        /// </summary>
+        public double PlannedFlightPathAngle(double altitude)
+        {
+            double turnStart = VerticalAscentEnd();
+            return altitude < turnStart ? 90.0 : TurnAngle(altitude, turnStart);
+        }
+
+        private double TurnAngle(double altitude, double turnStart)
+        {
+            double turnEnd = AutoPath ? AutoTurnEndAltitude : TurnEndAltitude;
 
             if (altitude > turnEnd) return TurnEndAngle;
 
             // below the altitude the turn started at (falling back, or a different altitude reference) Pow of a negative base is NaN
-            double turnFraction = altitude > _actualTurnStart ? (altitude - _actualTurnStart) / (turnEnd - _actualTurnStart) : 0;
+            double turnFraction = altitude > turnStart ? (altitude - turnStart) / (turnEnd - turnStart) : 0;
 
-            return Mathf.Clamp((float)(90.0 - Math.Pow(turnFraction, TurnShapeExponent) * (90.0 - TurnEndAngle)),
+            double turnShape = Math.Max(TurnShapeExponent, MIN_TURN_SHAPE_EXPONENT);
+
+            return Mathf.Clamp((float)(90.0 - Math.Pow(turnFraction, turnShape) * (90.0 - TurnEndAngle)),
                 0.01F, 89.99F);
         }
 
