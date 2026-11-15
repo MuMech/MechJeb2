@@ -159,6 +159,26 @@ namespace MuMech.UI
             return 5;
         }
 
+        /// <summary>How many columns the groups take, each whole, with at most <paramref name="step"/> rows a column; the manual button last.</summary>
+        static int ColumnsFor(List<DisplayModule>[] groups, int header, int step)
+        {
+            int columns = 1, inColumn = 0;
+            foreach (List<DisplayModule> g in groups)
+            {
+                if (g.Count == 0) continue;
+                int size = g.Count + header;
+                if (inColumn > 0 && inColumn + size > step)
+                {
+                    columns++;
+                    inColumn = 0;
+                }
+
+                inColumn += size;
+            }
+
+            return columns;
+        }
+
         /// <summary>The same toggles under one header per task, the groups in order, split into the menu's columns.</summary>
         void GroupedColumns(KodeWindow w, Layout columns, List<DisplayModule> modules)
         {
@@ -177,7 +197,9 @@ namespace MuMech.UI
                     largest = Math.Max(largest, g.Count + header);
                 }
 
+            // whole groups leave gaps at the column ends: a taller column until they fit in the menu's columns
             int step = Math.Max(Mathf.CeilToInt((float)rows / menu.columns), largest);
+            while (ColumnsFor(groups, header, step) > Math.Max(menu.columns, 1)) step++;
 
             Layout column = KodeWindow.Panel(columns);
             int inColumn = 0;
