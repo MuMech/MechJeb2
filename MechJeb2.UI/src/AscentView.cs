@@ -283,6 +283,8 @@ namespace MuMech.UI
                 UIButton psgButton = WindowButton(w, buttons, "PSG Settings", menu._psgSettingsMenu);
                 w.Visible(psgButton.gameObject, () => psg);
                 w.Badge(psgButton, () => PsgAttention.Any(Core));
+                UIButton solutionButton = WindowButton(w, buttons, "PSG Solution", Core.GetComputerModule<MechJebModulePSGSolutionGraph>());
+                w.Visible(solutionButton.gameObject, () => psg);
                 return;
             }
 
@@ -297,6 +299,9 @@ namespace MuMech.UI
             // the classic layout has a toggle, not a button, to carry a badge: its label turns orange instead
             w.ToneText(KodeWindow.RowOf(psgSettings).GetComponentInChildren<TMPro.TMP_Text>(true),
                 () => PsgAttention.Any(Core) ? Tone.Caution : Tone.Normal);
+            MechJebModulePSGSolutionGraph solutionGraph = Core.GetComputerModule<MechJebModulePSGSolutionGraph>();
+            UnityEngine.UI.Toggle solution = w.Toggle(row, "PSG Solution", () => solutionGraph.Enabled, v => solutionGraph.Enabled = v);
+            w.Visible(KodeWindow.RowOf(solution), () => psg);
         }
 
         /// <summary>A button that opens or closes another window, selected while that window is open.</summary>
