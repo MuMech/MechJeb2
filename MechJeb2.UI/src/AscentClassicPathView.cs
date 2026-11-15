@@ -87,7 +87,9 @@ namespace MuMech.UI
                 () => Autopilot.AutoTurnPerc * 200f, v => Autopilot.AutoTurnPerc = Mathf.Floor(v) / 200f, 1f, 210.5f);
             SliderRow(w, auto, "#MechJeb_NewUI_PathStartSpeed", startVel.Get, //Start speed
                 () => Autopilot.AutoTurnSpdFactor * 2f, v => Autopilot.AutoTurnSpdFactor = Mathf.Floor(v) / 2f, 8f, 160f);
-            auto.Value(KodeWindow.Loc("#MechJeb_NewUI_PathEndAltitude"), endAlt.Get); //End altitude
+            // no slider: an empty cell in the sliders' column keeps the value under the two above
+            Layout end = auto.Value(KodeWindow.Loc("#MechJeb_NewUI_PathEndAltitude"), endAlt.Get); //End altitude
+            KodeWindow.Label(end, "").transform.SetSiblingIndex(2);
 
             // manual path: the three fields
             Layout manual = KodeWindow.Panel(r);
