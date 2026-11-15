@@ -94,6 +94,20 @@ namespace KodeKit
         /// </summary>
         public Action<CharText, double, double> LabelFormat;
 
+        /// <summary>
+        /// A LabelFormat at the precision of the step between labels: whole numbers for a step of 1 or more, as many decimals as
+        /// a smaller step needs, and k or M for large values (90, 80 … rather than 90.0, 80.0; 100 k, 90 k rather than 100 k, 90.0 k).
+        /// </summary>
+        public static void StepLabel(CharText t, double v, double step)
+        {
+            double unit = Math.Abs(step) >= 1e6 ? 1e6 : Math.Abs(step) >= 1e3 ? 1e3 : 1;
+            double scaled = step > 0 ? step / unit : 0.1;
+            int decimals = Math.Max(0, (int)Math.Ceiling(-Math.Log10(scaled) - 1e-9));
+            t.Append(v / unit, decimals);
+            if (unit == 1e6) t.Append(" M");
+            else if (unit == 1e3) t.Append(" k");
+        }
+
         readonly RectTransform frame;
 
         /// <param name="scrollbarParent">Where the scrollbar row goes (null: under the plot, indented past the Y labels).
