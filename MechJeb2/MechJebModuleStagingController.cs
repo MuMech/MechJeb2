@@ -57,6 +57,13 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble HotStagingLeadTime = 2.0;
 
+        // the stages hot-staged into when HotStaging (every stage) is off: set per stage in the PSG Stages window
+        [Persistent(pass = (int)Pass.TYPE)]
+        public readonly EditableIntList HotStagingStages = new EditableIntList();
+
+        /// <summary>Whether staging into inverseStage waits until HotStagingLeadTime before the current stage burns out.</summary>
+        public bool HotStagesInto(int inverseStage) => HotStaging || HotStagingStages.Val.Contains(inverseStage);
+
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool DropSolids;
 
@@ -309,7 +316,7 @@ namespace MuMech
             }
 
             // prevent staging if we have unstable ullage and we have RCS
-            if (InverseStageHasUnstableEngines(Vessel.currentStage - 1) && Core.Thrust.AutoRCSUllaging && Vessel.hasEnabledRCSModules() &&
+            if (InverseStageHasUnstableEngines(Vessel.currentStage - 1) && Core.Thrust.RcsUllageFor(Vessel.currentStage - 1) && Vessel.hasEnabledRCSModules() &&
                 Core.Thrust.LastThrottle > 0)
             {
                 if (!Vessel.ActionGroups[KSPActionGroup.RCS])
@@ -332,7 +339,7 @@ namespace MuMech
             }
 
             // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
-            if (HotStaging && InverseStageHasEngines(Vessel.currentStage - 1) &&
+            if (HotStagesInto(Vessel.currentStage - 1) && InverseStageHasEngines(Vessel.currentStage - 1) &&
                 !InverseStageFiresDecoupler(Vessel.currentStage - 1) && !InverseStageReleasesClamps(Vessel.currentStage - 1) &&
                 LastNonZeroDVStageBurnTime() > HotStagingLeadTime)
             {

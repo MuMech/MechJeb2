@@ -280,6 +280,18 @@ namespace MuMech
                 NumberText.ParseIntList(TextConfig, Val);
             }
         }
+
+        /// <summary>Adds value to the list or removes it, keeping the text in step.</summary>
+        public void Set(int value, bool present)
+        {
+            if (Val.Contains(value) == present) return;
+            var list = new List<int>(Val);
+            if (present) list.Add(value);
+            else list.RemoveAll(v => v == value);
+            list.Sort();
+            list.Reverse();
+            Text = string.Join(",", list);
+        }
     }
 
     public static class GuiUtils

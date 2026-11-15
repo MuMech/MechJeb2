@@ -75,20 +75,19 @@ namespace MuMech.UI
         }
 
         // under the stage table: which burns the plan leaves out, in the caution colour
-        // the PSG Stages window, and while the plan is edited there, that the stage fields don't apply
+        // the PSG Stages window, where the plan is edited (which stages burn, their flags, the coast), and its reset
         void BuildEditorRow(KodeWindow w, UIObject parent)
         {
             MechJebModuleAscentPSGStagesMenu editor = Core.GetComputerModule<MechJebModuleAscentPSGStagesMenu>();
-            // the note wraps at the window's width, on its own line above the buttons
-            UIText note = w.Wrap(w.BoundLabel(parent, () => "The plan is edited in PSG Stages: the stage fields below don't apply.", true));
-            KodeWindow.ToneText(note, Tone.Caution);
-            w.Visible(note, () => Psgs.PlanEdited);
             Layout row = KodeWindow.Row(parent);
             KodeWindow.FlexibleSpace(row);
-            UIButton reset = KodeWindow.Button(row, "Reset to settings", editor.ResetToSettings);
+            UIButton reset = KodeWindow.Button(row, "Reset plan", editor.ResetToSettings);
+            Tooltips.Add(reset.gameObject, ResetTooltip);
             w.Visible(reset.gameObject, () => Psgs.PlanEdited);
             KodeWindow.Button(row, "Stage editor", () => editor.Enabled = !editor.Enabled);
         }
+
+        public const string ResetTooltip = "Forget the edits: the default plan, every burn guided, with no coast.";
 
         void BuildSkipped(KodeWindow w, UIObject parent)
         {
@@ -208,9 +207,7 @@ namespace MuMech.UI
 
         const string ArefNote = "Aref is 0: PSG plans the ascent with no drag. Set the rocket's cross-section area.";
 
-        static readonly string[] coastLocations = { "Before", "During", "After" };
-
-        // Titled groups of aligned fields, the coast location as one choice, the Qα warnings in a status bar
+        // Titled groups of aligned fields, the Qα warnings in a status bar
         protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
@@ -224,21 +221,14 @@ namespace MuMech.UI
 
             KodeWindow.PropertyGrid plan = w.Properties(r);
             OptionRows.Field(plan, "Min ΔV", Psgs.MinDeltaV, "m/s", 50);
-            OptionRows.Field(plan, "Last Stage", Settings.LastStage, "", 50);
-            OptionRows.Switch(plan, "Fixed Burn Stages", () => Settings.FixedStagesFlag, v => Settings.FixedStagesFlag = v, Settings.FixedStagesInternal, "", 100);
-            OptionRows.Switch(plan, "Unguided Stages", () => Settings.UnguidedStagesFlag, v => Settings.UnguidedStagesFlag = v,
-                Settings.UnguidedStagesInternal, "", 100);
 
+            // which stages burn, their flags and where the coast goes are set in the Stage editor
             UIObject g = w.Group(r, "#MechJeb_NewUI_Coast"); //Coast
             KodeWindow.PropertyGrid coast = w.Properties(g);
-            w.Attention(OptionRows.Switch(coast, "Coast Stage", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v, Settings.CoastStageInternal, "", 100),
-                () => PsgAttention.CoastNoRelight(Core));
             UIText relight = coast.Note(RelightNote);
             KodeWindow.ToneText(relight, Tone.Caution);
             KodeWindow.WrapToWidth(relight);
             w.Visible(relight.transform.parent.gameObject, () => PsgAttention.CoastNoRelight(Core));
-            Layout where = KodeWindow.Row(g);
-            w.Segmented(where, coastLocations, () => Settings.CoastLocation + 1, i => Settings.CoastLocation = i - 1);
             KodeWindow.PropertyGrid coastTimes = w.Properties(g);
             w.Attention(OptionRows.Field(coastTimes, "Min Coast", Psgs.MinCoast, "s", 50), () => PsgAttention.CoastTimesInverted(Core));
             w.Attention(OptionRows.Field(coastTimes, "Max Coast", Psgs.MaxCoast, "s", 50), () => PsgAttention.CoastTimesInverted(Core));
@@ -246,7 +236,6 @@ namespace MuMech.UI
 
             g = w.Group(r, "#MechJeb_NewUI_Spinup"); //Spinup
             KodeWindow.PropertyGrid spin = w.Properties(g);
-            OptionRows.Switch(spin, "Spinup stage", () => Settings.SpinupStageFlag, v => Settings.SpinupStageFlag = v, Settings.SpinupStageInternal, "", 50);
             OptionRows.Field(spin, "ω", Settings.SpinupAngularVelocity, "rpm", 50);
             OptionRows.Field(spin, "Spinup lead time", Settings.SpinupLeadTime, "s", 50);
 

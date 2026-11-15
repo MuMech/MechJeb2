@@ -238,5 +238,19 @@ namespace MechJebLibTest.PSGTests
             var reread = new PlanEditor(editor.Plan(), rows, MIN_DV);
             Assert.False(reread.CoastGuided);
         }
+
+        // the rows the vessel stages into: the first row of each KSP stage after the first burn, not the second part of a stage
+        // with two burn rows nor an engine-less stage
+        [Fact]
+        public void StagedRows()
+        {
+            // flight order: stage 3 (boosters with the core, then the core alone: two rows), stage 2 (a decoupler), stage 1, stage 0
+            var rows = new List<FuelStats> { Row(0, 2000, 1), Row(1, 1500, 2), Row(2, 0), Row(3, 900, 3), Row(3, 1200, 3, 4) };
+
+            var editor = new PlanEditor(new LogicalPlan(), rows, MIN_DV);
+
+            Assert.Equal(new[] { 3, 3, 2, 1, 0 }, editor.Rows.Select(r => r.KSPStage).ToArray());
+            Assert.Equal(new[] { false, false, false, true, true }, editor.Rows.Select(r => r.Staged).ToArray());
+        }
     }
 }

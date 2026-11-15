@@ -424,7 +424,8 @@ namespace MuMech
                 if (!IsCoasting())
                     DoCoast();
 
-                if (solutionCoast && Solution.StageTimeLeft(VesselState.MET) < UllageLeadTime)
+                if (solutionCoast && Solution.StageTimeLeft(VesselState.MET) < UllageLeadTime &&
+                    !Core.Thrust.NoRcsUllageStages.Val.Contains(Solution.NextBurnKSPStage(VesselState.MET)))
                     RCSOn();
 
                 ThrustOff();

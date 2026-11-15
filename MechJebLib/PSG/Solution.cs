@@ -344,6 +344,16 @@ namespace MechJebLib.PSG
             return Phases[idx].Coast || (idx + 1 < Phases.Count && Phases[idx + 1].Coast);
         }
 
+        // the KSP stage of the first burn at or after t (during a coast, the burn it ends in), or -1 with none left
+        public int NextBurnKSPStage(double t)
+        {
+            for (int i = IndexFor(t); i < Phases.Count; i++)
+                if (!Phases[i].Coast)
+                    return Phases[i].KSPStage;
+
+            return -1;
+        }
+
         public int CoastKSPStage()
         {
             for (int i = 0; i < Phases.Count; i++)

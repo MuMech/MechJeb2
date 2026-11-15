@@ -64,6 +64,13 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool AutoRCSUllaging = true;
 
+        // the stages that light without RCS ullage, set per stage in the PSG Stages window
+        [Persistent(pass = (int)Pass.TYPE)]
+        public readonly EditableIntList NoRcsUllageStages = new EditableIntList();
+
+        /// <summary>Whether RCS ullages the engines of inverseStage: on everywhere (AutoRCSUllaging) except the stages left out.</summary>
+        public bool RcsUllageFor(int inverseStage) => AutoRCSUllaging && !NoRcsUllageStages.Val.Contains(inverseStage);
+
         [GeneralInfoItem("#MechJeb_UseRCStoullage", InfoItem.Category.Thrust)] //Use RCS to ullage
         public void AutoRCsUllageInfoItem() { }
 
@@ -990,7 +997,7 @@ namespace MuMech
             if (!ReflectionUtils.IsLoadedRealFuels)
                 return;
 
-            if (!AutoRCSUllaging || s.mainThrottle <= 0F || ThrottleLimit <= 0F)
+            if (!RcsUllageFor(Vessel.currentStage) || s.mainThrottle <= 0F || ThrottleLimit <= 0F)
                 return;
 
             if (!Vessel.hasEnabledRCSModules())

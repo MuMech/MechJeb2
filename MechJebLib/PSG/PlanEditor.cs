@@ -51,6 +51,10 @@ namespace MechJebLib.PSG
             // fixed burn time: the whole stage burns (no optimized shutdown)
             public bool FullBurn;
 
+            // a burn row the vessel stages into: the first row of its KSP stage, after the first burn. The options that act when
+            // a stage is entered (spin-up before it, hot staging into it, RCS ullage before it lights) belong to these rows.
+            public bool Staged;
+
             public int KSPStage => Stats.KSPStage;
         }
 
@@ -106,6 +110,7 @@ namespace MechJebLib.PSG
                 else
                     row.Kind = s.EngineSignatures.Count > 0 ? RowKind.UNDER_MIN : RowKind.NO_ENGINE;
 
+                row.Staged = row.BurnIndex > 0 && Rows.Count > 0 && Rows[Rows.Count - 1].KSPStage != row.KSPStage;
                 Rows.Add(row);
             }
 
