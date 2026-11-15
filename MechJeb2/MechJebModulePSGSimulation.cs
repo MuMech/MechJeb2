@@ -268,6 +268,22 @@ namespace MuMech
             Core.Guidance.FlushSolution();
         }
 
+        /// <summary>
+        ///     Drops the solve in progress, keeping the last converged solution to warm start the next solve. Guidance calls this
+        ///     when the coast starts and when it ends: a solve started before either change plans a part of the flight that has
+        ///     already happened (a burn before the coast, or a coast that is over), and must never reach guidance.
+        /// </summary>
+        public void CancelSolve(string why)
+        {
+            if (_ascent is { IsReady: false })
+                Debug.Log($"[MechJebModulePSGSimulation] dropped the solve in progress: {why}");
+
+            // Unlike FlushSolution this keeps _solution, or the next solve in flight would start from nothing.  The cancelled
+            // job reads it only while it transcribes its warm start, in its first milliseconds, and the next job can't start
+            // until a second after this one did (Block at TryStartJob), so the two never read it at once.
+            CancelJob();
+        }
+
         private void HandleStageEvent(int data) => Block(OptimizerPauseTime, OptimizerState.AFTER_STAGING);
 
         private void Block(double seconds, OptimizerState reason)
