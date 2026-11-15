@@ -81,16 +81,22 @@ namespace MuMech.UI
 
             Layout table = KodeWindow.Panel(r);
             Layout head = KodeWindow.Row(table);
-            KodeWindow.ToneText(Cell(head, "Stage", NameWidth), Tone.Dim);
-            KodeWindow.ToneText(Cell(head, "ΔV", NumberWidth), Tone.Dim);
-            KodeWindow.ToneText(Cell(head, "Time", NumberWidth), Tone.Dim);
-            KodeWindow.ToneText(Cell(head, "TWR", NumberWidth), Tone.Dim);
-            OptionHeader(head, "Guided", "PSG steers the burn. Off (unguided): the burn holds one fixed inertial attitude, which PSG " +
-                "picks, e.g. for a spin-stabilised stage.");
-            OptionHeader(head, "Full", "Full burn: the stage burns until it's empty. Off: PSG may cut it off early to reach the orbit.");
-            OptionHeader(head, "Spin", "Spin up before staging into the stage: staging waits for the spin (one stage at a time).");
-            OptionHeader(head, "Hot", "Hot-stage into the stage: light its engines before the stage below burns out.");
-            OptionHeader(head, "Ullage", "Ullage with RCS before the stage's engines light.");
+            Header(head, "Stage", NameWidth, "The KSP stage, top-down like the staging list: the first burn is at the bottom. A stage " +
+                "that burns in two parts (boosters with the core, then the core alone) has a row for each part.");
+            Header(head, "ΔV", NumberWidth, "The burn's vacuum Δv, as the stage stats count it.");
+            Header(head, "Time", NumberWidth, "How long the burn lasts at full thrust.");
+            Header(head, "TWR", NumberWidth, "Thrust-to-weight ratio at the start of the burn, at 1 g (9.81 m/s²).");
+            Header(head, "Guided", OptionWidth, "PSG steers the burn. Off (unguided): the burn holds one fixed inertial attitude, " +
+                "which PSG picks, e.g. for a spin-stabilised stage. The coast row has its own: off, the coast holds its attitude too.");
+            Header(head, "Full", OptionWidth, "Full burn: the stage burns until it's empty, a fixed burn time, for solids or engines " +
+                "that can't be shut down. Off: PSG may cut it off early to reach the orbit.");
+            Header(head, "Spin", OptionWidth, "On a stage the vessel stages into: spin the vessel up in the stage before it, at the " +
+                "spin-up rate (ω in PSG Settings), and wait for the spin before staging. One stage at a time.");
+            Header(head, "Hot", OptionWidth, "On a stage the vessel stages into: light its engines the hot-staging lead time before " +
+                "the stage below burns out. Ticked and greyed while Hot staging is on for every stage in the staging settings.");
+            Header(head, "Ullage", OptionWidth, "On a stage the vessel stages into: push forward with RCS to settle the propellant " +
+                "before its engines light (RealFuels), and at the end of a coast before it. On by default; greyed while \"Use RCS " +
+                "to ullage\" is off.");
             Cell(head, "", ActionWidth);
             KodeWindow.FlexibleSpace(head);
 
@@ -224,9 +230,10 @@ namespace MuMech.UI
 
         const float OptionWidth = 52, ActionWidth = 116;
 
-        void OptionHeader(UIObject head, string text, string tooltip)
+        // a column's header: its name, dimmed, with what the column means as a tooltip
+        static void Header(UIObject head, string text, float width, string tooltip)
         {
-            UIText t = Cell(head, text, OptionWidth);
+            UIText t = Cell(head, text, width);
             KodeWindow.ToneText(t, Tone.Dim);
             Tooltips.Add(t.gameObject, tooltip);
         }
