@@ -48,9 +48,10 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble DesiredInclination = new EditableDouble(0.0);
 
-        // false until the PSG inclination saved before the two were shared was taken over (ShareInclinationIfNeeded)
+        // false until the PSG inclination saved before the two were shared was taken over (ShareInclinationIfNeeded). Per vessel
+        // type only: a global true would skip the other types, which still have their own PSG inclination to take over
         [UsedImplicitly]
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        [Persistent(pass = (int)Pass.TYPE)]
         public bool InclinationShared;
 
         /// <summary>
