@@ -70,7 +70,8 @@ namespace MuMech.UI
                 case ActionInfoItem a:
                     UIButton b = KodeWindow.Button(parent, item.localizedName, a.Invoke, true);
                     Tooltip(b.gameObject, item);
-                    ApplyColor(b.GetComponentInChildren<TMP_Text>(), true);
+                    if (a.EngagedModule != null) EngageForm(b, a);
+                    else ApplyColor(b.GetComponentInChildren<TMP_Text>(), true);
                     break;
                 case GeneralInfoItem g:
                     // another mod's item has no builder: its IMGUI method can't be shown, so its name only
@@ -88,6 +89,19 @@ namespace MuMech.UI
         {
             grid = null;
             KodeWindow.Label(parent, item.localizedName);
+        }
+
+        // an action that engages its module: Primary with its name while the module is off, Danger with the engaged name
+        // while it is on. The role's colours, not the window's text colour: the role says what the button does
+        void EngageForm(UIButton b, ActionInfoItem a)
+        {
+            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
+            w.BindRole(b, () => a.EngagedModule.Enabled ? ButtonRole.Danger : ButtonRole.Primary);
+            w.AddSync(() =>
+            {
+                string text = a.EngagedModule.Enabled ? a.LocalizedEngagedName : a.localizedName;
+                if (!ReferenceEquals(label.text, text)) label.text = text;
+            });
         }
 
         static void Tooltip(GameObject go, InfoItem item)
