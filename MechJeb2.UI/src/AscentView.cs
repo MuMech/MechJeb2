@@ -332,7 +332,6 @@ namespace MuMech.UI
             w.Visible(invalid.gameObject, () => TargetChoice && !targetExists && Core.Target.NormalTargetExists);
             UIText select = KodeWindow.Paragraph(idle, "#MechJeb_Ascent_label34"); //No target: select one for a timed launch.
             KodeWindow.ToneText(select, Tone.Dim);
-            KodeWindow.ToneText(select, Tone.Caution);
             w.Visible(select.gameObject, () => TargetChoice && !Core.Target.NormalTargetExists);
 
             UnityEngine.UI.Toggle overrideWarp = w.SwitchRow(idle, "#MechJeb_NewUI_LaunchAtOnce", () => Settings.OverrideWarpToPlane,
