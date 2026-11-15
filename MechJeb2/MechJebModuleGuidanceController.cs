@@ -206,6 +206,37 @@ namespace MuMech
                 return;
             }
 
+            // the optimized stage is not the last one and leaves terminal guidance without reaching its target: it runs dry first (a
+            // rocket short of delta-v), or autostaging drops it as it flames out.  TerminalDone never comes then, so go on as it
+            // would: into the coast that follows, or on to the stages after it.
+            if (Status == PSGStatus.TERMINAL && Solution.OptimizeKSPStage() != Solution.TerminalKSPStage())
+            {
+                bool stagedOff = Vessel.currentStage < Solution.OptimizeKSPStage();
+                if (stagedOff || OptimizedStageSpent())
+                {
+                    Debug.Log($"[MechJebModuleGuidanceController] the optimized stage ran out {Solution.Tgo(VesselState.MET):F1} s before the end of its burn, going on with the stages after it.");
+                    _boosterSpentSince = double.NaN;
+
+                    if (Solution.CoastFollows(VesselState.MET))
+                    {
+                        ThrustOff();
+                        DoCoast();
+                    }
+                    else if (stagedOff)
+                    {
+                        Status = PSGStatus.BURNING;
+                    }
+                    else
+                    {
+                        ThrustOff();
+                        Core.Staging.ImmediateStage();
+                        Status = PSGStatus.TERMINAL_STAGING;
+                    }
+
+                    return;
+                }
+            }
+
             /*
              * FIXME: consider liquid booster()s + unguided beehive cluster
              *
@@ -353,6 +384,25 @@ namespace MuMech
                 _spentSince = VesselState.Time;
 
             return VesselState.Time - _spentSince >= 1;
+        }
+
+        private double _boosterSpentSince = double.NaN;
+
+        // the optimized stage, still on, has nothing left to burn (as TerminalStageSpent, for a stage that is not the last)
+        private bool OptimizedStageSpent()
+        {
+            bool spent = Vessel.currentStage == Solution!.OptimizeKSPStage() && NoThrust(VesselState.ThrustAvailable) && CurrentStageEmpty();
+
+            if (!spent)
+            {
+                _boosterSpentSince = double.NaN;
+                return false;
+            }
+
+            if (double.IsNaN(_boosterSpentSince))
+                _boosterSpentSince = VesselState.Time;
+
+            return VesselState.Time - _boosterSpentSince >= 1;
         }
 
         private void HandleSpinup()
