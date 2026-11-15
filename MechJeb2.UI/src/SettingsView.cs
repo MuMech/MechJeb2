@@ -95,7 +95,6 @@ namespace MuMech.UI
                 }
                 return pctText;
             }).transform.parent.GetComponent<UnityEngine.UI.LayoutElement>().preferredWidth = 40;
-            Tooltips.Add(opacity.gameObject, "How opaque the new UI's window backgrounds are. Lower lets more of the scene show through.");
 
             w.Toggle(look, "#MechJeb_NewUI_Compact", () => settings.UiCompact, v =>
             {
