@@ -47,8 +47,37 @@ namespace MuMech
         [Persistent(pass = (int)Pass.TYPE)]
         public PersistedLogicalPlan? LogicalPlan;
 
+        // set once the plan is edited in the PSG Stages window: the saved LogicalPlan is then kept, instead of being generated
+        // from the stage-number settings (Last Stage, Fixed, Unguided, Coast Stage) every frame
+        [Persistent(pass = (int)Pass.TYPE)]
+        public bool PlanEdited;
+
         // This is generated from the LogicalPlan, and is not user-editable while the module is enabled
         public FlightPlan? FlightPlan;
+
+        /// <summary>
+        ///     The plan's coast, from the FlightPlan: its kind and KSP stage, or (BURN, -1) without one. Read this rather than the
+        ///     Coast Stage settings, which an edited plan doesn't follow.
+        /// </summary>
+        public (StageType Kind, int KSPStage) PlannedCoast()
+        {
+            if (FlightPlan == null) return (StageType.BURN, -1);
+            foreach (FlightPlanStage s in FlightPlan.Stages)
+                if (s.StageType != StageType.BURN)
+                    return (s.StageType, s.KSPStage);
+            return (StageType.BURN, -1);
+        }
+
+        /// <summary>The lowest KSP stage the plan burns (its last burn), or 0 without a plan; the Last Stage setting's place.</summary>
+        public int PlannedLastKSPStage()
+        {
+            if (FlightPlan == null || FlightPlan.Stages.Count == 0) return 0;
+            int last = int.MaxValue;
+            foreach (FlightPlanStage s in FlightPlan.Stages)
+                if (s.StageType == StageType.BURN && s.KSPStage < last)
+                    last = s.KSPStage;
+            return last == int.MaxValue ? 0 : last;
+        }
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult PeriapsisAltitude = new EditableDoubleMult(145000, 1000);
@@ -361,12 +390,33 @@ namespace MuMech
             if (vacStats.Count == 0)
                 return false;
 
+            if (PlanEdited && LogicalPlan != null)
+            {
+                RequestFlightPlanUpdate();
+                return true;
+            }
+
             LogicalPlan = new PersistedLogicalPlan(MechJebLib.PSG.LogicalPlan.GenerateLogicalPlan(vacStats, settings.UnguidedStages, settings.FixedStages,
                 settings.LastStage, MinDeltaV, settings.CoastStage, settings.CoastLocation));
 
             RequestFlightPlanUpdate();
 
             return true;
+        }
+
+        /// <summary>Keeps plan as the vessel's plan, edited: the stage-number settings no longer generate it.</summary>
+        public void SetEditedPlan(LogicalPlan plan)
+        {
+            LogicalPlan = new PersistedLogicalPlan(plan);
+            PlanEdited = true;
+            RequestFlightPlanUpdate();
+        }
+
+        /// <summary>Drops the edited plan: the stage-number settings generate it again.</summary>
+        public void ResetPlanToSettings(MechJebModuleAscentSettings settings)
+        {
+            PlanEdited = false;
+            UpdateLogicalPlan(settings);
         }
 
         private void HandleDoneTask()

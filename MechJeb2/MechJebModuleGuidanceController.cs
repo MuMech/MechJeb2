@@ -250,7 +250,8 @@ namespace MuMech
                 return;
 
             // if we are coast-during then prevent coasting if we will be coasting this stage (first burn of burn-coast-burn)
-            if (_ascentSettings.CoastLocation == 0 && Vessel.currentStage == Solution.CoastKSPStage() && Solution.WillCoast(VesselState.MET))
+            if (Core.PSGSimulation.PlannedCoast().Kind == StageType.COAST_DURING && Vessel.currentStage == Solution.CoastKSPStage() &&
+                Solution.WillCoast(VesselState.MET))
                 return;
 
             if (Status != PSGStatus.TERMINAL_RCS)

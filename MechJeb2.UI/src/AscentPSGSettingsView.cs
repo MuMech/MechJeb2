@@ -43,7 +43,7 @@ namespace MuMech.UI
         {
             System.Collections.Generic.List<MechJebLib.FuelFlowSimulation.FuelStats> vac = Core.StageStats.VacStats;
             double min = Psgs.MinDeltaV;
-            int top = Settings.LastStage;
+            int top = Psgs.PlannedLastKSPStage();
             double key = min * 7919 + top;
             int count = 0;
             for (int i = 0; i < vac.Count; i++)
@@ -75,6 +75,21 @@ namespace MuMech.UI
         }
 
         // under the stage table: which burns the plan leaves out, in the caution colour
+        // the PSG Stages window, and while the plan is edited there, that the stage fields don't apply
+        void BuildEditorRow(KodeWindow w, UIObject parent)
+        {
+            MechJebModuleAscentPSGStagesMenu editor = Core.GetComputerModule<MechJebModuleAscentPSGStagesMenu>();
+            // the note wraps at the window's width, on its own line above the buttons
+            UIText note = w.Wrap(w.BoundLabel(parent, () => "The plan is edited in PSG Stages: the stage fields below don't apply.", true));
+            KodeWindow.ToneText(note, Tone.Caution);
+            w.Visible(note, () => Psgs.PlanEdited);
+            Layout row = KodeWindow.Row(parent);
+            KodeWindow.FlexibleSpace(row);
+            UIButton reset = KodeWindow.Button(row, "Reset to settings", editor.ResetToSettings);
+            w.Visible(reset.gameObject, () => Psgs.PlanEdited);
+            KodeWindow.Button(row, "Stage editor", () => editor.Enabled = !editor.Enabled);
+        }
+
         void BuildSkipped(KodeWindow w, UIObject parent)
         {
             UIText note = w.Wrap(w.BoundLabel(parent, () => skipped ?? " ", true));
@@ -204,6 +219,7 @@ namespace MuMech.UI
             KodeWindow.Header(stages, "#MechJeb_NewUI_Stages"); //Stages
             BuildStageTable(w, stages);
             BuildSkipped(w, stages);
+            BuildEditorRow(w, stages);
             w.Visible(stages.gameObject, () => hasStages);
 
             KodeWindow.PropertyGrid plan = w.Properties(r);
