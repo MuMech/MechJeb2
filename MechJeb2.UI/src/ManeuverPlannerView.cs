@@ -126,10 +126,11 @@ namespace MuMech.UI
             ExecuteButtons(w, exec);
 
             NodeUi.AutowarpToggle(w, exec, Core, "#MechJeb_Maneu_Autowarp"); //"Auto-warp"
-            w.SwitchRow(exec, "RCS Burn", () => HasNode && Core.Node.RCSOnly, v =>
+            UnityEngine.UI.Toggle rcs = w.SwitchRow(exec, "#MechJeb_NewUI_RcsBurn", () => HasNode && Core.Node.RCSOnly, v => //RCS burn
             {
                 if (HasNode) Core.Node.RCSOnly = v;
             });
+            Tooltips.Add(rcs.transform.parent.gameObject, "#MechJeb_NewUI_RcsBurn_tooltip");
             w.SwitchRow(exec, "#MechJeb_SmartASS_button35", () => HasNode && Core.Node.KillRollRotation, v =>
             {
                 if (HasNode) Core.Node.KillRollRotation = v;
