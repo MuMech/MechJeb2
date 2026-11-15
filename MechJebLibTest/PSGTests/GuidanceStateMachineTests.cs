@@ -115,6 +115,10 @@ namespace MechJebLibTest.PSGTests
             // so a planned cut leaves propellant in it
             public readonly Dictionary<int, double> DryAt = new Dictionary<int, double>();
 
+            // how fast a stage moves the vessel along the trajectory while it burns, against the plan (1 when missing): under 1
+            // it is short of thrust and falls behind
+            public readonly Dictionary<int, double> Rate = new Dictionary<int, double>();
+
             // MET ranges with the engines out though the stage still has propellant (a flameout)
             public readonly List<(double from, double to)> Flameouts = new List<(double, double)>();
 
@@ -146,10 +150,11 @@ namespace MechJebLibTest.PSGTests
             {
                 (V3 r, V3 v) = Solution.StateVectors(_tEff);
                 bool moving = Moving();
+                double step = moving ? DT * StepRate() : 0;
                 V3 a = V3.zero;
                 if (moving)
                 {
-                    (_, V3 v1) = Solution.StateVectors(_tEff + DT);
+                    (_, V3 v1) = Solution.StateVectors(_tEff + step);
                     a = (v1 - v) / DT;
                 }
 
@@ -180,7 +185,7 @@ namespace MechJebLibTest.PSGTests
                 Apply(cmd);
 
                 if (moving)
-                    _tEff += DT;
+                    _tEff += step;
 
                 if (ManualStaging.Count > 0 && Met >= ManualStaging[0])
                 {
@@ -191,6 +196,9 @@ namespace MechJebLibTest.PSGTests
                 Record();
                 Met += DT;
             }
+
+            private double StepRate() =>
+                Lit && _throttle == GuidanceThrottle.SOLUTION && Rate.TryGetValue(Stage, out double rate) ? rate : 1;
 
             // the vessel moves along the trajectory while it burns, or coasts on the Solution's clock
             private bool Moving()
@@ -296,6 +304,50 @@ namespace MechJebLibTest.PSGTests
             f.WhenStage(1).ShouldEqual(Met(0.5) - 4, Flight.DT);
             f.Events.Last(e => e.Status == PSGStatus.BURNING).Met.ShouldEqual(Met(1), Flight.DT);
             f.When(PSGStatus.FINISHED).ShouldEqual(Met(1.25) + 2, Flight.DT);
+        }
+
+        [Fact]
+        public void BoosterBehindPlanBurnsOn()
+        {
+            using Solution solution = BoosterBeforeCoastPlan();
+            var flight = new Flight(solution);
+            // the booster gives 90 % of the planned acceleration and has propellant to spare: it reaches the planned end's
+            // angular momentum 64 / 0.9 s after its start
+            flight.Rate[2] = 0.9;
+            flight.DryAt[2] = Met(1);
+            Flight f = Fly(flight, Met(2));
+
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINISHED });
+            f.When(PSGStatus.COASTING).ShouldEqual(T0 + 64 / 0.9, 2 * Flight.DT);
+            f.WhenStage(1).ShouldEqual(f.When(PSGStatus.COASTING), 1e-9);
+            // the coast still ends on the plan's clock
+            f.Events.Last(e => e.Status == PSGStatus.BURNING).Met.ShouldEqual(Met(1), Flight.DT);
+        }
+
+        [Fact]
+        public void BoosterBehindPlanRunsDry()
+        {
+            using Solution solution = BoosterBeforeCoastPlan();
+            var flight = new Flight(solution);
+            // behind its plan and dry 3 s after the planned end, before it reaches the planned end's angular momentum
+            flight.Rate[2] = 0.9;
+            flight.DryAt[2] = Met(0.5) + 3;
+            Flight f = Fly(flight, Met(2));
+
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINISHED });
+            f.When(PSGStatus.COASTING).ShouldEqual(Met(0.5) + 4, Flight.DT);
+        }
+
+        [Fact]
+        public void BoosterAheadOfPlanWaitsForTheClock()
+        {
+            using Solution solution = BoosterBeforeCoastPlan();
+            var flight = new Flight(solution);
+            // ahead of its plan: the angular momentum is reached early, the cut still comes at the planned end
+            flight.Rate[2] = 1.1;
+            Flight f = Fly(flight, Met(2));
+
+            f.When(PSGStatus.COASTING).ShouldEqual(Met(0.5), Flight.DT);
         }
 
         [Fact]

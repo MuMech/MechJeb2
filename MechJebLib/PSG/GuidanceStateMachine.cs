@@ -149,8 +149,9 @@ namespace MechJebLib.PSG
     ///     holds the segment it flies, and only ever moves on to the next one. Each segment says how it ends:
     ///     - the last burn: terminal guidance when the target is reached (FINAL, with an RCS trim when the RCS is on), or for a
     ///       fixed last burn when it is spent;
-    ///     - a burn before a coast, or an optimized burn the plan cuts with propellant left: at its planned end, on the nearest
-    ///       tick, once the vessel is in its last stage;
+    ///     - a burn before a coast, or an optimized burn the plan cuts with propellant left: once the vessel is in its last stage,
+    ///       at the later of its planned end (on the nearest tick) and the tick its angular momentum reaches the planned end's,
+    ///       so that a burn behind its plan (an engine short of thrust, a plan the optimizer could not update) burns on;
     ///     - a burn the plan burns to depletion: when the vessel stages past it (autostaging, which may go down to the next
     ///       segment's stage);
     ///     - a coast: at its planned end, after the ullage lead (a coast after the last burn is not flown);
@@ -398,9 +399,11 @@ namespace MechJebLib.PSG
                         continue;
                     // the nearest tick to the planned end: cutting now stops seg.EndTime - Met short, the next tick a tick less
                     // than that over.  Only in the segment's last stage: a vessel still in an earlier one keeps burning until
-                    // staging or the spent rule brings it there.
-                    case SegmentEnd.CUT when seg.EndTime - inputs.Met < 0.5 * inputs.Dt && inputs.KSPStage <= seg.LastKSPStage:
-                        Print($"[GuidanceStateMachine] cut at the planned end of the burn in stage {inputs.KSPStage}.");
+                    // staging or the spent rule brings it there.  A vessel short of the planned end's angular momentum burns on
+                    // until it gets there, or until the spent rule ends the burn.
+                    case SegmentEnd.CUT when seg.EndTime - inputs.Met < 0.5 * inputs.Dt && inputs.KSPStage <= seg.LastKSPStage &&
+                        EndStateReached(seg, inputs):
+                        Print($"[GuidanceStateMachine] cut at the end of the burn in stage {inputs.KSPStage}, {inputs.Met - seg.EndTime:F1} s after its planned end.");
                         Advance(inputs, ref cmd, true);
                         continue;
                     case SegmentEnd.TERMINAL:
@@ -685,6 +688,24 @@ namespace MechJebLib.PSG
                     return true;
             return false;
         }
+
+        // the vessel's angular momentum at the next tick reaches the one the plan has at the segment's end, within a relative
+        // 1e-5: on the plan the two only meet to the rounding of the interpolants
+        private bool EndStateReached(in Segment seg, in GuidanceInputs inputs)
+        {
+            InterpolantLayout end = Solution!.State(seg.Last, seg.EndTime);
+            double hT = V3.Cross(end.R, end.V).magnitude;
+
+            double dt = inputs.Dt;
+            V3 v1 = inputs.V + inputs.A * dt;
+            V3 x1 = inputs.R + inputs.V * dt + 0.5 * inputs.A * dt * dt;
+
+            double h1 = V3.Cross(x1, v1).magnitude;
+
+            return h1 >= hT * (1 - END_STATE_TOLERANCE);
+        }
+
+        private const double END_STATE_TOLERANCE = 1e-5;
 
         // the plan ends the burn with propellant left in the stage
         private static bool PropellantLeft(Solution solution, int p)
