@@ -99,6 +99,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int scaleIdx;
 
+        // graphs of one unit share a Y range (see drawnStates); off, each graph keeps its own
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool sharedScales = true;
+
         public bool ascentPath = false;
 
         internal static Texture2D backgroundTexture;
@@ -108,8 +112,8 @@ namespace MuMech
         // each graph's own Y range, grown from what it recorded since the mark
         internal readonly graphState[] graphStates;
 
-        // the Y range each graph is drawn and labelled with: graphs of one unit share the widest range among the
-        // displayed graphs of their group (or among all of them when none is displayed), so the same value is
+        // the Y range each graph is drawn and labelled with. With sharedScales, graphs of one unit share the widest range
+        // among the displayed graphs of their group (or among all of them when none is displayed), so the same value is
         // drawn at the same height whichever of them the Y labels show
         internal readonly graphState[] drawnStates;
 
@@ -302,6 +306,7 @@ namespace MuMech
         private void ShareRanges()
         {
             Array.Copy(graphStates, drawnStates, typeCount);
+            if (!sharedScales) return;
 
             foreach (RecordType[] group in rangeGroups)
             {
