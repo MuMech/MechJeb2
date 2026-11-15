@@ -1,6 +1,5 @@
 extern alias JetBrainsAnnotations;
 using System;
-using System.Collections.Generic;
 using KSP.Localization;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -212,7 +211,7 @@ namespace MuMech
             // since the pitch program goes on down to the horizon
             if (Core.Guidance.Solution == null)
                 Status.Set($"No guidance yet, pitch program at {pitch:F0}°. " +
-                    MechJebModuleAscentMenu.OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, true, false,
+                    PSGFeedback.OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, true, false,
                         Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0),
                     AscentStatusLevel.WARNING);
             else
@@ -280,7 +279,7 @@ namespace MuMech
         private bool SetLockStatus()
         {
             bool taken = Core.DeactivateControl;
-            string lockId = SteeringLockId();
+            string lockId = PSGFeedback.SteeringLockId();
             if (!taken && lockId == null)
                 return false;
 
@@ -290,32 +289,11 @@ namespace MuMech
                 _lockStatusId     = lockId;
                 _lockStatusSpinup = spinupHeld;
                 _lockStatusTaken  = taken;
-                string who = lockId ?? "another mod";
-                _lockStatus = spinupHeld
-                    ? $"Controls locked by {who}: the spin-up can't start, so staging is held"
-                    : $"Controls locked by {who}: MechJeb can't steer or throttle";
+                _lockStatus       = PSGFeedback.LockStatus(lockId, spinupHeld);
             }
 
             Status.Set(_lockStatus, AscentStatusLevel.ERROR);
             return true;
-        }
-
-        /// <summary>
-        ///     The id of an input lock that blocks steering on the vessel, or null (MechJeb sets none: its own lock only blocks clicks). RP-1's is
-        ///     "RP0ControlLocker". Walks the lock dictionary with its struct enumerator, so no garbage.
-        /// </summary>
-        internal static string SteeringLockId()
-        {
-            if (!InputLockManager.IsLocked(ControlTypes.PITCH))
-                return null;
-
-            foreach (KeyValuePair<string, ulong> entry in InputLockManager.lockStack)
-            {
-                if ((entry.Value & (ulong)ControlTypes.PITCH) != 0)
-                    return entry.Key;
-            }
-
-            return null;
         }
 
         private Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
