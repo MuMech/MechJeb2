@@ -4,12 +4,32 @@
  */
 
 using System;
+using System.Collections.Generic;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.PSG
 {
-    public enum PSGStatus { ENABLED, INITIALIZED, BURNING, COASTING, TERMINAL, TERMINAL_RCS, TERMINAL_STAGING, FINISHED }
+    public enum PSGStatus
+    {
+        // engaged, waiting for a Solution or for the autopilot to let guidance fly
+        WAITING,
+
+        // flying a burn segment
+        BURNING,
+
+        // flying a coast segment
+        COASTING,
+
+        // the last burn's terminal guidance: steering frozen, cutting on the tick the target is reached
+        FINAL,
+
+        // the last burn finished with the RCS
+        FINAL_RCS,
+
+        FINISHED
+    }
 
     // what guidance does with the main throttle and the RCS this tick
     public enum GuidanceThrottle
@@ -87,9 +107,6 @@ namespace MechJebLib.PSG
 
         // how long before the end of a coast the RCS settles the propellant
         public double UllageLeadTime;
-
-        // the coast is a coast-during (inside the burn of one KSP stage)
-        public bool CoastDuring;
     }
 
     /// <summary>
@@ -122,12 +139,64 @@ namespace MechJebLib.PSG
     }
 
     /// <summary>
-    ///     The decisions of the PSG guidance controller: which part of the Solution the vessel is flying, when a burn ends, when
-    ///     to coast, stage and finish. The KSP side gathers the inputs, calls Step once per physics tick, and applies the command.
+    ///     The decisions of the PSG guidance controller. The KSP side gathers the inputs, calls Step once per physics tick, and
+    ///     applies the command.
+    ///     The Solution's phases are grouped into segments: a coast on its own, or a run of burns up to a coast, a change between
+    ///     optimized and fixed burns, or the last burn (the terminal stage; the pruned stages after it are not flown). Guidance
+    ///     holds the segment it flies, and only ever moves on to the next one. Each segment says how it ends:
+    ///     - the last burn: terminal guidance when the target is reached (FINAL, with an RCS trim when the RCS is on), or for a
+    ///       fixed last burn when it is spent;
+    ///     - a burn before a coast, or an optimized burn the plan cuts with propellant left: at its planned end, on the nearest
+    ///       tick;
+    ///     - a burn the plan burns to depletion: when the vessel stages past it (autostaging, which may go down to the next
+    ///       segment's stage);
+    ///     - a coast: at its planned end, after the ullage lead;
+    ///     - any burn: when it is spent (no thrust and nothing left in its last stage for a second, or no thrust past its planned
+    ///       end), or when the vessel has staged into the next segment.
+    ///     Guidance stages only into a segment it moved to itself; the autostage limit keeps autostaging within the segment.
     /// </summary>
     public class GuidanceStateMachine
     {
-        public PSGStatus Status { get; private set; } = PSGStatus.ENABLED;
+        private enum SegmentEnd
+        {
+            // cut at the planned end
+            CUT,
+
+            // the plan burns it out: staging moves on
+            DEPLETION,
+
+            // terminal guidance on the target
+            TERMINAL,
+
+            // a coast's planned end
+            COAST
+        }
+
+        private struct Segment
+        {
+            public int        First;
+            public int        Last;
+            public SegmentEnd End;
+            public bool       IsLast;
+
+            // the highest and lowest KSP stage of its phases
+            public int FirstKSPStage;
+            public int LastKSPStage;
+
+            public double EndTime;
+
+            public bool Coast => End == SegmentEnd.COAST;
+
+            public override string ToString() => $"phases {First}-{Last} {End}{(IsLast ? " last" : "")} stages {FirstKSPStage}-{LastKSPStage} ends {EndTime:F2}";
+        }
+
+        // what the cut leaves within a tick and what stays in a stage the plan burns out, relative to the stage's mass
+        private const double PROPELLANT_LEFT = 1e-3;
+
+        // terminal guidance starts this long before the end of the last burn
+        private const double FINAL_TIME = 10;
+
+        public PSGStatus Status { get; private set; } = PSGStatus.WAITING;
 
         public Solution? Solution { get; private set; }
 
@@ -137,32 +206,62 @@ namespace MechJebLib.PSG
         // the universal time the last coast started
         public double StartCoast { get; private set; }
 
+        private readonly List<Segment> _segments = new List<Segment>();
+
+        private int _cursor;
+
+        // the phases of the segments already flown (KSP stage, coast, after a coast): the Solutions solved in flight start
+        // from the vessel's state, and one solved before guidance moved on still has the segment it left
+        private readonly List<int> _done = new List<int>();
+
         private double _spentSince = double.NaN;
 
-        public bool IsTerminal() => Status == PSGStatus.TERMINAL_RCS || Status == PSGStatus.TERMINAL_STAGING || Status == PSGStatus.TERMINAL;
+        // guidance moved on to a segment it has to stage into
+        private bool _stagePending;
 
-        // not terminal guidance and not finished: when the optimizer should run
-        public bool IsNormal() => Status == PSGStatus.INITIALIZED || Status == PSGStatus.BURNING || Status == PSGStatus.COASTING;
+        public bool IsTerminal() => Status == PSGStatus.FINAL || Status == PSGStatus.FINAL_RCS;
 
         public bool IsCoasting() => Status == PSGStatus.COASTING;
 
-        public bool IsRCSTrim() => Status == PSGStatus.TERMINAL_RCS;
+        public bool IsRCSTrim() => Status == PSGStatus.FINAL_RCS;
+
+        // flying a burn or a coast, or with a Solution and waiting to fly it: when the optimizer should run
+        public bool IsNormal() => (Status == PSGStatus.WAITING && Solution != null) || Status == PSGStatus.BURNING || Status == PSGStatus.COASTING;
+
+        // waiting or flying normally: not in terminal guidance and not finished
+        public bool IsReady() => Status == PSGStatus.WAITING || Status == PSGStatus.BURNING || Status == PSGStatus.COASTING;
+
+        // the steering can be followed
+        public bool IsStable() => IsNormal() || IsTerminal();
 
         // the state of an enabled controller with nothing to fly yet
         public void Reset()
         {
-            Status = PSGStatus.ENABLED;
+            Status = PSGStatus.WAITING;
             Solution = null;
             HasCoasted = false;
             StartCoast = 0;
+            _segments.Clear();
+            _cursor = 0;
+            _done.Clear();
             _spentSince = double.NaN;
+            _stagePending = false;
         }
 
         public void SetSolution(Solution solution)
         {
+            if (Status == PSGStatus.FINISHED)
+                return;
+
             Solution = solution;
-            if (Status == PSGStatus.ENABLED)
-                Status = PSGStatus.INITIALIZED;
+            BuildSegments(solution);
+
+            _cursor = 0;
+            while (_cursor < _segments.Count - 1 && IsDone(_segments[_cursor]))
+                _cursor++;
+
+            if (Status == PSGStatus.BURNING || Status == PSGStatus.COASTING)
+                Status = _segments[_cursor].Coast ? PSGStatus.COASTING : PSGStatus.BURNING;
         }
 
         public void Finish()
@@ -175,16 +274,20 @@ namespace MechJebLib.PSG
         {
             GuidanceCommand cmd = GuidanceCommand.None;
 
-            if (Status == PSGStatus.ENABLED)
-                return cmd;
-
             if (Status == PSGStatus.FINISHED)
             {
                 cmd.Finished = true;
                 return cmd;
             }
 
-            HandleTerminal(inputs, ref cmd);
+            if (Solution == null || !inputs.AllowExecution)
+                return cmd;
+
+            if (Status == PSGStatus.WAITING)
+                Enter(inputs, ref cmd);
+
+            if (!inputs.Grounded)
+                Transitions(inputs, ref cmd);
 
             if (cmd.Finished)
             {
@@ -192,128 +295,217 @@ namespace MechJebLib.PSG
                 return cmd;
             }
 
-            HandleThrottle(inputs, ref cmd);
+            Drive(inputs, ref cmd);
 
             return cmd;
         }
 
-        private bool IsThrustOn() => Status == PSGStatus.BURNING || IsTerminal();
-
-        // under 1 mm/s² on this vessel
-        private static bool NoThrust(double thrust, in GuidanceInputs inputs) => thrust < 1e-3 * inputs.Mass;
-
-        // under 1 m/s left in the current stage by the stage stats; not empty while they have nothing for it
-        private static bool StageEmpty(in GuidanceInputs inputs) => inputs.StageDeltaV < 1;
-
-        private bool WillDoRCSButNotYet(in GuidanceInputs inputs) =>
-            inputs.ForwardRCS && inputs.RCSGroup && Status != PSGStatus.TERMINAL_RCS && inputs.KSPStage == Solution!.TerminalKSPStage();
-
-        private void HandleTerminal(in GuidanceInputs inputs, ref GuidanceCommand cmd)
+        private void Transitions(in GuidanceInputs inputs, ref GuidanceCommand cmd)
         {
-            if (Solution == null)
-                return;
-
-            if (!IsThrustOn())
+            // a segment's end can take guidance straight past the next one (a vessel staged two segments ahead)
+            for (int n = 0; n <= _segments.Count; n++)
             {
-                _spentSince = double.NaN;
+                Segment seg = _segments[_cursor];
+
+                // staged past the segment
+                if (inputs.KSPStage < seg.LastKSPStage)
+                {
+                    if (seg.IsLast)
+                    {
+                        Print("[GuidanceStateMachine] staged past the last stage.");
+                        cmd.Finished = true;
+                        return;
+                    }
+
+                    if (inputs.KSPStage <= _segments[_cursor + 1].FirstKSPStage)
+                    {
+                        Advance(inputs, ref cmd, false);
+                        continue;
+                    }
+                }
+
+                if (!seg.Coast && Spent(seg, inputs))
+                {
+                    if (seg.IsLast)
+                    {
+                        Print($"[GuidanceStateMachine] the last stage ran dry {seg.EndTime - inputs.Met:F1} s before the end of the burn.");
+                        cmd.Finished = true;
+                        return;
+                    }
+
+                    Print($"[GuidanceStateMachine] the burn in stage {inputs.KSPStage} ran dry {seg.EndTime - inputs.Met:F1} s before its end.");
+                    // a burned out stage is autostaging's to drop: only a segment that ends on guidance's cut is staged off here
+                    Advance(inputs, ref cmd, seg.End == SegmentEnd.CUT);
+                    continue;
+                }
+
+                switch (seg.End)
+                {
+                    case SegmentEnd.COAST when inputs.Met >= seg.EndTime:
+                        Print("[GuidanceStateMachine] end of the coast.");
+                        Advance(inputs, ref cmd, true);
+                        continue;
+                    // the nearest tick to the planned end: cutting now stops seg.EndTime - Met short, the next tick a tick less
+                    // than that over
+                    case SegmentEnd.CUT when seg.EndTime - inputs.Met < 0.5 * inputs.Dt:
+                        Print($"[GuidanceStateMachine] cut at the planned end of the burn in stage {inputs.KSPStage}.");
+                        Advance(inputs, ref cmd, true);
+                        continue;
+                    case SegmentEnd.TERMINAL:
+                        TerminalGuidance(seg, inputs, ref cmd);
+                        return;
+                }
+
                 return;
             }
+        }
 
-            if (inputs.Grounded)
-                return;
+        // the last segment's terminal guidance
+        private void TerminalGuidance(in Segment seg, in GuidanceInputs inputs, ref GuidanceCommand cmd)
+        {
+            int terminalStage = Solution!.KSPStage(seg.Last);
 
-            // past the last stage
-            if (inputs.KSPStage < Solution.TerminalKSPStage())
+            if (Status == PSGStatus.BURNING)
             {
-                cmd.Finished = true;
-                return;
-            }
-
-            if (TerminalStageSpent(inputs))
-            {
-                Print($"[GuidanceStateMachine] the last stage ran dry {Solution.Tgo(inputs.Met):F1} s before the end of the burn.");
-                cmd.Finished = true;
-                return;
-            }
-
-            // the end of a fixed burn time last stage, which never gets terminal guidance
-            if (Solution.OptimizeKSPStage() != Solution.TerminalKSPStage() && inputs.KSPStage <= Solution.TerminalKSPStage() &&
-                Solution.Tgo(inputs.Met) <= 0 && NoThrust(inputs.ThrustAvailable, inputs))
-            {
-                cmd.Finished = true;
-                return;
-            }
-
-            if (Status == PSGStatus.TERMINAL_STAGING)
-            {
-                if (inputs.KSPStage == Solution.OptimizeKSPStage())
+                if (seg.EndTime - inputs.Met > FINAL_TIME || inputs.KSPStage > terminalStage)
                     return;
 
-                Status = PSGStatus.BURNING;
-            }
-
-            if (inputs.KSPStage != Solution.OptimizeKSPStage())
-                return;
-
-            if (Solution.TgoForKSPStage(inputs.Met, inputs.KSPStage) > 10)
-                return;
-
-            if (IsCoasting())
-                return;
-
-            // the first burn of a coast-during burn-coast-burn
-            if (inputs.CoastDuring && inputs.KSPStage == Solution.CoastKSPStage() && Solution.WillCoast(inputs.Met))
-                return;
-
-            if (Status != PSGStatus.TERMINAL_RCS)
-            {
-                if (Status != PSGStatus.TERMINAL && inputs.ForwardRCS && !inputs.RCSGroup && inputs.KSPStage == Solution.TerminalKSPStage())
+                if (inputs.ForwardRCS && !inputs.RCSGroup)
                     cmd.Messages |= GuidanceMessages.RCS_OFF;
-                Status = PSGStatus.TERMINAL;
+                Status = PSGStatus.FINAL;
             }
 
             cmd.MinimumWarp = true;
 
-            if (Status == PSGStatus.TERMINAL_RCS && !inputs.RCSGroup)
+            if (Status == PSGStatus.FINAL_RCS && !inputs.RCSGroup)
             {
                 Print("[GuidanceStateMachine] terminating guidance due to manual deactivation of RCS.");
-                TerminalDone(inputs, ref cmd);
+                cmd.Finished = true;
                 return;
             }
 
-            // stopping one tick short is more accurate for rockets without RCS, but sometimes we overshoot with only one tick
-            int ticks = WillDoRCSButNotYet(inputs) ? 2 : 1;
+            bool willTrim = Status == PSGStatus.FINAL && inputs.ForwardRCS && inputs.RCSGroup && inputs.KSPStage == terminalStage;
 
-            double dt = ticks * inputs.Dt;
+            // stopping one tick short is more accurate for rockets without RCS, but sometimes we overshoot with only one tick
+            double dt = (willTrim ? 2 : 1) * inputs.Dt;
             V3 v1 = inputs.V + inputs.A * dt;
             V3 x1 = inputs.R + inputs.V * dt + 0.5 * inputs.A * dt * dt;
 
             if (!Solution.TerminalGuidanceSatisfied(x1, v1, inputs.Met, inputs.KSPStage))
                 return;
 
-            if (WillDoRCSButNotYet(inputs))
+            if (willTrim)
             {
                 Print("[GuidanceStateMachine] transition to RCS terminal guidance.");
                 cmd.Messages |= GuidanceMessages.RCS_TRIM;
-                Status = PSGStatus.TERMINAL_RCS;
                 cmd.RCSGroupOn = true;
+                Status = PSGStatus.FINAL_RCS;
+                return;
             }
-            else
+
+            Print("[GuidanceStateMachine] terminal guidance completed.");
+            cmd.Finished = true;
+        }
+
+        // the throttle, RCS, warp and staging of the state; no state changes here
+        private void Drive(in GuidanceInputs inputs, ref GuidanceCommand cmd)
+        {
+            Segment seg = _segments[_cursor];
+
+            cmd.AutoStageLimit = AutoStageLimit();
+
+            if (_stagePending)
             {
-                Print("[GuidanceStateMachine] terminal guidance completed.");
-                TerminalDone(inputs, ref cmd);
+                // the stage after the first one (an interstage, a decoupler before the engines) with the staging delays
+                if (inputs.KSPStage > seg.FirstKSPStage)
+                {
+                    if (cmd.Staging == GuidanceStaging.NONE)
+                        cmd.Staging = GuidanceStaging.STAGE;
+                }
+                else
+                    _stagePending = false;
+            }
+
+            if (HasCoasted && !seg.Coast)
+                cmd.MarkCoastDone = true;
+
+            switch (Status)
+            {
+                case PSGStatus.COASTING:
+                    cmd.Throttle = seg.EndTime - inputs.Met < inputs.UllageLeadTime ? GuidanceThrottle.RCS_FORWARD : GuidanceThrottle.OFF;
+                    break;
+                case PSGStatus.FINAL_RCS:
+                    cmd.Throttle = GuidanceThrottle.RCS_FORWARD;
+                    break;
+                default:
+                    cmd.Throttle = GuidanceThrottle.SOLUTION;
+                    if (seg.End == SegmentEnd.CUT && seg.EndTime - inputs.Met <= FINAL_TIME)
+                        cmd.MinimumWarp = true;
+                    break;
             }
         }
 
-        // On the terminal stage with no thrust left to give, for a second
-        private bool TerminalStageSpent(in GuidanceInputs inputs)
+        // autostaging stays within the segment, except that a burn the plan burns out may be dropped into the next segment
+        private int AutoStageLimit()
         {
-            // a RealFuels engine that has not lit yet has no ThrustAvailable either, but still has its propellant: in a burn the
-            // stage stats must say it is empty too
-            bool spent = inputs.KSPStage == Solution!.TerminalKSPStage() &&
-                (Status == PSGStatus.TERMINAL_RCS
+            Segment seg = _segments[_cursor];
+            if (seg.End == SegmentEnd.DEPLETION && !seg.IsLast)
+                return _segments[_cursor + 1].FirstKSPStage;
+            return seg.LastKSPStage;
+        }
+
+        // start flying the current segment
+        private void Enter(in GuidanceInputs inputs, ref GuidanceCommand cmd)
+        {
+            _spentSince = double.NaN;
+
+            if (!_segments[_cursor].Coast)
+            {
+                Status = PSGStatus.BURNING;
+                return;
+            }
+
+            Status = PSGStatus.COASTING;
+            HasCoasted = true;
+            StartCoast = inputs.Time;
+            if (!inputs.RCSGroup)
+            {
+                cmd.RCSGroupOn = true;
+                cmd.Messages |= GuidanceMessages.RCS_COAST;
+            }
+        }
+
+        // move on to the next segment, staging into it if guidance ended this one
+        private void Advance(in GuidanceInputs inputs, ref GuidanceCommand cmd, bool stage)
+        {
+            Segment seg = _segments[_cursor];
+            for (int p = seg.First; p <= seg.Last; p++)
+            {
+                int key = Key(p);
+                if (!_done.Contains(key))
+                    _done.Add(key);
+            }
+
+            _cursor++;
+            Segment next = _segments[_cursor];
+
+            _stagePending = stage && inputs.KSPStage > next.FirstKSPStage;
+            // the cut and the stage on one tick: a hot handover to the next burn, or the coast's separation
+            if (_stagePending)
+                cmd.Staging = GuidanceStaging.IMMEDIATE;
+
+            Enter(inputs, ref cmd);
+        }
+
+        // the segment's last stage has no thrust left to give for a second: nothing left in it, or past its planned end.  A
+        // RealFuels engine that has not lit yet has no ThrustAvailable either, but still has its propellant.  In the RCS trim the
+        // RCS is what has to be out.
+        private bool Spent(in Segment seg, in GuidanceInputs inputs)
+        {
+            bool spent = Status != PSGStatus.WAITING && inputs.KSPStage <= seg.LastKSPStage &&
+                (Status == PSGStatus.FINAL_RCS
                     ? NoThrust(inputs.RCSThrustUp, inputs)
-                    : NoThrust(inputs.ThrustAvailable, inputs) && StageEmpty(inputs));
+                    : NoThrust(inputs.ThrustAvailable, inputs) && (inputs.StageDeltaV < 1 || inputs.Met >= seg.EndTime));
 
             if (!spent)
             {
@@ -327,96 +519,104 @@ namespace MechJebLib.PSG
             return inputs.Time - _spentSince >= 1;
         }
 
-        private void HandleThrottle(in GuidanceInputs inputs, ref GuidanceCommand cmd)
+        // under 1 mm/s² on this vessel
+        private static bool NoThrust(double thrust, in GuidanceInputs inputs) => thrust < 1e-3 * inputs.Mass;
+
+        private bool IsDone(in Segment seg)
         {
-            if (Solution == null)
-                return;
+            for (int p = seg.First; p <= seg.Last; p++)
+                if (!_done.Contains(Key(p)))
+                    return false;
+            return true;
+        }
 
-            if (!inputs.AllowExecution)
-                return;
+        // a phase by its KSP stage, whether it is the (only) coast, and for a burn whether it comes after the coast: the two
+        // burns of a coast-during coast share a KSP stage.  A Solution solved after the coast doesn't have it any more.
+        private int Key(int p)
+        {
+            Solution solution = Solution!;
+            if (solution.CoastPhase(p))
+                return solution.KSPStage(p) * 4 + 1;
 
-            if (Status == PSGStatus.TERMINAL_RCS)
+            bool hasCoast = false, afterCoast = false;
+            for (int i = 0; i < solution.Segments; i++)
+                if (solution.CoastPhase(i))
+                {
+                    hasCoast = true;
+                    afterCoast = i < p;
+                    break;
+                }
+
+            if (!hasCoast)
+                afterCoast = HasCoasted;
+
+            return solution.KSPStage(p) * 4 + (afterCoast ? 2 : 0);
+        }
+
+        private void BuildSegments(Solution solution)
+        {
+            _segments.Clear();
+
+            int terminal = -1;
+            for (int p = 0; p < solution.Segments; p++)
+                if (solution.Phases[p].TerminalStage)
+                    terminal = p;
+            Check.True(terminal >= 0, "Solution has no terminal stage");
+
+            for (int p = 0; p <= terminal; p++)
             {
-                cmd.Throttle = GuidanceThrottle.RCS_FORWARD;
-                return;
+                Phase phase = solution.Phases[p];
+                Phase? prev = p > 0 ? solution.Phases[p - 1] : null;
+
+                bool newSegment = prev == null || phase.Coast || prev.Coast || phase.AllowShutdown != prev.AllowShutdown ||
+                    phase.Unguided != prev.Unguided;
+
+                if (newSegment)
+                    _segments.Add(new Segment { First = p, Last = p, FirstKSPStage = phase.KSPStage, LastKSPStage = phase.KSPStage });
+
+                Segment seg = _segments[_segments.Count - 1];
+                seg.Last = p;
+                seg.LastKSPStage = Math.Min(seg.LastKSPStage, phase.KSPStage);
+                seg.FirstKSPStage = Math.Max(seg.FirstKSPStage, phase.KSPStage);
+                seg.EndTime = solution.EndTime(p);
+                _segments[_segments.Count - 1] = seg;
             }
 
-            if (Status == PSGStatus.TERMINAL || Status == PSGStatus.TERMINAL_STAGING)
+            for (int i = 0; i < _segments.Count; i++)
             {
-                cmd.Throttle = GuidanceThrottle.SOLUTION;
-                return;
-            }
+                Segment seg = _segments[i];
+                Phase last = solution.Phases[seg.Last];
+                seg.IsLast = i == _segments.Count - 1;
 
-            int coastStage = Solution.CoastKSPStage();
+                if (last.Coast)
+                    seg.End = SegmentEnd.COAST;
+                else if (seg.IsLast)
+                    seg.End = AnyAllowShutdown(solution, seg) ? SegmentEnd.TERMINAL : SegmentEnd.DEPLETION;
+                else if (solution.Phases[_segments[i + 1].First].Coast || (last.AllowShutdown && PropellantLeft(solution, seg.Last)))
+                    seg.End = SegmentEnd.CUT;
+                else
+                    seg.End = SegmentEnd.DEPLETION;
 
-            // hold autostaging at the coast's stage while the coast is ahead, else at the top of the rocket, so that the RCS trim
-            // keeps a spent insertion stage
-            if (coastStage >= 0 && inputs.KSPStage >= coastStage && Solution.WillCoast(inputs.Met))
-                cmd.AutoStageLimit = coastStage;
-            else
-                cmd.AutoStageLimit = Solution.TerminalKSPStage();
-
-            // terminal guidance may have shut down the burn before the coast slightly ahead of the (frozen) solution's planned
-            // coast start, so stay in the coast until the solution's coast is behind us
-            bool solutionCoast = Solution.Coast(inputs.Met);
-
-            if (solutionCoast || (IsCoasting() && Solution.WillCoast(inputs.Met)))
-            {
-                if (!IsCoasting())
-                    DoCoast(inputs, ref cmd);
-
-                cmd.Throttle = solutionCoast && Solution.StageTimeLeft(inputs.Met) < inputs.UllageLeadTime
-                    ? GuidanceThrottle.RCS_FORWARD
-                    : GuidanceThrottle.OFF;
-
-                // a relightable booster below a coast-before/dedicated coast is not dropped by autostaging
-                if (inputs.KSPStage > coastStage)
-                    cmd.Staging = GuidanceStaging.STAGE;
-            }
-            else
-            {
-                if (HasCoasted)
-                    cmd.MarkCoastDone = true;
-
-                cmd.Throttle = GuidanceThrottle.SOLUTION;
-
-                Status = PSGStatus.BURNING;
+                _segments[i] = seg;
             }
         }
 
-        private void TerminalDone(in GuidanceInputs inputs, ref GuidanceCommand cmd)
+        private static bool AnyAllowShutdown(Solution solution, in Segment seg)
         {
-            // the burn just shut down is followed by the coast
-            if (Solution!.CoastFollows(inputs.Met))
-            {
-                cmd.Throttle = GuidanceThrottle.OFF;
-                DoCoast(inputs, ref cmd);
-                return;
-            }
-
-            // more un-optimized upper stages to burn
-            if (Solution.TerminalKSPStage() != inputs.KSPStage && Solution.OptimizeKSPStage() == inputs.KSPStage)
-            {
-                cmd.Throttle = GuidanceThrottle.OFF;
-                cmd.Staging = GuidanceStaging.IMMEDIATE;
-                Status = PSGStatus.TERMINAL_STAGING;
-                return;
-            }
-
-            cmd.Finished = true;
+            for (int p = seg.First; p <= seg.Last; p++)
+                if (solution.Phases[p].AllowShutdown)
+                    return true;
+            return false;
         }
 
-        private void DoCoast(in GuidanceInputs inputs, ref GuidanceCommand cmd)
+        // the plan ends the burn with propellant left in the stage
+        private static bool PropellantLeft(Solution solution, int p)
         {
-            StartCoast = inputs.Time;
-            if (!inputs.RCSGroup)
-            {
-                cmd.RCSGroupOn = true;
-                cmd.Messages |= GuidanceMessages.RCS_COAST;
-            }
-
-            Status = PSGStatus.COASTING;
-            HasCoasted = true;
+            Phase phase = solution.Phases[p];
+            double mEnd = solution.State(p, solution.EndTime(p)).M;
+            return mEnd - phase.Mf > PROPELLANT_LEFT * phase.M0;
         }
+
+        public override string ToString() => $"{Status} segment {_cursor}: {(_segments.Count > _cursor ? _segments[_cursor].ToString() : "none")}";
     }
 }

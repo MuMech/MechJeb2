@@ -28,7 +28,8 @@ namespace MechJebLibTest.PSGTests
 
         private static double Met(double tbar) => T0 + tbar * TIME_SCALE;
 
-        private static Seg Burn(Phase phase, double tbar0, double tbar1) => new Seg(phase, tbar0, tbar1, 1024, 512, _xHat, _xHat, 1, 1);
+        // a burn from 1024 kg down to mf (the stage is empty at 512 kg)
+        private static Seg Burn(Phase phase, double tbar0, double tbar1, double mf = 512) => new Seg(phase, tbar0, tbar1, 1024, mf, _xHat, _xHat, 1, 1);
 
         private static Seg Coast(Phase phase, double tbar0, double tbar1) => new Seg(phase, tbar0, tbar1, 512, 512, _xHat, _xHat, 0, 0);
 
@@ -50,10 +51,12 @@ namespace MechJebLibTest.PSGTests
         // an optimized booster (KSP stage 2, 4096-4160 s, cut with propellant left), a coast-before coast (stage 1, 4160-4224 s) and a
         // fixed upper stage (stage 1, 4224-4256 s): the RP-1 Juno I
         private static Solution BoosterBeforeCoastPlan() =>
-            Build(Burn(OptBurn(2, true), 0, 0.5), Coast(NewCoast(1, 1, 512), 0.5, 1), Burn(FixedBurn(1, true), 1, 1.25));
+            Build(Burn(OptBurn(2, true), 0, 0.5, 600), Coast(NewCoast(1, 1, 512), 0.5, 1), Burn(FixedBurn(1, true), 1, 1.25));
 
-        // an optimized booster (KSP stage 2, 4096-4160 s, cut with propellant left) under a fixed upper stage (stage 1, 4160-4192 s)
-        private static Solution BoosterBeforeStackPlan() => Build(Burn(OptBurn(2, true), 0, 0.5), Burn(FixedBurn(1, true), 0.5, 0.75));
+        // an optimized booster (KSP stage 2, 4096-4160 s, cut with propellant left unless boosterMf is its empty mass) under a fixed
+        // upper stage (stage 1, 4160-4192 s)
+        private static Solution BoosterBeforeStackPlan(double boosterMf = 600) =>
+            Build(Burn(OptBurn(2, true), 0, 0.5, boosterMf), Burn(FixedBurn(1, true), 0.5, 0.75));
 
         // one KSP stage that burns (4096-4160 s), coasts (4160-4224 s) and burns again to the target (4224-4256 s)
         private static Solution CoastDuring() =>
@@ -96,7 +99,6 @@ namespace MechJebLibTest.PSGTests
             public int    Stage;
             public bool   RCSGroup;
             public bool   ForwardRCS;
-            public bool   CoastDuring;
             public int    AutoStageLimit = -1;
             public int    Staged;
 
@@ -159,8 +161,7 @@ namespace MechJebLibTest.PSGTests
                     R = r,
                     V = v,
                     A = a,
-                    UllageLeadTime = 20,
-                    CoastDuring = CoastDuring
+                    UllageLeadTime = 20
                 };
 
                 GuidanceCommand cmd = Machine.Step(inputs);
@@ -257,17 +258,14 @@ namespace MechJebLibTest.PSGTests
             using Solution solution = BoosterBeforeCoastPlan();
             Flight f = Fly(new Flight(solution), Met(2));
 
-            f.Statuses().ShouldEqual(new[]
-            {
-                PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINISHED
-            });
-            // terminal guidance cuts the booster on the tick before its end, and staging waits for the coast's stage
-            f.When(PSGStatus.COASTING).ShouldEqual(Met(0.5) - Flight.DT, 1e-9);
-            f.WhenStage(1).ShouldEqual(Met(0.5) - Flight.DT, 1e-9);
-            f.When(PSGStatus.TERMINAL).ShouldEqual(Met(0.5) - 10, Flight.DT);
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINISHED });
+            // no terminal guidance on the booster: cut at its planned end, staged into the coast's stage on the same tick
+            f.When(PSGStatus.COASTING).ShouldEqual(Met(0.5), Flight.DT);
+            f.WhenStage(1).ShouldEqual(f.When(PSGStatus.COASTING), 1e-9);
+            f.Commands.Count(c => c.Staging == GuidanceStaging.IMMEDIATE).ShouldEqual(1);
             f.Events.Last(e => e.Status == PSGStatus.BURNING).Met.ShouldEqual(Met(1), Flight.DT);
-            // the fixed upper stage ends when its engine is out after its planned end
-            f.When(PSGStatus.FINISHED).ShouldEqual(Met(1.25) + 1, Flight.DT);
+            // the fixed upper stage ends a second after its engine is out
+            f.When(PSGStatus.FINISHED).ShouldEqual(Met(1.25) + 2, Flight.DT);
         }
 
         [Fact]
@@ -278,12 +276,12 @@ namespace MechJebLibTest.PSGTests
             flight.DryAt[2] = Met(0.5) - 5;
             Flight f = Fly(flight, Met(2));
 
-            // the Juno hang: the booster runs dry in terminal guidance, which never ends.  Autostaging drops it, and guidance stays
-            // in TERMINAL with the throttle up: no coast, until the upper stage has burned out past its planned end
-            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.FINISHED });
-            f.Commands.Any(c => c.Throttle == GuidanceThrottle.OFF).ShouldBeFalse();
-            f.WhenStage(1).ShouldEqual(Met(0.5) - 5, Flight.DT);
-            f.When(PSGStatus.FINISHED).ShouldEqual(Met(1.25) + 1, Flight.DT);
+            // the Juno: the booster runs dry before its planned end, and a second later guidance stages it off and coasts
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINISHED });
+            f.When(PSGStatus.COASTING).ShouldEqual(Met(0.5) - 4, Flight.DT);
+            f.WhenStage(1).ShouldEqual(Met(0.5) - 4, Flight.DT);
+            f.Events.Last(e => e.Status == PSGStatus.BURNING).Met.ShouldEqual(Met(1), Flight.DT);
+            f.When(PSGStatus.FINISHED).ShouldEqual(Met(1.25) + 2, Flight.DT);
         }
 
         [Fact]
@@ -292,12 +290,11 @@ namespace MechJebLibTest.PSGTests
             using Solution solution = BoosterBeforeStackPlan();
             Flight f = Fly(new Flight(solution), Met(2));
 
-            f.Statuses().ShouldEqual(new[]
-            {
-                PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.TERMINAL_STAGING, PSGStatus.BURNING, PSGStatus.FINISHED
-            });
-            f.WhenStage(1).ShouldEqual(Met(0.5) - Flight.DT, 1e-9);
-            f.When(PSGStatus.FINISHED).ShouldEqual(Met(0.75) + 1, Flight.DT);
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.FINISHED });
+            // cut at its planned end and staged on the same tick
+            f.WhenStage(1).ShouldEqual(Met(0.5), Flight.DT);
+            f.Commands.Count(c => c.Staging == GuidanceStaging.IMMEDIATE).ShouldEqual(1);
+            f.When(PSGStatus.FINISHED).ShouldEqual(Met(0.75) + 2, Flight.DT);
         }
 
         [Fact]
@@ -308,29 +305,43 @@ namespace MechJebLibTest.PSGTests
             flight.DryAt[2] = Met(0.5) - 5;
             Flight f = Fly(flight, Met(2));
 
-            // the booster runs dry before terminal guidance is satisfied: autostaging drops it, and the upper stage burns in
-            // TERMINAL to its end
-            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.FINISHED });
-            f.WhenStage(1).ShouldEqual(Met(0.5) - 5, Flight.DT);
-            f.When(PSGStatus.FINISHED).ShouldEqual(Met(0.75) + 1, Flight.DT);
+            // the booster's autostage limit holds it, and a second after it runs dry guidance stages it off
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.FINISHED });
+            f.WhenStage(1).ShouldEqual(Met(0.5) - 4, Flight.DT);
+            f.When(PSGStatus.FINISHED).ShouldEqual(Met(0.75) + 2, Flight.DT);
+        }
+
+        [Fact]
+        public void OptimizedBoosterBurnedOutBeforeStack()
+        {
+            using Solution solution = BoosterBeforeStackPlan(512);
+            Flight f = Fly(new Flight(solution), Met(2));
+
+            // the plan burns it out: autostaging drops it when it is out, and guidance stages nothing
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.FINISHED });
+            f.WhenStage(1).ShouldEqual(Met(0.5) + 1, Flight.DT);
+            f.Commands.Any(c => c.Staging != GuidanceStaging.NONE).ShouldBeFalse();
+            f.When(PSGStatus.FINISHED).ShouldEqual(Met(0.75) + 2, Flight.DT);
         }
 
         [Fact]
         public void CoastDuringTheBurn()
         {
             using Solution solution = CoastDuring();
-            Flight f = Fly(new Flight(solution) { CoastDuring = true }, Met(2));
+            Flight f = Fly(new Flight(solution), Met(2));
 
             f.Statuses().ShouldEqual(new[]
             {
-                PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.FINISHED
+                PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINAL, PSGStatus.FINISHED
             });
             f.When(PSGStatus.COASTING).ShouldEqual(Met(0.5), Flight.DT);
             f.Events.Last(e => e.Status == PSGStatus.BURNING).Met.ShouldEqual(Met(1), Flight.DT);
+            f.When(PSGStatus.FINAL).ShouldEqual(Met(1.25) - 10, Flight.DT);
             f.When(PSGStatus.FINISHED).ShouldEqual(Met(1.25) - Flight.DT, 1e-9);
             f.Staged.ShouldEqual(0);
             // the ullage: RCS forward for the last 20 s of the coast
             ((double)f.Commands.Count(c => c.Throttle == GuidanceThrottle.RCS_FORWARD)).ShouldEqual(20 / Flight.DT, 2);
+            f.Commands.Count(c => (c.Messages & GuidanceMessages.RCS_COAST) != 0).ShouldEqual(1);
             f.Commands.Any(c => c.MarkCoastDone).ShouldBeTrue();
         }
 
@@ -342,10 +353,10 @@ namespace MechJebLibTest.PSGTests
 
             f.Statuses().ShouldEqual(new[]
             {
-                PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.FINISHED
+                PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINAL, PSGStatus.FINISHED
             });
             f.When(PSGStatus.COASTING).ShouldEqual(Met(0.5), Flight.DT);
-            f.WhenStage(1).ShouldEqual(Met(0.5), Flight.DT);
+            f.WhenStage(1).ShouldEqual(f.When(PSGStatus.COASTING), 1e-9);
             f.When(PSGStatus.FINISHED).ShouldEqual(Met(1.25) - Flight.DT, 1e-9);
         }
 
@@ -358,7 +369,8 @@ namespace MechJebLibTest.PSGTests
             f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.FINISHED });
             // autostaging drops the booster when it is out
             f.WhenStage(0).ShouldEqual(Met(0.5) + 1, Flight.DT);
-            f.When(PSGStatus.FINISHED).ShouldEqual(Met(1) + 1, Flight.DT);
+            f.Commands.Any(c => c.Staging != GuidanceStaging.NONE).ShouldBeFalse();
+            f.When(PSGStatus.FINISHED).ShouldEqual(Met(1) + 2, Flight.DT);
         }
 
         [Fact]
@@ -367,9 +379,9 @@ namespace MechJebLibTest.PSGTests
             using Solution solution = SingleBurn();
             Flight f = Fly(new Flight(solution) { ForwardRCS = true, RCSGroup = true }, Met(2));
 
-            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.TERMINAL_RCS, PSGStatus.FINISHED });
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.FINAL, PSGStatus.FINAL_RCS, PSGStatus.FINISHED });
             // two ticks short on the engine, then one tick on the RCS
-            f.When(PSGStatus.TERMINAL_RCS).ShouldEqual(Met(0.5) - 2 * Flight.DT, 1e-9);
+            f.When(PSGStatus.FINAL_RCS).ShouldEqual(Met(0.5) - 2 * Flight.DT, 1e-9);
             f.When(PSGStatus.FINISHED).ShouldEqual(Met(0.5) - Flight.DT, 1e-9);
             f.Commands.Count(c => (c.Messages & GuidanceMessages.RCS_TRIM) != 0).ShouldEqual(1);
         }
@@ -380,7 +392,7 @@ namespace MechJebLibTest.PSGTests
             using Solution solution = SingleBurn();
             Flight f = Fly(new Flight(solution) { ForwardRCS = true }, Met(2));
 
-            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.FINISHED });
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.FINAL, PSGStatus.FINISHED });
             f.Commands.Count(c => (c.Messages & GuidanceMessages.RCS_OFF) != 0).ShouldEqual(1);
         }
 
@@ -392,9 +404,21 @@ namespace MechJebLibTest.PSGTests
             flight.DryAt[0] = Met(0.5) - 5;
             Flight f = Fly(flight, Met(2));
 
-            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.FINISHED });
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.FINAL, PSGStatus.FINISHED });
             // a second after it runs dry
             f.When(PSGStatus.FINISHED).ShouldEqual(Met(0.5) - 4, Flight.DT);
+        }
+
+        [Fact]
+        public void LastStageRunsDryBeforeFinal()
+        {
+            using Solution solution = SingleBurn();
+            var flight = new Flight(solution);
+            flight.DryAt[0] = Met(0.5) - 30;
+            Flight f = Fly(flight, Met(2));
+
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.FINISHED });
+            f.When(PSGStatus.FINISHED).ShouldEqual(Met(0.5) - 29, Flight.DT);
         }
 
         [Fact]
@@ -405,10 +429,24 @@ namespace MechJebLibTest.PSGTests
             flight.ManualStaging.Add(Met(0.5) - 20);
             Flight f = Fly(flight, Met(2));
 
-            // staged by hand off the booster before its end: the upper stage burns to its end
+            // staged by hand off the booster before its end: guidance moves on without staging again
             f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.FINISHED });
             f.WhenStage(1).ShouldEqual(Met(0.5) - 20, Flight.DT);
-            f.When(PSGStatus.FINISHED).ShouldEqual(Met(0.75) + 1, Flight.DT);
+            f.Staged.ShouldEqual(0);
+            f.When(PSGStatus.FINISHED).ShouldEqual(Met(0.75) + 2, Flight.DT);
+        }
+
+        [Fact]
+        public void EarlyStagingIntoTheCoast()
+        {
+            using Solution solution = BoosterBeforeCoastPlan();
+            var flight = new Flight(solution);
+            flight.ManualStaging.Add(Met(0.5) - 20);
+            Flight f = Fly(flight, Met(2));
+
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINISHED });
+            f.When(PSGStatus.COASTING).ShouldEqual(Met(0.5) - 20, Flight.DT);
+            f.Staged.ShouldEqual(0);
         }
 
         [Fact]
@@ -422,9 +460,73 @@ namespace MechJebLibTest.PSGTests
             // an engine out with propellant left changes nothing: no staging, no end
             f.Statuses().ShouldEqual(new[]
             {
-                PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.FINISHED
+                PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINAL, PSGStatus.FINISHED
             });
             f.WhenStage(1).ShouldEqual(Met(0.5), Flight.DT);
+        }
+
+        [Fact]
+        public void FlameoutAtTheEndOfAFixedLastStage()
+        {
+            using Solution solution = FixedRocket();
+            var flight = new Flight(solution);
+            // the upper stage's engine is out from its planned end on, with propellant left (residuals)
+            flight.DryAt[0] = Met(1) + 30;
+            flight.Flameouts.Add((Met(1), Met(1) + 60));
+            Flight f = Fly(flight, Met(2));
+
+            // past its planned end no thrust is enough
+            f.When(PSGStatus.FINISHED).ShouldEqual(Met(1) + 1, Flight.DT);
+        }
+
+        [Fact]
+        public void StaleSolutionsDoNotGoBack()
+        {
+            using Solution solution = BoosterBeforeCoastPlan();
+            var flight = new Flight(solution);
+            flight.Fly(Met(0.75));
+            flight.Machine.Status.ShouldEqual(PSGStatus.COASTING);
+
+            // a Solution solved before the cut still has the booster
+            flight.Machine.SetSolution(solution);
+            flight.Machine.Status.ShouldEqual(PSGStatus.COASTING);
+            flight.Tick();
+            flight.Machine.Status.ShouldEqual(PSGStatus.COASTING);
+
+            Flight f = Fly(flight, Met(2));
+            f.Statuses().ShouldEqual(new[] { PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINISHED });
+            f.Commands.Count(c => c.Staging == GuidanceStaging.IMMEDIATE).ShouldEqual(1);
+        }
+
+        [Fact]
+        public void SolutionsSolvedInFlight()
+        {
+            using Solution solution = CoastDuring();
+            var flight = new Flight(solution);
+            flight.Fly(Met(0.75));
+            flight.Machine.Status.ShouldEqual(PSGStatus.COASTING);
+
+            // solved in the coast: the rest of the coast and the burn
+            using Solution inCoast = Build(Coast(NewCoast(1, 1, 512), 0.75, 1), Burn(OptBurn(1, true, true), 1, 1.25));
+            flight.Machine.SetSolution(inCoast);
+            flight.Machine.Status.ShouldEqual(PSGStatus.COASTING);
+            flight.Fly(Met(1.1));
+            flight.Machine.Status.ShouldEqual(PSGStatus.BURNING);
+
+            // solved after the coast: the burn alone, the second one in that KSP stage
+            using Solution afterCoast = Build(Burn(OptBurn(1, true, true), 1.1, 1.25));
+            flight.Machine.SetSolution(afterCoast);
+            flight.Machine.Status.ShouldEqual(PSGStatus.BURNING);
+
+            // and a stale one with the coast in it again
+            flight.Machine.SetSolution(inCoast);
+            flight.Machine.Status.ShouldEqual(PSGStatus.BURNING);
+
+            Flight f = Fly(flight, Met(2));
+            f.Statuses().ShouldEqual(new[]
+            {
+                PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINAL, PSGStatus.FINISHED
+            });
         }
 
         // KerbinTests.MainSailTinCanVacuum solved, flown through its burn, coast-during coast and burn
@@ -445,13 +547,13 @@ namespace MechJebLibTest.PSGTests
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
-            var flight = new Flight(solution) { CoastDuring = true };
+            var flight = new Flight(solution);
             flight.Met = solution.T0;
             Flight f = Fly(flight, solution.Tf + 60);
 
             f.Statuses().ShouldEqual(new[]
             {
-                PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.TERMINAL, PSGStatus.FINISHED
+                PSGStatus.BURNING, PSGStatus.COASTING, PSGStatus.BURNING, PSGStatus.FINAL, PSGStatus.FINISHED
             });
             f.When(PSGStatus.COASTING).ShouldEqual(solution.EndTime(0), Flight.DT);
             f.When(PSGStatus.FINISHED).ShouldEqual(solution.Tf, 2 * Flight.DT);
@@ -463,5 +565,7 @@ namespace MechJebLibTest.PSGTests
     {
         public static void ShouldEqual(this PSGStatus[] actual, PSGStatus[] expected) =>
             Assert.Equal(string.Join(", ", expected), string.Join(", ", actual));
+
+        public static void ShouldEqual(this PSGStatus actual, PSGStatus expected) => Assert.Equal(expected, actual);
     }
 }

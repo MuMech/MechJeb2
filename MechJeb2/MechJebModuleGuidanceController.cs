@@ -130,14 +130,14 @@ namespace MuMech
                 Done();
             }
 
-            if (!Enabled || Status == PSGStatus.ENABLED)
+            if (!Enabled || (Status == PSGStatus.WAITING && Solution == null))
                 return;
 
             if (Solution != null && !IsGrounded())
                 FlownTrack.Record(Core);
 
             // RO/RF: if we are spooling up engines, then flush the PID integrators to prevent windup
-            if (Status == PSGStatus.BURNING || Status == PSGStatus.TERMINAL)
+            if (Status == PSGStatus.BURNING || Status == PSGStatus.FINAL)
                 if (VesselState.ThrustCurrent < VesselState.ThrustMinimum * 0.98)
                     Core.Attitude.Controller.Reset();
 
@@ -181,8 +181,7 @@ namespace MuMech
                 R               = VesselState.OrbitalPosition.WorldToV3Rotated(),
                 V               = VesselState.OrbitalVelocity.WorldToV3Rotated(),
                 A               = Vessel.acceleration_immediate.WorldToV3Rotated(),
-                UllageLeadTime  = UllageLeadTime,
-                CoastDuring     = Core.PSGSimulation.PlannedCoast().Kind == StageType.COAST_DURING
+                UllageLeadTime  = UllageLeadTime
             };
 
         private void Apply(in GuidanceCommand cmd)
@@ -260,21 +259,22 @@ namespace MuMech
             Core.Spinup.RollAngularVelocity = _ascentSettings.SpinupAngularVelocity;
         }
 
+        // the last burn's terminal guidance (FINAL, FINAL_RCS)
         public bool IsTerminal() => _machine.IsTerminal();
 
-        /* is guidance usable? */
-        public bool IsStable() => IsNormal() || IsTerminal();
+        // the steering can be followed: flying, or with a Solution to fly
+        public bool IsStable() => _machine.IsStable();
 
-        // either ENABLED and waiting for a Solution, or executing a solution "normally" (not terminal, not failed)
-        public bool IsReady() => Status == PSGStatus.ENABLED || IsNormal();
+        // waiting or flying a burn or a coast: not in terminal guidance and not finished
+        public bool IsReady() => _machine.IsReady();
 
-        // not TERMINAL guidance or TERMINAL_RCS -- when we should be running the optimizer
+        // flying a burn or a coast, or with a Solution and waiting to fly it: when the optimizer should run
         public bool IsNormal() => _machine.IsNormal();
 
         public bool IsCoasting() => _machine.IsCoasting();
 
-        /* normal pre-states but not usefully converged */
-        public bool IsInitializing() => Status == PSGStatus.ENABLED || Status == PSGStatus.INITIALIZED;
+        // waiting for a Solution or for the autopilot to let guidance fly
+        public bool IsInitializing() => Status == PSGStatus.WAITING;
 
         private bool IsGrounded() =>
             Vessel.situation == Vessel.Situations.LANDED ||

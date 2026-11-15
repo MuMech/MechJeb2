@@ -93,7 +93,7 @@ namespace MuMech.MechJebKos
             AddSuffix("HASSOLUTION", new Suffix<BooleanValue>(() => Core.Guidance.Solution != null,
                 "True once the optimizer has produced a guidance solution; starting a timed launch clears it until the optimizer solves again. Wait on this before staging to launch manually (a timed launch holds its own staging until there is one)."));
             AddSuffix("GUIDANCESTATUS", new Suffix<StringValue>(() => Core.Guidance.Status.ToString(),
-                "PSG guidance controller status (ENABLED, INITIALIZED, BURNING, COASTING, TERMINAL, ...)."));
+                "PSG guidance controller status: WAITING, BURNING, COASTING, FINAL (terminal guidance of the last burn), FINAL_RCS (its RCS trim) or FINISHED."));
             AddSuffix("VGO", new Suffix<ScalarValue>(() => Core.Guidance.Vgo,
                 "Velocity-to-go of the current guidance solution in m/s."));
             AddSuffix("TGO", new Suffix<ScalarValue>(() => Core.Guidance.Tgo,
