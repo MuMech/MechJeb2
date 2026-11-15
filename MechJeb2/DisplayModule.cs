@@ -204,8 +204,16 @@ namespace MuMech
 
         private ComputerModule[] _makesActive;
 
+        /// <summary>
+        ///     Whether the autopilot this window drives is engaged, whoever engaged it (this window, another module, kOS): the menu
+        ///     shows the window active then.
+        /// </summary>
+        protected virtual bool AutopilotEngaged => false;
+
         public virtual bool IsActive()
         {
+            if (AutopilotEngaged) return true;
+
             _makesActive ??= new ComputerModule[] { Core.Attitude, Core.Thrust, Core.Rover, Core.Node, Core.RCS, Core.Rcsbal };
 
             bool active = false;

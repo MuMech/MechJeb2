@@ -179,6 +179,10 @@ namespace MuMech
             return port.part?.partInfo?.title ?? port.part?.name ?? "?";
         }
 
+        protected override bool AutopilotEngaged => (_dockingAutopilot ??= Core.GetComputerModule<MechJebModuleDockingAutopilot>()) != null && _dockingAutopilot.Enabled;
+
+        private MechJebModuleDockingAutopilot _dockingAutopilot;
+
         public override string GetName() => Localizer.Format("#MechJeb_Docking_title"); //"Docking Autopilot"
 
         public override string IconName() => "Docking Autopilot";
