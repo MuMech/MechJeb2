@@ -304,9 +304,12 @@ namespace MuMech
 
         public Vector3d SurfaceVelocity;
 
-        // Forward direction of thrust (CoT-CoM).normalized
-        // FIXME: this is Vector3d.zero if throttle is zero!
+        // The neutral trim axis of the engines at max thrust, gimbals at rest (see AnalyzeParts); Vector3d.zero when no engine
+        // has thrust available.
         public Vector3d ThrustForward;
+
+        // The length (m) of CoM - CoT under which ThrustForward moves from CoM - CoT to the direction of the thrust.
+        private const double ThrustAxisLength = 1.0;
 
         // Thrust is a vector.  These are in the same frame of reference as forward and other vectors.
         public Vector3d ThrustVectorLastFrame;
@@ -425,16 +428,20 @@ namespace MuMech
         // for the new UI's torque comparison item
         internal Vector6 DifferentialThrottleTorque => _einfo.TorqueDifferentialThrottle;
 
-        // Thrust in the forward direction (for historical reasons).
-        public double ThrustAvailable => Vector3d.Dot(ThrustVectorMaxThrottle, Forward);
-        public double ThrustMinimum   => Vector3d.Dot(ThrustVectorMinThrottle, Forward);
-        public double ThrustCurrent   => Vector3d.Dot(ThrustVectorLastFrame, Forward);
+        // The axis the autopilots point at their target through the CoT references (INERTIAL_COT, SURFACE_NORTH_COT): the
+        // thrust axis, or the control forward when no engine thrusts (RCS from the main throttle pushes along it).
+        public Vector3d ThrustAxis => ThrustForward.sqrMagnitude > 0.5 ? ThrustForward : Forward;
+
+        // Thrust along ThrustAxis.
+        public double ThrustAvailable => Vector3d.Dot(ThrustVectorMaxThrottle, ThrustAxis);
+        public double ThrustMinimum   => Vector3d.Dot(ThrustVectorMinThrottle, ThrustAxis);
+        public double ThrustCurrent   => Vector3d.Dot(ThrustVectorLastFrame, ThrustAxis);
 
         // Fraction of ThrustAvailable the engines produce at zero throttle, so thrust at throttle t is
         // ThrustMinimum + (ThrustAvailable - ThrustMinimum) * t.  Zero when no thrust is available.
         public double MinThrottle => ThrustAvailable > 0 ? Clamp(ThrustMinimum / ThrustAvailable, 0, 1) : 0;
 
-        // Acceleration in the forward direction, for when dividing by mass is too complicated.
+        // Acceleration along ThrustAxis, for when dividing by mass is too complicated.
         public double MaxThrustAcceleration     => ThrustAvailable / Mass;
         public double MinThrustAcceleration     => ThrustMinimum / Mass;
         public double CurrentThrustAcceleration => ThrustCurrent / Mass;
@@ -1149,12 +1156,28 @@ namespace MuMech
             if (CoTWeightSum > 0)
             {
                 CoT /= CoTWeightSum;
-                ThrustForward = (CoM - CoT).normalized;
-                // In certain circumstances, like hotstaging, the CoM of the Vessel can be behind the CoT before
-                // decoupling and while dragging the previous stage.  In that case thrustForward can wind up pointing
-                // backwards, which is not what we want.  If that happens, we just set it to the forward vector.
-                if (Vector3d.Dot(ThrustForward, Forward) < 0)
-                    ThrustForward = Forward;
+
+                // Gimbals that turn the thrust through the CoM push the vessel along CoM - CoT, but that vector only has a
+                // meaningful direction while the CoT is well behind the CoM: as the CoT nears the CoM (radial engines at CoM
+                // height, or a CoM that moves down as the tanks drain) a small sideways offset turns it far off.  Adding the
+                // direction of the summed thrust, scaled by ThrustAxisLength, keeps CoM - CoT when it is long and moves smoothly
+                // to the thrust direction when it is short.
+                Vector3d thrustDirection = einfo.ThrustMax.normalized;
+                if (thrustDirection.sqrMagnitude > 0.5)
+                {
+                    ThrustForward = (CoM - CoT + ThrustAxisLength * thrustDirection).normalized;
+                    // With the CoT ahead of the CoM (engines pulling from the front, or hot staging while the previous stage
+                    // is still attached) CoM - CoT points backwards: the thrust direction is then the axis.
+                    if (Vector3d.Dot(ThrustForward, thrustDirection) <= 0)
+                        ThrustForward = thrustDirection;
+                }
+                else
+                {
+                    // engines whose thrusts cancel out: no thrust direction, so keep the geometric axis
+                    ThrustForward = (CoM - CoT).normalized;
+                    if (Vector3d.Dot(ThrustForward, Forward) < 0)
+                        ThrustForward = Forward;
+                }
             }
 
             DoT = DoT.normalized;
@@ -1483,7 +1506,8 @@ namespace MuMech
                         // would wind up pushing its own setpoint around.  Do not design rockets which have a neutral
                         // trim axis that is significantly different at minthrottle than maxthrottle.
                         cot += tMaxThrust * (Vector3d)transform.position;
-                        // DoT is the actual current direction of thrust.
+                        // DoT is the direction of the exhaust of the current thrust (opposite the force) with the gimbals at
+                        // rest, not as they are deflected now.
                         dot -= tCurrentThrust * thrustDirectionVector;
                         coTWeightSum += tMaxThrust;
 
