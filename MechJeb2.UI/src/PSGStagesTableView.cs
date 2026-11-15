@@ -73,7 +73,9 @@ namespace MuMech.UI
                 Tooltips.Add(reset.gameObject, AscentPSGSettingsView.ResetTooltip);
             }
 
-            if (!ed.Fits)
+            // in flight the stages already flown are gone from the stage stats, so the saved plan stops mapping onto them: the
+            // plan is frozen for the flight then, and there's nothing to re-fit
+            if (!ed.Fits && m.CanEdit)
             {
                 UIText fit = KodeWindow.Label(r, "The saved plan doesn't fit this vessel any more: pick where it ends to re-fit it.", true);
                 KodeWindow.ToneText(fit, Tone.Caution);
