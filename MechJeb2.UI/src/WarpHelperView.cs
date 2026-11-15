@@ -74,7 +74,8 @@ namespace MuMech.UI
             w.Visible(time.gameObject, () => helper.warpTarget == MechJebModuleWarpHelper.WarpTarget.Time);
 
             // I wonder if I should check for target that don't make sense
-            UIText needTarget = KodeWindow.Label(r, "#MechJeb_WarpHelper_label3"); //"You need a target"
+            UIText needTarget = KodeWindow.Label(r, "#MechJeb_WarpHelper_label3"); //"No target: select one to warp to a phase angle."
+            KodeWindow.ToneText(needTarget, KodeWindow.Tone.Dim);
             w.Visible(needTarget.gameObject, () => helper.warpTarget == MechJebModuleWarpHelper.WarpTarget.PhaseAngleT && !TargetExists());
             Layout phase = KodeWindow.Row(r);
             KodeWindow.Label(phase, "#MechJeb_WarpHelper_label4"); //"Phase Angle:"
