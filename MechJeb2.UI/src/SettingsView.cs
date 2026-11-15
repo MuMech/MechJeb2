@@ -167,7 +167,6 @@ namespace MuMech.UI
             w.Visible(ask.gameObject, () => !Armed);
 
             Layout confirm = KodeWindow.Panel(r);
-            w.Visible(confirm.gameObject, () => Armed);
             UIText warning = KodeWindow.Paragraph(confirm, "#MechJeb_NewUI_RestoreWarning"); //This deletes all MechJeb settings, ...
             KodeWindow.ToneText(warning, KodeWindow.Tone.Warn);
             Layout buttons = KodeWindow.Row(confirm);
@@ -178,6 +177,8 @@ namespace MuMech.UI
             }, true);
             KodeWindow.Role(delete, ButtonRole.Danger);
             KodeWindow.Button(buttons, "#MechJeb_NewUI_Cancel", () => armedUntil = float.NegativeInfinity); //Cancel
+            // hidden once its texts are made (TMP sets up under an active parent)
+            w.Visible(confirm.gameObject, () => Armed);
         }
 
         static string[] Locs(params string[] keys)
