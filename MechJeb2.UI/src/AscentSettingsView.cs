@@ -57,10 +57,6 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            // the ascent's own values: say so once, above the groups
-            UIText own = w.Wrap(KodeWindow.Label(r, "#MechJeb_NewUI_AscentOwnValues", true)); //The ascent's own values: ...
-            KodeWindow.ToneText(own, Tone.Dim);
-
             UIObject g = w.Group(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
             OptionRows.ThrustLimits(w, g, Thrust, Settings.ThrustLimits, OwnValuesApply, () => psg, false);
 
