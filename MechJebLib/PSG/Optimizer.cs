@@ -63,14 +63,6 @@ namespace MechJebLib.PSG
         public double Diffstep            { get; set; } = 1e-9;
         public double Stpmax              { get; set; } = 10;
         public int    OptimizerTimeout    { get; set; } = DEFAULT_TIMEOUT; // milliseconds, per Run()
-
-        /// <summary>
-        ///     Debug builds only: run ALGLIB's OptGuard, which checks the analytic Jacobian against finite differences and the
-        ///     line searches for discontinuities, and throws when it finds a bad gradient. The finite differences integrate the
-        ///     whole trajectory several times per variable before the first iteration, about 80 % of a Debug first solve, so the
-        ///     game turns it off; the unit tests keep it.
-        /// </summary>
-        public static bool OptGuard = true;
         public double ZeroCoastTime       { get; set; } = 1; // seconds, minimum coast of a burn-coast-burn with a nonzero first burn
         public double ZeroCoastMu         { get; set; } = 1e-6;
 
@@ -538,12 +530,9 @@ namespace MechJebLib.PSG
             //alglib.minnlcsetalgogipm2(_state);
             alglib.minnlcsetcond3(_state, Epsf, SQPTrustRegionLimit, Maxits);
 
-#if DEBUG
-            if (OptGuard)
-            {
-                alglib.minnlcoptguardgradient(_state, Diffstep);
-                alglib.minnlcoptguardsmoothness(_state, 1);
-            }
+#if DEBUG && !NO_OPTGUARD
+            alglib.minnlcoptguardgradient(_state, Diffstep);
+            alglib.minnlcoptguardsmoothness(_state, 1);
 #endif
             //alglib.trace_file("SQP,SQP.PROBINGONFAILURE,PREC.F6", "/tmp/trace.log");
 
