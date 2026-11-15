@@ -70,7 +70,7 @@ namespace MuMech
         }
 
         // Keeps the PSG LogicalPlan, and the FlightPlan built from it, current while this window is open with PSG selected,
-        // whichever UI draws it. Engaging the autopilot enables the PSGSimulation, which freezes both for the flight.
+        // whichever UI draws it. Both are locked once the autopilot is engaged or the vessel leaves the ground (PSGSimulation.PlanLocked).
         // Without this window, the PSG ascent autopilot builds them itself when it is engaged (kOS launches).
         public override void OnFixedUpdate()
         {
@@ -78,7 +78,7 @@ namespace MuMech
                 return;
 
             Core.StageStats.RequestUpdate();
-            Core.PSGSimulation.UpdateLogicalPlan(_ascentSettings);
+            Core.PSGSimulation.UpdateLogicalPlan();
         }
 
         internal const string InclinationCurrentTooltip =

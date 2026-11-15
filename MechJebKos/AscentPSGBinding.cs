@@ -72,16 +72,8 @@ namespace MuMech.MechJebKos
                 value => Core.PSGSimulation.MaxCoast.Val = value, "Maximum coast duration in seconds."));
             AddSuffix("MINCOAST", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.MinCoast.Val,
                 value => Core.PSGSimulation.MinCoast.Val = value, "Minimum coast duration in seconds."));
-            AddSuffix("COASTSTAGE", new SetSuffix<ScalarValue>(() => AscentSettings.CoastStageInternal.Val,
-                value => AscentSettings.CoastStageInternal.Val = (int)value, "KSP stage index at which to insert the coast."));
-            AddSuffix("COASTSTAGEFLAG", new SetSuffix<BooleanValue>(() => AscentSettings.CoastStageFlag,
-                value => AscentSettings.CoastStageFlag = value, "Enable the fixed coast stage (else PSG picks automatically)."));
 
             // --- spinup ---
-            AddSuffix("SPINUPSTAGE", new SetSuffix<ScalarValue>(() => AscentSettings.SpinupStageInternal.Val,
-                value => AscentSettings.SpinupStageInternal.Val = (int)value, "KSP stage index to spin up (spin-stabilized upper stages)."));
-            AddSuffix("SPINUPSTAGEFLAG", new SetSuffix<BooleanValue>(() => AscentSettings.SpinupStageFlag,
-                value => AscentSettings.SpinupStageFlag = value, "Enable the spinup stage."));
             AddSuffix("SPINUPLEADTIME", new SetSuffix<ScalarValue>(() => AscentSettings.SpinupLeadTime.Val,
                 value => AscentSettings.SpinupLeadTime.Val = value, "Lead time (s) before staging to begin spinup."));
             AddSuffix("SPINUPANGULARVELOCITY", new SetSuffix<ScalarValue>(() => AscentSettings.SpinupAngularVelocity.Val,

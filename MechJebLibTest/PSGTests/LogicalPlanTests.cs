@@ -16,9 +16,10 @@ namespace MechJebLibTest.PSGTests
     {
         private const double MIN_DV = 40;
 
-        private const int COAST_BEFORE = -1;
-        private const int COAST_DURING = 0;
-        private const int COAST_AFTER  = 1;
+        private const PlanEditor.CoastKind BEFORE    = PlanEditor.CoastKind.BEFORE;
+        private const PlanEditor.CoastKind DURING    = PlanEditor.CoastKind.DURING;
+        private const PlanEditor.CoastKind AFTER     = PlanEditor.CoastKind.AFTER;
+        private const PlanEditor.CoastKind DEDICATED = PlanEditor.CoastKind.DEDICATED;
 
         private static FuelStats Row(int kspStage, double deltaV, params uint[] engines)
         {
@@ -34,14 +35,32 @@ namespace MechJebLibTest.PSGTests
             return stats;
         }
 
-        private static LogicalPlan Generate(List<FuelStats> rows, int lastStage = 0, int coastStage = -1, int coastLocation = 0) =>
-            LogicalPlan.GenerateLogicalPlan(rows, new List<int>(), new List<int>(), lastStage, MIN_DV, coastStage, coastLocation);
-
-        private static FlightPlan GenerateFlightPlan(List<FuelStats> rows, int lastStage = 0, int coastStage = -1, int coastLocation = 0)
+        // the plan the stage editor makes: the bottom planned burn rows (all of them by default), and the coast in the slot of
+        // its kind at the VacStats row coastRow
+        private static LogicalPlan Edited(List<FuelStats> rows, int planned = 0, PlanEditor.CoastKind? coast = null, int coastRow = -1)
         {
-            FlightPlan? flightPlan = FlightPlan.FromLogicalPlan(Generate(rows, lastStage, coastStage, coastLocation), rows, rows, MIN_DV);
+            var editor = new PlanEditor(new LogicalPlan(), rows, MIN_DV);
+            if (planned > 0)
+                editor.EndAt(planned - 1);
+            if (coast.HasValue)
+                Assert.True(editor.SetCoast(new PlanEditor.CoastSlot(coast.Value, coastRow)));
+            return editor.Plan();
+        }
+
+        private static FlightPlan Fly(List<FuelStats> rows, int planned = 0, PlanEditor.CoastKind? coast = null, int coastRow = -1)
+        {
+            FlightPlan? flightPlan = FlightPlan.FromLogicalPlan(Edited(rows, planned, coast, coastRow), rows, rows, MIN_DV);
             Assert.NotNull(flightPlan);
             return flightPlan!;
+        }
+
+        // whether the editor offers a coast there
+        private static bool HasSlot(List<FuelStats> rows, int planned, PlanEditor.CoastKind coast, int coastRow)
+        {
+            var editor = new PlanEditor(new LogicalPlan(), rows, MIN_DV);
+            if (planned > 0)
+                editor.EndAt(planned - 1);
+            return editor.SetCoast(new PlanEditor.CoastSlot(coast, coastRow));
         }
 
         private static LogicalPlan Plan(params StageType[] types)
@@ -64,33 +83,33 @@ namespace MechJebLibTest.PSGTests
         [Fact]
         public void PlainRocket()
         {
-            Assert.Equal("BURN:T BURN:T BURN:T", Describe(Generate(ThreeStages())));
-            Assert.Equal("BURN:0 BURN:1 BURN:2", Describe(GenerateFlightPlan(ThreeStages())));
+            Assert.Equal("BURN:T BURN:T BURN:T", Describe(Edited(ThreeStages())));
+            Assert.Equal("BURN:0 BURN:1 BURN:2", Describe(Fly(ThreeStages())));
         }
 
         [Fact]
         public void CoastBefore()
         {
-            Assert.Equal("BURN:T BURN:T COAST_BEFORE:F BURN:T", Describe(Generate(ThreeStages(), coastStage: 1, coastLocation: COAST_BEFORE)));
+            Assert.Equal("BURN:T BURN:T COAST_BEFORE:F BURN:T", Describe(Edited(ThreeStages(), coast: BEFORE, coastRow: 1)));
             Assert.Equal("BURN:0 BURN:1 COAST_BEFORE:1 BURN:2",
-                Describe(GenerateFlightPlan(ThreeStages(), coastStage: 1, coastLocation: COAST_BEFORE)));
+                Describe(Fly(ThreeStages(), coast: BEFORE, coastRow: 1)));
         }
 
         [Fact]
         public void CoastDuring()
         {
             Assert.Equal("BURN:T BURN:T COAST_DURING:F BURN:F BURN:T",
-                Describe(Generate(ThreeStages(), coastStage: 1, coastLocation: COAST_DURING)));
+                Describe(Edited(ThreeStages(), coast: DURING, coastRow: 1)));
             Assert.Equal("BURN:0 BURN:1 COAST_DURING:1 BURN:1 BURN:2",
-                Describe(GenerateFlightPlan(ThreeStages(), coastStage: 1, coastLocation: COAST_DURING)));
+                Describe(Fly(ThreeStages(), coast: DURING, coastRow: 1)));
         }
 
         [Fact]
         public void CoastAfter()
         {
-            Assert.Equal("BURN:T COAST_AFTER:T BURN:F BURN:T", Describe(Generate(ThreeStages(), coastStage: 1, coastLocation: COAST_AFTER)));
+            Assert.Equal("BURN:T COAST_AFTER:T BURN:F BURN:T", Describe(Edited(ThreeStages(), coast: AFTER, coastRow: 1)));
             Assert.Equal("BURN:0 COAST_AFTER:1 BURN:1 BURN:2",
-                Describe(GenerateFlightPlan(ThreeStages(), coastStage: 1, coastLocation: COAST_AFTER)));
+                Describe(Fly(ThreeStages(), coast: AFTER, coastRow: 1)));
         }
 
         [Fact]
@@ -99,32 +118,32 @@ namespace MechJebLibTest.PSGTests
             // KSP stage 1 decouples the lower stage and coasts, no engines
             var rows = new List<FuelStats> { Row(0, 2000, 1), Row(1, 0), Row(2, 3000, 3) };
 
-            Assert.Equal("BURN:T COAST_DEDICATED:F BURN:T", Describe(Generate(rows, coastStage: 1)));
-            Assert.Equal("BURN:0 COAST_DEDICATED:1 BURN:2", Describe(GenerateFlightPlan(rows, coastStage: 1)));
+            Assert.Equal("BURN:T COAST_DEDICATED:F BURN:T", Describe(Edited(rows, coast: DEDICATED, coastRow: 1)));
+            Assert.Equal("BURN:0 COAST_DEDICATED:1 BURN:2", Describe(Fly(rows, coast: DEDICATED, coastRow: 1)));
         }
 
         [Fact]
-        public void CoastAfterTheFinalBurnIsRemoved()
+        public void NoCoastAfterTheFinalBurn()
         {
             var rows = new List<FuelStats> { Row(0, 2000, 1), Row(1, 3000, 2) };
 
-            Assert.Equal("BURN:T BURN:T", Describe(Generate(rows, coastStage: 0, coastLocation: COAST_AFTER)));
+            Assert.False(HasSlot(rows, 0, AFTER, 0));
         }
 
         [Fact]
-        public void CoastBeforeTheFirstBurnIsRemoved()
+        public void NoCoastBeforeTheFirstBurn()
         {
             var rows = new List<FuelStats> { Row(0, 2000, 1), Row(1, 3000, 2) };
 
-            Assert.Equal("BURN:T BURN:T", Describe(Generate(rows, coastStage: 1, coastLocation: COAST_BEFORE)));
+            Assert.False(HasSlot(rows, 0, BEFORE, 1));
         }
 
         [Fact]
-        public void DedicatedCoastAboveLastStageIsRemoved()
+        public void NoDedicatedCoastAboveTheLastBurn()
         {
             var rows = new List<FuelStats> { Row(0, 0), Row(1, 2000, 1), Row(2, 3000, 2) };
 
-            Assert.Equal("BURN:T BURN:T", Describe(Generate(rows, 1, 0)));
+            Assert.False(HasSlot(rows, 0, DEDICATED, 0));
         }
 
         [Fact]
@@ -133,7 +152,7 @@ namespace MechJebLibTest.PSGTests
             // the payload has its own engine with more than MinDeltaV
             var rows = new List<FuelStats> { Row(0, 500, 9), Row(1, 2000, 1), Row(2, 3000, 2) };
 
-            Assert.Equal("BURN:1 BURN:2", Describe(GenerateFlightPlan(rows, 1)));
+            Assert.Equal("BURN:1 BURN:2", Describe(Fly(rows, 2)));
         }
 
         [Fact]
@@ -142,7 +161,7 @@ namespace MechJebLibTest.PSGTests
             // coast-during adds two BURNs on one row, the starting row has to be counted with SkipToNextBurn
             var rows = new List<FuelStats> { Row(0, 500, 9), Row(1, 2000, 1), Row(2, 3000, 2) };
 
-            Assert.Equal("BURN:1 BURN:2 COAST_DURING:2 BURN:2", Describe(GenerateFlightPlan(rows, 1, 2, COAST_DURING)));
+            Assert.Equal("BURN:1 BURN:2 COAST_DURING:2 BURN:2", Describe(Fly(rows, 2, DURING, 2)));
         }
 
         [Fact]
@@ -151,9 +170,9 @@ namespace MechJebLibTest.PSGTests
             // KSP stage 1 burns in two segments over MinDeltaV (engine 4 burns out early), the later segment is listed first
             var rows = new List<FuelStats> { Row(0, 2000, 1), Row(1, 500, 2), Row(1, 800, 2, 4), Row(2, 3000, 3) };
 
-            Assert.Equal("BURN:T COAST_AFTER:T BURN:F BURN:T BURN:T", Describe(Generate(rows, coastStage: 1, coastLocation: COAST_AFTER)));
+            Assert.Equal("BURN:T COAST_AFTER:T BURN:F BURN:T BURN:T", Describe(Edited(rows, coast: AFTER, coastRow: 1)));
             Assert.Equal("BURN:0 COAST_AFTER:1 BURN:1 BURN:2 BURN:3",
-                Describe(GenerateFlightPlan(rows, coastStage: 1, coastLocation: COAST_AFTER)));
+                Describe(Fly(rows, coast: AFTER, coastRow: 1)));
         }
 
         [Fact]
@@ -204,7 +223,7 @@ namespace MechJebLibTest.PSGTests
         [Fact]
         public void ReconcileOnThePadChangesNothing()
         {
-            FlightPlan plan = GenerateFlightPlan(ThreeStages(), coastStage: 1, coastLocation: COAST_DURING);
+            FlightPlan plan = Fly(ThreeStages(), coast: DURING, coastRow: 1);
             plan.ReconcileStages(ThreeStages(), ThreeStages(), MIN_DV);
 
             Assert.Equal("BURN:0 BURN:1 COAST_DURING:1 BURN:1 BURN:2", Describe(plan));
@@ -214,7 +233,7 @@ namespace MechJebLibTest.PSGTests
         public void ReconcileDropTanksStaged()
         {
             // core engine 5 burns from the drop tanks in KSP stage 2, then from its own tanks in KSP stage 1
-            FlightPlan plan = GenerateFlightPlan(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1500, 5), Row(2, 800, 5) });
+            FlightPlan plan = Fly(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1500, 5), Row(2, 800, 5) });
             plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1500, 5) }, new List<FuelStats>(), MIN_DV);
 
             Assert.Equal("BURN:0 BURN:1 BURN:Done", Describe(plan));
@@ -223,7 +242,7 @@ namespace MechJebLibTest.PSGTests
         [Fact]
         public void ReconcileDropTanksDryButAttached()
         {
-            FlightPlan plan = GenerateFlightPlan(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1500, 5), Row(2, 800, 5) });
+            FlightPlan plan = Fly(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1500, 5), Row(2, 800, 5) });
             plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1500, 5), Row(2, 5, 5) }, new List<FuelStats>(), MIN_DV);
 
             Assert.Equal("BURN:0 BURN:1 BURN:Done", Describe(plan));
@@ -232,7 +251,7 @@ namespace MechJebLibTest.PSGTests
         [Fact]
         public void ReconcileEngineOut()
         {
-            FlightPlan plan = GenerateFlightPlan(new List<FuelStats> { Row(0, 2000, 1), Row(1, 3000, 2, 3, 4) });
+            FlightPlan plan = Fly(new List<FuelStats> { Row(0, 2000, 1), Row(1, 3000, 2, 3, 4) });
             plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1), Row(1, 2500, 2, 4) }, new List<FuelStats>(), MIN_DV);
 
             Assert.Equal("BURN:0 BURN:1", Describe(plan));
@@ -243,7 +262,7 @@ namespace MechJebLibTest.PSGTests
         public void ReconcileBoosterBurnoutWithSustainerStage()
         {
             // sustainer 2 burns with boosters 3 and 4, then alone in the same KSP stage
-            FlightPlan plan = GenerateFlightPlan(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1000, 2), Row(1, 2000, 2, 3, 4) });
+            FlightPlan plan = Fly(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1000, 2), Row(1, 2000, 2, 3, 4) });
             plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1000, 2) }, new List<FuelStats>(), MIN_DV);
 
             Assert.Equal("BURN:0 BURN:1 BURN:Done", Describe(plan));
@@ -255,7 +274,7 @@ namespace MechJebLibTest.PSGTests
             // verniers 3 and 4 burn a little longer than main engine 2 (issue #1917)
             var rows = new List<FuelStats> { Row(0, 2000, 1), Row(1, 10, 3, 4), Row(1, 3000, 2, 3, 4) };
 
-            FlightPlan plan = GenerateFlightPlan(rows);
+            FlightPlan plan = Fly(rows);
             Assert.Equal("BURN:0 BURN:2", Describe(plan));
 
             plan.ReconcileStages(rows, rows, MIN_DV);
@@ -271,7 +290,7 @@ namespace MechJebLibTest.PSGTests
             // parachutes in KSP stage 0, service module engine in stage 1, both above LastStage
             var rows = new List<FuelStats> { Row(0, 0), Row(1, 600, 9), Row(2, 2000, 1), Row(3, 3000, 2) };
 
-            FlightPlan plan = GenerateFlightPlan(rows, 2);
+            FlightPlan plan = Fly(rows, 2);
             plan.ReconcileStages(rows, rows, MIN_DV);
 
             Assert.Equal("BURN:2 BURN:3", Describe(plan));
@@ -280,7 +299,7 @@ namespace MechJebLibTest.PSGTests
         [Fact]
         public void ReconcileCoastAfterMidCoast()
         {
-            FlightPlan plan = GenerateFlightPlan(ThreeStages(), coastStage: 1, coastLocation: COAST_AFTER);
+            FlightPlan plan = Fly(ThreeStages(), coast: AFTER, coastRow: 1);
 
             // the middle stage has burned out and the bottom stage is gone
             plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1), Row(1, 0) }, new List<FuelStats>(), MIN_DV);
@@ -294,7 +313,7 @@ namespace MechJebLibTest.PSGTests
             // KSP stage 2 decouples the lower stage and coasts, stage 1 jettisons the fairing during the coast
             var rows = new List<FuelStats> { Row(0, 2000, 1), Row(1, 0), Row(2, 0), Row(3, 3000, 2) };
 
-            FlightPlan plan = GenerateFlightPlan(rows, coastStage: 2);
+            FlightPlan plan = Fly(rows, coast: DEDICATED, coastRow: 2);
             Assert.Equal("BURN:0 COAST_DEDICATED:2 BURN:3", Describe(plan));
 
             plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1), Row(1, 0) }, new List<FuelStats>(), MIN_DV);

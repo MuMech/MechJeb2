@@ -109,51 +109,13 @@ namespace MuMech
          * PSG Staging values
          */
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public int CoastLocation = -1;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableInt LastStage = -1;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableInt CoastStageInternal = -1;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool CoastStageFlag;
-
-        public int CoastStage => CoastStageFlag ? CoastStageInternal.Val : -1;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool SpinupStageFlag = true;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableInt SpinupStageInternal = -1;
-
-        public int SpinupStage => SpinupStageFlag ? SpinupStageInternal.Val : -1;
+        // which stages burn, how, and where the coast and its spin-up go are the PSG plan's (PSGSimulation.LogicalPlan)
 
         [Persistent(pass = (int)Pass.TYPE)]
         public readonly EditableDouble SpinupLeadTime = 50;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(TAU / 6.0, TAU / 60.0);
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableIntList UnguidedStagesInternal = new EditableIntList();
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool UnguidedStagesFlag;
-
-        private readonly List<int> _emptyList = new List<int>();
-
-        public List<int> UnguidedStages => UnguidedStagesFlag ? UnguidedStagesInternal.Val : _emptyList;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableIntList FixedStagesInternal = new EditableIntList();
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool FixedStagesFlag;
-
-        public List<int> FixedStages => FixedStagesFlag ? FixedStagesInternal.Val : _emptyList;
 
         public bool OptimizeStageFlag => !Core.PSGSimulation.LogicalPlan?.AllFixedBurnTimes() ?? true;
 
@@ -239,13 +201,6 @@ namespace MuMech
             PitchStartHeight.Val = PITCH_START_HEIGHT_DEFAULT;
             PitchRate.Val = PITCH_RATE_DEFAULT;
             LaunchLANDifference.Val = LAUNCH_LAN_DIFFERENCE;
-
-            SpinupStageFlag = false;
-            SpinupStageInternal.Val = -1;
-            CoastStageFlag = false;
-            CoastStageInternal.Val = -1;
-            UnguidedStagesFlag = false;
-            FixedStagesFlag = false;
 
             DesiredOrbitAltitude.Val = 145000;
 

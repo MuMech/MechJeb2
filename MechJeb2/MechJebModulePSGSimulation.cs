@@ -47,8 +47,55 @@ namespace MuMech
         [Persistent(pass = (int)Pass.TYPE)]
         public PersistedLogicalPlan? LogicalPlan;
 
+        // set once the plan is edited in the PSG Stages window: the saved LogicalPlan is then kept. Without it the plan is the
+        // default one (PlanEditor.DefaultPlan), made again from the stage stats every frame, so it follows the vessel's changes
+        [Persistent(pass = (int)Pass.TYPE)]
+        public bool PlanEdited;
+
+        /// <summary>
+        ///     The plan is set on the ground and locked from the moment the ascent is engaged or the vessel leaves the ground,
+        ///     until it is back on the ground: staging changes under the autopilot in flight (fairings, an escape tower, engine
+        ///     failures, stages burning out a little early or late), and the flight plan made on the ground is what it reconciles
+        ///     with them.
+        /// </summary>
+        public bool PlanLocked => Enabled || (Vessel != null && Vessel.VesselOffGround());
+
         // This is generated from the LogicalPlan, and is not user-editable while the module is enabled
         public FlightPlan? FlightPlan;
+
+        /// <summary>The plan's coast, from the FlightPlan: its kind and the KSP stage the vessel is in during it, or (BURN, -1) without one.</summary>
+        public (StageType Kind, int KSPStage) PlannedCoast()
+        {
+            if (FlightPlan == null) return (StageType.BURN, -1);
+            foreach (FlightPlanStage s in FlightPlan.Stages)
+                if (s.StageType != StageType.BURN)
+                    return (s.StageType, s.KSPStage);
+            return (StageType.BURN, -1);
+        }
+
+        /// <summary>
+        ///     The KSP stage the vessel spins up in, during the plan's coast (a guided coast with Spinup set), or -1: the spin-up
+        ///     controller holds the staging until the vessel spins.
+        /// </summary>
+        public int PlannedSpinupStage()
+        {
+            if (LogicalPlan == null) return -1;
+            foreach (LogicalPlanStage s in LogicalPlan.Plan.Stages)
+                if (s.StageType != StageType.BURN)
+                    return s.Spinup && !s.Unguided ? PlannedCoast().KSPStage : -1;
+            return -1;
+        }
+
+        /// <summary>The lowest KSP stage the plan burns (its last burn), or 0 without a plan.</summary>
+        public int PlannedLastKSPStage()
+        {
+            if (FlightPlan == null || FlightPlan.Stages.Count == 0) return 0;
+            int last = int.MaxValue;
+            foreach (FlightPlanStage s in FlightPlan.Stages)
+                if (s.StageType == StageType.BURN && s.KSPStage < last)
+                    last = s.KSPStage;
+            return last == int.MaxValue ? 0 : last;
+        }
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult PeriapsisAltitude = new EditableDoubleMult(145000, 1000);
@@ -342,30 +389,56 @@ namespace MuMech
 
         public void RequestFlightPlanUpdate()
         {
-            // the flight plan is frozen in flight, once there is one
-            if (Enabled && FlightPlan != null)
+            // once there is one, the flight plan is kept while the plan is locked
+            if (PlanLocked && FlightPlan != null)
                 return;
             FlightPlan = LogicalPlan == null ? null : FlightPlan.FromLogicalPlan(LogicalPlan.Plan, Core.StageStats.VacStats, Core.StageStats.AtmoStats, MinDeltaV);
         }
 
         /// <summary>
-        ///     Builds the logical plan from the stage stats and the ascent settings, then the flight plan from it (unless that is
-        ///     frozen). The Ascent window calls this every physics frame while it is open with PSG selected, and the PSG ascent
-        ///     autopilot until there is a flight plan, so launches don't depend on that window being open (kOS launches never
-        ///     open it). Returns whether there were stages to plan.
+        ///     Keeps the logical plan current, then the flight plan built from it: the default plan follows the stage stats, an
+        ///     edited one stays as edited, and neither changes while the plan is locked. The Ascent window calls this every physics
+        ///     frame while it is open with PSG selected, and the PSG ascent autopilot until there is a flight plan, so launches
+        ///     don't depend on that window being open (kOS launches never open it). Returns whether there were stages to plan.
         /// </summary>
-        public bool UpdateLogicalPlan(MechJebModuleAscentSettings settings)
+        public bool UpdateLogicalPlan()
         {
             List<FuelStats> vacStats = Core.StageStats.VacStats;
 
             if (vacStats.Count == 0)
                 return false;
 
-            LogicalPlan = new PersistedLogicalPlan(MechJebLib.PSG.LogicalPlan.GenerateLogicalPlan(vacStats, settings.UnguidedStages, settings.FixedStages,
-                settings.LastStage, MinDeltaV, settings.CoastStage, settings.CoastLocation));
+            if (PlanLocked && FlightPlan != null)
+                return true;
+
+            if (!PlanEdited || LogicalPlan == null)
+                LogicalPlan = new PersistedLogicalPlan(PlanEditor.DefaultPlan(vacStats, MinDeltaV));
 
             RequestFlightPlanUpdate();
 
+            return true;
+        }
+
+        /// <summary>Keeps plan as the vessel's plan, edited. Refused while the plan is locked.</summary>
+        public bool SetEditedPlan(LogicalPlan plan)
+        {
+            if (PlanLocked)
+                return false;
+
+            LogicalPlan = new PersistedLogicalPlan(plan);
+            PlanEdited  = true;
+            RequestFlightPlanUpdate();
+            return true;
+        }
+
+        /// <summary>Drops the edited plan for the default one, every burn guided and optimized with no coast. Refused while locked.</summary>
+        public bool ResetPlan()
+        {
+            if (PlanLocked)
+                return false;
+
+            PlanEdited = false;
+            UpdateLogicalPlan();
             return true;
         }
 

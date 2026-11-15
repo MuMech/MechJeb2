@@ -93,7 +93,7 @@ namespace MuMech
             if (Core.PSGSimulation.FlightPlan == null)
             {
                 Core.StageStats.RequestUpdate();
-                Core.PSGSimulation.UpdateLogicalPlan(AscentSettings);
+                Core.PSGSimulation.UpdateLogicalPlan();
             }
 
             if (Countdown.Active)

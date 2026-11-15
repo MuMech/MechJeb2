@@ -1,3 +1,4 @@
+using MechJebLib.PSG;
 using UnityEngine;
 
 namespace MuMech.UI
@@ -11,9 +12,9 @@ namespace MuMech.UI
         /// <summary>Aref 0 (the default) on a body with an atmosphere: PSG then plans the ascent with no drag at all.</summary>
         public static bool ArefUnset(MechJebCore core) => core.PSGSimulation.Aref <= 0 && Atmosphere(core);
 
-        /// <summary>A minimum coast longer than the maximum, which PSG refuses to plan with (only read when a coast stage is set).</summary>
+        /// <summary>A minimum coast longer than the maximum, which PSG refuses to plan with (only read when the plan has a coast).</summary>
         public static bool CoastTimesInverted(MechJebCore core) =>
-            core.AscentSettings.CoastStage >= 0 && core.PSGSimulation.MinCoast > core.PSGSimulation.MaxCoast;
+            core.PSGSimulation.PlannedCoast().KSPStage >= 0 && core.PSGSimulation.MinCoast > core.PSGSimulation.MaxCoast;
 
         /// <summary>A Qα limit PSG clamps to between 0 and 10000 Pa-rad.</summary>
         public static bool QaClamped(MechJebCore core) => core.PSGSimulation.LimitQa < 0 || core.PSGSimulation.LimitQa > 10000;
@@ -41,10 +42,9 @@ namespace MuMech.UI
 
         static bool ComputeCoastNoRelight(MechJebCore core)
         {
-            MechJebModuleAscentSettings s = core.AscentSettings;
-            int stage = s.CoastStage;
+            (StageType kind, int stage) = core.PSGSimulation.PlannedCoast();
             // once the coast is over, its relight is behind: an engine with no ignitions left in the burn after it is fine
-            if (stage < 0 || s.CoastLocation != 0 || core.Guidance.hasCoasted)
+            if (kind != StageType.COAST_DURING || stage < 0 || core.Guidance.hasCoasted)
                 return false;
 
             System.Collections.Generic.List<Part> parts = core.vessel != null ? core.vessel.parts : EditorLogic.fetch?.ship?.parts;

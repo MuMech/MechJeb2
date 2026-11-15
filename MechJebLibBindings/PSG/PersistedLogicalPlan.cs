@@ -16,6 +16,10 @@ namespace MechJebLibBindings.PSG
 
         [UsedImplicitly]
         [Persistent]
+        public bool Spinup;
+
+        [UsedImplicitly]
+        [Persistent]
         public int KSPStage;
 
         [UsedImplicitly]
@@ -30,13 +34,14 @@ namespace MechJebLibBindings.PSG
         {
             AllowShutdown = stage.AllowShutdown;
             Unguided      = stage.Unguided;
+            Spinup        = stage.Spinup;
             KSPStage      = stage.KSPStage;
             StageType     = stage.StageType;
         }
 
         // SkipToNextBurn is not persisted, LogicalPlan.Sanitize() recomputes it
         public LogicalPlanStage ToLogicalPlanStage() =>
-            new LogicalPlanStage { AllowShutdown = AllowShutdown, Unguided = Unguided, KSPStage = KSPStage, StageType = StageType };
+            new LogicalPlanStage { AllowShutdown = AllowShutdown, Unguided = Unguided, Spinup = Spinup, KSPStage = KSPStage, StageType = StageType };
     }
 
     // KSP ConfigNode persistence for the LogicalPlan, which lives in MechJebLib and can't see the KSP attributes.
