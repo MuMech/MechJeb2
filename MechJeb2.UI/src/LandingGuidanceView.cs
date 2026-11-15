@@ -127,7 +127,7 @@ namespace MuMech.UI
         {
             Layout siteRow = KodeWindow.Row(r);
             new ComboBox(w, siteRow, () => guidance._landingSiteIdx, i => guidance._landingSiteIdx = i, SiteNames);
-            KodeWindow.Button(siteRow, "Set", () =>
+            UIButton set = KodeWindow.Button(siteRow, "#MechJeb_NewUI_SetSite", () => //Set
             {
                 SiteNames();
                 if (siteIndexes.Count == 0) return;
@@ -136,6 +136,7 @@ namespace MuMech.UI
                     MechJebModuleLandingGuidance.LandingSites[siteIndexes[Mathf.Clamp(guidance._landingSiteIdx, 0, siteIndexes.Count - 1)]];
                 Core.Target.SetPositionTarget(Body, site.Latitude, site.Longitude);
             });
+            Tooltips.Add(set.gameObject, "#MechJeb_NewUI_SetSite_tooltip"); //Make the chosen landing site the target.
             w.Visible(siteRow.gameObject, () => SiteNames().Length > 0);
         }
 
