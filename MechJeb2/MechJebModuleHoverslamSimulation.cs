@@ -188,11 +188,13 @@ namespace MuMech
                 burnTime -= bt;
             }
 
-            if (burnTime > 0 && lastNonZeroIndex > -1) // we ain't gonna make it
+            // the burn outlasts the propellant: count the rest at the last stage's final acceleration, the delta-v still missing, since
+            // burning it from the stage's start mass again would take it past its empty mass (a negative mass, NaN in Release)
+            if (burnTime > 0 && lastNonZeroIndex > -1)
             {
                 FuelStats stage = _vacStats[lastNonZeroIndex];
 
-                dv += Astro.DeltaVFromMassThrustIspBurntime(stage.StartMass, stage.Thrust, stage.Isp, burnTime);
+                dv += stage.Thrust / stage.EndMass * burnTime;
             }
 
             return dv;
