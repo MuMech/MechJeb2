@@ -577,25 +577,32 @@ namespace MuMech.UI
 
             HistorySizeField(w, chipsRow);
 
-            // which graph the Y labels show, and whether graphs of one unit share their range
+            // the left Y labels' drop-down on the left, the right labels' one on the right, the Shared scales switch in the
+            // middle: the two sides take equal shares of the row (no preferred width of their own), so the switch is centred
             Layout axisRow = KodeWindow.Row(r);
-            axisRow.ChildAlignment(TextAnchor.MiddleLeft);
-            Layout axisPick = KodeWindow.Row(axisRow);
+            axisRow.gameObject.name = "AxisRow";
+            Layout leftSide = KodeWindow.Row(axisRow);
+            leftSide.gameObject.name = "LeftAxis";
+            leftSide.PreferredWidth(0);
+            Layout axisPick = KodeWindow.Row(leftSide);
             axisPick.FlexibleLayout(0f, 0f);
-            KodeWindow.Label(axisPick, KodeWindow.Loc("#MechJeb_Flightrecord_Label5")); //Y axis
             new ComboBox(w, axisPick, ScalePosition, i => g.scaleIdx = (int)scaleGraphs[i].Type, ScaleNames, false, i => scaleGraphs[i].Color);
             w.Visible(axisPick.gameObject, () => ScaleNames().Length > 0);
+
+            KodeWindow.RowOf(w.SwitchRow(axisRow, "#MechJeb_Flightrecord_checkbox32", () => g.sharedScales, v => g.sharedScales = v)) //Shared scales
+                .GetComponent<LayoutElement>().flexibleWidth = 0;
+
             // the right labels: none, or one of the displayed graphs
-            Layout rightPick = KodeWindow.Row(axisRow);
+            Layout rightSide = KodeWindow.Row(axisRow);
+            rightSide.gameObject.name = "RightAxis";
+            rightSide.PreferredWidth(0);
+            rightSide.ChildAlignment(TextAnchor.MiddleRight);
+            Layout rightPick = KodeWindow.Row(rightSide);
             rightPick.FlexibleLayout(0f, 0f);
-            KodeWindow.Label(rightPick, KodeWindow.Loc("#MechJeb_Flightrecord_Label6")); //Right axis
             new ComboBox(w, rightPick, RightPosition, i => g.rightScaleIdx = i == 0 ? -1 : (int)scaleGraphs[i - 1].Type, RightNames, false,
                 i => i == 0 ? Color.clear : scaleGraphs[i - 1].Color);
             w.Visible(rightPick.gameObject, () => ScaleNames().Length > 0);
             w.Behaviour.AddRelocalize(() => scaleNamesMask = -1);
-            KodeWindow.RowOf(w.SwitchRow(axisRow, "#MechJeb_Flightrecord_checkbox32", () => g.sharedScales, v => g.sharedScales = v)) //Shared scales
-                .GetComponent<LayoutElement>().flexibleWidth = 0;
-            KodeWindow.FlexibleSpace(axisRow);
         }
 
         /// <summary>[−] value [+] on a value the window computes (a scale, a plot size): a stepper without a field.</summary>
@@ -681,7 +688,7 @@ namespace MuMech.UI
 
             scaleNames = new string[scaleGraphs.Count];
             rightNames = new string[scaleGraphs.Count + 1];
-            rightNames[0] = KodeWindow.Loc("#MechJeb_Flightrecord_Label7"); //None
+            rightNames[0] = KodeWindow.Loc("#MechJeb_Flightrecord_Label5"); //None
             for (int i = 0; i < scaleNames.Length; i++)
                 rightNames[i + 1] = scaleNames[i] = KodeWindow.Loc(scaleGraphs[i].ScaleLabel);
             return scaleNames;
