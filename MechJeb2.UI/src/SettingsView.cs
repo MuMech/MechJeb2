@@ -30,8 +30,6 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            KodeWindow.Button(r, "#MechJeb_Settings_button1", settings.RestoreFactoryDefaults, true); //"\nRestore factory default settings\n"
-
             Layout scale = KodeWindow.Row(r);
             KodeWindow.Label(scale, "#MechJeb_Settings_label2", true); //"UI Scale:"
             for (int i = 0; i < MechJebModuleSettings.UiScalePresets.Length; i++)
@@ -149,6 +147,37 @@ namespace MuMech.UI
                 settings.UiSectionHeaders = v;
                 Changed();
             });
+            BuildRestore(w, r);
+        }
+
+        // how long the confirmation waits for its second click
+        const float ConfirmSeconds = 10f;
+
+        float armedUntil = float.NegativeInfinity;
+
+        bool Armed => Time.unscaledTime < armedUntil;
+
+        /// <summary>
+        /// "Restore factory default settings" deletes the global settings and this vessel type's, and can't be undone: it is the
+        /// last row, and asks again (in the Danger colour, with Cancel) before it does; the question goes after ConfirmSeconds.
+        /// </summary>
+        void BuildRestore(KodeWindow w, UIObject r)
+        {
+            UIButton ask = KodeWindow.Button(r, "#MechJeb_NewUI_RestoreDefaults", () => armedUntil = Time.unscaledTime + ConfirmSeconds, true); //Restore factory default settings…
+            w.Visible(ask.gameObject, () => !Armed);
+
+            Layout confirm = KodeWindow.Panel(r);
+            w.Visible(confirm.gameObject, () => Armed);
+            UIText warning = KodeWindow.Paragraph(confirm, "#MechJeb_NewUI_RestoreWarning"); //This deletes all MechJeb settings, ...
+            KodeWindow.ToneText(warning, KodeWindow.Tone.Warn);
+            Layout buttons = KodeWindow.Row(confirm);
+            UIButton delete = KodeWindow.Button(buttons, "#MechJeb_NewUI_RestoreConfirm", () => //Delete all MechJeb settings
+            {
+                armedUntil = float.NegativeInfinity;
+                settings.RestoreFactoryDefaults();
+            }, true);
+            KodeWindow.Role(delete, ButtonRole.Danger);
+            KodeWindow.Button(buttons, "#MechJeb_NewUI_Cancel", () => armedUntil = float.NegativeInfinity); //Cancel
         }
 
         static string[] Locs(params string[] keys)
