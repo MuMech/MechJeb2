@@ -181,7 +181,8 @@ namespace MuMech
                 R               = VesselState.OrbitalPosition.WorldToV3Rotated(),
                 V               = VesselState.OrbitalVelocity.WorldToV3Rotated(),
                 A               = Vessel.acceleration_immediate.WorldToV3Rotated(),
-                UllageLeadTime  = UllageLeadTime
+                UllageLeadTime  = UllageLeadTime,
+                Autostaging     = Core.Staging.Enabled
             };
 
         private void Apply(in GuidanceCommand cmd)

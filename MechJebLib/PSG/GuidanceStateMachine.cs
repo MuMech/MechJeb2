@@ -107,6 +107,9 @@ namespace MechJebLib.PSG
 
         // how long before the end of a coast the RCS settles the propellant
         public double UllageLeadTime;
+
+        // MechJeb's autostaging is on
+        public bool Autostaging;
     }
 
     /// <summary>
@@ -147,13 +150,16 @@ namespace MechJebLib.PSG
     ///     - the last burn: terminal guidance when the target is reached (FINAL, with an RCS trim when the RCS is on), or for a
     ///       fixed last burn when it is spent;
     ///     - a burn before a coast, or an optimized burn the plan cuts with propellant left: at its planned end, on the nearest
-    ///       tick;
+    ///       tick, once the vessel is in its last stage;
     ///     - a burn the plan burns to depletion: when the vessel stages past it (autostaging, which may go down to the next
     ///       segment's stage);
-    ///     - a coast: at its planned end, after the ullage lead;
-    ///     - any burn: when it is spent (no thrust and nothing left in its last stage for a second, or no thrust past its planned
-    ///       end), or when the vessel has staged into the next segment.
-    ///     Guidance stages only into a segment it moved to itself; the autostage limit keeps autostaging within the segment.
+    ///     - a coast: at its planned end, after the ullage lead (a coast after the last burn is not flown);
+    ///     - any burn: when it is spent (no thrust in its last stage for a second, with nothing left in it, or once it has burned
+    ///       past its planned end, or on a burn guidance cuts), or when the vessel has staged into the next segment;
+    ///     - any segment: when a new Solution no longer has it.
+    ///     Guidance drops the stage of a segment it ended itself; the autostage limit keeps autostaging within the segment, and
+    ///     autostaging takes the vessel on to the next segment's first stage (guidance does, with the staging delays, when
+    ///     autostaging is off).
     /// </summary>
     public class GuidanceStateMachine
     {
@@ -216,8 +222,14 @@ namespace MechJebLib.PSG
 
         private double _spentSince = double.NaN;
 
-        // guidance moved on to a segment it has to stage into
-        private bool _stagePending;
+        // guidance moved on to a segment it has to stage into, from this KSP stage (-1: nothing to stage)
+        private int _stageFrom = -1;
+
+        // a Solution moved the cursor on to a later segment: the next Step moves on as Advance does
+        private bool _relocated;
+
+        // the current segment's last stage has had thrust since the segment started
+        private bool _lit;
 
         public bool IsTerminal() => Status == PSGStatus.FINAL || Status == PSGStatus.FINAL_RCS;
 
@@ -245,13 +257,22 @@ namespace MechJebLib.PSG
             _cursor = 0;
             _done.Clear();
             _spentSince = double.NaN;
-            _stagePending = false;
+            _stageFrom = -1;
+            _relocated = false;
+            _lit = false;
         }
 
         public void SetSolution(Solution solution)
         {
             if (Status == PSGStatus.FINISHED)
                 return;
+
+            // the segment being flown, by its phases' keys in the Solution it came from
+            bool flying = Status == PSGStatus.BURNING || Status == PSGStatus.COASTING;
+            _flown.Clear();
+            if (flying && Solution != null)
+                for (int p = _segments[_cursor].First; p <= _segments[_cursor].Last; p++)
+                    _flown.Add(Key(p));
 
             Solution = solution;
             BuildSegments(solution);
@@ -260,8 +281,25 @@ namespace MechJebLib.PSG
             while (_cursor < _segments.Count - 1 && IsDone(_segments[_cursor]))
                 _cursor++;
 
-            if (Status == PSGStatus.BURNING || Status == PSGStatus.COASTING)
-                Status = _segments[_cursor].Coast ? PSGStatus.COASTING : PSGStatus.BURNING;
+            // a Solution that no longer has the segment being flown (its stage was too spent to plan) moves guidance on to the
+            // next one, as the segment's own end would
+            if (flying && !Contains(_segments[_cursor], _flown))
+            {
+                foreach (int key in _flown)
+                    if (!_done.Contains(key))
+                        _done.Add(key);
+                _relocated = true;
+            }
+        }
+
+        private readonly List<int> _flown = new List<int>();
+
+        private bool Contains(in Segment seg, List<int> keys)
+        {
+            for (int p = seg.First; p <= seg.Last; p++)
+                if (keys.Contains(Key(p)))
+                    return true;
+            return false;
         }
 
         public void Finish()
@@ -285,6 +323,13 @@ namespace MechJebLib.PSG
 
             if (Status == PSGStatus.WAITING)
                 Enter(inputs, ref cmd);
+
+            if (_relocated)
+            {
+                _relocated = false;
+                Print("[GuidanceStateMachine] the new Solution starts with a later segment.");
+                MoveOn(inputs, ref cmd, true);
+            }
 
             if (!inputs.Grounded)
                 Transitions(inputs, ref cmd);
@@ -333,7 +378,7 @@ namespace MechJebLib.PSG
                         return;
                     }
 
-                    Print($"[GuidanceStateMachine] the burn in stage {inputs.KSPStage} ran dry {seg.EndTime - inputs.Met:F1} s before its end.");
+                    Print($"[GuidanceStateMachine] the burn in stage {inputs.KSPStage} has no thrust left, {seg.EndTime - inputs.Met:F1} s before its end.");
                     // a burned out stage is autostaging's to drop: only a segment that ends on guidance's cut is staged off here
                     Advance(inputs, ref cmd, seg.End == SegmentEnd.CUT);
                     continue;
@@ -343,11 +388,18 @@ namespace MechJebLib.PSG
                 {
                     case SegmentEnd.COAST when inputs.Met >= seg.EndTime:
                         Print("[GuidanceStateMachine] end of the coast.");
+                        if (seg.IsLast)
+                        {
+                            cmd.Finished = true;
+                            return;
+                        }
+
                         Advance(inputs, ref cmd, true);
                         continue;
                     // the nearest tick to the planned end: cutting now stops seg.EndTime - Met short, the next tick a tick less
-                    // than that over
-                    case SegmentEnd.CUT when seg.EndTime - inputs.Met < 0.5 * inputs.Dt:
+                    // than that over.  Only in the segment's last stage: a vessel still in an earlier one keeps burning until
+                    // staging or the spent rule brings it there.
+                    case SegmentEnd.CUT when seg.EndTime - inputs.Met < 0.5 * inputs.Dt && inputs.KSPStage <= seg.LastKSPStage:
                         Print($"[GuidanceStateMachine] cut at the planned end of the burn in stage {inputs.KSPStage}.");
                         Advance(inputs, ref cmd, true);
                         continue;
@@ -414,16 +466,22 @@ namespace MechJebLib.PSG
 
             cmd.AutoStageLimit = AutoStageLimit();
 
-            if (_stagePending)
+            // staging into a segment guidance moved on to: the stage it ended is dropped now (asked again while KSP refuses
+            // it); the stages after that (an interstage, a decoupler before the engines) are left to autostaging, with its
+            // checks for ullage, fairings and the rest, or staged with the staging delays when autostaging is off
+            bool dropping = false;
+            if (_stageFrom >= 0)
             {
-                // the stage after the first one (an interstage, a decoupler before the engines) with the staging delays
-                if (inputs.KSPStage > seg.FirstKSPStage)
+                if (inputs.KSPStage <= seg.FirstKSPStage)
+                    _stageFrom = -1;
+                else if (inputs.KSPStage >= _stageFrom)
                 {
+                    dropping = true;
                     if (cmd.Staging == GuidanceStaging.NONE)
-                        cmd.Staging = GuidanceStaging.STAGE;
+                        cmd.Staging = GuidanceStaging.IMMEDIATE;
                 }
-                else
-                    _stagePending = false;
+                else if (!inputs.Autostaging && cmd.Staging == GuidanceStaging.NONE)
+                    cmd.Staging = GuidanceStaging.STAGE;
             }
 
             if (HasCoasted && !seg.Coast)
@@ -438,7 +496,8 @@ namespace MechJebLib.PSG
                     cmd.Throttle = GuidanceThrottle.RCS_FORWARD;
                     break;
                 default:
-                    cmd.Throttle = GuidanceThrottle.SOLUTION;
+                    // the stage that was cut stays off until it is dropped
+                    cmd.Throttle = dropping ? GuidanceThrottle.OFF : GuidanceThrottle.SOLUTION;
                     if (seg.End == SegmentEnd.CUT && seg.EndTime - inputs.Met <= FINAL_TIME)
                         cmd.MinimumWarp = true;
                     break;
@@ -458,6 +517,7 @@ namespace MechJebLib.PSG
         private void Enter(in GuidanceInputs inputs, ref GuidanceCommand cmd)
         {
             _spentSince = double.NaN;
+            _lit = false;
 
             if (!_segments[_cursor].Coast)
             {
@@ -487,25 +547,38 @@ namespace MechJebLib.PSG
             }
 
             _cursor++;
+            MoveOn(inputs, ref cmd, stage);
+        }
+
+        // start the segment at the cursor, staging into it if guidance ended the one before
+        private void MoveOn(in GuidanceInputs inputs, ref GuidanceCommand cmd, bool stage)
+        {
             Segment next = _segments[_cursor];
 
-            _stagePending = stage && inputs.KSPStage > next.FirstKSPStage;
+            _stageFrom = stage && inputs.KSPStage > next.FirstKSPStage ? inputs.KSPStage : -1;
             // the cut and the stage on one tick: a hot handover to the next burn, or the coast's separation
-            if (_stagePending)
+            if (_stageFrom >= 0)
                 cmd.Staging = GuidanceStaging.IMMEDIATE;
 
             Enter(inputs, ref cmd);
         }
 
-        // the segment's last stage has no thrust left to give for a second: nothing left in it, or past its planned end.  A
-        // RealFuels engine that has not lit yet has no ThrustAvailable either, but still has its propellant.  In the RCS trim the
-        // RCS is what has to be out.
+        // the segment's last stage has had no thrust to give for a second.  A RealFuels engine that has not lit yet has no
+        // ThrustAvailable either, but still has its propellant.  In the RCS trim the RCS is what has to be out.
         private bool Spent(in Segment seg, in GuidanceInputs inputs)
         {
-            bool spent = Status != PSGStatus.WAITING && inputs.KSPStage <= seg.LastKSPStage &&
+            bool inLastStage = inputs.KSPStage <= seg.LastKSPStage;
+            if (inLastStage && !NoThrust(inputs.ThrustAvailable, inputs))
+                _lit = true;
+
+            // A stage with propellant left counts as spent once it has burned, past the planned end, or at any time on a burn
+            // that guidance cuts (a failed engine, which autostaging would drop but the cut's autostage limit holds).  One that
+            // never lit may still be waiting to: a vessel behind the clock, an engine held for ullage.
+            bool burnedOut = _lit && (inputs.Met >= seg.EndTime || seg.End == SegmentEnd.CUT);
+            bool spent = Status != PSGStatus.WAITING && inLastStage &&
                 (Status == PSGStatus.FINAL_RCS
                     ? NoThrust(inputs.RCSThrustUp, inputs)
-                    : NoThrust(inputs.ThrustAvailable, inputs) && (inputs.StageDeltaV < 1 || inputs.Met >= seg.EndTime));
+                    : NoThrust(inputs.ThrustAvailable, inputs) && (inputs.StageDeltaV < 1 || burnedOut));
 
             if (!spent)
             {
@@ -581,6 +654,10 @@ namespace MechJebLib.PSG
                 seg.EndTime = solution.EndTime(p);
                 _segments[_segments.Count - 1] = seg;
             }
+
+            // a coast after the last burn (every burn after it pruned) is not flown: the burn before it is the last segment
+            while (_segments.Count > 1 && solution.Phases[_segments[_segments.Count - 1].First].Coast)
+                _segments.RemoveAt(_segments.Count - 1);
 
             for (int i = 0; i < _segments.Count; i++)
             {
