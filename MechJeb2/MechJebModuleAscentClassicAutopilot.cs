@@ -98,6 +98,7 @@ namespace MuMech
             _launchAltitude = Vessel.LandedOrSplashed ? Math.Max(VesselState.AltitudeASL, 0) : 0;
             _actualTurnStart = _launchAltitude;
 
+            AscentSettings.ApplyOwnValues(this, false);
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
             if (AscentSettings.Autostage) Core.Staging.Users.Add(this);
@@ -115,6 +116,7 @@ namespace MuMech
             Core.Staging.Users.Remove(this);
             Countdown.Users.Remove(this);
             Countdown.Abort();
+            AscentSettings.ReleaseOwnValues(this);
 
             Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
 
@@ -298,7 +300,7 @@ namespace MuMech
             else
                 Core.Thrust.ThrustOff();
 
-            if (Core.Node.Autowarp)
+            if (AscentSettings.Autowarp)
                 Core.Warp.WarpPhysicsAtRate(2); // 2x physics warp
 
             Status.Set(Localizer.Format("#MechJeb_Ascent_status23")); //"Coasting to edge of atmosphere"

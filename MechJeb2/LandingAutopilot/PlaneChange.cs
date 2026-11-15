@@ -39,7 +39,7 @@ namespace MuMech
                 {
                     Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.MaxThrustAcceleration))));
                 }
-                else if (_planeChangeTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
+                else if (_planeChangeTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.Limits.LimiterMinThrottle)
                 {
                     Core.Thrust.RequestActiveThrottle(0.0f);
                 }

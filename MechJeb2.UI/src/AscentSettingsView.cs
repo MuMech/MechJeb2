@@ -7,8 +7,8 @@ namespace MuMech.UI
 {
     /// <summary>
     /// MechJebModuleAscentSettingsMenu ("Ascent Settings") in KodeKit.
-    /// The thrust limiter rows are the ones of the Utilities window; the autostage settings are
-    /// OptionRows.AutostageSettings.
+    /// The thrust limiter rows and the autostage settings are the ones of the Utilities window, bound to the ascent's own
+    /// values (AscentSettings.ThrustLimits, StagingRules, Autowarp), which apply while an ascent autopilot is engaged.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleAscentSettingsMenu))]
     public class AscentSettingsView : KodeView
@@ -26,6 +26,9 @@ namespace MuMech.UI
         MechJebModuleThrustController Thrust => Core.Thrust;
 
         bool psg;
+
+        // the ascent's own limits are the ones that apply while an ascent autopilot is engaged
+        bool OwnValuesApply() => Thrust.LimitsOverrideUser != null && ReferenceEquals(Thrust.LimitsOverrideUser, Core.Ascent);
 
         protected override void BeforeSync()
         {
@@ -54,8 +57,12 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
+            // the ascent's own values: say so once, above the groups
+            UIText own = w.Wrap(KodeWindow.Label(r, "#MechJeb_NewUI_AscentOwnValues", true)); //The ascent's own values: ...
+            KodeWindow.ToneText(own, Tone.Dim);
+
             UIObject g = w.Group(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
-            OptionRows.ThrustLimits(w, g, Thrust, () => psg, false);
+            OptionRows.ThrustLimits(w, g, Thrust, Settings.ThrustLimits, OwnValuesApply, () => psg, false);
 
             g = w.Group(r, "#MechJeb_NewUI_Steering"); //Steering
             KodeWindow.PropertyGrid steer = w.Properties(g);
@@ -86,7 +93,7 @@ namespace MuMech.UI
             g = w.Group(r, "#MechJeb_NewUI_Autostage"); //Autostage
             w.SwitchRow(g, "#MechJeb_Ascent_checkbox5", () => Settings.Autostage, v => Settings.Autostage = v); //Autostage
             Layout autostage = KodeWindow.Panel(g);
-            OptionRows.AutostageSettings(w, autostage, Core.Staging);
+            OptionRows.AutostageSettings(w, autostage, Core.Staging, Settings.StagingRules);
             w.Visible(autostage.gameObject, () => Settings.Autostage);
 
             g = w.Group(r, "#MechJeb_NewUI_Deployment"); //Deployment
@@ -94,7 +101,7 @@ namespace MuMech.UI
             w.SwitchRow(g, "#MechJeb_Ascent_checkbox7", () => Settings.AutoDeployAntennas, v => Settings.AutoDeployAntennas = v); //Auto-deploy antennas
 
             g = w.Group(r, "#MechJeb_NewUI_Other"); //Other
-            NodeUi.AutowarpToggle(w, g, Core, "#MechJeb_Ascent_checkbox8"); //Auto-warp
+            w.SwitchRow(g, "#MechJeb_Ascent_checkbox8", () => Settings.Autowarp, v => Settings.Autowarp = v); //Auto-warp
             UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Classic.SkipCircularization,
                 v => Classic.SkipCircularization = v); //Skip Circularization
             w.Visible(skip, () => !psg);

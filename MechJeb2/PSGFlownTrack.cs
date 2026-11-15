@@ -70,7 +70,7 @@ namespace MuMech
             double aoa = vs.SpeedSurface > 0.01 ? Vector3d.Angle(vs.Forward, vs.SurfaceVelocity) : 0;
             double q = vs.DynamicPressure;
             double qAlphaLimit = core.PSGSimulation.QAlphaLimit;
-            double qLimit = core.Thrust.LimitDynamicPressure ? core.Thrust.MaxDynamicPressure.Val : 0;
+            double qLimit = core.AscentSettings.ThrustLimits.LimitDynamicPressure ? core.AscentSettings.ThrustLimits.MaxDynamicPressure.Val : 0;
 
             Add(Column.MET, met);
             Add(Column.ALTITUDE, vs.AltitudeASL);

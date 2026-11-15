@@ -60,6 +60,31 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble TurnRoll = new EditableDouble(0);
 
+        /// <summary>
+        ///     The ascent's own throttle limits: the thrust controller reads them instead of the general ones (Utilities) while an
+        ///     ascent autopilot is engaged.
+        /// </summary>
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly ThrustLimitSet ThrustLimits = new ThrustLimitSet();
+
+        /// <summary>The ascent's own staging rules: the staging controller reads them while an ascent autopilot is engaged.</summary>
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly StagingRuleSet StagingRules = new StagingRuleSet();
+
+        /// <summary>The ascent's own Auto-warp: the launch countdown, the coast and the Classic circularization burn use it.</summary>
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool Autowarp = true;
+
+        // false until the ascent's own values were first copied from the general ones (InitOwnValuesIfNeeded)
+        [UsedImplicitly]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool OwnValuesInitialized;
+
+        /// <summary>The limits a PSG ascent flies with: the ascent's own, without the throttle cap and the electric limit.</summary>
+        public IThrustLimits PsgThrustLimits => _psgThrustLimits ??= new ThrustLimitsWithoutThrottleCap(ThrustLimits);
+
+        private IThrustLimits _psgThrustLimits;
+
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool AutoDeploySolarPanels = true;
 
@@ -129,14 +154,36 @@ namespace MuMech
         public bool OverrideWarpToPlane;
 
         /// <summary>
-        ///     PSG plans the ascent at full thrust and manages the throttle itself, so the throttle and electric limits are off while
-        ///     it flies. Both are persistent settings that the player, a classic ascent or a kOS script may have left on: the PSG
-        ///     autopilot keeps their values when it engages and gives them back when it disengages.
+        ///     An ascent autopilot's engage: its own throttle limits, staging rules and Auto-warp apply instead of the general ones
+        ///     until it disengages (ReleaseOwnValues). PSG flies without the throttle cap and the electric limit.
         /// </summary>
-        public void ForcePsgThrustLimits()
+        public void ApplyOwnValues(object autopilot, bool psg)
         {
-            Core.Thrust.LimitThrottle = false;
-            Core.Thrust.ElectricThrottle = false;
+            Core.Thrust.SetLimitsOverride(autopilot, psg ? PsgThrustLimits : ThrustLimits);
+            Core.Staging.SetRulesOverride(autopilot, StagingRules);
+            Core.Node.SetAutowarpOverride(autopilot, () => Autowarp);
+        }
+
+        public void ReleaseOwnValues(object autopilot)
+        {
+            Core.Thrust.ClearLimitsOverride(autopilot);
+            Core.Staging.ClearRulesOverride(autopilot);
+            Core.Node.ClearAutowarpOverride(autopilot);
+        }
+
+        /// <summary>
+        ///     The ascent's own throttle limits, staging rules and Auto-warp start as a copy of the general ones, once: an ascent
+        ///     flies as before until the player changes one side. The core calls this after its settings reload and saves at once
+        ///     when it returns true.
+        /// </summary>
+        public bool InitOwnValuesIfNeeded()
+        {
+            if (OwnValuesInitialized) return false;
+            MuMech.ThrustLimits.Copy(Core.Thrust, ThrustLimits);
+            MuMech.StagingRules.Copy(Core.Staging, StagingRules);
+            Autowarp             = Core.Node.Autowarp;
+            OwnValuesInitialized = true;
+            return true;
         }
 
         /*
@@ -254,6 +301,11 @@ namespace MuMech
 
             // Disable 'kill roll' toggle
             Core.Node.KillRollRotation = false;
+
+            // the ascent flies with its own values: they get the same defaults
+            MuMech.ThrustLimits.Copy(Core.Thrust, ThrustLimits);
+            MuMech.StagingRules.Copy(Core.Staging, StagingRules);
+            OwnValuesInitialized = true;
         }
 
         private const double LAUNCH_LAN_DIFFERENCE = 0;

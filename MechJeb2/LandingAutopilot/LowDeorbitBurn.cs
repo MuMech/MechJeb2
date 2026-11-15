@@ -28,7 +28,7 @@ namespace MuMech
                 {
                     Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle), allowZero: true);
                 }
-                else if (_deorbitBurnTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
+                else if (_deorbitBurnTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.Limits.LimiterMinThrottle)
                 {
                     Core.Thrust.RequestActiveThrottle(0.0f);
                 }

@@ -127,7 +127,7 @@ namespace MuMech.UI
         /// <summary>MechJebModuleStagingController.AutostageSettingsInfoItem, as a property grid.</summary>
         static void AutostageSettings(KodeWindow w, UIObject parent, MechJebModuleStagingController s)
         {
-            OptionRows.AutostageSettings(w, parent, s);
+            OptionRows.AutostageSettings(w, parent, s, s);
         }
 
         static void ClampAutostageThrust(KodeWindow w, UIObject parent, MechJebModuleStagingController s)

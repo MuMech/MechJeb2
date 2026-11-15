@@ -24,18 +24,12 @@ namespace MuMech
 
         private MechJebModuleLaunchCountdown Countdown => Core.LaunchCountdown;
 
-        // the player's throttle and electric limits, off while PSG flies and given back when it stops
-        private bool _savedLimitThrottle, _savedElectricThrottle, _limitsSaved;
-
         protected override void OnModuleEnabled()
         {
             Debug.Log("Enabling PSG Ascent Autopilot");
             _mode = AscentMode.PRELAUNCH;
 
-            _savedLimitThrottle    = Core.Thrust.LimitThrottle;
-            _savedElectricThrottle = Core.Thrust.ElectricThrottle;
-            _limitsSaved           = true;
-            AscentSettings.ForcePsgThrustLimits();
+            AscentSettings.ApplyOwnValues(this, true);
 
             // Each engage plans from the current settings and stages: Drive rebuilds the flight plan, so the plan of an earlier
             // engage, with the stages it marked done, is not flown again. The simulation, which freezes the plan, is disabled here.
@@ -60,12 +54,7 @@ namespace MuMech
             Core.Thrust.Users.Remove(this);
             Core.Staging.Users.Remove(this);
             Countdown.Users.Remove(this);
-            if (_limitsSaved)
-            {
-                Core.Thrust.LimitThrottle    = _savedLimitThrottle;
-                Core.Thrust.ElectricThrottle = _savedElectricThrottle;
-                _limitsSaved                 = false;
-            }
+            AscentSettings.ReleaseOwnValues(this);
 
             Countdown.Abort();
 
@@ -87,8 +76,6 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            AscentSettings.ForcePsgThrustLimits();
-
             // the guidance needs a flight plan, which nothing else makes unless the Ascent window is open
             if (Core.PSGSimulation.FlightPlan == null)
             {

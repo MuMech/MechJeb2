@@ -238,7 +238,7 @@ namespace MuMech.UI
                 if (Core.Landing != null) Core.Landing.RCSAdjustment = v;
             });
             MechJebModuleThrustController t = Core.Thrust;
-            OptionRows.MinThrottle(g, t, 50); //"Keep limited throttle over"
+            OptionRows.MinThrottle(g, t, t, OptionRows.GeneralLimitsApply(t), 50); //"Keep limited throttle over"
 
             // while landing: the autopilot's state in a status bar
             Layout running = w.StatusBar(p, () => KodeWindow.Tone.Normal);

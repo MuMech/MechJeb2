@@ -327,7 +327,7 @@ namespace MuMech.UI
             KodeWindow.Label(countdown, "#MechJeb_Ascent_label33"); //Launch countdown:
             EditUi.Field(w, countdown, Settings.WarpCountDown, 35);
             KodeWindow.Label(countdown, "s");
-            w.Visible(countdown.gameObject, () => Core.Node != null && Core.Node.Autowarp);
+            w.Visible(countdown.gameObject, () => Settings.Autowarp);
 
             UIText invalid = AscentUi.ToneText(box, "#MechJeb_Ascent_warnInvalidTarget", Tone.Caution, true); // Target must be in the same sphere of influence.
             KodeWindow.WrapToWidth(invalid);
