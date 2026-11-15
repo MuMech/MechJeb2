@@ -613,5 +613,11 @@ namespace MechJebLib.PSG
         }
 
         public bool Success() => PrimalFeasibility <= 1e-4;
+
+        /// <summary>Iterations of the run in progress, read from another thread while it runs.</summary>
+        public int LiveIterations => _kktStop.Iterations;
+
+        /// <summary>Largest constraint violation of the run in progress, in the solver's scaled units, NaN before the first iterate.</summary>
+        public double LiveInfeasibility => _kktStop.PrimalInfeasibility;
     }
 }

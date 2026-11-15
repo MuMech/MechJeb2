@@ -48,6 +48,9 @@ namespace MechJebLib.Utils
         /// <summary>Largest |multiplier * slack| at the last accepted iterate, NaN until one has been measured.</summary>
         public double Complementarity { get; private set; } = double.NaN;
 
+        /// <summary>Iterates accepted so far, after the starting point.</summary>
+        public int Iterations { get; private set; }
+
         /// <summary>True once termination has been requested from the solver.</summary>
         public bool StopRequested { get; private set; }
 
@@ -75,6 +78,7 @@ namespace MechJebLib.Utils
             PrimalInfeasibility = double.NaN;
             DualInfeasibility = double.NaN;
             Complementarity = double.NaN;
+            Iterations = 0;
             StopRequested = false;
 
             alglib.minnlcsetxrep(state, true);
@@ -95,6 +99,7 @@ namespace MechJebLib.Utils
                 return;
             }
 
+            Iterations++;
             Measure(state.innerobj.fsqpsolverstate);
 
             if (!(_optimalityTolerance > 0) || StopRequested)
