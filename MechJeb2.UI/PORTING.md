@@ -35,12 +35,12 @@ views can reach it too. Make private fields/methods `internal` when the view nee
 | `GUILayout.Button` | `KodeWindow.Button(p, text, action, flexible)` |
 | button whose text changes | `UIButton b = KodeWindow.Button(...)` + `w.AddSync(...)` updating `b.Text(...)` on change |
 | `GUILayout.RepeatButton` | `KodeWindow.RepeatButton(p, text, action)` (fires at once, then every 0.2 s) |
-| `GUILayout.Toggle` | `w.Toggle(p, text, () => get, v => set)`; coloured: the `Func<KodeWindow.Tone>` overload |
+| `GUILayout.Toggle` | `w.Toggle(p, text, () => get, v => set)` (a switch); `w.CheckBox` for a checkbox; coloured: the `Func<KodeWindow.Tone>` overload |
 | `GuiUtils.SimpleTextBox(label, editable, unit, width)` | Row + Label + `EditFields.Field(w, row, () => ed.Text, s => ed.Text = s, width, () => ed.IsParsed)` + Label(unit) |
 | `GuiUtils.ToggledTextBox` | Row + `w.Toggle` + `EditFields.Field` + unit label |
-| `GuiUtils.ArrowSelector` | `w.ArrowSelector(p, get, set, count or () => count, () => label)` |
+| `GuiUtils.ArrowSelector` | `w.ArrowSelector(p, get, set, count or () => count, () => label)`; the views use `new ComboBox(w, p, get, set, () => names)`, a dropdown drawn as `[<] entry [>]` when MechJeb's "no drop-down menus" setting is on |
 | `GuiUtils.ComboBox.Box` / `GuiUtils.DropDownMenu` | `new ComboBox(w, p, get, set, () => entries)` |
-| `GUILayout.SelectionGrid` / `Toolbar` | `w.SelectionGrid(p, items, get, set)` |
+| `GUILayout.SelectionGrid` / `Toolbar` | `w.SelectionGrid(p, items, get, set)`; the views use `w.Segmented(p, items, get, set)` (`ChoiceStyle.Tabs` for navigation) |
 | `GUILayout.HorizontalSlider` | `w.Slider(p, get, set, min, max)` |
 | `GUILayout.TextArea` / long help text | `KodeWindow.Paragraph(p, text)` (wraps) |
 | tooltip | `Tooltips.Add(gameObject, "#key or text")` |

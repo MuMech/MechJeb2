@@ -22,77 +22,24 @@ namespace MuMech.UI
         MechJebCore Core => window.Core;
         MechJebModuleThrustController Thrust => window.Core.Thrust;
 
+        // The same options in property grids (switches on the left, fields dimmed when off), under headers
         protected override void BuildContents(KodeWindow w)
-        {
-            if (KodeWindow.ModernLayout)
-            {
-                BuildModern(w);
-                return;
-            }
-
-            UIObject r = w.Root;
-
-            GeneralItemBuilders.Build(w, r, "General:ThrustController.LimitToMaxDynamicPressureInfoItem", Thrust);
-            GeneralItemBuilders.Build(w, r, "General:ThrustController.LimitToPreventOverheatsInfoItem", Thrust);
-            GeneralItemBuilders.Build(w, r, "General:ThrustController.LimitAccelerationInfoItem", Thrust);
-            GeneralItemBuilders.Build(w, r, "General:ThrustController.LimitThrottleInfoItem", Thrust);
-            GeneralItemBuilders.Build(w, r, "General:ThrustController.LimiterMinThrottleInfoItem", Thrust);
-            GeneralItemBuilders.Build(w, r, "General:ThrustController.LimitElectricInfoItem", Thrust);
-            GeneralItemBuilders.Build(w, r, "General:ThrustController.LimitToPreventFlameoutInfoItem", Thrust);
-            if (ReflectionUtils.IsLoadedRealFuels)
-            {
-                // does nothing in stock, so it is not shown if RF is not loaded
-                GeneralItemBuilders.Build(w, r, "General:ThrustController.LimitToPreventUnstableIgnitionInfoItem", Thrust);
-                GeneralItemBuilders.Build(w, r, "General:ThrustController.AutoRCsUllageInfoItem", Thrust);
-            }
-
-            w.Toggle(r, "#MechJeb_Utilities_checkbox3", () => Thrust.ManageIntakes, v => Thrust.ManageIntakes = v);
-            Layout jet = KodeWindow.Row(r);
-            KodeWindow.Label(jet, "#MechJeb_Utilities_label2", true);
-            EditUi.Field(w, jet, () => Thrust.FlameoutSafetyPct, 40);
-            KodeWindow.Label(jet, "%");
-
-            // DifferentialThrottleMenu + the failure messages under it
-            GeneralItemBuilders.Build(w, r, "General:ThrustController.DifferentialThrottleMenu", Thrust);
-            UIText diffStatus = OpUi.DynamicParagraph(w, r, DifferentialStatus(), true);
-            w.Visible(diffStatus.gameObject, DifferentialFailed);
-
-            GeneralItemBuilders.Build(w, r, "General:SolarPanelController.SolarPanelDeployButton", Core.Solarpanel);
-            GeneralItemBuilders.Build(w, r, "General:DeployableAntennaController.AntennaDeployButton", Core.AntennaControl);
-
-            GeneralItemBuilders.Build(w, r, "General:ThrustWindow.Autostage", window);
-            UIButton once = KodeWindow.Button(r, "#MechJeb_Utilities_button1", () => Core.Staging.AutostageOnce(window), true);
-            w.Visible(once.gameObject, () => !Core.Staging.Enabled);
-
-            Layout autostageSettings = r.Add<Layout>("AutostageSettings");
-            autostageSettings.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false);
-            autostageSettings.FlexibleLayout(true, false);
-            autostageSettings.Finish();
-            GeneralItemBuilders.Build(w, autostageSettings, "General:StagingController.AutostageSettingsInfoItem", Core.Staging);
-            w.Visible(autostageSettings.gameObject, () => Core.Staging.Enabled);
-
-            UIText status = w.BoundLabel(r, AutostageStatus(), true);
-            w.Visible(status, () => Core.Staging.Enabled);
-        }
-
-        // modern layout: the same options in property grids (switches on the left, fields dimmed when off), under headers
-        void BuildModern(KodeWindow w)
         {
             UIObject r = w.Root;
 
             UIObject g = w.Group(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
-            ModernRows.ThrustLimits(w, g, Thrust, null, false);
+            OptionRows.ThrustLimits(w, g, Thrust, null, false);
 
             g = w.Group(r, "#MechJeb_NewUI_Jets"); //Jet engines
             KodeWindow.PropertyGrid jets = w.Properties(g);
-            ModernRows.Switch(jets, "#MechJeb_Ascent_checkbox13", () => Thrust.LimitToPreventFlameout, v => Thrust.LimitToPreventFlameout = v,
+            OptionRows.Switch(jets, "#MechJeb_Ascent_checkbox13", () => Thrust.LimitToPreventFlameout, v => Thrust.LimitToPreventFlameout = v,
                 tone: LimiterTones.For(Thrust, LimitMode.FLAMEOUT)); //"Prevent jet flameout"
-            ModernRows.Switch(jets, "#MechJeb_Utilities_checkbox3", () => Thrust.ManageIntakes, v => Thrust.ManageIntakes = v);
-            ModernRows.Field(jets, "#MechJeb_Utilities_label2", Thrust.FlameoutSafetyPct, "%", 50);
+            OptionRows.Switch(jets, "#MechJeb_Utilities_checkbox3", () => Thrust.ManageIntakes, v => Thrust.ManageIntakes = v);
+            OptionRows.Field(jets, "#MechJeb_Utilities_label2", Thrust.FlameoutSafetyPct, "%", 50);
 
             g = w.Group(r, "#MechJeb_NewUI_Other"); //Other
             KodeWindow.PropertyGrid other = w.Properties(g);
-            ModernRows.Switch(other, "#MechJeb_Ascent_checkbox19", () => Thrust.DifferentialThrottle, LimiterTones.SetDifferential(Thrust),
+            OptionRows.Switch(other, "#MechJeb_Ascent_checkbox19", () => Thrust.DifferentialThrottle, LimiterTones.SetDifferential(Thrust),
                 tone: () => LimiterTones.Differential(Thrust)); //"Differential throttle"
             Layout diffBar = w.StatusBar(g, () => KodeWindow.Tone.Warn);
             OpUi.DynamicParagraph(w, diffBar, DifferentialStatus());
@@ -119,7 +66,7 @@ namespace MuMech.UI
             w.Visible(once.gameObject, () => !Core.Staging.Enabled);
 
             Layout settings = KodeWindow.Panel(g);
-            ModernRows.AutostageSettings(w, settings, Core.Staging);
+            OptionRows.AutostageSettings(w, settings, Core.Staging);
             w.Visible(settings.gameObject, () => Core.Staging.Enabled);
 
             Layout statusBar = w.StatusBar(g, () => KodeWindow.Tone.Normal);

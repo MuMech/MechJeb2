@@ -124,61 +124,17 @@ namespace MuMech.UI
             });
         }
 
-        /// <summary>MechJebModuleStagingController.AutostageSettingsInfoItem, in a box (a property grid in the modern layout).</summary>
+        /// <summary>MechJebModuleStagingController.AutostageSettingsInfoItem, as a property grid.</summary>
         static void AutostageSettings(KodeWindow w, UIObject parent, MechJebModuleStagingController s)
         {
-            if (KodeWindow.ModernLayout)
-            {
-                ModernRows.AutostageSettings(w, parent, s);
-                return;
-            }
-
-            LayoutPanel box = KodeWindow.Box(parent);
-
-            Layout limit = KodeWindow.Row(box);
-            KodeWindow.Label(limit, "#MechJeb_Ascent_label42", true); //"Stop at stage #"
-            EditUi.Field(w, limit, () => s.AutostageLimit, 40);
-
-            Layout delays = KodeWindow.Row(box);
-            KodeWindow.Label(delays, "Delays: ");
-            KodeWindow.Space(delays, 30);
-            KodeWindow.Label(delays, "pre: ");
-            EditUi.Field(w, delays, () => s.AutostagePreDelay, 35);
-            KodeWindow.Label(delays, "s");
-            KodeWindow.FlexibleSpace(delays);
-            KodeWindow.Label(delays, "post: ");
-            EditUi.Field(w, delays, () => s.AutostagePostDelay, 35);
-            KodeWindow.Label(delays, "s");
-
-            ClampAutostageThrust(w, box, s);
-
-            KodeWindow.Label(box, "#MechJeb_Ascent_label38"); //"Stage fairings when:"
-            ToggledField(w, box, s._sFairingMaxDynamicPressure.Trim(), () => s.FairingMaxDynamicPressureEnabled,
-                v => s.FairingMaxDynamicPressureEnabled = v, s.FairingMaxDynamicPressure, "kPa", 50, () => KodeWindow.Tone.Normal);
-            ToggledField(w, box, s._sFairingMinAltitude.Trim(), () => s.FairingMinAltitudeEnabled,
-                v => s.FairingMinAltitudeEnabled = v, s.FairingMinAltitude, "km", 50, () => KodeWindow.Tone.Normal);
-            ToggledField(w, box, s._sFairingMaxAerothermalFlux.Trim(), () => s.FairingMaxAerothermalFluxEnabled,
-                v => s.FairingMaxAerothermalFluxEnabled = v, s.FairingMaxAerothermalFlux, "W/m²", 50, () => KodeWindow.Tone.Normal);
-
-            Layout hot = KodeWindow.Row(box);
-            w.Toggle(hot, "#MechJeb_Ascent_hotStaging", () => s.HotStaging, v => s.HotStaging = v); //"Support hotstaging"
-            KodeWindow.FlexibleSpace(hot);
-            KodeWindow.Label(hot, s._sLeadTime);
-            EditUi.Field(w, hot, () => s.HotStagingLeadTime, 35);
-            KodeWindow.Label(hot, "s");
-
-            Layout solids = KodeWindow.Row(box);
-            w.Toggle(solids, "#MechJeb_Ascent_dropSolids", () => s.DropSolids, v => s.DropSolids = v); //"Drop solids early"
-            KodeWindow.FlexibleSpace(solids);
-            EditUi.Field(w, solids, () => s.DropSolidsTwrPct, 35);
-            KodeWindow.Label(solids, "% rocket accel");
+            OptionRows.AutostageSettings(w, parent, s);
         }
 
         static void ClampAutostageThrust(KodeWindow w, UIObject parent, MechJebModuleStagingController s)
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, CachedLocalizer.Instance.MechJebAscentLabel44, true); //"Clamp AutoStage Thrust "
-            EditFields.Field(w, row, () => s.ClampAutoStageThrustPct.Text, x => ModernRows.SetClamp(s, x), 50, () => s.ClampAutoStageThrustPct.IsParsed);
+            EditFields.Field(w, row, () => s.ClampAutoStageThrustPct.Text, x => OptionRows.SetClamp(s, x), 50, () => s.ClampAutoStageThrustPct.IsParsed);
             KodeWindow.Label(row, "%");
         }
 
@@ -196,16 +152,7 @@ namespace MuMech.UI
 
         static void Separator(UIObject parent)
         {
-            if (KodeWindow.ModernLayout)
-            {
-                KodeWindow.Rule(parent);
-                return;
-            }
-
-            UIEmpty line = parent.Add<UIEmpty>("Separator");
-            line.PreferredHeight(2).FlexibleLayout(true, false).Finish();
-            Image img = line.gameObject.AddComponent<Image>();
-            KodeWindow.Styled(line.gameObject, th => img.color = th.Dim * new Color(1, 1, 1, 0.6f));
+            KodeWindow.Rule(parent);
         }
     }
 }

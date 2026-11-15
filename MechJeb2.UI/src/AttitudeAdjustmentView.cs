@@ -28,19 +28,6 @@ namespace MuMech.UI
 
         MechJebModuleAttitudeController Attitude => adj.Core.Attitude;
 
-        /// <summary>One radio-like toggle: checked while it is the active controller; clicking sets it.</summary>
-        void ControllerToggle(KodeWindow w, UIObject parent, string text, int index) =>
-            w.Toggle(parent, text, () => Attitude.ActiveController == index, v =>
-            {
-                // GUILayout.Toggle(current == index) returned true only when switched on; unchecking the active one did nothing
-                if (v && Attitude.ActiveController != index) Attitude.SetActiveController(index);
-            });
-
-        static void Padded(CharText t, double v, int decimals) => AttitudeControllerPanels.Padded(t, v, decimals);
-        static void Vector(CharText t, Vector3d v) => AttitudeControllerPanels.WithMagnitude(t, v);
-
-        const string VectorTemplate = AttitudeControllerPanels.VectorTemplate;
-
         /// <summary>label (flexible) + a live value, committed in a sync only while the numbers are shown.</summary>
         void InfoRow(KodeWindow w, UIObject parent, string labelKey, string template, Action<CharText> fill)
         {
@@ -69,77 +56,6 @@ namespace MuMech.UI
             }
         }
 
-        protected override void BuildContents(KodeWindow w)
-        {
-            if (KodeWindow.ModernLayout)
-            {
-                BuildModern(w);
-                return;
-            }
-
-            UIObject r = w.Root;
-
-            w.Toggle(r, "#MechJeb_AttitudeAdjust_checkbox1", () => Attitude.RCSAuto, v => Attitude.RCSAuto = v); //RCS auto mode
-
-            // the radio choice and the active controller's settings
-            Layout controller = w.Section(r, "#MechJeb_NewUI_SectionController");
-            ControllerToggle(w, controller, "#MechJeb_AttitudeAdjust_checkbox2", 0); //MJAttitudeController
-            ControllerToggle(w, controller, "#MechJeb_AttitudeAdjust_checkbox3", 1); //KosAttitudeController
-            ControllerToggle(w, controller, "#MechJeb_AttitudeAdjust_checkbox4", 2); //HybridController
-            ControllerToggle(w, controller, "BetterController", 3);
-
-            // the active controller's settings, indented by 20; one panel per controller, built once, the active one shown
-            Layout indent = KodeWindow.Row(controller);
-            KodeWindow.Space(indent, 20);
-            Layout panels = KodeWindow.Panel(indent);
-            ControllerPanels(w, panels);
-
-            // "Show Numbers" is the section: open = numbers shown. adj.showInfos (persisted, shared with IMGUI) follows
-            // the section, so the readouts below are only computed while it is open.
-            Layout infos = w.Section(r, "#MechJeb_NewUI_SectionNumbers", adj.showInfos);
-            FollowSection(w, infos);
-            InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label1", "[ 1,  1,  1 ]", t => //Axis Control
-            {
-                Vector3d a = Attitude.AxisControl;
-                t.Append('[');
-                Padded(t, a.x, 0);
-                t.Append(", ");
-                Padded(t, a.y, 0);
-                t.Append(", ");
-                Padded(t, a.z, 0);
-                t.Append(" ]");
-            });
-            InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label2", VectorTemplate, t => Vector(t, Attitude.Torque)); //Torque
-            InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label3", VectorTemplate, //torqueReactionSpeed
-                t => Vector(t, adj.VesselState.TorqueReactionSpeed));
-            InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label4", VectorTemplate, t => //MOI / torque
-                Vector(t, Vector3d.Scale(adj.VesselState.MoI, Attitude.Torque.InvertNoNaN())));
-            InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label5", VectorTemplate, t => Vector(t, adj.VesselState.MoI)); //MOI
-            InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label6", VectorTemplate, //Angular Velocity
-                t => Vector(t, adj.Vessel.angularVelocity));
-            InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label7", VectorTemplate, //Angular M
-                t => Vector(t, adj.VesselState.AngularMomentum));
-            InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label8", "0.000", t => t.Append(TimeWarp.fixedDeltaTime, 3)); //fixedDeltaTime
-
-            MechJebModuleDebugArrows arrows = adj.Core.GetComputerModule<MechJebModuleDebugArrows>();
-            if (arrows == null) return;
-
-            w.Section(r, "#MechJeb_NewUI_SectionDebugArrows", false, debug =>
-            {
-                Layout length = KodeWindow.Row(debug);
-                KodeWindow.Label(length, "#MechJeb_AttitudeAdjust_Label9"); //Arrows length
-                EditUi.Field(w, length, () => arrows.arrowsLength, 50);
-
-                SphereToggles(w, debug, arrows);
-
-                Layout radius = KodeWindow.Row(debug);
-                KodeWindow.Label(radius, "#MechJeb_AttitudeAdjust_Label10", true); //Radius of Sphere
-                EditUi.Field(w, radius, () => arrows.comSphereRadius, 40);
-
-                ArrowToggles(w, debug, arrows);
-            });
-        }
-
         // adj.showInfos (persisted, shared with IMGUI) follows the "Numbers" section's fold
         void FollowSection(KodeWindow w, Layout infos) =>
             w.AddSync(() =>
@@ -148,7 +64,7 @@ namespace MuMech.UI
                 if (adj.showInfos != open) adj.showInfos = open;
             });
 
-        // the debug arrow options, in IMGUI's order (the radius field goes between the two groups in the classic layout)
+        // the debug arrow options, in IMGUI's order
         static void SphereToggles(KodeWindow w, UIObject debug, MechJebModuleDebugArrows arrows)
         {
             w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox6", () => arrows.seeThrough, v => arrows.seeThrough = v); //Visible through object
@@ -171,8 +87,8 @@ namespace MuMech.UI
 
         static readonly string[] controllerNames = { "MJ", "kOS", "Hybrid", "Better" };
 
-        // modern layout: the controller as one choice, switches, and the numbers as an X, Y, Z grid
-        void BuildModern(KodeWindow w)
+        // The controller as one choice, switches, and the numbers as an X, Y, Z grid
+        protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
 

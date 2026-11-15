@@ -52,66 +52,6 @@ namespace MuMech.UI
             ed.SelectNode(nodes.Count == 1 || !nodes.Contains(ed.node) ? nodes[0] : ed.node);
         }
 
-        protected override void BuildContents(KodeWindow w)
-        {
-            if (KodeWindow.ModernLayout)
-            {
-                BuildModern(w);
-                return;
-            }
-
-            UIObject r = w.Root;
-
-            // no node
-            Layout none = KodeWindow.Panel(r);
-            KodeWindow.Label(none, "#MechJeb_NodeEd_Label1"); //"No maneuver nodes to edit."
-            RelativityModeSelect(w, none);
-            w.Visible(none.gameObject, () => Count == 0);
-
-            Layout edit = KodeWindow.Panel(r);
-            w.Visible(edit.gameObject, () => Count > 0);
-
-            // node selector + merge, only with several nodes
-            Layout selector = KodeWindow.Panel(edit);
-            w.ArrowSelector(selector, () => NodeIndex, i => ed.SelectNode(Nodes[i]), () => Count, () => NodeLabel(NodeIndex));
-            UIButton merge = KodeWindow.Button(selector, "#MechJeb_NodeEd_button1", () => ed.MergeNext(NodeIndex)); //"Merge next node"
-            w.Visible(merge.gameObject, () => Count > 1 && NodeIndex < Count - 1);
-            w.Visible(selector.gameObject, () => Count > 1);
-
-            ComponentRow(w, edit, "#MechJeb_NodeEd_Label2", () => ed.prograde, v => ed.prograde = v, () => ed.progradeDelta); //"Prograde:"
-            ComponentRow(w, edit, "#MechJeb_NodeEd_Label3", () => ed.radialPlus, v => ed.radialPlus = v, () => ed.radialPlusDelta); //"Radial+:"
-            ComponentRow(w, edit, "#MechJeb_NodeEd_Label4", () => ed.normalPlus, v => ed.normalPlus = v, () => ed.normalPlusDelta); //"Normal+:"
-
-            Layout deltas = KodeWindow.Row(edit);
-            KodeWindow.Label(deltas, "#MechJeb_NodeEd_Label5", true); //"Set delta to:"
-            string[] deltaLabels = { "0.01", "0.1", "1", "10", "100" };
-            double[] deltaValues = { 0.01, 0.1, 1, 10, 100 };
-            for (int i = 0; i < deltaValues.Length; i++)
-            {
-                double v = deltaValues[i];
-                KodeWindow.Button(deltas, deltaLabels[i], () => ed.progradeDelta = ed.radialPlusDelta = ed.normalPlusDelta = v, true);
-            }
-
-            KodeWindow.Button(edit, "#MechJeb_NodeEd_button2", ed.UpdateNodeFromFields); //"Update"
-
-            Layout shift = KodeWindow.Row(edit);
-            KodeWindow.Label(shift, "#MechJeb_NodeEd_Label6", true); //"Shift time"
-            KodeWindow.Button(shift, "-o", () => ed.ShiftNodeOrbits(-1));
-            KodeWindow.Button(shift, "-", () => ed.ShiftNode(-ed.timeOffset));
-            EditUi.Field(w, shift, () => ed.timeOffset, 100);
-            KodeWindow.Button(shift, "+", () => ed.ShiftNode(ed.timeOffset));
-            KodeWindow.Button(shift, "+o", () => ed.ShiftNodeOrbits(1));
-
-            Layout snap = KodeWindow.Row(edit);
-            KodeWindow.Button(snap, "#MechJeb_NodeEd_button3", ed.SnapNode, true); //"Snap node to"
-            w.ArrowSelector(snap, () => (int)ed.snap, i => ed.snap = (MechJebModuleNodeEditor.Snap)i, MechJebModuleNodeEditor.numSnaps,
-                () => ed.snapStrings[(int)ed.snap]);
-
-            RelativityModeSelect(w, edit);
-
-            ExecuteRows(w, edit, false);
-        }
-
         // the node executor: Execute next node / Execute all nodes (with more than one node) / Abort, Auto-warp
         void ExecuteRows(KodeWindow w, UIObject parent, bool flexible)
         {
@@ -122,29 +62,7 @@ namespace MuMech.UI
             w.Visible(autowarp, () => core.Node != null);
         }
 
-        /// <summary>label [value] m/s [-] [delta] [+] m/s; -/+ repeat every 0.2 s while held, like LimitedRepeatButtoon.</summary>
-        void ComponentRow(KodeWindow w, UIObject parent, string label, System.Func<EditableDouble> value, System.Action<EditableDouble> setValue,
-            System.Func<EditableDouble> delta)
-        {
-            Layout row = KodeWindow.Row(parent);
-            KodeWindow.Label(row, label);
-            EditUi.Field(w, row, value, 60);
-            KodeWindow.Label(row, "m/s");
-            KodeWindow.RepeatButton(row, "-", () =>
-            {
-                setValue(value() - delta());
-                ed.UpdateNodeFromFields();
-            });
-            EditUi.Field(w, row, delta, 50);
-            KodeWindow.RepeatButton(row, "+", () =>
-            {
-                setValue(value() + delta());
-                ed.UpdateNodeFromFields();
-            });
-            KodeWindow.Label(row, "m/s");
-        }
-
-        // ---- modern layout: a node dropdown, steppers in a property grid with one step choice, grouped sections ----
+        // ---- A node dropdown, steppers in a property grid with one step choice, grouped sections ----
 
         string[] nodeEntries = new string[0];
         ManeuverNode[] listedNodes = new ManeuverNode[0];
@@ -174,13 +92,13 @@ namespace MuMech.UI
             return -1;
         }
 
-        void BuildModern(KodeWindow w)
+        protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
 
             Layout none = KodeWindow.Panel(r);
             KodeWindow.Label(none, "#MechJeb_NodeEd_Label1"); //"No maneuver nodes to edit."
-            ModernRelativity(w, none);
+            Relativity(w, none);
             w.Visible(none.gameObject, () => Count == 0);
 
             Layout edit = KodeWindow.Panel(r);
@@ -220,7 +138,7 @@ namespace MuMech.UI
             new ComboBox(w, snap, () => (int)ed.snap, i => ed.snap = (MechJebModuleNodeEditor.Snap)i, () => ed.snapStrings);
 
             KodeWindow.Header(edit, "#MechJeb_NewUI_Display"); //Display
-            ModernRelativity(w, edit);
+            Relativity(w, edit);
 
             KodeWindow.Header(edit, "#MechJeb_NewUI_Execute"); //Execute
             ExecuteRows(w, edit, true);
@@ -240,7 +158,7 @@ namespace MuMech.UI
             KodeWindow.Label(row, "m/s");
         }
 
-        void ModernRelativity(KodeWindow w, UIObject parent)
+        void Relativity(KodeWindow w, UIObject parent)
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, "#MechJeb_NodeEd_Label8"); //"Conics mode:"
@@ -248,15 +166,6 @@ namespace MuMech.UI
                 i => ed.Vessel.patchedConicRenderer.relativityMode = (PatchRendering.RelativityMode)i);
             UIText mode = w.BoundLabel(parent, ModeLabel, true); //"Current mode: <<1>>"
             KodeWindow.ToneText(mode, KodeWindow.Tone.Dim);
-        }
-
-        void RelativityModeSelect(KodeWindow w, UIObject parent)
-        {
-            Layout row = KodeWindow.Row(parent);
-            KodeWindow.Label(row, "#MechJeb_NodeEd_Label8"); //"Conics mode:"
-            w.SelectionGrid(row, relativityModeStrings, () => (int)ed.Vessel.patchedConicRenderer.relativityMode,
-                i => ed.Vessel.patchedConicRenderer.relativityMode = (PatchRendering.RelativityMode)i);
-            w.BoundLabel(parent, ModeLabel, true); //"Current mode: <<1>>"
         }
 
     }

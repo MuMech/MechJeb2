@@ -23,8 +23,7 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
             Layout grid = KodeWindow.Row(r);
-            if (KodeWindow.ModernLayout) w.Segmented(grid, help.Topics, () => help.SelTopic, i => help.SelTopic = i, ChoiceStyle.Tabs); // navigation
-            else w.SelectionGrid(grid, help.Topics, () => help.SelTopic, i => help.SelTopic = i);
+            w.Segmented(grid, help.Topics, () => help.SelTopic, i => help.SelTopic = i, ChoiceStyle.Tabs); // navigation
 
             for (int t = 0; t < help.Topics.Length; t++)
             {

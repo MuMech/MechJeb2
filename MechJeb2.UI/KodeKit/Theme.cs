@@ -64,7 +64,7 @@ namespace KodeKit
         public ElementStyle Window = new ElementStyle(), Button = new ElementStyle(), Toggle = new ElementStyle(), Check = new ElementStyle(),
             Field = new ElementStyle(), Box = new ElementStyle(), Tooltip = new ElementStyle();
 
-        // ---- the modern layout's widgets (segmented choices, switches, chips, action bars, headers) ----
+        // ---- the layout widgets (segmented choices, switches, chips, action bars, headers) ----
 
         /// <summary>The accent: selected choices, switches that are on, primary actions. AccentText is text drawn on it.</summary>
         public Color Accent = new Color(0.18f, 0.75f, 0.48f), AccentText = new Color(0.02f, 0.08f, 0.05f);

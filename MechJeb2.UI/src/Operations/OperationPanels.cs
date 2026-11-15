@@ -216,19 +216,7 @@ namespace MuMech.UI
             // two-burn capture vs single-burn intercept/flyby: radio buttons whose texts depend on the kind of target
             void CaptureRadios(Layout row, string captureKey, string interceptKey)
             {
-                if (KodeWindow.ModernLayout)
-                {
-                    w.Segmented(row, new[] { captureKey, interceptKey }, () => op.Capture ? 0 : 1, i => op.Capture = i == 0);
-                    return;
-                }
-                w.Toggle(row, captureKey, () => op.Capture, v =>
-                {
-                    if (v) op.Capture = true;
-                });
-                w.Toggle(row, interceptKey, () => !op.Capture, v =>
-                {
-                    if (v) op.Capture = false;
-                });
+                w.Segmented(row, new[] { captureKey, interceptKey }, () => op.Capture ? 0 : 1, i => op.Capture = i == 0);
             }
 
             Layout celestial = KodeWindow.Row(c.Panel);

@@ -211,21 +211,13 @@ namespace KodeKit
             BodyDrag.Target = Behaviour;
             BodyDrag.Enabled = () => !TitleBarOnly();
             UIText titleText = Label(titleRow, title, true);
-            // the modern layout puts the title on the left, where the eye starts, and draws the title-bar buttons as icons
-            titleText.tmpText.alignment = ModernLayout ? TextAlignmentOptions.Left : TextAlignmentOptions.Center;
+            // the title on the left, where the eye starts, and the title-bar buttons as icons
+            titleText.tmpText.alignment = TextAlignmentOptions.Left;
             titleText.tmpText.raycastTarget = true; // so the title bar catches drags
             TitleText = titleText;
             Action close = () => (OnClose ?? (() => Root.gameObject.SetActive(false)))();
-            if (ModernLayout)
-            {
-                CloseButton = IconButton(titleRow, Sprites.Cross, close);
-                FlatIcon(CloseButton, true);
-            }
-            else
-            {
-                CloseButton = Button(titleRow, "x", close);
-                SquareButton(CloseButton, true);
-            }
+            CloseButton = IconButton(titleRow, Sprites.Cross, close);
+            FlatIcon(CloseButton, true);
         }
 
         /// <summary>The title label (a window can show something other than its module's name, e.g. the menu's version).</summary>
@@ -233,35 +225,6 @@ namespace KodeKit
 
         /// <summary>The title bar's close button.</summary>
         public UIButton CloseButton { get; }
-
-        /// <summary>
-        /// A small square title-bar button: an outlined frame instead of a full button; the close button turns red on hover.
-        /// </summary>
-        static void SquareButton(UIButton b, bool close)
-        {
-            var button = b.GetComponent<Button>();
-            var img = b.GetComponent<Image>();
-            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
-            b.Content.Padding(0);
-            var le = b.gameObject.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
-            Styled(b.gameObject, th =>
-            {
-                float size = th.FontSize + 3;
-                le.minWidth = le.preferredWidth = le.minHeight = le.preferredHeight = size;
-                img.sprite = Sprites.CheckBox;
-                img.type = Image.Type.Sliced;
-                img.color = Color.white;
-                button.transition = Selectable.Transition.ColorTint;
-                ColorBlock cb = ColorBlock.defaultColorBlock;
-                cb.normalColor = new Color(1, 1, 1, 0.8f);
-                cb.highlightedColor = close ? new Color(1f, 0.35f, 0.3f) : new Color(1f, 1f, 0.7f);
-                cb.pressedColor = cb.highlightedColor * 0.8f;
-                cb.selectedColor = cb.normalColor;
-                button.colors = cb;
-                th.ApplyText(label, th.Text);
-                label.fontSize = th.FontSize - 2;
-            });
-        }
 
         public WindowBehaviour Behaviour { get; }
 
@@ -278,20 +241,13 @@ namespace KodeKit
         public Layout TitleRow { get; }
 
         /// <summary>
-        /// A small button at the left of the title bar (like the custom windows' "E" and "C"); in the modern layout a flat one
-        /// on the right, before the close button, like the title-bar icons.
+        /// A small flat button in the title bar, before the close button, like the title-bar icons.
         /// </summary>
         public UIButton TitleButton(string text, Action onClick)
         {
             UIButton b = Button(TitleRow, text, onClick);
-            if (ModernLayout)
-            {
-                FlatIcon(b, false);
-                b.transform.SetSiblingIndex(CloseButton.transform.GetSiblingIndex());
-                return b;
-            }
-            SquareButton(b, false);
-            b.transform.SetSiblingIndex(0);
+            FlatIcon(b, false);
+            b.transform.SetSiblingIndex(CloseButton.transform.GetSiblingIndex());
             return b;
         }
 
@@ -588,36 +544,7 @@ namespace KodeKit
         public Layout Section(UIObject parent, string title, bool open = true, string key = null) => SectionCore(parent, title, open, key ?? title, false);
 
         // lazy: a folded section starts inactive and its contents are made when it opens; else they are made now, open
-        Layout SectionCore(UIObject parent, string title, bool open, string key, bool lazy)
-        {
-            if (ModernLayout) return FoldSection(parent, title, open, key, lazy);
-            if (sectionState.TryGetValue(key, out bool saved)) open = saved;
-
-            Layout header = Row(parent);
-            UIButton toggle = Button(header, open ? "-" : "+", () => { });
-            UIText label = Label(header, title, true);
-            label.tmpText.fontStyle = FontStyles.Bold;
-
-            Layout content = parent.Add<Layout>("Section");
-            content.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false).Padding(10, 0, 0, 2);
-            content.FlexibleLayout(true, false);
-            content.Finish();
-            content.gameObject.SetActive(open || !lazy);
-            if (!open && !lazy) FoldInFirstSync(content, null);
-
-            void Flip()
-            {
-                bool o = !content.gameObject.activeSelf;
-                content.gameObject.SetActive(o);
-                sectionState[key] = o;
-                toggle.Text(o ? "-" : "+");
-            }
-
-            toggle.GetComponent<Button>().onClick.AddListener(Flip);
-            label.tmpText.raycastTarget = true;
-            label.gameObject.AddComponent<ClickHandler>().Click = Flip;
-            return content;
-        }
+        Layout SectionCore(UIObject parent, string title, bool open, string key, bool lazy) => FoldSection(parent, title, open, key, lazy);
 
         /// <summary>A static text that wraps to the window width (help texts, long descriptions).</summary>
         public static UIText Paragraph(UIObject parent, string text) => WrapToWidth(Label(parent, text, true));
@@ -912,7 +839,7 @@ namespace KodeKit
         public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<Tone> tone) =>
             ToneLabel(Toggle(parent, text, get, set), tone);
 
-        /// <summary>A checkbox whose label colour follows a state, in either layout.</summary>
+        /// <summary>A checkbox whose label colour follows a state.</summary>
         public Toggle CheckBox(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<Tone> tone) =>
             ToneLabel(CheckBox(parent, text, get, set), tone);
 
@@ -925,11 +852,11 @@ namespace KodeKit
         /// <summary>The label of a toggle made by Toggle, CheckBox or SwitchToggle (the text that flips it).</summary>
         public static TMP_Text LabelOf(Toggle toggle) => toggle.transform.parent.GetComponentInChildren<ToggleLabelClick>().GetComponent<TMP_Text>();
 
-        /// <summary>A checkbox and its label; a switch in the modern layout. The label flips it too.</summary>
+        /// <summary>A switch and its label. The label flips it too.</summary>
         public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green = null) =>
-            ModernLayout ? SwitchToggle(parent, text, get, set, green) : CheckBox(parent, text, get, set, green);
+            SwitchToggle(parent, text, get, set, green);
 
-        /// <summary>A checkbox and its label in either layout (the menu's window list keeps checkboxes in the modern layout).</summary>
+        /// <summary>A checkbox and its label (the menu's window list keeps checkboxes; <see cref="Toggle(UIObject, string, Func{bool}, Action{bool}, Func{bool})"/> is a switch).</summary>
         public Toggle CheckBox(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green = null)
         {
             Layout row = Row(parent);
@@ -984,16 +911,11 @@ namespace KodeKit
             });
         }
 
-        /// <summary>GUILayout.SelectionGrid with one row.</summary>
+        /// <summary>GUILayout.SelectionGrid with one row: a button per item, the selected one tinted green (<see cref="Segmented"/> is the joined control).</summary>
         /// <param name="padding">0: normal buttons; else like <see cref="Padded"/>.</param>
         public void SelectionGrid(UIObject parent, string[] items, Func<int> get, Action<int> set, int padding = 0)
         {
-            if (ModernLayout)
-            {
-                Segmented(parent, items, get, set);
-                return;
-            }
-            Action<int> edited = Edits(set); // past the modern branch: Segmented reports its own edits
+            Action<int> edited = Edits(set);
             var images = new Image[items.Length];
             for (int i = 0; i < items.Length; i++)
             {

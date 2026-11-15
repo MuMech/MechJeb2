@@ -62,7 +62,7 @@ namespace MuMech.UI
         internal const string VectorTemplate = "|9999.999| [-9999.999, -9999.999, -9999.999 ]";
 
         /// <summary>
-        /// The modern layout's vector read-outs: label | X | Y | Z (| |v|) in one table for consecutive rows, instead of
+        /// The vector read-outs: label | X | Y | Z (| |v|) in one table for consecutive rows, instead of
         /// "[ x, y, z ]" strings, so the axes line up and differences between them stand out.
         /// </summary>
         internal sealed class VectorGrid
@@ -233,9 +233,9 @@ namespace MuMech.UI
             public void Vec(string label, Func<T, Vector3d> get, Action<CharText, Vector3d> format = null, string template = null,
                 UIObject parent = null)
             {
-                // modern layout: the plain, scientific and magnitude vectors as X, Y, Z columns
+                // the plain, scientific and magnitude vectors as X, Y, Z columns; the other formats on a row of their own
                 bool plain = format == null || format == Plain, sci = format == PlainSci, magnitude = format == WithMagnitude;
-                if (KodeWindow.ModernLayout && (plain || sci || magnitude))
+                if (plain || sci || magnitude)
                 {
                     UIObject into = parent ?? Parent;
                     if (vectors == null || vectors.Parent != into) vectors = new VectorGrid(w, into);

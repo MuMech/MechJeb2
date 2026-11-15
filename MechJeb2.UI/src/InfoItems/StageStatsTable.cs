@@ -41,8 +41,7 @@ namespace MuMech.UI
             this.w = w;
             h = helper;
 
-            if (KodeWindow.ModernLayout) ModernToolbar(parent);
-            else ClassicToolbar(parent);
+            Toolbar(parent);
 
             grid = KodeWindow.Row(parent);
             // columns at the top: a row's default centres them, so one shorter than the others would sit half a row lower
@@ -53,8 +52,8 @@ namespace MuMech.UI
             Refresh();
         }
 
-        // modern layout: the on/off options as switches side by side, the display set as one choice
-        void ModernToolbar(UIObject parent)
+        // the on/off options as switches side by side, the display set as one choice
+        void Toolbar(UIObject parent)
         {
             KodeWindow.Header(parent, "#MechJeb_InfoItems_label1"); //"Stage stats"
             Layout switches = KodeWindow.FlowWrap(parent, 10);
@@ -76,35 +75,6 @@ namespace MuMech.UI
                 if (v != get()) toggle();
                 Refresh();
             });
-
-        void ClassicToolbar(UIObject parent)
-        {
-            Layout bar = KodeWindow.Row(parent);
-            KodeWindow.Label(bar, "#MechJeb_InfoItems_label1", true); //"Stage stats"
-            ToolbarButton(bar, () => h.TimeSeconds ? "s" : "dhms", h.ToggleTimeSeconds);
-            ToolbarButton(bar, () => h.ShowEmpty ? CachedLocalizer.Instance.MechJebInfoItemsShowEmpty : CachedLocalizer.Instance.MechJebInfoItemsHideEmpty,
-                h.ToggleShowEmpty);
-            ToolbarButton(bar, () => MechJebStageStatsHelper.DisplayStateNames[h.DisplayState], h.CycleDisplayState);
-            ToolbarButton(bar, () => h.ShowRcs ? CachedLocalizer.Instance.MechJebInfoItemsRcs : CachedLocalizer.Instance.MechJebInfoItemsEngine, h.ToggleRcs);
-            if (HighLogic.LoadedSceneIsEditor) EditorEnvironment(parent);
-        }
-
-        void ToolbarButton(UIObject parent, System.Func<string> text, System.Action onClick)
-        {
-            UIButton b = KodeWindow.Button(parent, text(), () =>
-            {
-                onClick();
-                Refresh();
-            });
-            string shown = text();
-            w.AddSync(() =>
-            {
-                string s = text();
-                if ((object)s == shown) return; // constant strings: a reference check is enough
-                shown = s;
-                b.Text(s);
-            });
-        }
 
         // body combo + altitude and mach sliders (editor only)
         void EditorEnvironment(UIObject parent)
@@ -241,9 +211,8 @@ namespace MuMech.UI
                 builtRows = rows;
             }
 
-            // the modern layout highlights the stage that burns now and dims the units
-            bool modern = KodeWindow.ModernLayout;
-            int current = modern ? CurrentRow(stages) : -1;
+            // the stage that burns now is highlighted, the units dimmed
+            int current = CurrentRow(stages);
             Theme th = Theme.Current;
             double gee = h.GeeASL;
             foreach (Column c in columns)
@@ -258,11 +227,9 @@ namespace MuMech.UI
                     else if (h.TimeSeconds) ct.Append(v, 2).Append('s');
                     else ct.AppendDHMS(v, 1);
                     int length = ct.Length + (unit?.Length ?? 0);
-                    if (modern && !string.IsNullOrEmpty(unit)) ct.Append("<alpha=#80>").Append(unit);
-                    else ct.Append(unit);
+                    if (!string.IsNullOrEmpty(unit)) ct.Append("<alpha=#80>").Append(unit);
                     FitWidth(c, length);
                     ct.Commit();
-                    if (!modern) continue;
                     Color want = row == current ? th.Accent : th.Text;
                     if (c.Cells[row].tmpText.color != want) c.Cells[row].tmpText.color = want;
                 }
