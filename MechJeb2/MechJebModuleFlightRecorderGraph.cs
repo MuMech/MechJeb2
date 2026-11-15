@@ -69,11 +69,23 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool stages;
 
+        // the plot's size in steps of 128 px, from older settings: plotWidth and plotHeight start from them
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int hSize = 4;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int vSize = 2;
+
+        // the plot's size in px, set by the window's resize grip and its - and + buttons; -1 until started from hSize and vSize
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int plotWidth = -1;
+
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int plotHeight = -1;
+
+        internal const int SIZE_STEP = 128;
+        internal const int MIN_PLOT_WIDTH = 128, MAX_PLOT_WIDTH = 20 * SIZE_STEP;
+        internal const int MIN_PLOT_HEIGHT = 96, MAX_PLOT_HEIGHT = 10 * SIZE_STEP;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoScale = true;
@@ -178,8 +190,8 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
                 return;
 
-            width = 128 * hSize;
-            height = 128 * vSize;
+            ClampSizes();
+            ApplySizes();
             recorder = Core.GetComputerModule<MechJebModuleFlightRecorder>();
             ResetScale();
         }
@@ -213,14 +225,16 @@ namespace MuMech
         {
             timeScale = Mathf.Clamp(timeScale, 0, 20);
             downrangeScale = Mathf.Clamp(downrangeScale, 0, 20);
-            hSize = Mathf.Clamp(hSize, 1, 20);
-            vSize = Mathf.Clamp(vSize, 1, 10);
+            if (plotWidth < 0) plotWidth = SIZE_STEP * Mathf.Clamp(hSize, 1, 20);
+            if (plotHeight < 0) plotHeight = SIZE_STEP * Mathf.Clamp(vSize, 1, 10);
+            plotWidth = Mathf.Clamp(plotWidth, MIN_PLOT_WIDTH, MAX_PLOT_WIDTH);
+            plotHeight = Mathf.Clamp(plotHeight, MIN_PLOT_HEIGHT, MAX_PLOT_HEIGHT);
         }
 
         internal void ApplySizes()
         {
-            width = 128 * hSize;
-            height = 128 * vSize;
+            width = plotWidth;
+            height = plotHeight;
         }
 
         // x units (m or s) per pixel, and the largest x recorded since the mark

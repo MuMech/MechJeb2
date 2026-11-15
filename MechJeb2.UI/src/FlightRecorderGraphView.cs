@@ -15,7 +15,7 @@ namespace MuMech.UI
     /// MechJebModuleFlightRecorderGraph ("Flight Recorder") in KodeKit. The plot is a KodeKit LineGraph:
     /// one decimated mesh per graph (rebuilt a few times a second, one per frame), a mesh for the stage markers, Y labels for the selected graph.
     /// The model work (scales, background texture, sizes) runs in BeforeSync through the module's shared methods.
-    /// Differences: the Y labels are as many as the plot's height has room for, the plot size changes by rebuilding the view, and the
+    /// Differences: the Y labels are as many as the plot's height has room for, a grip in the window's corner resizes the plot, and the
     /// graph is clipped to the plot instead of skipping the points outside it. In the modern layout the plot fills the
     /// window's width, and a drop-down in its corner picks the graph of the Y labels, not the column beside it.
     /// </summary>
@@ -235,7 +235,14 @@ namespace MuMech.UI
         }
         RawImage background;
         CanvasGroup yLabels;
-        int builtWidth, builtHeight;
+        int builtLabels, shownWidth = -1, shownHeight = -1;
+        // the sizes the resize grip and the - and + buttons set
+        LayoutElement plotSize, labelsSize;
+        ResizeGrip grip;
+        float dragStartWidth, dragStartHeight;
+        int dragStartPlotWidth = -1, dragStartPlotHeight;
+
+        static int LabelsFor(int height) => Mathf.Clamp(height / 24 + 1, 3, 11);
         int lastRefreshFrame = int.MinValue / 2;
         float lastRefreshTime;
         double lastScaleX = double.NaN;
@@ -267,8 +274,11 @@ namespace MuMech.UI
             CheckMark();
             // what IMGUI's Repaint pass did
             g.UpdateScale();
+            g.ClampSizes();
             g.ApplySizes();
-            if (g.width != builtWidth || g.height != builtHeight)
+            ApplySize();
+            // a new height needs another number of Y labels: rebuild once the drag is over
+            if (!grip.Dragging && LabelsFor(g.height) != builtLabels)
             {
                 RebuildRequested = true;
                 return;
@@ -346,9 +356,10 @@ namespace MuMech.UI
         protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
+            g.ClampSizes();
             g.ApplySizes();
-            builtWidth = g.width;
-            builtHeight = g.height;
+            shownWidth = shownHeight = -1;
+            dragStartPlotWidth = -1;
             stageMarkers = new StageMarkers(this);
             scannedStages = 0;
             seenMarkUT = Rec.MarkUT;
@@ -357,6 +368,7 @@ namespace MuMech.UI
             {
                 BuildModernControls(w, r);
                 BuildPlot(w, r);
+                AddGrip(w);
                 return;
             }
 
@@ -409,6 +421,53 @@ namespace MuMech.UI
             HistorySizeField(w, toggles);
 
             BuildPlot(w, r);
+            AddGrip(w);
+        }
+
+        void AddGrip(KodeWindow w)
+        {
+            grip = ResizeGrip.Add(w, Resized, ResizeDone);
+            ApplySize();
+        }
+
+        // the plot's size as the settings give it, set on the plot and the Y labels without a rebuild
+        void ApplySize()
+        {
+            if (g.width != shownWidth)
+            {
+                shownWidth = g.width;
+                plotSize.preferredWidth = g.width;
+            }
+
+            if (g.height != shownHeight)
+            {
+                shownHeight = g.height;
+                plotSize.preferredHeight = labelsSize.preferredHeight = g.height;
+            }
+        }
+
+        // the grip moves the plot's right and bottom edges with the window's
+        void Resized(float width, float height)
+        {
+            if (dragStartPlotWidth < 0)
+            {
+                dragStartWidth = width;
+                dragStartHeight = height;
+                // the width the plot has, which filling its row can have made larger than the setting's
+                dragStartPlotWidth = KodeWindow.ModernLayout ? Math.Max(g.plotWidth, Mathf.RoundToInt(graph.Plot.rect.width)) : g.plotWidth;
+                dragStartPlotHeight = g.plotHeight;
+            }
+
+            g.plotWidth = Mathf.RoundToInt(dragStartPlotWidth + width - dragStartWidth);
+            g.plotHeight = Mathf.RoundToInt(dragStartPlotHeight + height - dragStartHeight);
+            g.ClampSizes();
+            g.ApplySizes();
+        }
+
+        void ResizeDone()
+        {
+            dragStartPlotWidth = -1;
+            g.Dirty = true;
         }
 
         // ---- the controls' actions, in both layouts ----
@@ -424,11 +483,18 @@ namespace MuMech.UI
 
         void Resize(int dh, int dv)
         {
-            // step from the width the plot has, which filling its row can have made larger than hSize's
-            if (dh != 0 && KodeWindow.ModernLayout) g.hSize = g.width / 128;
-            g.hSize += dh;
-            g.vSize += dv;
+            // step from the width the plot has, which filling its row can have made larger than the setting's
+            if (dh != 0) g.plotWidth = Step(KodeWindow.ModernLayout ? g.width : g.plotWidth, dh);
+            if (dv != 0) g.plotHeight = Step(g.plotHeight, dv);
             g.ClampSizes();
+            g.Dirty = true;
+        }
+
+        // the next multiple of SIZE_STEP up or down
+        static int Step(int size, int d)
+        {
+            const int step = MechJebModuleFlightRecorderGraph.SIZE_STEP;
+            return d > 0 ? (size / step + 1) * step : ((size + step - 1) / step - 1) * step;
         }
 
         void SetRealAtmo(bool v)
@@ -504,9 +570,11 @@ namespace MuMech.UI
             Layout left = plotRow.Add<Layout>("Plot");
             left.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false);
             left.Finish();
-            int labels = Mathf.Clamp(g.height / 24 + 1, 3, 11);
+            builtLabels = LabelsFor(g.height);
             // the scrollbar row spans the window, as IMGUI's HorizontalScrollbar does
-            graph = new LineGraph(w, left, g.width, g.height, labels, r);
+            graph = new LineGraph(w, left, g.width, g.height, builtLabels, r);
+            plotSize = graph.Plot.GetComponent<LayoutElement>();
+            labelsSize = graph.Plot.parent.Find("YLabels").GetComponent<LayoutElement>();
 
             background = graph.Plot.Find("Background").GetComponent<RawImage>();
             yLabels = graph.Plot.parent.Find("YLabels").gameObject.AddComponent<CanvasGroup>();
@@ -523,7 +591,7 @@ namespace MuMech.UI
 
             if (KodeWindow.ModernLayout)
             {
-                graph.Plot.GetComponent<LayoutElement>().flexibleWidth = 1;
+                plotSize.flexibleWidth = 1;
                 BuildScaleCombo(w);
                 return;
             }
