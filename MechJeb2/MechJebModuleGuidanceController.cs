@@ -52,8 +52,7 @@ namespace MuMech
 
         public PSGStatus Status = PSGStatus.ENABLED;
 
-        // what guidance does with RCS, said once at each change: it turns RCS on for a coast, and trims the end of the last burn with
-        // RCS only when the RCS group is already on, which otherwise looks like chance
+        // what guidance does with RCS (PSGFeedback), said once at each change
         private ScreenMessage _rcsCoastMessage = null!, _rcsTrimMessage = null!, _rcsOffMessage = null!;
 
         // what the vessel flew since guidance was engaged, for the PSG Solution window
@@ -65,12 +64,9 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            _rcsCoastMessage = new ScreenMessage("<color=orange>[MechJeb]: PSG coast, RCS on to hold attitude and settle propellant</color>", 5f,
-                ScreenMessageStyle.UPPER_CENTER);
-            _rcsTrimMessage = new ScreenMessage("<color=orange>[MechJeb]: PSG finishing the burn with RCS</color>", 5f,
-                ScreenMessageStyle.UPPER_CENTER);
-            _rcsOffMessage = new ScreenMessage("<color=orange>[MechJeb]: RCS is off, so PSG won't trim the end of the burn with RCS</color>", 5f,
-                ScreenMessageStyle.UPPER_CENTER);
+            _rcsCoastMessage = PSGFeedback.RcsCoastMessage();
+            _rcsTrimMessage  = PSGFeedback.RcsTrimMessage();
+            _rcsOffMessage   = PSGFeedback.RcsOffMessage();
 
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {

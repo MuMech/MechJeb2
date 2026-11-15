@@ -87,22 +87,11 @@ namespace MuMech
         // shared with the new UI
         internal void SetInclinationToLatitude(EditableDouble inclinationSetting) => inclinationSetting.Val = Math.Round(VesselState.Latitude, 3);
 
-        internal double InclinationBelowLatitude(EditableDouble inclinationSetting)
-        {
-            double inclination = Math.Abs(inclinationSetting);
-            return Math.Abs(VesselState.Latitude) - (inclination < 90.0 ? inclination : 180.0 - inclination);
-        }
+        internal double InclinationBelowLatitude(EditableDouble inclinationSetting) =>
+            PSGFeedback.InclinationBelowLatitude(VesselState.Latitude, inclinationSetting);
 
-        // a known reason for "Target unreachable": the same test as the window's red "inc below current latitude" line
-        private string UnreachableCause()
-        {
-            string failure = Core.PSGSimulation.LastFailureMessage;
-            if (failure == null || failure.IndexOf("unreachable", StringComparison.OrdinalIgnoreCase) < 0)
-                return string.Empty;
-
-            double below = InclinationBelowLatitude(Core.PSGSimulation.Inc);
-            return below > 2.001 ? $" (the target inclination is {below:F1}° below the launch latitude)" : string.Empty;
-        }
+        private string UnreachableCause() =>
+            PSGFeedback.UnreachableCause(Core.PSGSimulation.LastFailureMessage, InclinationBelowLatitude(Core.PSGSimulation.Inc));
 
         internal bool AutoWarpTargetExists => Core.Target.NormalTargetExists && Core.Target.TargetOrbit?.referenceBody == MainBody;
 
@@ -167,12 +156,14 @@ namespace MuMech
                 optimizerState = Core.PSGSimulation.Enabled
                     ? Core.Guidance.Solution == null && Core.PSGSimulation.ProgressDetail != null
                         ? "Optimizer: " + Core.PSGSimulation.ProgressDetail
-                        : OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting(),
-                        Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0)
+                        : PSGFeedback.OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting(),
+                            Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0)
                     : null;
                 // the figures belong to the last solve: kept in flight after the ascent ended (they say why), but not on the pad with the
                 // autopilot off, where the player may have changed the rocket or the target since
-                ReachWarning = Core.PSGSimulation.Enabled || (Vessel != null && !Vessel.LandedOrSplashed) ? PsgReachWarning() : null;
+                ReachWarning = Core.PSGSimulation.Enabled || (Vessel != null && !Vessel.LandedOrSplashed)
+                    ? PSGFeedback.ReachWarning(Core.PSGSimulation.DeltaVShortfall, Core.PSGSimulation.SuborbitalPeriapsis, MainBody.atmosphere)
+                    : null;
             }
             else
             {
@@ -195,64 +186,8 @@ namespace MuMech
         /// <summary>"Optimizer: …": what the PSG optimizer is doing, or why it is not solving, so that a climbing staleness reads as a pause.</summary>
         internal string optimizerState;
 
-        /// <param name="failingFor">
-        ///     the plan's age while the re-solves fail (a failure is kept until the next success), else 0: guidance keeps flying the
-        ///     last plan, and its age says how stale it is
-        /// </param>
-        internal static string OptimizerStateText(OptimizerState state, double seconds, bool noSolution, bool coasting = false, double failingFor = 0)
-        {
-            switch (state)
-            {
-                case OptimizerState.SOLVING:
-                case OptimizerState.READY:
-                    if (noSolution) return failingFor > 0 ? "Optimizer: no plan yet, the solves are failing" : "Optimizer: computing the ascent…";
-                    // a re-solve or two can fail and the next succeed: only a plan older than a few seconds is worth a line
-                    return failingFor > 3 ? $"Optimizer: re-solves failing, flying the plan from {GuiUtils.TimeToDHMS(failingFor)} ago" : "Optimizer: running";
-                case OptimizerState.NO_PLAN:
-                    return "Optimizer: no flight plan, no stages to optimize";
-                case OptimizerState.STAGE_ENDING:
-                    // the freeze comes before the end of each phase: a burn's end or, in a coast, the burn after it
-                    return coasting
-                        ? $"Optimizer: paused, the burn starts in {Math.Ceiling(seconds):F0} s"
-                        : $"Optimizer: paused, the stage ends in {Math.Ceiling(seconds):F0} s";
-                case OptimizerState.AFTER_STAGING:
-                    return $"Optimizer: paused after staging, {Math.Ceiling(seconds):F0} s";
-                case OptimizerState.ON_PAD:
-                    return "Optimizer: paused until liftoff";
-                case OptimizerState.AFTER_PHASE:
-                    return $"Optimizer: paused while the next phase starts, {Math.Ceiling(seconds):F0} s";
-                case OptimizerState.COAST_PAUSE:
-                    return $"Optimizer: paused for the coast, resumes in {GuiUtils.TimeToDHMS(seconds)}";
-                case OptimizerState.TERMINAL:
-                    return "Optimizer: paused, terminal guidance";
-                case OptimizerState.UNGUIDED_ONLY:
-                    return "Optimizer: paused, only unguided stages left";
-                case OptimizerState.FINISHED:
-                    return "Optimizer: guidance finished";
-                case OptimizerState.RETRYING:
-                    return "Optimizer: can't plan with these settings, retrying";
-                default:
-                    return null;
-            }
-        }
-
         /// <summary>Why the PSG plan can't reach orbit with this rocket, in words, or null.</summary>
         internal string ReachWarning;
-
-        // the burn lines round a shortfall under 2.5 m/s to zero as noise, so this does too
-        private string PsgReachWarning()
-        {
-            MechJebModulePSGSimulation sim = Core.PSGSimulation;
-
-            if (sim.DeltaVShortfall >= 2.5)
-                return $"Not enough Δv: the rocket is {sim.DeltaVShortfall:F0} m/s short of the target orbit.";
-
-            if (!double.IsNaN(sim.SuborbitalPeriapsis))
-                return $"Not enough Δv for orbit: the planned orbit's periapsis is {sim.SuborbitalPeriapsis / 1000:F0} km, " +
-                    (MainBody.atmosphere ? "inside the atmosphere." : "under the surface.");
-
-            return null;
-        }
 
         // The PSG status lines (one per burn/coast phase, then the terminal conditions, one per line), for the new UI whose rows are fixed
         internal const int MAX_PHASE_LINES = 15;

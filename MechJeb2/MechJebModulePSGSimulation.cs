@@ -175,12 +175,7 @@ namespace MuMech
             _progressSeconds    = seconds;
             _progressIterations = p.Iterations;
 
-            string time = GuiUtils.TimeToDHMS(seconds);
-            string step = $"computing the ascent, step {p.Pass} of {Max(p.Pass, p.PassCount)}";
-            ProgressShort = $"{step} ({time})";
-            ProgressDetail = p.Iterations > 0 && !double.IsNaN(p.Infeasibility)
-                ? $"{step}, {p.Name}: {time}, iteration {p.Iterations}, error {p.Infeasibility:0.0e+00}"
-                : $"{step}, {p.Name}: {time}";
+            (ProgressShort, ProgressDetail) = PSGFeedback.ProgressText(p);
         }
         private double _lastTime;
 
