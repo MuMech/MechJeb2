@@ -75,22 +75,22 @@ namespace MechJebLibTest.Utils
 
                 if (unguided)
                 {
-                    ix.U1Idx = ix.U2Idx = (idx, idx + 1, idx + 2, idx + 3);
-                    ix.T1Idx = ix.T2Idx = idx + 4;
-                    idx += 5;
+                    ix.U1Idx = ix.U2Idx = (idx, idx + 1, idx + 2);
+                    ix.T1Idx = ix.T2Idx = idx + 3;
+                    idx += 4;
                 }
                 else if (_guidedCoast)
                 {
-                    ix.U1Idx = ix.U2Idx = (-1, -1, -1, -1);
+                    ix.U1Idx = ix.U2Idx = (-1, -1, -1);
                     ix.T1Idx = ix.T2Idx = -1;
                 }
                 else
                 {
-                    ix.U1Idx = (idx, idx + 2, idx + 4, idx + 6);
-                    ix.U2Idx = (idx + 1, idx + 3, idx + 5, idx + 7);
-                    ix.T1Idx = idx + 8;
-                    ix.T2Idx = idx + 9;
-                    idx += 10;
+                    ix.U1Idx = (idx, idx + 2, idx + 4);
+                    ix.U2Idx = (idx + 1, idx + 3, idx + 5);
+                    ix.T1Idx = idx + 6;
+                    ix.T2Idx = idx + 7;
+                    idx += 8;
                 }
 
                 ix.BtIdx = idx;
@@ -117,8 +117,8 @@ namespace MechJebLibTest.Utils
 
                 if (!_guidedCoast)
                 {
-                    Put(ix.U2Idx, new Q3(0.11, 0.19, 0.32, 0.91));
-                    Put(ix.U1Idx, new Q3(0.10, 0.20, 0.30, 0.92));
+                    Put(ix.U2Idx, new V3(0.32, 0.19, 0.92));
+                    Put(ix.U1Idx, new V3(0.30, 0.20, 0.93));
                     X[ix.T2Idx] = 0.95;
                     X[ix.T1Idx] = 0.90;
                 }
@@ -133,17 +133,7 @@ namespace MechJebLibTest.Utils
                 X[idx.Item3] = v.z;
             }
 
-            private void Put((int, int, int, int) idx, Q3 q)
-            {
-                X[idx.Item1] = q.x;
-                X[idx.Item2] = q.y;
-                X[idx.Item3] = q.z;
-                X[idx.Item4] = q.w;
-            }
-
             private static V3 GetV3(double[] x, (int, int, int) idx) => new V3(x[idx.Item1], x[idx.Item2], x[idx.Item3]);
-
-            private static Q3 GetQ3(double[] x, (int, int, int, int) idx) => new Q3(x[idx.Item1], x[idx.Item2], x[idx.Item3], x[idx.Item4]);
 
             public GaussLegendreSegment Segment(double[] x) =>
                 new GaussLegendreSegment
@@ -160,8 +150,8 @@ namespace MechJebLibTest.Utils
                     M1 = x[Indexes.M1Idx],
                     M2 = x[Indexes.M2Idx],
                     M3 = x[Indexes.M3Idx],
-                    U1 = _guidedCoast ? Q3.zero : GetQ3(x, Indexes.U1Idx),
-                    U2 = _guidedCoast ? Q3.zero : GetQ3(x, Indexes.U2Idx),
+                    U1 = _guidedCoast ? V3.zero : GetV3(x, Indexes.U1Idx),
+                    U2 = _guidedCoast ? V3.zero : GetV3(x, Indexes.U2Idx),
                     T1 = _guidedCoast ? 0 : x[Indexes.T1Idx],
                     T2 = _guidedCoast ? 0 : x[Indexes.T2Idx],
                     Bt = x[Indexes.BtIdx]
@@ -174,7 +164,7 @@ namespace MechJebLibTest.Utils
                 Dual r3 = d.R.sqrMagnitude * r;
                 DualV3 vr = d.V - DualV3.Cross(_w, d.R);
                 DualV3 drag = 0.5 * RHO0_CDAREF * AscentProblem.NormalizedDensity(r, R_BODY, H0) * vr.sqrMagnitude * vr.normalized;
-                return -d.R / r3 + _thrust / d.M * d.U.forward * d.T - drag / d.M;
+                return -d.R / r3 + _thrust / d.M * d.U * d.T - drag / d.M;
             }
         }
 

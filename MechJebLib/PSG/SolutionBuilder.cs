@@ -135,7 +135,7 @@ namespace MechJebLib.PSG
                 if (p - 1 >= 0)
                 {
                     PhaseProxy prevPhase = _vars[p - 1];
-                    u0 = prevPhase.U.Last.forward;
+                    u0 = prevPhase.U.Last;
                 }
                 else
                 {
@@ -143,7 +143,7 @@ namespace MechJebLib.PSG
                 }
 
                 PhaseProxy nextPhase = _vars[p + 1];
-                V3 uf = nextPhase.U.First.forward;
+                V3 uf = nextPhase.U.First;
 
                 // the slerp fraction has to be the node's own fraction of the coast, since the hermite is anchored at
                 // t1 = (n + tau1) * h and t2 = (n + tau2) * h and gets extrapolated out to the ends of the segment.
@@ -157,16 +157,16 @@ namespace MechJebLib.PSG
             }
             else if (phase.Unguided)
             {
-                y0Layout.U = y1Layout.U = thisPhase.U.First.forward;
+                y0Layout.U = y1Layout.U = thisPhase.U.First;
                 dy0U = dy1U = V3.zero;
                 y0Layout.T = y1Layout.T = thisPhase.T.First;
                 dyT = 0;
             }
             else
             {
-                dy0U = dy1U = (thisPhase.U[k + 2].forward - thisPhase.U[k + 1].forward) / htau;
-                y0Layout.U = thisPhase.U[k + 1].forward;
-                y1Layout.U = thisPhase.U[k + 2].forward;
+                dy0U = dy1U = (thisPhase.U[k + 2] - thisPhase.U[k + 1]) / htau;
+                y0Layout.U = thisPhase.U[k + 1];
+                y1Layout.U = thisPhase.U[k + 2];
                 y0Layout.T = thisPhase.T[k + 1];
                 y1Layout.T = thisPhase.T[k + 2];
                 dyT = (y1Layout.T - y0Layout.T) / htau;
