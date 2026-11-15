@@ -116,11 +116,13 @@ namespace MuMech.UI
                 settings.DontUseDropDownMenu = v;
                 Changed();
             });
-            w.Toggle(windows, "Show Advanced Window Settings", () => settings.ShowAdvancedWindowSettings, v =>
+            // it shows the refresh rate of Ascent Guidance and the custom windows, nothing else: named for that
+            UnityEngine.UI.Toggle refresh = w.Toggle(windows, "#MechJeb_NewUI_ShowRefreshRate", () => settings.ShowAdvancedWindowSettings, v => //Show refresh-rate settings
             {
                 settings.ShowAdvancedWindowSettings = v;
                 Changed();
             });
+            Tooltips.Add(refresh.gameObject, "#MechJeb_NewUI_ShowRefreshRate_tooltip");
 
             RoverUi.ToggleRow(w, windows, editor, "Toggle:Settings.HideBrakeOnEject");
 
