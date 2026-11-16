@@ -32,6 +32,42 @@ namespace MuMech.UI
             hasStages = menu.HasStages;
             stageCount = StageList?.Count ?? 0;
             UpdateSkipped();
+            UpdateAero();
+        }
+
+        // what AutoAero filled Cd and Aref with, and from what. Rebuilt only when the estimate changes.
+        string aeroCd = "", aeroAref = "", aeroSource = "";
+        double aeroKey = double.NaN;
+
+        void UpdateAero()
+        {
+            if (!Psgs.AutoAero)
+                return;
+
+            if (HighLogic.LoadedSceneIsFlight)
+                Psgs.UpdateAutoAero();
+
+            PSGAeroEstimate e = Psgs.AeroEstimate;
+            double key = ((Psgs.Cd * 7919 + Psgs.Aref) * 31 + e.CdA) * 31 + (int)e.Source * 2 + (e.FromPlan ? 1 : 0) +
+                (double.IsNaN(e.MachAtMaxQ) ? 0 : Math.Round(e.MachAtMaxQ, 2) * 1e-3);
+            if (key == aeroKey) return;
+            aeroKey = key;
+
+            aeroCd = Psgs.Cd.Val.ToString("0.###");
+            aeroAref = Psgs.Aref.Val.ToString("0.###") + " m²";
+            aeroSource = AeroSource(e);
+        }
+
+        static string AeroSource(PSGAeroEstimate e)
+        {
+            if (e.Source == PSGAeroEstimate.Model.NONE)
+                return "Worked out from the vessel in flight, before each PSG solve.";
+
+            string model = e.Source == PSGAeroEstimate.Model.FAR ? "FAR" : "the parts' drag cubes";
+            string where = e.FromPlan
+                ? $"averaged along PSG's ascent (maximum Q at Mach {e.MachAtMaxQ:0.0})"
+                : "averaged over Mach 0.5 to 2 until PSG has a plan";
+            return $"Drag area {e.CdA:0.###} m² from {model}, nose first, {where}.";
         }
 
         // the burns Min ΔV leaves out of the plan: some Δv, but under Min ΔV. Rebuilt only when that set changes, as the
@@ -243,8 +279,26 @@ namespace MuMech.UI
             KodeWindow.PropertyGrid aero = w.Properties(g);
             OptionRows.Field(aero, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
             OptionRows.Field(aero, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
-            OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50);
-            w.Attention(OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50), () => PsgAttention.ArefUnset(Core));
+            OptionRows.Switch(aero, "Cd and Aref from the vessel", () => Psgs.AutoAero, v => Psgs.AutoAero = v);
+            Layout cdField = OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50);
+            Layout arefField = OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50);
+            w.Attention(arefField, () => PsgAttention.ArefUnset(Core));
+            w.Visible(cdField.gameObject, () => !Psgs.AutoAero);
+            w.Visible(arefField.gameObject, () => !Psgs.AutoAero);
+            Layout cdValue = aero.Value("Cd", () => aeroCd);
+            Layout arefValue = aero.Value("Aref", () => aeroAref);
+            w.Visible(cdValue.gameObject, () => Psgs.AutoAero);
+            w.Visible(arefValue.gameObject, () => Psgs.AutoAero);
+            UIText aeroNote = aero.Note("");
+            KodeWindow.WrapToWidth(aeroNote);
+            string shownSource = null;
+            w.AddSync(() =>
+            {
+                if (ReferenceEquals(shownSource, aeroSource)) return;
+                shownSource = aeroSource;
+                aeroNote.Text(aeroSource);
+            });
+            w.Visible(aeroNote.transform.parent.gameObject, () => Psgs.AutoAero);
             UIText arefNote = aero.Note(ArefNote);
             KodeWindow.ToneText(arefNote, Tone.Caution);
             KodeWindow.WrapToWidth(arefNote);
