@@ -320,10 +320,9 @@ namespace MuMech
             if (desired == PSGState.COASTING && _state == PSGState.COASTING && CoastOver())
                 desired = PSGState.BURNING;
 
-            // a burn the optimizer ended with propellant left is cut at its planned end and jettisoned before the next burn flies
-            // (which can come before the pitch program has met guidance, like the coast)
-            if ((desired == PSGState.VERTICAL_ASCENT || desired == PSGState.PITCH_PROGRAM || desired == PSGState.BURNING) &&
-                JettisonDue(CurrentPhase(false)))
+            // a burn the optimizer ended with propellant left before a fixed upper stack is cut at its planned end and jettisoned,
+            // from BURNING only: one that ends before the pitch program hands over to guidance is jettisoned once it has
+            if (desired == PSGState.BURNING && _state == PSGState.BURNING && JettisonDue(CurrentPhase(false)))
                 desired = PSGState.JETTISON;
 
             // its engines are gone (UpdateJettison has moved CurrentPhase on to the next burn)
@@ -549,6 +548,7 @@ namespace MuMech
             // The coast starts in its KSP stage: the burn before a coast before the next burn (or a dedicated one) is staged off,
             // which autostaging won't do while it still has propellant (residuals, or a booster cut at the coast's start).  A
             // fairing or an escape tower jettisoned in the coast takes the vessel past that stage, which doesn't end the coast.
+            // (A burn cut before a fixed upper stack has no such stage to stage to: JETTISON drops it.)
             if (Vessel.currentStage > StageOf(coast))
                 Core.Staging.Stage();
 
@@ -796,8 +796,11 @@ namespace MuMech
             return true;
         }
 
-        // A burn the optimizer ends with propellant left, before another burn in a lower KSP stage, is cut at its planned end
-        // and jettisoned (JETTISON): autostaging won't drop an engine with propellant left.
+        // A burn the optimizer ends with propellant left, before another burn in a lower KSP stage (a fixed upper stack), is cut at
+        // its planned end and jettisoned (JETTISON): autostaging won't drop an engine with propellant left.  The burn before a
+        // coast is cut by the coast instead, and COASTING stages into the coast's KSP stage (TickCoasting).  Here there is no such
+        // stage to stage to: the next burn's is its ignition, which is left to autostaging (ullage), so JETTISON watches the
+        // burn's engines leave instead.
         private bool JettisonDue(int p)
         {
             Solution solution = Solution!;
@@ -843,8 +846,7 @@ namespace MuMech
         // staged, and the next burn flies with the engines still on.
         private void UpdateJettison()
         {
-            if (Solution == null ||
-                !(_state == PSGState.VERTICAL_ASCENT || _state == PSGState.PITCH_PROGRAM || _state == PSGState.BURNING || _state == PSGState.JETTISON))
+            if (Solution == null || !(_state == PSGState.BURNING || _state == PSGState.JETTISON))
                 return;
 
             int p = CurrentPhase(false);
