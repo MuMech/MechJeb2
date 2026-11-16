@@ -945,6 +945,12 @@ namespace MuMech
     {
         private readonly Action action;
 
+        /// <summary>The module the action engages and disengages, when its attribute names a label for the engaged state; else null.</summary>
+        public readonly ComputerModule EngagedModule;
+
+        /// <summary>The label while <see cref="EngagedModule"/> is enabled.</summary>
+        public readonly string LocalizedEngagedName;
+
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
             : base(attribute)
         {
@@ -953,6 +959,12 @@ namespace MuMech
             id = GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
             action = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
+
+            if (!string.IsNullOrEmpty(attribute.engagedName) && obj is ComputerModule module)
+            {
+                EngagedModule        = module;
+                LocalizedEngagedName = Localizer.Format(attribute.engagedName);
+            }
 
 
             Profiler.EndSample();
@@ -1121,6 +1133,12 @@ namespace MuMech
     [AttributeUsage(AttributeTargets.Method)]
     public class ActionInfoItemAttribute : InfoItemAttribute
     {
+        /// <summary>
+        /// For an action that turns its module on and off: the label while the module is enabled ("Disengage …"). The button
+        /// is then the window's main action while the module is off, and a destructive one while it is on.
+        /// </summary>
+        public string engagedName;
+
         public ActionInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
 

@@ -55,7 +55,7 @@ namespace MuMech.UI
         public static Layout RendezvousGate(KodeWindow w, UIObject r, Func<int> mode, string noneKey, string otherKey)
         {
             Layout none = KodeWindow.Panel(r);
-            Wrapped(none, noneKey);
+            KodeWindow.ToneText(Wrapped(none, noneKey), KodeWindow.Tone.Dim); // the empty state: "No target: ..."
             w.Visible(none.gameObject, () => mode() == 0);
 
             Layout other = KodeWindow.Panel(r);
