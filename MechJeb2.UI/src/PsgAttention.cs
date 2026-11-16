@@ -9,8 +9,11 @@ namespace MuMech.UI
     /// </summary>
     static class PsgAttention
     {
-        /// <summary>Aref 0 (the default) on a body with an atmosphere: PSG then plans the ascent with no drag at all.</summary>
-        public static bool ArefUnset(MechJebCore core) => core.PSGSimulation.Aref <= 0 && Atmosphere(core);
+        /// <summary>
+        ///     Aref 0 typed in (Cd and Aref not filled from the vessel) on a body with an atmosphere: PSG then plans the ascent with
+        ///     no drag at all.
+        /// </summary>
+        public static bool ArefUnset(MechJebCore core) => !core.PSGSimulation.AutoAero && core.PSGSimulation.Aref <= 0 && Atmosphere(core);
 
         /// <summary>A minimum coast longer than the maximum, which PSG refuses to plan with (only read when the plan has a coast).</summary>
         public static bool CoastTimesInverted(MechJebCore core) =>
