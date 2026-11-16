@@ -61,7 +61,7 @@ namespace MuMech.UI
         static string AeroSource(PSGAeroEstimate e)
         {
             if (e.Source == PSGAeroEstimate.Model.NONE)
-                return "Worked out from the vessel in flight, before each PSG solve.";
+                return "Worked out from the vessel on the ground, before the PSG solves; kept once it is airborne.";
 
             string model = e.Source == PSGAeroEstimate.Model.FAR ? "FAR" : "the parts' drag cubes";
             string where = e.FromPlan

@@ -138,14 +138,15 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool AutoAero = true;
 
-        /// <summary>The vessel's drag area as AutoAero fills Cd and Aref with it, kept up to date by UpdateAutoAero.</summary>
+        /// <summary>The vessel's drag area as AutoAero fills Cd and Aref with it, worked out by UpdateAutoAero.</summary>
         public readonly PSGAeroEstimate AeroEstimate = new PSGAeroEstimate();
 
         private float _nextAeroEstimate;
 
         /// <summary>
-        ///     With AutoAero, works out the vessel's drag area again (at most twice a second) and fills Cd and Aref with it. The PSG
-        ///     Settings window calls it too, so the fields show the estimate before the ascent is engaged.
+        ///     With AutoAero, works out the vessel's drag area (at most twice a second) and fills Cd and Aref with it. It is worked
+        ///     out on the ground and stays once the vessel is airborne. The PSG Settings window calls it too, so the fields show the
+        ///     estimate before the ascent is engaged.
         /// </summary>
         public void UpdateAutoAero()
         {
@@ -154,7 +155,7 @@ namespace MuMech
             _nextAeroEstimate = Time.unscaledTime + 0.5f;
 
             Solution? plan = Core.Guidance.Solution ?? Core.Guidance.PadSolution;
-            if (!AeroEstimate.Update(Vessel, plan, VesselState.MET))
+            if (!AeroEstimate.Update(Vessel, plan))
                 return;
 
             Cd.Val = Round(AeroEstimate.Cd, 3);
