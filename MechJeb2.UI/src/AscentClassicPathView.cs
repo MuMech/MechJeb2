@@ -76,20 +76,19 @@ namespace MuMech.UI
             string[] modes = { KodeWindow.Loc("#MechJeb_NewUI_PathAutomatic"), KodeWindow.Loc("#MechJeb_NewUI_PathManual") }; //Automatic, Manual
             w.Segmented(mode, modes, () => Autopilot.AutoPath ? 0 : 1, i => Autopilot.AutoPath = i == 0);
 
-            // automatic: each slider with the value it gives at the end of its row, then the end altitude it gives
-            KodeWindow.PropertyGrid auto = w.Properties(r);
-            w.Visible(auto.Table.gameObject, () => Autopilot.AutoPath);
+            // automatic: each slider on its own row, the window's full width (a short slider is too coarse to set), under its label
+            // and the value it gives; then the end altitude
+            Layout auto = KodeWindow.Panel(r);
+            w.Visible(auto.gameObject, () => Autopilot.AutoPath);
             var startAlt = new SiText(() => Autopilot.AutoTurnStartAltitude, 2, "m") { Available = () => HasVessel };
             var startVel = new SiText(() => Autopilot.AutoTurnStartVelocity, 3, "m/s") { Available = () => HasVessel };
             var endAlt = new SiText(() => Autopilot.AutoTurnEndAltitude, 2, "m") { Available = () => HasVessel };
-            SliderRow(w, auto, "#MechJeb_NewUI_PathStartAltitude", startAlt.Get, //Start altitude
+            SliderRows(w, auto, "#MechJeb_NewUI_PathStartAltitude", startAlt.Get, //Start altitude
                 // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
                 () => Autopilot.AutoTurnPerc * 200f, v => Autopilot.AutoTurnPerc = Mathf.Floor(v) / 200f, 1f, 210.5f);
-            SliderRow(w, auto, "#MechJeb_NewUI_PathStartSpeed", startVel.Get, //Start speed
+            SliderRows(w, auto, "#MechJeb_NewUI_PathStartSpeed", startVel.Get, //Start speed
                 () => Autopilot.AutoTurnSpdFactor * 2f, v => Autopilot.AutoTurnSpdFactor = Mathf.Floor(v) / 2f, 8f, 160f);
-            // no slider: an empty cell in the sliders' column keeps the value under the two above
-            Layout end = auto.Value(KodeWindow.Loc("#MechJeb_NewUI_PathEndAltitude"), endAlt.Get); //End altitude
-            KodeWindow.Label(end, "").transform.SetSiblingIndex(2);
+            LabelAndValue(w, auto, "#MechJeb_NewUI_PathEndAltitude", endAlt.Get); //End altitude
 
             // manual path: the three fields
             Layout manual = KodeWindow.Panel(r);
@@ -110,16 +109,19 @@ namespace MuMech.UI
             BuildPathPicture(w, r);
         }
 
-        // label, slider, and the value the slider gives
-        static void SliderRow(KodeWindow w, KodeWindow.PropertyGrid g, string key, Func<string> value, Func<float> get, Action<float> set,
-            float min, float max)
+        // the label and the value the slider gives on one row, the slider on the next, across the window
+        static void SliderRows(KodeWindow w, UIObject parent, string key, Func<string> value, Func<float> get, Action<float> set, float min, float max)
         {
-            Layout row = g.Value(KodeWindow.Loc(key), value);
-            UnityEngine.UI.Slider slider = w.Slider(row, get, set, min, max);
-            // the row is: the switch column (empty), the label, the value; the slider goes between the label and the value
-            Transform cell = slider.transform;
-            while (cell.parent != null && cell.parent != row.transform) cell = cell.parent;
-            cell.SetSiblingIndex(2);
+            LabelAndValue(w, parent, key, value);
+            w.Slider(KodeWindow.Row(parent), get, set, min, max);
+        }
+
+        // the label on the left, the value on the right
+        static void LabelAndValue(KodeWindow w, UIObject parent, string key, Func<string> value)
+        {
+            Layout row = KodeWindow.Row(parent);
+            KodeWindow.Label(row, key, true);
+            w.BoundLabel(row, value).tmpText.alignment = TMPro.TextAlignmentOptions.Right;
         }
 
         // the texture's own size, as GUILayout.Box(texture) shows it; the height sets the meters-per-pixel scale
