@@ -61,8 +61,9 @@ namespace MuMech.UI
     }
 
     /// <summary>
-    /// MechJebModuleAscentMenu ("Ascent Guidance") in KodeKit.
-    /// Both ascent types are built once; the rows that only apply to one of them are shown or hidden.
+    /// MechJebModuleAscentMenu ("Ascent Guidance") in KodeKit, top to bottom: the ascent type, TARGET, LAUNCH (on the ground: the
+    /// launch Engage starts and the countdown), Engage, the status bars, the buttons of the ascent's windows, and PSG's solver
+    /// numbers in a fold. Both ascent types are built once; the rows that only apply to one of them are shown or hidden.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleAscentMenu))]
     public class AscentView : KodeView
@@ -139,19 +140,19 @@ namespace MuMech.UI
             // the strings of the status labels exist before the first sync (the cells are sized from them)
             menu.UpdateStrings();
 
-            // VisibleSectionsGUIElements
-            LayoutPanel top = KodeWindow.Box(r);
-            UIButton disengage = KodeWindow.Button(top, "#MechJeb_Ascent_button1", () => menu._autopilot.Users.Clear(), true); //Disengage autopilot: whoever engaged it (a kOS script too)
+            // the ascent type first: it decides every row below, and which windows the buttons open
+            BuildType(w, r);
+            BuildTargeting(w, r);
+            BuildLaunch(w, r);
+
+            Layout engageRow = KodeWindow.Row(r);
+            UIButton disengage = KodeWindow.Button(engageRow, "#MechJeb_Ascent_button1", () => menu._autopilot.Users.Clear(), true); //Disengage autopilot: whoever engaged it (a kOS script too)
             w.Visible(disengage.gameObject, () => menu._autopilot.Enabled);
-            UIButton engage = KodeWindow.Button(top, "#MechJeb_Ascent_button2", () => menu._autopilot.Users.Add(menu), true); //Engage autopilot
+            UIButton engage = KodeWindow.Button(engageRow, "#MechJeb_Ascent_button2", menu.Engage, true); //Engage autopilot
             w.Visible(engage.gameObject, () => !menu._autopilot.Enabled);
+            GuidanceUi.Enable(w, engage, () => menu.LaunchChoiceReady);
             KodeWindow.Role(engage, ButtonRole.Primary);
             KodeWindow.Role(disengage, ButtonRole.Danger);
-
-            BuildTargeting(w, r);
-            BuildSettingsToggles(w, r);
-            BuildStatus(w, r);
-            BuildAutoWarp(w, r);
 
             // the autopilot's state and the avionics warning, in status bars
             Layout statusBar = w.StatusBar(r, StatusTone);
@@ -166,15 +167,9 @@ namespace MuMech.UI
             UIText noTracking = KodeWindow.Paragraph(r, "#MechJeb_Ascent_label37"); //unable to circularize without an upgraded Tracking Station
             w.Visible(noTracking.gameObject, () => HasVessel && !Core.vessel.patchedConicsUnlocked() && !psg);
 
-            Layout type = KodeWindow.Row(r);
-            // a change of type turns the engaged autopilot off, so the type is fixed while the ascent is engaged
-            new ComboBox(w, type, () => (int)Settings.AscentType, i => Settings.AscentType = (AscentType)i, () => menu._ascentPathList)
-            {
-                Enabled = () => !menu._autopilot.Enabled
-            };
-
-            UIButton path = WindowButton(w, r, "#MechJeb_Ascent_checkbox10", menu._classicPathMenu); //Edit ascent path
-            w.Visible(path.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
+            BuildGuidanceStatus(w, r);
+            BuildWindowButtons(w, r);
+            BuildGuidanceDetails(w, r);
 
             // RefreshRateGUI
             Layout refresh = KodeWindow.Row(r);
@@ -189,9 +184,33 @@ namespace MuMech.UI
             w.Visible(refresh.gameObject, () => GuiUtils.ShowAdvancedWindowSettings);
         }
 
+        // [ Classic | PSG ]: a change of type turns the engaged autopilot off, so the type is fixed while the ascent is engaged
+        void BuildType(KodeWindow w, UIObject r)
+        {
+            string[] names = { KodeWindow.Loc("#MechJeb_NewUI_AscentClassic"), KodeWindow.Loc("#MechJeb_NewUI_AscentPSG") }; //Classic, PSG
+            Layout type = w.Segmented(r, names, () => (int)Settings.AscentType, i =>
+            {
+                if (!menu._autopilot.Enabled) Settings.AscentType = (AscentType)i;
+            });
+            Tooltips.Add(type.gameObject, () => menu._autopilot.Enabled
+                ? KodeWindow.Loc("#MechJeb_NewUI_AscentTypeLocked") //The ascent type can't change while the ascent autopilot is engaged.
+                : KodeWindow.Loc("#MechJeb_NewUI_AscentTypeTooltip")); //Classic: the Classic Ascent Profile. PSG: Polynomial SQP Guidance (RSS/RO).
+            CanvasGroup group = type.gameObject.GetComponent<CanvasGroup>() ?? type.gameObject.AddComponent<CanvasGroup>();
+            bool locked = false;
+            w.AddSync(() =>
+            {
+                bool l = menu._autopilot.Enabled;
+                if (l == locked) return;
+                locked = l;
+                group.alpha = l ? 0.45f : 1;
+                group.interactable = !l;
+            });
+        }
+
         // ShowTargetingGUIElements
         void BuildTargeting(KodeWindow w, UIObject r)
         {
+            KodeWindow.Header(r, "#MechJeb_NewUI_Target"); //Target
             LayoutPanel box = KodeWindow.Box(r);
 
             // PSG with an optimized stage: periapsis, apoapsis, attach altitude, argument of periapsis and their warnings
@@ -199,15 +218,17 @@ namespace MuMech.UI
             w.Visible(opt.gameObject, () => optimize);
             AscentUi.SimpleBox(w, opt, "#MechJeb_Ascent_label1", Psgs.PeriapsisAltitude, "km"); //Target Periapsis
             AscentUi.SimpleBox(w, opt, "#MechJeb_Ascent_label2", Psgs.ApoapsisAltitude, "km"); //Target Apoapsis:
+
+            // as the PSG simulation reads them: a negative apoapsis asks for a hyperbola, a lower positive one for a circle. The
+            // circle is the default (apoapsis 0), so the note is dim, not a warning
+            bool ApLtPe() => Psgs.ApoapsisAltitude >= 0 && Psgs.ApoapsisAltitude < Psgs.PeriapsisAltitude;
+            UIText l3 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label3", Tone.Dim); //Ap < Pe: circularizing orbit
+            w.Visible(l3.gameObject, ApLtPe);
+
             AscentUi.ToggledBox(w, opt, "#MechJeb_Ascent_attachAlt", () => Psgs.BurnoutAltitudeFlag, v => Psgs.BurnoutAltitudeFlag = v,
                 Psgs.BurnoutAltitude, "km", 100);
             AscentUi.ToggledBox(w, opt, "Arg Periapsis:", () => Psgs.ArgPFlag, v => Psgs.ArgPFlag = v, Psgs.ArgP, "°", 100);
 
-            // as the PSG simulation reads them: a negative apoapsis asks for a hyperbola, a lower positive one for a circle
-            bool ApLtPe() => Psgs.ApoapsisAltitude >= 0 && Psgs.ApoapsisAltitude < Psgs.PeriapsisAltitude;
-            UIText l3 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label3", Tone.Warn); //Ap < Pe: circularizing orbit
-            w.Visible(l3.gameObject, ApLtPe);
-            // these three in the caution colour, the one above in the warning colour
             UIText high = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltHigh", Tone.Caution); //Attach > Ap: apoapsis insertion
             w.Visible(high.gameObject, () => Psgs.ApoapsisAltitude >= 0 && !ApLtPe() && Psgs.BurnoutAltitudeFlag &&
                 Psgs.BurnoutAltitude > Psgs.ApoapsisAltitude);
@@ -252,17 +273,116 @@ namespace MuMech.UI
             w.Attention(inc, () => 2.001 < incDelta);
         }
 
-        // the "Ascent Settings" and "PSG Settings" window toggles
-        void BuildSettingsToggles(KodeWindow w, UIObject r)
+        // ---- LAUNCH: on the ground, the launch Engage starts ----
+
+        static readonly MechJebModuleAscentMenu.LaunchKind[] launchKinds =
         {
-            // buttons that open the windows, drawn selected while their window is open
+            MechJebModuleAscentMenu.LaunchKind.NOW, MechJebModuleAscentMenu.LaunchKind.PLANE_OF_TARGET,
+            MechJebModuleAscentMenu.LaunchKind.TARGET_LAN, MechJebModuleAscentMenu.LaunchKind.LAN
+        };
+
+        // the drop-down's entries: Now and Into the target's plane for both types, the two LAN launches for PSG
+        string[] launchNames, launchNamesClassic, launchNamesPsg;
+
+        string[] LaunchNames()
+        {
+            if (launchNames == null)
+            {
+                launchNames = new[]
+                {
+                    KodeWindow.Loc("#MechJeb_NewUI_LaunchNow"), //Now
+                    KodeWindow.Loc("#MechJeb_NewUI_LaunchPlaneOfTarget"), //Into the target's plane
+                    KodeWindow.Loc("#MechJeb_NewUI_LaunchTargetLan"), //To the target's LAN
+                    KodeWindow.Loc("#MechJeb_NewUI_LaunchLan") //To a LAN
+                };
+                launchNamesClassic = new[] { launchNames[0], launchNames[1] };
+                launchNamesPsg = launchNames;
+            }
+
+            return psg ? launchNamesPsg : launchNamesClassic;
+        }
+
+        MechJebModuleAscentMenu.LaunchKind Choice => menu.EffectiveLaunchChoice;
+
+        bool TargetChoice => Choice == MechJebModuleAscentMenu.LaunchKind.PLANE_OF_TARGET || Choice == MechJebModuleAscentMenu.LaunchKind.TARGET_LAN;
+
+        // ShowAutoWarpGUIElements (only when landed)
+        void BuildLaunch(KodeWindow w, UIObject r)
+        {
+            UIText header = KodeWindow.Header(r, "#MechJeb_NewUI_Launch"); //Launch
+            w.Visible(header.gameObject, () => landed);
+            LayoutPanel box = KodeWindow.Box(r);
+            w.Visible(box.gameObject, () => landed);
+
+            // nothing being launched: what Engage will start
+            Layout idle = KodeWindow.Panel(box);
+            w.Visible(idle.gameObject, () => !anyPlaneControl);
+            Layout choiceRow = KodeWindow.Row(idle);
+            KodeWindow.Label(choiceRow, "#MechJeb_NewUI_Launch"); //Launch
+            new ComboBox(w, choiceRow, () => (int)Choice, i => menu.LaunchChoice = (int)launchKinds[i], LaunchNames);
+            w.Behaviour.AddRelocalize(() => launchNames = null);
+
+            Layout offset = AscentUi.SimpleBox(w, idle, "#MechJeb_NewUI_LanOffset", Settings.LaunchLANDifference, "°", 60); //LAN offset
+            w.Visible(offset.gameObject, () => TargetChoice);
+            Layout lan = AscentUi.SimpleBox(w, idle, "#MechJeb_NewUI_Lan", Psgs.LAN, "°", 60); //LAN
+            w.Visible(lan.gameObject, () => Choice == MechJebModuleAscentMenu.LaunchKind.LAN);
+
+            UIText invalid = AscentUi.ToneText(idle, "#MechJeb_Ascent_warnInvalidTarget", Tone.Caution, true); // Target must be in the same sphere of influence.
+            KodeWindow.WrapToWidth(invalid);
+            w.Visible(invalid.gameObject, () => TargetChoice && !targetExists && Core.Target.NormalTargetExists);
+            UIText select = KodeWindow.Paragraph(idle, "#MechJeb_Ascent_label34"); //Select a target for a timed launch.
+            KodeWindow.ToneText(select, Tone.Caution);
+            w.Visible(select.gameObject, () => TargetChoice && !Core.Target.NormalTargetExists);
+
+            UnityEngine.UI.Toggle overrideWarp = w.SwitchRow(idle, "#MechJeb_NewUI_LaunchAtOnce", () => Settings.OverrideWarpToPlane,
+                v => Settings.OverrideWarpToPlane = v); //Launch at once, without waiting for the plane
+            w.Visible(overrideWarp, () => Choice != MechJebModuleAscentMenu.LaunchKind.NOW);
+
+            // the countdown: where warp stops before T-0, and under PSG when guidance starts
+            Layout countdown = AscentUi.SimpleBox(w, box, "#MechJeb_NewUI_Countdown", Settings.WarpCountDown, "s", 60); //Countdown
+            Tooltips.Add(countdown.gameObject, "#MechJeb_NewUI_CountdownTooltip");
+
+            // launching: timer and abort
+            Layout launching = KodeWindow.Panel(box);
+            w.Visible(launching.gameObject, () => anyPlaneControl);
+            w.BoundLabel(launching, () => string.IsNullOrEmpty(menu.launchTimer) ? " " : menu.launchTimer, true);
+            UIButton abort = KodeWindow.Button(launching, "#MechJeb_Ascent_button17", menu.AbortTimedLaunch); //Abort
+            KodeWindow.Role(abort, ButtonRole.Danger);
+        }
+
+        // PSG: guidance's status and its last failure stay in view; the solver's numbers fold away (BuildGuidanceDetails)
+        void BuildGuidanceStatus(KodeWindow w, UIObject r)
+        {
+            // only while the ascent flies, or when guidance failed: on the pad, before anything runs, it has nothing to say
+            Layout bar = w.StatusBar(r, GuidanceTone);
+            w.Visible(bar.gameObject, () => psg && (menu._autopilot.Enabled || Psgs.LastFailureMessage != null));
+            UIText status = w.BoundLabel(bar, () => menu.label26 ?? " ", true); //Guidance Status:
+            w.ToneText(status, GuidanceTone);
+
+            UIText reach = w.Wrap(w.BoundLabel(r, () => menu.ReachWarning ?? " ", true));
+            KodeWindow.ToneText(reach, Tone.Bad);
+            w.Visible(reach, () => psg && menu.ReachWarning != null);
+
+            UIText failure = w.Wrap(w.BoundLabel(r, () => menu.label30 ?? " ", true)); //LAST FAILURE:
+            KodeWindow.ToneText(failure, Tone.Bad);
+            w.Visible(failure, () => psg && Psgs.LastFailureMessage != null);
+        }
+
+        // the windows of the ascent: Settings for both types, Stages and Solution for PSG, Path for Classic
+        void BuildWindowButtons(KodeWindow w, UIObject r)
+        {
+            // one row across the window, the buttons sharing its width
             Layout buttons = KodeWindow.Row(r);
-            WindowButton(w, buttons, "Ascent Settings", menu._settingsMenu);
-            UIButton psgButton = WindowButton(w, buttons, "PSG Settings", menu._psgSettingsMenu);
-            w.Visible(psgButton.gameObject, () => psg);
-            w.Badge(psgButton, () => PsgAttention.Any(Core));
-            UIButton solutionButton = WindowButton(w, buttons, "PSG Solution", Core.GetComputerModule<MechJebModulePSGSolutionGraph>());
-            w.Visible(solutionButton.gameObject, () => psg);
+            // the PSG warnings on the button of the window that has their setting
+            UIButton settingsButton = WindowButton(w, buttons, "#MechJeb_NewUI_AscentSettingsButton", menu._settingsMenu); //Settings
+            w.Badge(settingsButton, () => psg && (PsgAttention.ArefUnset(Core) || PsgAttention.QaClamped(Core)));
+            UIButton stages = WindowButton(w, buttons, "#MechJeb_NewUI_Stages", Core.GetComputerModule<MechJebModuleAscentPSGStagesMenu>()); //Stages
+            w.Visible(stages.gameObject, () => psg);
+            w.Badge(stages, () => PsgAttention.CoastTimesInverted(Core) || PsgAttention.CoastNoRelight(Core));
+            UIButton solution = WindowButton(w, buttons, "#MechJeb_NewUI_SolutionButton", Core.GetComputerModule<MechJebModulePSGSolutionGraph>()); //Solution
+            w.Visible(solution.gameObject, () => psg);
+            UIButton path = WindowButton(w, buttons, "#MechJeb_NewUI_PathButton", menu._classicPathMenu); //Path
+            w.Visible(path.gameObject, () => !psg);
         }
 
         /// <summary>A button that opens or closes another window, selected while that window is open.</summary>
@@ -273,11 +393,18 @@ namespace MuMech.UI
             return b;
         }
 
-        // ShowStatusGUIElements (PSG only)
-        void BuildStatus(KodeWindow w, UIObject r)
+        // ShowStatusGUIElements (PSG only): the solver's numbers, in a fold whose state is saved
+        void BuildGuidanceDetails(KodeWindow w, UIObject r)
         {
-            LayoutPanel box = KodeWindow.Box(r);
-            w.Visible(box.gameObject, () => psg);
+            Layout fold = KodeWindow.Panel(r);
+            w.Visible(fold.gameObject, () => psg);
+            Layout box = w.Section(fold, "#MechJeb_NewUI_GuidanceDetails", menu.GuidanceDetailsOpen); //Guidance details
+            // the fold's state is the module's saved one: follow the header's clicks into it
+            w.AddSync(() =>
+            {
+                bool open = box.gameObject.activeSelf;
+                if (menu.GuidanceDetailsOpen != open) menu.GuidanceDetailsOpen = open;
+            });
 
             for (int i = 0; i < MechJebModuleAscentMenu.MAX_PHASE_LINES; i++)
             {
@@ -293,13 +420,6 @@ namespace MuMech.UI
             w.BoundLabel(tgo, "tgo: 999.999", () => menu.tgo ?? " ");
             w.BoundLabel(tgo, "pitch: -90.0", () => menu.pitch ?? " ", true);
 
-            UIText reach = w.Wrap(w.BoundLabel(box, () => menu.ReachWarning ?? " ", true));
-            KodeWindow.ToneText(reach, Tone.Bad);
-            w.Visible(reach, () => menu.ReachWarning != null);
-
-            UIText status = w.BoundLabel(box, () => menu.label26 ?? " ", true); //Guidance Status:
-            w.ToneText(status, GuidanceTone);
-
             Layout conv = KodeWindow.Row(box);
             w.BoundLabel(conv, "converges: 999", () => menu.label27 ?? " "); //converges:
             w.BoundLabel(conv, "staleness: 99d 99h 99m 99s", () => menu.label29 ?? " ", true); //staleness:
@@ -311,47 +431,6 @@ namespace MuMech.UI
             Layout n = KodeWindow.Row(box);
             w.BoundLabel(n, "n: 100(100)", () => menu.n ?? " ");
             w.BoundLabel(n, "infeasibility: -1.2345E-05", () => menu.znorm ?? " ", true);
-
-            UIText failure = w.Wrap(w.BoundLabel(box, () => menu.label30 ?? " ", true)); //LAST FAILURE:
-            KodeWindow.ToneText(failure, Tone.Bad);
-            w.Visible(failure, () => Psgs.LastFailureMessage != null);
-        }
-
-        // ShowAutoWarpGUIElements (only when landed)
-        void BuildAutoWarp(KodeWindow w, UIObject r)
-        {
-            LayoutPanel box = KodeWindow.Box(r);
-            w.Visible(box.gameObject, () => landed);
-
-            Layout countdown = KodeWindow.Row(box);
-            KodeWindow.Label(countdown, "#MechJeb_Ascent_label33"); //Launch countdown:
-            EditUi.Field(w, countdown, Settings.WarpCountDown, 35);
-            KodeWindow.Label(countdown, "s");
-            w.Visible(countdown.gameObject, () => Settings.Autowarp);
-
-            UIText invalid = AscentUi.ToneText(box, "#MechJeb_Ascent_warnInvalidTarget", Tone.Caution, true); // Target must be in the same sphere of influence.
-            KodeWindow.WrapToWidth(invalid);
-            w.Visible(invalid.gameObject, () => !anyPlaneControl && !targetExists && Core.Target.NormalTargetExists);
-            UIText select = KodeWindow.Label(box, "#MechJeb_Ascent_label34"); //Select a target for a timed launch.
-            w.Visible(select.gameObject, () => !anyPlaneControl && !targetExists && !Core.Target.NormalTargetExists);
-
-            // nothing being launched: the launch buttons
-            Layout idle = KodeWindow.Panel(box);
-            w.Visible(idle.gameObject, () => !anyPlaneControl);
-            Layout plane = AscentUi.ButtonBox(w, idle, "#MechJeb_Ascent_button15", menu.LaunchToPlaneOfTarget, Settings.LaunchLANDifference, "°", 40); //Launch into plane of target
-            w.Visible(plane.gameObject, () => targetExists);
-            Layout targetLan = AscentUi.ButtonBox(w, idle, "#MechJeb_Ascent_LaunchToTargetLan", menu.LaunchToTargetLan, Settings.LaunchLANDifference, "°", 40); //Launch to target LAN
-            w.Visible(targetLan.gameObject, () => targetExists && psg);
-            Layout lan = AscentUi.ButtonBox(w, idle, "#MechJeb_Ascent_LaunchToLan", menu.LaunchToLan, Psgs.LAN, "°", 40); //Launch to LAN
-            w.Visible(lan.gameObject, () => psg);
-
-            // launching: timer and abort
-            Layout launching = KodeWindow.Panel(box);
-            w.Visible(launching.gameObject, () => anyPlaneControl);
-            w.BoundLabel(launching, () => string.IsNullOrEmpty(menu.launchTimer) ? " " : menu.launchTimer, true);
-            KodeWindow.Button(launching, "#MechJeb_Ascent_button17", menu.AbortTimedLaunch); //Abort
-
-            w.Toggle(box, "Override Warp to Plane", () => Settings.OverrideWarpToPlane, v => Settings.OverrideWarpToPlane = v);
         }
     }
 }

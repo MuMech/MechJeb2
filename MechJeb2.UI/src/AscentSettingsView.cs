@@ -24,6 +24,9 @@ namespace MuMech.UI
         MechJebModuleAscentSettings Settings => Core.AscentSettings;
         MechJebModuleAscentClassicAutopilot Classic => classic ??= Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         MechJebModuleThrustController Thrust => Core.Thrust;
+        MechJebModulePSGSimulation Psgs => Core.PSGSimulation;
+
+        const string ArefNote = "Aref is 0: PSG plans the ascent with no drag. Set the rocket's cross-section area.";
 
         bool psg;
 
@@ -33,6 +36,27 @@ namespace MuMech.UI
         protected override void BeforeSync()
         {
             psg = Settings.AscentType == AscentType.PSG;
+            if (psg) UpdateAero();
+        }
+
+        // what AutoAero filled Cd and Aref with. Rebuilt only when they change.
+        string aeroCd = "", aeroAref = "";
+        double aeroKey = double.NaN;
+
+        void UpdateAero()
+        {
+            if (!Psgs.AutoAero)
+                return;
+
+            if (HighLogic.LoadedSceneIsFlight)
+                Psgs.UpdateAutoAero();
+
+            double key = Psgs.Cd * 7919 + Psgs.Aref;
+            if (key == aeroKey) return;
+            aeroKey = key;
+
+            aeroCd = Psgs.Cd.Val.ToString("0.###");
+            aeroAref = Psgs.Aref.Val.ToString("0.###");
         }
 
         // "° (x.x°)" after the AoA field, formatted when the tenth changes
@@ -86,6 +110,42 @@ namespace MuMech.UI
             w.Visible(corrective.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
             w.Visible(gain.gameObject, () => Settings.AscentType == AscentType.CLASSIC && Classic.CorrectiveSteering);
 
+            // PSG: the Qα limit (PSG's angle-of-attack limit, beside Classic's) and the pitch-over before guidance takes over
+            Layout qaRow = OptionRows.Field(steer, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60); //Qα limit
+            w.Attention(qaRow, () => PsgAttention.QaClamped(Core));
+            Layout pitchStart = OptionRows.Field(steer, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
+            Layout pitchRate = OptionRows.Field(steer, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
+            foreach (Layout row in new[] { qaRow, pitchStart, pitchRate })
+                w.Visible(row.gameObject, () => psg);
+            bool Clamped() => Psgs.LimitQa < 0 || Psgs.LimitQa > 10000;
+            Layout qa = w.StatusBar(g, () => Clamped() ? Tone.Bad : Tone.Warn);
+            UIText clamped = GuidanceUi.Wrapped(qa, "Qα limit has been clamped to between 0 and 10000 Pa-rad");
+            w.Visible(clamped.gameObject, Clamped);
+            UIText recommended = GuidanceUi.Wrapped(qa, "#MechJeb_Ascent_label20"); //Qα limit is recommended to be 1000 to 4000 Pa-rad
+            w.Visible(recommended.gameObject, () => !Clamped());
+            w.Visible(qa.gameObject, () => psg && (Psgs.LimitQa < 1000 || Psgs.LimitQa > 4000));
+
+            // PSG: the drag model it plans with, header and all in a panel that only PSG shows
+            Layout dragModel = KodeWindow.Panel(r);
+            w.Visible(dragModel.gameObject, () => psg);
+            g = w.Group(dragModel, "#MechJeb_NewUI_DragModel"); //Drag model
+            KodeWindow.PropertyGrid aero = w.Properties(g);
+            OptionRows.Switch(aero, "Cd and Aref from the vessel", () => Psgs.AutoAero, v => Psgs.AutoAero = v);
+            Layout cdField = OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50);
+            Layout arefField = OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50);
+            w.Attention(arefField, () => PsgAttention.ArefUnset(Core));
+            w.Visible(cdField.gameObject, () => !Psgs.AutoAero);
+            w.Visible(arefField.gameObject, () => !Psgs.AutoAero);
+            // sized from templates: the values are still empty when the window is made under Classic or with the switch off
+            Layout cdValue = aero.Value("Cd", () => aeroCd, null, "0.000");
+            Layout arefValue = aero.Value("Aref", () => aeroAref, "m²", "000.000");
+            w.Visible(cdValue.gameObject, () => Psgs.AutoAero);
+            w.Visible(arefValue.gameObject, () => Psgs.AutoAero);
+            UIText arefNote = aero.Note(ArefNote);
+            KodeWindow.ToneText(arefNote, Tone.Caution);
+            KodeWindow.WrapToWidth(arefNote);
+            w.Visible(arefNote.transform.parent.gameObject, () => PsgAttention.ArefUnset(Core));
+
             g = w.Group(r, "#MechJeb_NewUI_Autostage"); //Autostage
             w.SwitchRow(g, "#MechJeb_Ascent_checkbox5", () => Settings.Autostage, v => Settings.Autostage = v); //Autostage
             Layout autostage = KodeWindow.Panel(g);
@@ -101,6 +161,9 @@ namespace MuMech.UI
             UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Classic.SkipCircularization,
                 v => Classic.SkipCircularization = v); //Skip Circularization
             w.Visible(skip, () => !psg);
+            UnityEngine.UI.Toggle trajectory = w.SwitchRow(g, "Draw Trajectory on Map", () => Core.Guidance.ShouldDrawTrajectory,
+                v => Core.Guidance.ShouldDrawTrajectory = v);
+            w.Visible(trajectory, () => psg);
             UnityEngine.UI.Toggle rss = w.SwitchRow(g, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
             w.Visible(rss, () => psg);
         }

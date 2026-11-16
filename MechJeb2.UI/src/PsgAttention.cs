@@ -4,8 +4,8 @@ using UnityEngine;
 namespace MuMech.UI
 {
     /// <summary>
-    /// PSG settings that need the player's attention: their rows are marked in the PSG Settings window, and the Ascent window's PSG
-    /// Settings button carries a badge while any of them is.
+    /// PSG settings that need the player's attention: their rows are marked where they are set (Ascent Settings, PSG Stages), and
+    /// Ascent Guidance's button for that window carries a badge while any of them is.
     /// </summary>
     static class PsgAttention
     {
@@ -80,7 +80,6 @@ namespace MuMech.UI
             return e.allowRestart;
         }
 
-        public static bool Any(MechJebCore core) => ArefUnset(core) || CoastTimesInverted(core) || QaClamped(core) || CoastNoRelight(core);
 
         // the vessel's body in flight, Kerbin (or the home body) in the editor
         static bool Atmosphere(MechJebCore core)
