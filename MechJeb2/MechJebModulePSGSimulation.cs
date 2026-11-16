@@ -403,6 +403,9 @@ namespace MuMech
         /// </summary>
         public void TerminalStarted() => CancelSolve("terminal guidance started");
 
+        /// <summary>Guidance calls this when it finishes, when no solution it is given is flown any more.</summary>
+        public void GuidanceFinished() => CancelSolve("guidance finished");
+
         // Drops the solve in progress, keeping the last converged solution to warm start the next solve: a solve started before
         // the coast starts or ends plans a part of the flight that has already happened (a burn before the coast, or a coast
         // that is over), and must never reach guidance.

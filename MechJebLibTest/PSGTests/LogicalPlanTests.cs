@@ -349,5 +349,60 @@ namespace MechJebLibTest.PSGTests
             plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1), Row(1, 0) }, new List<FuelStats>(), MIN_DV);
             Assert.Equal("BURN:0 COAST_DEDICATED:2 BURN:Done", Describe(plan));
         }
+
+        private static uint[] Jettisoned(FlightPlan plan, int index)
+        {
+            var parts = new HashSet<uint> { 99 }; // cleared first
+            plan.PartsJettisonedWith(index, parts);
+            return parts.OrderBy(p => p).ToArray();
+        }
+
+        [Fact]
+        public void JettisonedPartsPlainRocket()
+        {
+            FlightPlan plan = Fly(ThreeStages());
+
+            Assert.Equal(new uint[] { 3 }, Jettisoned(plan, 2));
+            Assert.Equal(new uint[] { 2 }, Jettisoned(plan, 1));
+        }
+
+        [Fact]
+        public void JettisonedPartsDropTanks()
+        {
+            // core engine 5 burns from the drop tanks in KSP stage 2 and on from its own tanks in KSP stage 1: nothing leaves
+            // with the drop tanks' burn, and the core leaves with its own
+            FlightPlan plan = Fly(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1500, 5), Row(2, 800, 5) });
+
+            Assert.Empty(Jettisoned(plan, 2));
+            Assert.Equal(new uint[] { 5 }, Jettisoned(plan, 1));
+        }
+
+        [Fact]
+        public void JettisonedPartsSustainer()
+        {
+            // boosters 6 and 7 burn with sustainer 5, which burns on alone: only the boosters leave
+            FlightPlan plan = Fly(new List<FuelStats> { Row(0, 2000, 1), Row(1, 1500, 5), Row(2, 800, 5, 6, 7) });
+
+            Assert.Equal(new uint[] { 6, 7 }, Jettisoned(plan, 2));
+        }
+
+        [Fact]
+        public void CoastAfterCarriesItsBurn()
+        {
+            FlightPlan plan = Fly(ThreeStages(), coast: AFTER, coastRow: 1);
+            Assert.Equal("BURN:0 COAST_AFTER:1 BURN:1 BURN:2", Describe(plan));
+
+            // the coast is on the burn's row with its engines, which must not count as a later burn's
+            Assert.Equal(2, plan.CoastAfterBurnIndex());
+            Assert.Equal(new uint[] { 2 }, Jettisoned(plan, 2));
+        }
+
+        [Fact]
+        public void NoCoastAfterBurn()
+        {
+            Assert.Equal(-1, Fly(ThreeStages()).CoastAfterBurnIndex());
+            Assert.Equal(-1, Fly(ThreeStages(), coast: BEFORE, coastRow: 1).CoastAfterBurnIndex());
+            Assert.Equal(-1, Fly(ThreeStages(), coast: DURING, coastRow: 1).CoastAfterBurnIndex());
+        }
     }
 }

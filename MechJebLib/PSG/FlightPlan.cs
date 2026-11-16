@@ -83,6 +83,36 @@ namespace MechJebLib.PSG
             return true;
         }
 
+        /// <summary>
+        ///     The part persistentIds of the engines of stage index that leave the vessel with it: its planned engines but those a
+        ///     later burn burns too (a sustainer, a core fed by drop tanks).  The stages are top-down, so the later burns are the
+        ///     stages before it.  Only burns count: a COAST_AFTER coast is on its burn's own row, with the same engines.
+        /// </summary>
+        public void PartsJettisonedWith(int index, HashSet<uint> into)
+        {
+            into.Clear();
+            foreach (EngineSignature s in Stages[index].PlannedSignatures)
+                into.Add(s.PartPersistentID);
+
+            for (int i = 0; i < index; i++)
+                if (Stages[i].StageType == StageType.BURN)
+                    foreach (EngineSignature s in Stages[i].PlannedSignatures)
+                        into.Remove(s.PartPersistentID);
+        }
+
+        /// <summary>
+        ///     The index of the burn a COAST_AFTER coast follows, which the coast carries (in the burn's KSP stage) to the next
+        ///     burn, or -1 without one.  The coast and the burn share a stats row, and the burn is listed right after the coast.
+        /// </summary>
+        public int CoastAfterBurnIndex()
+        {
+            for (int i = 0; i < Stages.Count; i++)
+                if (Stages[i].StageType == StageType.COAST_AFTER)
+                    return i + 1 < Stages.Count && Stages[i + 1].StageType == StageType.BURN ? i + 1 : -1;
+
+            return -1;
+        }
+
         public FlightPlan DeepCopy()
         {
             var dup = new FlightPlan();
