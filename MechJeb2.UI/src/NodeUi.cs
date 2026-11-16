@@ -15,12 +15,26 @@ namespace MuMech.UI
         /// idle and <paramref name="canAll"/> holds, "Abort node execution" while it runs, as primary, normal and danger
         /// buttons.
         /// </summary>
+        /// <param name="oneRole">the next-node button's role: Normal in a window whose main action is another button</param>
+        /// <param name="noNodeKey">
+        /// when set, the next-node button stays shown while it can't run, disabled, with this text under it; otherwise it is
+        /// hidden then
+        /// </param>
         public static void ExecuteButtons(KodeWindow w, UIObject parent, MechJebCore core, object controller, string oneKey, string allKey,
-            string abortKey, Func<bool> canOne, Func<bool> canAll, bool flexible)
+            string abortKey, Func<bool> canOne, Func<bool> canAll, bool flexible, ButtonRole oneRole = ButtonRole.Primary, string noNodeKey = null)
         {
             bool Idle() => core.Node != null && !core.Node.Enabled;
-            UIButton one = KodeWindow.Button(parent, oneKey, () => core.Node.ExecuteOneNode(controller), ButtonRole.Primary, flexible);
-            w.Visible(one.gameObject, () => Idle() && canOne());
+            UIButton one = KodeWindow.Button(parent, oneKey, () => core.Node.ExecuteOneNode(controller), oneRole, flexible);
+            if (noNodeKey == null)
+                w.Visible(one.gameObject, () => Idle() && canOne());
+            else
+            {
+                w.Visible(one.gameObject, Idle);
+                GuidanceUi.Enable(w, one, canOne);
+                UIText why = KodeWindow.Paragraph(parent, noNodeKey);
+                KodeWindow.ToneText(why, KodeWindow.Tone.Dim);
+                w.Visible(why.gameObject, () => Idle() && !canOne());
+            }
             UIButton all = KodeWindow.Button(parent, allKey, () => core.Node.ExecuteAllNodes(controller), ButtonRole.Normal, flexible);
             w.Visible(all.gameObject, () => Idle() && canAll());
             UIButton abort = KodeWindow.Button(parent, abortKey, () => core.Node.Abort(), ButtonRole.Danger, flexible);

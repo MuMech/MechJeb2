@@ -167,6 +167,52 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             private void BuildModules(SimPart part, Part kspPart)
             {
+                // the engines read their thrust directions from the nozzles, which the gimbals of the part move while steering:
+                // read them at rest, as VesselState does, so the thrust does not change with the control input
+                ResetGimbals(kspPart);
+                try
+                {
+                    BuildModulesAtRest(part, kspPart);
+                }
+                finally
+                {
+                    RestoreGimbals();
+                }
+            }
+
+            private readonly List<KeyValuePair<Transform, Quaternion>> _gimbalRotations = new List<KeyValuePair<Transform, Quaternion>>();
+
+            private void ResetGimbals(Part kspPart)
+            {
+                _gimbalRotations.Clear();
+
+                for (int i = 0; i < kspPart.Modules.Count; i++)
+                {
+                    // a locked gimbal is held at rest by KSP, and one that has not started yet has no rest rotations
+                    if (!(kspPart.Modules[i] is ModuleGimbal gimbal) || gimbal.gimbalLock || gimbal.gimbalTransforms == null ||
+                        gimbal.initRots == null)
+                        continue;
+
+                    int count = Mathf.Min(gimbal.gimbalTransforms.Count, gimbal.initRots.Count);
+                    for (int j = 0; j < count; j++)
+                    {
+                        Transform gimbalTransform = gimbal.gimbalTransforms[j];
+                        _gimbalRotations.Add(new KeyValuePair<Transform, Quaternion>(gimbalTransform, gimbalTransform.localRotation));
+                        gimbalTransform.localRotation = gimbal.initRots[j];
+                    }
+                }
+            }
+
+            private void RestoreGimbals()
+            {
+                // in reverse, in case two gimbals share a transform
+                for (int i = _gimbalRotations.Count - 1; i >= 0; i--)
+                    _gimbalRotations[i].Key.localRotation = _gimbalRotations[i].Value;
+                _gimbalRotations.Clear();
+            }
+
+            private void BuildModulesAtRest(SimPart part, Part kspPart)
+            {
                 for (int i = 0; i < kspPart.Modules.Count; i++)
                 {
                     PartModule kspModule = kspPart.Modules[i];
