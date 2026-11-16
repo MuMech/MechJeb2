@@ -34,8 +34,10 @@ namespace MuMech
             get => (AscentType)AscentTypeInteger;
             set
             {
+                bool changed = AscentTypeInteger != (int)value;
                 AscentTypeInteger = (int)value;
                 DisableAscentModules();
+                if (changed) CloseOtherTypeWindows();
             }
         }
 
@@ -200,6 +202,18 @@ namespace MuMech
                 AscentType.PSG     => Core.GetComputerModule<MechJebModuleAscentPSGAutopilot>(),
                 _                  => Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>()
             };
+        }
+
+        // the windows of the other ascent type have nothing to show: Classic's path editor, PSG's stage table and solution
+        private void CloseOtherTypeWindows()
+        {
+            if (AscentType == AscentType.PSG)
+                Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>().Enabled = false;
+            else
+            {
+                Core.GetComputerModule<MechJebModuleAscentPSGStagesMenu>().Enabled = false;
+                Core.GetComputerModule<MechJebModulePSGSolutionGraph>().Enabled = false;
+            }
         }
 
         private void DisableAscentModules()
