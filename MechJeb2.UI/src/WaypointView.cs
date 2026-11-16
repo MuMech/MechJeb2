@@ -106,6 +106,9 @@ namespace MuMech.UI
 
         void BuildWaypointsPage(KodeWindow w, UIObject page)
         {
+            UIText empty = KodeWindow.Paragraph(page, "#MechJeb_NewUI_NoWaypoints"); //No waypoints: Add Waypoint, then click the map.
+            KodeWindow.ToneText(empty, KodeWindow.Tone.Dim);
+            w.Visible(empty.gameObject, () => Ap == null || Ap.Waypoints.Count == 0);
             wpScroll = KodeWindow.ScrollList(page, ListHeight, out wpContent, 2);
 
             // the selected waypoint's edit panel; it is moved under the selected row
@@ -437,7 +440,7 @@ namespace MuMech.UI
             titledPage = page;
             nextTitle = Time.unscaledTime + 0.25f;
 
-            title.Clear().Append(m.Mode == MechJebModuleWaypointWindow.WaypointMode.ROVER ? "ROVER" : "PLANE").Append(" Waypoints");
+            title.Clear().Append(m.Mode == MechJebModuleWaypointWindow.WaypointMode.ROVER ? "Rover" : "Plane").Append(" waypoints");
             switch (page)
             {
                 case Pages.WAYPOINTS:

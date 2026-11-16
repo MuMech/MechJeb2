@@ -108,7 +108,7 @@ namespace MuMech.UI
 
             Layout top = KodeWindow.Row(r);
             KodeWindow.Button(top, "#MechJeb_WindowEd_button1", ed.AddNewWindow, true); //New window
-            if (Edited != null) KodeWindow.Button(top, "#MechJeb_WindowEd_button2", ed.RemoveCurrentWindow, true); //Delete window
+            if (Edited != null) KodeWindow.Button(top, "#MechJeb_WindowEd_button2", ed.RemoveCurrentWindow, ButtonRole.Danger, true); //Delete window
 
             // sharing: the edited window's configuration to the clipboard, or a new window from it
             Layout share = KodeWindow.Row(r);
@@ -177,10 +177,13 @@ namespace MuMech.UI
             List<ComputerModule> all = AllWindows;
 
             // the edited window picked from a dropdown, its title in a field
-            KodeWindow.Header(r, "#MechJeb_WindowEd_Edtitle"); //Title:
+            KodeWindow.Header(r, "#MechJeb_NewUI_Window"); //Window
             Layout pick = KodeWindow.Row(r);
             new ComboBox(w, pick, () => all.IndexOf(edited), i => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[i], WindowTitles);
             TitleField(w, pick, edited);
+
+            // where and how it shows
+            KodeWindow.Header(r, "#MechJeb_NewUI_Display"); //Display
 
             Layout showIn = KodeWindow.Row(r);
             KodeWindow.Label(showIn, "#MechJeb_WindowEd_label1"); //Show in:
@@ -199,9 +202,9 @@ namespace MuMech.UI
             {
                 Localizer.Format("#MechJeb_NewUI_CompactOff"), Localizer.Format("#MechJeb_NewUI_CompactFollow"), Localizer.Format("#MechJeb_NewUI_CompactOn")
             };
-            w.Switch3(compact, compactNames, () => (int)edited.Compact, v => edited.Compact = (MechJebModuleCustomInfoWindow.CompactMode)v);
+            w.Segmented(compact, compactNames, () => (int)edited.Compact, v => edited.Compact = (MechJebModuleCustomInfoWindow.CompactMode)v);
 
-            // Width: Auto (fits the values) or Fixed, set with -10 -1 [field] px +1 +10 or the window's resize grip
+            // Width: Auto (fits the values) or Fixed, set with [−][field][+] px (1 px a press, 10 with Shift) or the window's resize grip
             Layout width = KodeWindow.Row(r);
             Tooltips.Add(KodeWindow.Label(width, "#MechJeb_NewUI_Width", true).gameObject, "#MechJeb_NewUI_Width_tooltip"); //Width
             string auto = Localizer.Format("#MechJeb_NewUI_WidthAuto"), fixedName = Localizer.Format("#MechJeb_NewUI_WidthFixed");
@@ -212,15 +215,13 @@ namespace MuMech.UI
                 edited.FixedWidth = (edited.FixedWidth > 0 ? edited.FixedWidth : 250) + d;
                 edited.WidthFixed = true;
             }
-            KodeWindow.Button(width, "-10", () => Nudge(-10));
-            KodeWindow.Button(width, "-1", () => Nudge(-1));
             // four digits at most (MAX_FIXED_WIDTH)
             float digits = TextMeasure.Measure("0000", w.Behaviour.Theme).x + 10;
             // the typed text stays until it is a width in range ("3" on the way to "320"); a nudge or the grip replaces it
             string typed = null;
             int seen = edited.FixedWidth;
             string seenText = seen > 0 ? seen.ToString() : "";
-            EditFields.Field(w, width, () =>
+            w.Stepper(width, () =>
             {
                 if (edited.FixedWidth != seen)
                 {
@@ -236,10 +237,8 @@ namespace MuMech.UI
                     return;
                 edited.FixedWidth = seen = v;
                 edited.WidthFixed = true;
-            }, digits);
+            }, d => Nudge((int)d), () => 1, digits);
             KodeWindow.Label(width, "px");
-            KodeWindow.Button(width, "+1", () => Nudge(1));
-            KodeWindow.Button(width, "+10", () => Nudge(10));
 
             // Color: [x] Text [x] Background (exclusive), with the picker under them
             Layout color = KodeWindow.Row(r);
@@ -265,7 +264,7 @@ namespace MuMech.UI
             // the window's items: click to select
             KodeWindow.Label(r, "#MechJeb_WindowEd_label3"); //Window contents (click to edit):
             win = w;
-            KodeWindow.ScrollList(r, 100, out contentsList);
+            KodeWindow.ScrollList(r, 200, out contentsList);
             contentRows.Clear();
             rowItems.Clear();
             SyncContents();
@@ -285,7 +284,7 @@ namespace MuMech.UI
             KodeWindow.Label(r, "#MechJeb_WindowEd_label4"); //Click an item to add it to the info window:
             new ComboBox(w, r, () => (int)ed.itemCategory, i => ed.itemCategory = (InfoItem.Category)i,
                 () => MechJebModuleCustomWindowEditor.categories);
-            KodeWindow.ScrollList(r, 260, out Layout registry);
+            KodeWindow.ScrollList(r, 160, out Layout registry);
             foreach (InfoItem item in ed.ItemsOfCategory())
             {
                 InfoItem add = item;
