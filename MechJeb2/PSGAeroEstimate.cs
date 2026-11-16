@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using UnityEngine;
@@ -11,10 +12,11 @@ namespace MuMech
     /// <summary>
     ///     The drag area PSG plans the ascent with (Cd × Aref, the only drag figure its model reads), worked out from the vessel.
     ///     <para />
-    ///     A table of Cd·A against Mach for the vessel flying nose first: stock aerodynamics from the parts' drag cubes and drag
-    ///     models as FlightIntegrator applies them, FAR from FARAPI.CalculateVesselAeroForces. PSG holds one constant, so the table
-    ///     is averaged along the ascent PSG planned, each point weighted by the dynamic pressure over the mass (its share of the
-    ///     drag losses); with no plan yet, over Mach 0.5 to 2, where an ascent meets its maximum dynamic pressure.
+    ///     A table of Cd·A against Mach for the vessel flying a little off its nose, as an ascent does (FLOW_AOA): stock aerodynamics
+    ///     from the parts' drag cubes and drag models as FlightIntegrator applies them, FAR from FARAPI.CalculateVesselAeroForces.
+    ///     PSG holds one constant, so the table is averaged along the ascent PSG planned, each point weighted by the dynamic pressure
+    ///     over the mass (its share of the drag losses); with no plan yet, over Mach 0.5 to 2, where an ascent meets its maximum
+    ///     dynamic pressure. In stock aerodynamics each stage of the plan has its own table, without the parts dropped by then.
     ///     <para />
     ///     Aref is the vessel's frontal area (the drag cube faces towards the airflow) or FAR's reference area, and Cd the drag area
     ///     over it.
@@ -29,7 +31,18 @@ namespace MuMech
             0.1, 0.3, 0.5, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.2, 1.35, 1.5, 1.75, 2, 2.5, 3, 4, 5, 6, 8, 10, 15, 20, 25
         };
 
+        // A rocket flies a degree or two off its nose through the dense air (1.6 to 2.3° on average, weighted by the dynamic
+        // pressure, in stock ascents of Kerbal X), and a long body picks up drag fast with it: the table is for the airflow this
+        // far off the nose, in the pitch plane.
+        private const float FLOW_AOA = 2;
+
+        // the vessel as it is
         private readonly double[] _cdA = new double[_machs.Length];
+
+        // stock aerodynamics: the vessel in a later stage of the plan, without the parts dropped by then, read on first use
+        private readonly Dictionary<int, double[]> _stageTables = new Dictionary<int, double[]>();
+
+        private int _currentStage;
 
         private double _frontalArea;
 
@@ -57,20 +70,22 @@ namespace MuMech
         // the table is read again this often, as parts deploy and fairings open without the part count changing
         private const float TABLE_PERIOD = 10;
 
-        /// <summary>The drag area at <paramref name="mach" />, read off the table (0 before the first update).</summary>
-        public double CdAAt(double mach)
+        /// <summary>The drag area of the vessel as it is at <paramref name="mach" />, read off the table (0 before the first update).</summary>
+        public double CdAAt(double mach) => CdAAt(_cdA, mach);
+
+        private static double CdAAt(double[] table, double mach)
         {
             if (mach <= _machs[0])
-                return _cdA[0];
+                return table[0];
             for (int i = 1; i < _machs.Length; i++)
             {
                 if (mach > _machs[i])
                     continue;
                 double f = (mach - _machs[i - 1]) / (_machs[i] - _machs[i - 1]);
-                return _cdA[i - 1] + f * (_cdA[i] - _cdA[i - 1]);
+                return table[i - 1] + f * (table[i] - table[i - 1]);
             }
 
-            return _cdA[_machs.Length - 1];
+            return table[_machs.Length - 1];
         }
 
         /// <summary>
@@ -83,9 +98,14 @@ namespace MuMech
             if (vessel == null || vessel.mainBody == null || !vessel.mainBody.atmosphere || vessel.packed)
                 return false;
 
-            if (vessel != _vessel || vessel.mainBody != _body || vessel.parts.Count != _partCount || Time.unscaledTime >= _nextTable ||
-                Source == Model.NONE)
+            // FAR's read is slow (tens of milliseconds), so only a changed vessel is read again; stock's also every TABLE_PERIOD
+            bool changed = vessel != _vessel || vessel.mainBody != _body || vessel.parts.Count != _partCount ||
+                vessel.currentStage != _currentStage || Source == Model.NONE;
+            if (changed || (Source == Model.STOCK && Time.unscaledTime >= _nextTable))
             {
+                _currentStage = vessel.currentStage;
+                if (changed)
+                    _stageTables.Clear();
                 if (!ReadTable(vessel))
                     return false;
                 _vessel = vessel;
@@ -95,7 +115,7 @@ namespace MuMech
             }
 
             // once the rest of the plan is above the atmosphere, the last average along it stays: drag no longer matters there
-            if (plan != null && AverageAlongPlan(plan, vessel.mainBody, met))
+            if (plan != null && AverageAlongPlan(plan, vessel, met))
                 FromPlan = true;
             else if (plan == null || !FromPlan)
             {
@@ -108,38 +128,71 @@ namespace MuMech
             return CdA > 0;
         }
 
+        // the direction of the airflow (the velocity through the air) FLOW_AOA off the nose, in the pitch plane
+        private static Vector3 Flow(Vessel vessel)
+        {
+            Transform reference = vessel.GetTransform();
+            return Quaternion.AngleAxis(FLOW_AOA, reference.right) * reference.up;
+        }
+
         private bool ReadTable(Vessel vessel)
         {
-            Vector3 forward = vessel.GetTransform().up;
-
             if (VesselState.IsFARCorrectlyInitialized)
             {
-                if (!ReadFAR(vessel, forward))
+                if (!ReadFAR(vessel, Flow(vessel)))
                     return false;
                 Source = Model.FAR;
                 return true;
             }
 
-            ReadStock(vessel, forward);
+            ReadStock(vessel, Flow(vessel), _currentStage, _cdA);
             Source = Model.STOCK;
             return true;
         }
 
-        // FlightIntegrator.UpdateAerodynamics for each part with the airflow along the vessel's nose: CalculateDragValue (the drag
-        // cubes' AreaDrag × the drag cube multiplier, or the part's own drag model) × the drag multiplier, in m² as the force is
-        // q × this. The pseudo-Reynolds multiplier depends on the flight, so the average applies it.
-        private void ReadStock(Vessel vessel, Vector3 forward)
+        // The table of the stage a plan's phase flies: in stock aerodynamics the vessel without the parts the stages from the
+        // current one down to that one drop. FAR only has the vessel as it is.
+        private double[] TableFor(Vessel vessel, int stage)
         {
-            Array.Clear(_cdA, 0, _cdA.Length);
+            if (Source != Model.STOCK || stage >= _currentStage)
+                return _cdA;
+            if (!_stageTables.TryGetValue(stage, out double[] table))
+            {
+                table = new double[_machs.Length];
+                ReadStock(vessel, Flow(vessel), stage, table);
+                _stageTables[stage] = table;
+            }
+
+            return table;
+        }
+
+        // gone by the time the vessel flies that stage: decoupled (or a launch clamp released) in a stage from the next one down to it
+        private bool Dropped(Part p, int stage)
+        {
+            for (int s = stage; s < _currentStage; s++)
+                if (p.IsDecoupledInStage(s))
+                    return true;
+            return false;
+        }
+
+        // FlightIntegrator.UpdateAerodynamics for each part still on the vessel in that stage: CalculateDragValue (the drag cubes'
+        // AreaDrag × the drag cube multiplier, or the part's own drag model) × the drag multiplier, in m² as the force is q × this.
+        // The pseudo-Reynolds multiplier depends on the flight, so the average applies it.
+        private void ReadStock(Vessel vessel, Vector3 forward, int stage, double[] table)
+        {
+            bool current = stage == _currentStage;
+            Array.Clear(table, 0, table.Length);
             Array.Clear(_surfaceCdA, 0, _surfaceCdA.Length);
-            _frontalArea = 0;
+            if (current)
+                _frontalArea = 0;
 
             var data = new DragCubeList.CubeData();
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
                 // the launch clamps stay on the pad
-                if (p.ShieldedFromAirstream || (p.rb == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts) || p.HasModuleImplementing<LaunchClamp>())
+                if (p.ShieldedFromAirstream || (p.rb == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts) || p.IsLaunchClamp() ||
+                    (!current && Dropped(p, stage)))
                     continue;
 
                 AddLiftingSurfaceDrag(p, forward);
@@ -160,20 +213,21 @@ namespace MuMech
                     for (int m = 0; m < _machs.Length; m++)
                     {
                         cubes.AddSurfaceDragDirection(local, (float)_machs[m], ref data);
-                        _cdA[m] += data.areaDrag * PhysicsGlobals.DragCubeMultiplier;
+                        table[m] += data.areaDrag * PhysicsGlobals.DragCubeMultiplier;
                     }
 
-                    _frontalArea += data.crossSectionalArea;
+                    if (current)
+                        _frontalArea += data.crossSectionalArea;
                     continue;
                 }
 
                 double value = NoCubesDragValue(p, forward);
                 for (int m = 0; m < _machs.Length; m++)
-                    _cdA[m] += value;
+                    table[m] += value;
             }
 
             for (int m = 0; m < _machs.Length; m++)
-                _cdA[m] = _cdA[m] * PhysicsGlobals.DragMultiplier + _surfaceCdA[m];
+                table[m] = table[m] * PhysicsGlobals.DragMultiplier + _surfaceCdA[m];
         }
 
         private readonly double[] _surfaceCdA = new double[_machs.Length];
@@ -264,8 +318,9 @@ namespace MuMech
 
         // ∫ q/m × Cd·A(Mach) dt / ∫ q/m dt along the plan while in the atmosphere, with the body's own atmosphere curves and the
         // air turning with the body. False if the plan has no time left in the atmosphere.
-        private bool AverageAlongPlan(Solution plan, CelestialBody body, double met)
+        private bool AverageAlongPlan(Solution plan, Vessel vessel, double met)
         {
+            CelestialBody body = vessel.mainBody;
             double t0 = Max(plan.T0, met);
             double tf = plan.Tf;
             if (!(tf > t0))
@@ -293,7 +348,7 @@ namespace MuMech
 
                 double q = 0.5 * density * speed * speed;
                 double mach = speed / speedOfSound;
-                double cdA = CdAAt(mach);
+                double cdA = CdAAt(TableFor(vessel, plan.KSPStageAt(t)), mach);
                 if (Source == Model.STOCK)
                     cdA *= PhysicsGlobals.DragCurvePseudoReynolds.Evaluate((float)(density * speed));
 
