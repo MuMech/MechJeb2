@@ -27,6 +27,7 @@ namespace MuMech.UI
 
         PlanEditor ed;
         string builtShape;
+        bool spinColumn;
         float nextRead;
 
         // what the table's rows depend on: a change rebuilds the window
@@ -91,7 +92,10 @@ namespace MuMech.UI
                 "which PSG picks, e.g. for a spin-stabilised stage. The coast row has its own: off, the coast holds its attitude too.");
             Header(head, "Full", OptionWidth, "Full burn: the stage burns until it's empty, a fixed burn time, for solids or engines " +
                 "that can't be shut down. Off: PSG may cut it off early to reach the orbit.");
-            Header(head, "Spin", OptionWidth, "On the coast: spin the vessel up while it coasts, at the spin-up rate (ω under Plan " +
+            // the Spin column is the coast's only: without a coast (the default plan) it would stand empty
+            spinColumn = ed.Coast.HasValue;
+            if (spinColumn)
+                Header(head, "Spin", OptionWidth, "On the coast: spin the vessel up while it coasts, at the spin-up rate (ω under Plan " +
                 "options), and wait for the spin before staging, for spin-stabilised upper stages. Only on a guided coast.");
             Cell(head, "", ActionWidth);
             KodeWindow.FlexibleSpace(head);
@@ -188,7 +192,7 @@ namespace MuMech.UI
 
             if (!row.Planned)
             {
-                Blank(line, 3);
+                Blank(line, spinColumn ? 3 : 2);
                 foreach (UIText t in line.GetComponentsInChildren<UIText>()) KodeWindow.ToneText(t, Tone.Dim);
                 Layout planHere = Action(line);
                 if (m.CanEdit) KodeWindow.Button(planHere, "Plan up to here", () => Edit(e => e.EndAt(burn)));
@@ -198,11 +202,13 @@ namespace MuMech.UI
 
             Option(w, line, () => ed.BurnRows.Count > burn && ed.BurnRows[burn].Guided, v => Edit(e => e.SetGuided(burn, v)));
             Option(w, line, () => ed.BurnRows.Count > burn && ed.BurnRows[burn].FullBurn, v => Edit(e => e.SetFullBurn(burn, v)));
-            Blank(line, 1);
+            if (spinColumn) Blank(line, 1);
 
-            bool isEnd = burn == ed.PlannedCount - 1;
-            UIButton end = KodeWindow.Button(Action(line), isEnd ? "Last" : "End here", () => Edit(e => e.EndAt(burn)));
-            if (isEnd) KodeWindow.ToneText(end.GetComponentInChildren<UIText>(), Tone.Dim);
+            // the plan's last burn says so in plain text; the others can become the last
+            if (burn == ed.PlannedCount - 1)
+                KodeWindow.ToneText(KodeWindow.Label(Action(line), "last burn"), Tone.Dim);
+            else
+                KodeWindow.Button(Action(line), "End here", () => Edit(e => e.EndAt(burn)));
             KodeWindow.FlexibleSpace(line);
             KodeWindow.ToneText(name, Tone.Normal);
         }

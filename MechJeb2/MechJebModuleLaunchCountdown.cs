@@ -34,9 +34,8 @@ namespace MuMech
         // than the countdown does. Staging with no solution would release the rocket at zero throttle, so T-0 waits for one.
         private bool WaitingForGuidance => AscentSettings.AscentType == AscentType.PSG && Core.Guidance.Solution == null;
 
-        // the inclination the selected ascent type flies
-        public EditableDouble InclinationSetting =>
-            AscentSettings.AscentType == AscentType.PSG ? Core.PSGSimulation.Inc : AscentSettings.DesiredInclination;
+        // the target inclination, one for both ascent types
+        public EditableDouble InclinationSetting => AscentSettings.DesiredInclination;
 
         /// <summary>Counts down to the next launch into the target's plane and sets the inclination to match. Returns the launch UT.</summary>
         public double StartToPlaneOfTarget()

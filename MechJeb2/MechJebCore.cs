@@ -566,7 +566,8 @@ namespace MuMech
                 // after the reload, which would put the saved values back over them, and saved at once so it happens once
                 // the RO defaults first: a new RO install's ascent starts from them
                 bool roDefaults = AscentSettings.ApplyRODefaultsIfNeeded();
-                bool ownValues = AscentSettings.InitOwnValuesIfNeeded() | (Landing != null && Landing.InitOwnValuesIfNeeded());
+                bool ownValues = AscentSettings.InitOwnValuesIfNeeded() | (Landing != null && Landing.InitOwnValuesIfNeeded()) |
+                                 AscentSettings.ShareInclinationIfNeeded();
                 if (ownValues | roDefaults)
                     OnSave(null);
 
