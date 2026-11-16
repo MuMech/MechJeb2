@@ -126,14 +126,18 @@ namespace MuMech
         private void ReadStock(Vessel vessel, Vector3 forward)
         {
             Array.Clear(_cdA, 0, _cdA.Length);
+            Array.Clear(_surfaceCdA, 0, _surfaceCdA.Length);
             _frontalArea = 0;
 
             var data = new DragCubeList.CubeData();
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
-                if (p.ShieldedFromAirstream || (p.rb == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts))
+                // the launch clamps stay on the pad
+                if (p.ShieldedFromAirstream || (p.rb == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts) || p.HasModuleImplementing<LaunchClamp>())
                     continue;
+
+                AddLiftingSurfaceDrag(p, forward);
 
                 DragCubeList cubes = p.DragCubes;
                 bool cube = p.dragModel == Part.DragModel.DEFAULT || (p.dragModel == Part.DragModel.CUBE && !cubes.None);
@@ -164,7 +168,35 @@ namespace MuMech
             }
 
             for (int m = 0; m < _machs.Length; m++)
-                _cdA[m] *= PhysicsGlobals.DragMultiplier;
+                _cdA[m] = _cdA[m] * PhysicsGlobals.DragMultiplier + _surfaceCdA[m];
+        }
+
+        private readonly double[] _surfaceCdA = new double[_machs.Length];
+
+        // The drag wings, fins and control surfaces add on top of their drag cubes (ModuleLiftingSurface.GetDragVector, with the
+        // surface at rest): dragCurve at the airflow's angle to the lift axis × dragMachCurve × deflectionLiftCoeff × the lift
+        // drag multiplier. That force is in kN for a dynamic pressure in Pa, so × 1000 for the table's kPa.
+        private void AddLiftingSurfaceDrag(Part p, Vector3 forward)
+        {
+            for (int i = 0; i < p.Modules.Count; i++)
+            {
+                if (!(p.Modules[i] is ModuleLiftingSurface ls) || !ls.isEnabled || !ls.useInternalDragModel)
+                    continue;
+                if (ls.nodeEnabled && p.FindAttachNode(ls.attachNodeName)?.attachedPart != null)
+                    continue;
+
+                Transform t = string.IsNullOrEmpty(ls.transformName) ? null : p.FindModelTransform(ls.transformName);
+                if (t == null)
+                    t = ls.transform;
+                Vector3 liftVector = ls.transformDir == ModuleLiftingSurface.TransformDir.Z ? t.forward :
+                    ls.transformDir == ModuleLiftingSurface.TransformDir.Y ? t.up : t.right;
+                float liftDot = Vector3.Dot(forward, liftVector * ls.transformSign);
+                float absDot = ls.omnidirectional ? Mathf.Abs(liftDot) : Mathf.Clamp01(liftDot);
+
+                double drag = ls.dragCurve.Evaluate(absDot) * ls.deflectionLiftCoeff * PhysicsGlobals.LiftDragMultiplier * 1000;
+                for (int m = 0; m < _machs.Length; m++)
+                    _surfaceCdA[m] += drag * ls.dragMachCurve.Evaluate((float)_machs[m]);
+            }
         }
 
         // FlightIntegrator.CalculateDragValue for a part without drag cubes; forward is the direction of flight
