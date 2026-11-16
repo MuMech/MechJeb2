@@ -159,6 +159,28 @@ namespace MuMech.UI
                 create.Text(Localizer.Format(createKeys[m]));
                 createExecute.Text(Localizer.Format(createExecuteKeys[m]));
             });
+            // each button as wide as its longest label, so the window keeps its width when the choice changes
+            WidestLabel(w, create, createKeys);
+            WidestLabel(w, createExecute, createExecuteKeys);
+        }
+
+        // the button's text gets the width of its longest label, measured again when the theme changes the font or its size
+        static void WidestLabel(KodeWindow w, UIButton b, string[] keys)
+        {
+            TMPro.TMP_Text t = b.ChildText.tmpText;
+            UnityEngine.UI.LayoutElement le = b.ChildText.GetComponent<UnityEngine.UI.LayoutElement>() ?? b.ChildText.gameObject.AddComponent<UnityEngine.UI.LayoutElement>();
+            float size = -1;
+            TMPro.TMP_FontAsset font = null;
+            w.AddSync(() =>
+            {
+                if (t.fontSize == size && t.font == font) return;
+                size = t.fontSize;
+                font = t.font;
+                float widest = 0;
+                for (int i = 0; i < keys.Length; i++)
+                    widest = UnityEngine.Mathf.Max(widest, t.GetPreferredValues(Localizer.Format(keys[i])).x);
+                le.minWidth = UnityEngine.Mathf.Ceil(widest);
+            });
         }
 
         // why Add to the last node did nothing, then the operation's error or warning
