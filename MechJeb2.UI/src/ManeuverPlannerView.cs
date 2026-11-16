@@ -143,11 +143,13 @@ namespace MuMech.UI
             bar.Primary("#MechJeb_Maneu_button1", () => CreateNodes(false)); //"Create node"
         }
 
-        // the operation's error, else why Add to the last node did nothing
+        // why Add to the last node did nothing, then the operation's error or warning
         string Problem()
         {
             string error = planner.CurrentOperation.GetErrorMessage();
-            return !string.IsNullOrEmpty(error) ? error : planner.AddError ?? "";
+            string add = planner.AddError;
+            if (string.IsNullOrEmpty(add)) return error ?? "";
+            return string.IsNullOrEmpty(error) ? add : add + "\n" + error;
         }
 
         void BuildExecute(KodeWindow w, UIObject r)
