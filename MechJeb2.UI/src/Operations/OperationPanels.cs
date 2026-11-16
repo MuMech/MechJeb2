@@ -233,7 +233,7 @@ namespace MuMech.UI
 
             // arrival delay offsets the intercept point
             Layout delay = KodeWindow.Panel(c.Panel);
-            OpUi.LabeledField(w, delay, "#MechJeb_Hohm_arrivalDelay", () => op.LagTime, "sec"); //Arrival delay
+            OpUi.LabeledField(w, delay, "#MechJeb_Hohm_arrivalDelay", () => op.LagTime, "s"); //Arrival delay
             w.Visible(delay.gameObject, () => op.Capture && !op.MatchOrbit);
 
             // optionally create a maneuver node for the arrival burn (OperationGeneric.ViewUpdate clears it while it is not offered)
