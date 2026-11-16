@@ -51,6 +51,10 @@ namespace MechJebLib.PSG
         // assigned in the solution for the 'top' of the rocket.
         public bool TerminalStage;
 
+        // assigned in the solution for a burn the optimizer ends with propellant left in the stage (an AllowShutdown burn it
+        // shut down early), which guidance then cuts at its planned end rather than letting it burn out
+        public bool PropellantLeft;
+
         // mass continuity assigned to the last two stages in a burn-coast-burn sequence in the same phase (coast during)
         public bool MassContinuity;
 
@@ -106,6 +110,7 @@ namespace MechJebLib.PSG
 
             phase.PreciseShutdown = false;
             phase.TerminalStage = false;
+            phase.PropellantLeft = false;
             phase.MassContinuity = false;
             phase.Unguided = false;
             phase.Normalized = false;
@@ -232,6 +237,8 @@ namespace MechJebLib.PSG
                 sb.Append(" (mass-continuity)");
             if (ControlContinuity)
                 sb.Append(" (control-continuity)");
+            if (PropellantLeft)
+                sb.Append(" (propellant-left)");
             return sb.ToString();
         }
 

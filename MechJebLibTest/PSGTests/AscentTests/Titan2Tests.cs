@@ -531,8 +531,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(4, false).ShouldEqual(0);
             solution.IndexForKSPStage(3, false).ShouldEqual(1);
             solution.IndexForKSPStage(3, true).ShouldEqual(-1);
-            solution.CoastFollows(0).ShouldBeFalse();
-            solution.CoastFollows(solution.EndTime(0)).ShouldBeFalse();
+            solution.CoastIndex().ShouldEqual(-1);
 
             smaf.ShouldEqual(8616511.1913318466, 1e-6);
             eccf.ShouldEqual(0.23913520746130185, 1e-6);
@@ -1021,6 +1020,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(3, false).ShouldEqual(1);
             solution.IndexForKSPStage(3, true).ShouldEqual(-1);
 
+            // the optimizer shuts the booster down with propellant left, so guidance cuts it at its planned end and stages
+            solution.Phases[0].PropellantLeft.ShouldBeTrue();
+            solution.Phases[1].PropellantLeft.ShouldBeFalse();
+            solution.TerminalIndex().ShouldEqual(1);
+            solution.CoastIndex().ShouldEqual(-1);
+
             solution.Vgo(0).ShouldEqual(8562.0125605993326, 1e-3);
 
             solution.U(0).normalized.ShouldEqual(new V3(0.71091349069509358, 0.58674209774568975, 0.38773150436958898), 1e-2);
@@ -1166,6 +1171,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(4, false).ShouldEqual(0);
             solution.IndexForKSPStage(3, false).ShouldEqual(2);
             solution.IndexForKSPStage(3, true).ShouldEqual(1);
+
+            // a coast is never a burn with propellant left, and the fixed upper stage burns out
+            solution.Phases[1].PropellantLeft.ShouldBeFalse();
+            solution.Phases[2].PropellantLeft.ShouldBeFalse();
+            solution.TerminalIndex().ShouldEqual(2);
+            solution.CoastIndex().ShouldEqual(1);
 
             solution.U(0).normalized.ShouldEqual(new V3(0.70743037652982543, 0.59217914188368692, 0.38583173311790908), 1e-2);
 

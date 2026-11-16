@@ -158,7 +158,7 @@ namespace MuMech
                 return;
             _nextAeroEstimate = Time.unscaledTime + 0.5f;
 
-            Solution? plan = Core.Guidance.Solution ?? Core.Guidance.PadSolution;
+            Solution? plan = Core.PSGAutopilot.Solution ?? Core.PSGAutopilot.PadSolution;
             if (!AeroEstimate.Update(Vessel, plan))
                 return;
 
@@ -370,7 +370,7 @@ namespace MuMech
             // a cancelled job can still be reading _solution until it stops, so the next job must not be handed it
             _solution = null;
             ResetCounters();
-            Core.Guidance.FlushSolution();
+            Core.PSGAutopilot.FlushSolution();
         }
 
         /// <summary>
@@ -382,8 +382,8 @@ namespace MuMech
         {
             CancelSolve("the coast started");
             VacuumCoastSolved = false;
-            // the end of a burn ended by terminal guidance gets no pre-staging freeze (the optimizer stops in terminal guidance), so
-            // without this an engine still tailing off could start the coast's solve
+            // a burn that burned out ahead of the coast's start may have had no pre-staging freeze, so without this an engine still
+            // tailing off could start the coast's solve
             Block(OptimizerPauseTime, OptimizerState.AFTER_PHASE);
         }
 
@@ -396,6 +396,12 @@ namespace MuMech
             CancelSolve("the coast ended");
             VacuumCoastSolved = false;
         }
+
+        /// <summary>
+        ///     Guidance calls this when terminal guidance starts.  It flies to the end of the solution it has, which a solve still in
+        ///     progress would move, so that solve is dropped (no new one starts until terminal guidance is over).
+        /// </summary>
+        public void TerminalStarted() => CancelSolve("terminal guidance started");
 
         // Drops the solve in progress, keeping the last converged solution to warm start the next solve: a solve started before
         // the coast starts or ends plans a part of the flight that has already happened (a burn before the coast, or a coast
@@ -509,10 +515,10 @@ namespace MuMech
                     _solution = psg.Solution;
                     Solution flown = psg.Solution.DeNormalized();
                     CheckReach(flown);
-                    Core.Guidance.SetSolution(flown);
+                    Core.PSGAutopilot.SetSolution(flown);
 
                     // the coast's start and end cancel the job, so a job started in the coast lands in it
-                    CheckDebug.True(!_vacuumCoastJob || Core.Guidance.IsCoasting());
+                    CheckDebug.True(!_vacuumCoastJob || Core.PSGAutopilot.IsCoasting);
                     if (_vacuumCoastJob && !VacuumCoastSolved)
                     {
                         VacuumCoastSolved = true;
@@ -627,16 +633,17 @@ namespace MuMech
                 if (FlightPlan.AllUnguidedStages())
                 {
                     // also true once no stage is left at all, as in terminal guidance on the last stage: name that instead
-                    SetState(!Core.Guidance.IsReady() ? Core.Guidance.IsTerminal() ? OptimizerState.TERMINAL : OptimizerState.FINISHED
+                    SetState(Core.PSGAutopilot.IsTerminal ? OptimizerState.TERMINAL
+                        : Core.PSGAutopilot.IsFinished ? OptimizerState.FINISHED
                         : UnguidedBurnLeft() ? OptimizerState.UNGUIDED_ONLY : OptimizerState.NO_PLAN);
                     return;
                 }
             }
 
-            // check for readiness (not terminal guidance and not finished)
-            if (!Core.Guidance.IsReady())
+            // not in terminal guidance, which flies the end of a frozen solution, and not finished
+            if (Core.PSGAutopilot.IsTerminal || Core.PSGAutopilot.IsFinished)
             {
-                SetState(Core.Guidance.IsTerminal() ? OptimizerState.TERMINAL : OptimizerState.FINISHED);
+                SetState(Core.PSGAutopilot.IsTerminal ? OptimizerState.TERMINAL : OptimizerState.FINISHED);
                 return;
             }
 
@@ -645,19 +652,19 @@ namespace MuMech
             // Above the atmosphere the coast follows its orbit: once one solve started there has converged (VacuumCoastSolved) the
             // solves pause until 20 s before the burn.  Until then they run, after the waits, so the coast's length is solved from
             // where the shutdown, the staging into the coast and the atmosphere left the vessel.
-            if (VacuumCoastSolved && Core.Guidance.IsCoasting() && Core.Guidance.CurrentPhaseTgo > 20 && vesselOutsideAtmosphere)
+            if (VacuumCoastSolved && Core.PSGAutopilot.IsCoasting && Core.PSGAutopilot.CurrentPhaseTgo > 20 && vesselOutsideAtmosphere)
             {
-                SetState(OptimizerState.COAST_PAUSE, Core.Guidance.CurrentPhaseTgo - 20);
+                SetState(OptimizerState.COAST_PAUSE, Core.PSGAutopilot.CurrentPhaseTgo - 20);
                 return;
             }
 
-            if (Core.Guidance.Solution != null)
+            if (Core.PSGAutopilot.Solution != null)
             {
                 // check for prestaging as the current stage gets low
-                if (Core.Guidance.CurrentPhaseTgo < PreStageTime)
+                if (Core.PSGAutopilot.CurrentPhaseTgo < PreStageTime)
                 {
                     Block(OptimizerPauseTime, OptimizerState.STAGE_ENDING);
-                    SetState(Vessel.VesselOffGround() ? OptimizerState.STAGE_ENDING : OptimizerState.ON_PAD, Core.Guidance.CurrentPhaseTgo);
+                    SetState(Vessel.VesselOffGround() ? OptimizerState.STAGE_ENDING : OptimizerState.ON_PAD, Core.PSGAutopilot.CurrentPhaseTgo);
                     return;
                 }
             }
@@ -722,10 +729,10 @@ namespace MuMech
                 double mint = MinCoast;
                 double maxt = MaxCoast;
 
-                if (Core.Guidance.IsCoasting())
+                if (Core.PSGAutopilot.IsCoasting)
                 {
-                    mint = Max(mint - (VesselState.Time - Core.Guidance.StartCoast), 0);
-                    maxt = Max(maxt - (VesselState.Time - Core.Guidance.StartCoast), 0);
+                    mint = Max(mint - (VesselState.Time - Core.PSGAutopilot.CoastStartTime), 0);
+                    maxt = Max(maxt - (VesselState.Time - Core.PSGAutopilot.CoastStartTime), 0);
                 }
 
                 int startingIndex = FindStartingIndex();
@@ -738,7 +745,7 @@ namespace MuMech
 
                 // While coasting the starting index is the coast's.  Guidance stages into a coast before the burn (or a dedicated
                 // one) only after the autostaging delays, so a solve started before that stage doesn't solve the coast.
-                vacuumCoastJob = Core.Guidance.IsCoasting() && vesselOutsideAtmosphere &&
+                vacuumCoastJob = Core.PSGAutopilot.IsCoasting && vesselOutsideAtmosphere &&
                     Vessel.currentStage <= FlightPlan.Stages[startingIndex].KSPStage;
 
                 // walk the rocket from the bottom up
@@ -826,7 +833,7 @@ namespace MuMech
                 FlightPlanStage stage = FlightPlan.Stages[i];
 
                 // if we're coasting just return the index of the coast
-                if (Core.Guidance.IsCoasting())
+                if (Core.PSGAutopilot.IsCoasting)
                 {
                     if (stage.StageType == StageType.BURN)
                         continue;
@@ -834,7 +841,7 @@ namespace MuMech
                 }
 
                 // if we're past coasting, skip past the coast
-                if (Core.Guidance.hasCoasted && !foundCoast)
+                if (Core.PSGAutopilot.HasCoasted && !foundCoast)
                 {
                     if (stage.StageType != StageType.BURN)
                         foundCoast = true;

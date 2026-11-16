@@ -67,23 +67,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(0, false).ShouldEqual(3);
             solution.IndexForKSPStage(1, true).ShouldEqual(2);
 
-            // burn-burn-coast-burn: only the burn right before the coast (and the coast itself) are followed by the coast
-            solution.CoastFollows((solution.StartTime(0) + solution.EndTime(0)) / 2).ShouldBeFalse();
-            solution.CoastFollows((solution.StartTime(1) + solution.EndTime(1)) / 2).ShouldBeTrue();
-            solution.CoastFollows((solution.StartTime(2) + solution.EndTime(2)) / 2).ShouldBeTrue();
-            solution.CoastFollows((solution.StartTime(3) + solution.EndTime(3)) / 2).ShouldBeFalse();
-
-            // the coast is ahead until it is over, and nothing is unguided
+            // burn-burn-coast-burn: the coast sits between the burns before it and the last stage, and nothing is unguided
+            solution.CoastIndex().ShouldEqual(2);
+            solution.TerminalIndex().ShouldEqual(3);
             for (int p = 0; p < solution.Segments; p++)
             {
-                double mid = (solution.StartTime(p) + solution.EndTime(p)) / 2;
-                Assert.Equal(p == 2, solution.Coast(mid));
-                Assert.Equal(p <= 2, solution.WillCoast(mid));
-                solution.Unguided(mid).ShouldBeFalse();
+                Assert.Equal(p == 2, solution.CoastPhase(p));
+                solution.Unguided((solution.StartTime(p) + solution.EndTime(p)) / 2).ShouldBeFalse();
             }
-
-            double midCoast = (solution.StartTime(2) + solution.EndTime(2)) / 2;
-            solution.StageTimeLeft(midCoast).ShouldEqual(solution.Tgo(midCoast, 2), 0);
 
             // the delta-v left in each phase adds up to the delta-v to go
             double dv = 0;
@@ -91,7 +82,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                 dv += solution.DV(t0, p);
             dv.ShouldEqual(solution.Vgo(t0), 1e-9);
 
-            (V3 u, _) = solution.InertialGuidance(t0, 0);
+            (V3 u, _) = solution.InertialGuidance(0, t0, 0);
             u.ShouldEqual(solution.U(t0).normalized, 1e-12);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();

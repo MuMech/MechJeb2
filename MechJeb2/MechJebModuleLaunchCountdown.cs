@@ -32,7 +32,7 @@ namespace MuMech
 
         // Starting a countdown flushes the PSG solution and the optimizer restarts cold late in the countdown, which can take longer
         // than the countdown does. Staging with no solution would release the rocket at zero throttle, so T-0 waits for one.
-        private bool WaitingForGuidance => AscentSettings.AscentType == AscentType.PSG && Core.Guidance.Solution == null;
+        private bool WaitingForGuidance => AscentSettings.AscentType == AscentType.PSG && Core.PSGAutopilot.Solution == null;
 
         // the target inclination, one for both ascent types
         public EditableDouble InclinationSetting => AscentSettings.DesiredInclination;

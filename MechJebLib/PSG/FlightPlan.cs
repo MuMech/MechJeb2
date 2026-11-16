@@ -151,28 +151,21 @@ namespace MechJebLib.PSG
             return cursor;
         }
 
-        // subset match -- every item in a non-empty current must be in plan
-        private static bool EngineSignaturesMatch(FuelStats plan, FuelStats current)
+        // Fuzzy match: a non-empty current row that shares at least one engine with the engines the stage was planned with.
+        // An engine-out takes engines away from the row and a hot-staged row (the next stage lit while this one still burns)
+        // adds some, and either way the stage is still there.  The monotone cursor of ReconcileStages, walking from the top of
+        // the rocket down, keeps rows that share engines apart (a sustainer and the boosters burning with it, drop tanks, a
+        // vernier tail).  The planned engines never change, so a hot-staged row matched once doesn't widen what matches next.
+        private static bool EngineSignaturesMatch(IReadOnlyList<EngineSignature> planned, FuelStats current)
         {
             if (current.EngineSignatures.Count == 0) return false;
 
-            if (current.EngineSignatures.Count > plan.EngineSignatures.Count) return false;
-
             foreach (EngineSignature c in current.EngineSignatures)
-            {
-                bool found = false;
-                foreach (EngineSignature p in plan.EngineSignatures)
-                {
+                foreach (EngineSignature p in planned)
                     if (c == p)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) return false;
-            }
+                        return true;
 
-            return true;
+            return false;
         }
 
         // This will find the same row repeatedly if it is called with the same desired engine signature
@@ -181,16 +174,16 @@ namespace MechJebLib.PSG
             if (stage.SkipToNextBurn && !first)
                 cursor++;
 
-            while (cursor < fuelStats.Count && !EngineSignaturesMatch(stage.FuelStats, fuelStats[cursor]))
+            while (cursor < fuelStats.Count && !EngineSignaturesMatch(stage.PlannedSignatures, fuelStats[cursor]))
                 cursor++;
 
             if (cursor >= fuelStats.Count)
                 return fuelStats.Count;
 
-            while (cursor < fuelStats.Count && EngineSignaturesMatch(stage.FuelStats, fuelStats[cursor]) && fuelStats[cursor].DeltaV < minDeltaV)
+            while (cursor < fuelStats.Count && EngineSignaturesMatch(stage.PlannedSignatures, fuelStats[cursor]) && fuelStats[cursor].DeltaV < minDeltaV)
                 cursor++;
 
-            if (cursor >= fuelStats.Count || !EngineSignaturesMatch(stage.FuelStats, fuelStats[cursor]))
+            if (cursor >= fuelStats.Count || !EngineSignaturesMatch(stage.PlannedSignatures, fuelStats[cursor]))
                 return fuelStats.Count;
 
             return cursor;
@@ -211,8 +204,13 @@ namespace MechJebLib.PSG
         public readonly bool SkipToNextBurn;
         public          double DeltaV   => StageType == StageType.BURN && !Done ? FuelStats.DeltaV : 0;
 
+        // the engines the stage was planned with, which ReconcileStages matches the stage stats against: FuelStats follows the
+        // row it matched, engine-outs included, but this never changes (copies share it)
+        public readonly IReadOnlyList<EngineSignature> PlannedSignatures;
+
         public FlightPlanStage(int mjStage, FuelStats vacStat, bool unguided, bool allowShutdown, StageType stageType, int kspStage, bool skipToNextBurn, double atmoISP)
         {
+            PlannedSignatures = new List<EngineSignature>(vacStat.EngineSignatures).AsReadOnly();
             FuelStats = vacStat.DeepCopy();
             KSPStage = kspStage;
             MJStage = mjStage;
@@ -238,6 +236,8 @@ namespace MechJebLib.PSG
             if (Unguided)
                 sb.Append(" (unguided)");
             sb.Append(!AllowShutdown ? " (no shutdown)" : " (allow shutdown)");
+            if (Done)
+                sb.Append(" (done)");
             return sb.ToString();
         }
     }

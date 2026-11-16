@@ -220,7 +220,7 @@ namespace MuMech
             return type switch
             {
                 AscentType.CLASSIC => Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>(),
-                AscentType.PSG     => Core.GetComputerModule<MechJebModuleAscentPSGAutopilot>(),
+                AscentType.PSG     => Core.GetComputerModule<MechJebModulePSGAutopilot>(),
                 _                  => Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>()
             };
         }
@@ -286,7 +286,7 @@ namespace MuMech
 
             DesiredOrbitAltitude.Val = 145000;
 
-            Core.Guidance.UllageLeadTime.Val = 20;
+            Core.PSGAutopilot.UllageLeadTime.Val = 20;
 
             Core.Settings.RssMode = true;
 

@@ -140,7 +140,7 @@ namespace MuMech
 
         public readonly SolutionTrace Plan = new SolutionTrace();
 
-        // the Solution the vessel lifted off with (MechJebModuleGuidanceController.PadSolution), drawn under the current one
+        // the Solution the vessel lifted off with (MechJebModulePSGAutopilot.PadSolution), drawn under the current one
         public readonly SolutionTrace PadPlan = new SolutionTrace();
 
         // how many Solutions were sampled since the window opened, the last one included
@@ -151,7 +151,7 @@ namespace MuMech
         // how many pad Solutions were sampled since the window opened
         public int PadSampled { get; private set; }
 
-        public PSGFlownTrack Flown => Core.Guidance.FlownTrack;
+        public PSGFlownTrack Flown => Core.PSGAutopilot.FlownTrack;
 
         internal bool Displayed(int i) => (DisplayedMask & (1 << i)) != 0;
 
@@ -178,7 +178,7 @@ namespace MuMech
 
         private bool RefreshPad()
         {
-            Solution? pad = Core.Guidance.PadSolution;
+            Solution? pad = Core.PSGAutopilot.PadSolution;
             if (ReferenceEquals(pad, _padSampled))
                 return false;
 
@@ -196,7 +196,7 @@ namespace MuMech
 
         private bool RefreshCurrent()
         {
-            Solution? solution = Core.Guidance.Solution;
+            Solution? solution = Core.PSGAutopilot.Solution;
             if (solution == null || ReferenceEquals(solution, _sampled) || (Hold && Plan.Count > 0))
                 return false;
 
@@ -207,7 +207,7 @@ namespace MuMech
         }
 
         // the plan is the Solution guidance flies now (it may be held)
-        public bool PlanIsCurrent => ReferenceEquals(Core.Guidance.Solution, _sampled);
+        public bool PlanIsCurrent => ReferenceEquals(Core.PSGAutopilot.Solution, _sampled);
 
         // the plan is the pad Solution itself (on the pad, until a Solution computed in flight replaces it)
         public bool PlanIsPad => _sampled != null && ReferenceEquals(_sampled, _padSampled);

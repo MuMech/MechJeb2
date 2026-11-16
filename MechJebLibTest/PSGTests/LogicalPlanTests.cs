@@ -259,6 +259,36 @@ namespace MechJebLibTest.PSGTests
         }
 
         [Fact]
+        public void ReconcileEngineOutThenStaging()
+        {
+            FlightPlan plan = Fly(new List<FuelStats> { Row(0, 2000, 1), Row(1, 3000, 2, 3, 4) });
+
+            // engine 3 is lost in the booster, which keeps its stage
+            plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1), Row(1, 2500, 2, 4) }, new List<FuelStats>(), MIN_DV);
+            Assert.Equal("BURN:0 BURN:1", Describe(plan));
+
+            // then the booster is staged off and only the upper stage is left
+            plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1) }, new List<FuelStats>(), MIN_DV);
+            Assert.Equal("BURN:0 BURN:Done", Describe(plan));
+        }
+
+        [Fact]
+        public void ReconcileHotStagedRow()
+        {
+            FlightPlan plan = Fly(new List<FuelStats> { Row(0, 2000, 1), Row(1, 3000, 2) });
+
+            // hot staging lights the upper engine 1 while booster engine 2 still burns: the current row has both, and the booster
+            // keeps its stage
+            plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1), Row(1, 50, 1, 2) }, new List<FuelStats>(), MIN_DV);
+            Assert.Equal("BURN:0 BURN:1", Describe(plan));
+            Assert.Equal(2, plan.Stages[1].FuelStats.EngineSignatures.Count);
+
+            // the booster separates: the matched row's engine 1 doesn't make the booster match the upper stage's row
+            plan.ReconcileStages(new List<FuelStats> { Row(0, 2000, 1) }, new List<FuelStats>(), MIN_DV);
+            Assert.Equal("BURN:0 BURN:Done", Describe(plan));
+        }
+
+        [Fact]
         public void ReconcileBoosterBurnoutWithSustainerStage()
         {
             // sustainer 2 burns with boosters 3 and 4, then alone in the same KSP stage
