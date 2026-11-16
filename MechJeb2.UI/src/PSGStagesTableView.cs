@@ -115,6 +115,12 @@ namespace MuMech.UI
             BuildPlanOptions(w, r);
         }
 
+        static Layout Tip(Layout row, string key)
+        {
+            Tooltips.Add(row.gameObject, key);
+            return row;
+        }
+
         public const string ResetTooltip = "Forget the edits: the default plan, every burn guided, with no coast.";
 
         const string RelightNote = "An engine of the coast stage can't light again after the coast (no restart, or no ignitions left).";
@@ -126,11 +132,13 @@ namespace MuMech.UI
             MechJebModulePSGSimulation psgs = core.PSGSimulation;
             KodeWindow.Header(r, "#MechJeb_NewUI_PlanOptions"); //Plan options
             KodeWindow.PropertyGrid g = w.Properties(r);
-            OptionRows.Field(g, "Min ΔV", psgs.MinDeltaV, "m/s", 50);
-            w.Attention(OptionRows.Field(g, "Min Coast", psgs.MinCoast, "s", 50), () => PsgAttention.CoastTimesInverted(core));
-            w.Attention(OptionRows.Field(g, "Max Coast", psgs.MaxCoast, "s", 50), () => PsgAttention.CoastTimesInverted(core));
-            OptionRows.Field(g, "Ullage lead time", core.Guidance.UllageLeadTime, "s", 50);
-            OptionRows.Field(g, "ω", core.AscentSettings.SpinupAngularVelocity, "rpm", 50);
+            Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgMinDv", psgs.MinDeltaV, "m/s", 50), "#MechJeb_NewUI_PsgMinDv_tooltip"); //Min ΔV
+            w.Attention(Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgMinCoast", psgs.MinCoast, "s", 50), "#MechJeb_NewUI_PsgCoast_tooltip"), //Min coast
+                () => PsgAttention.CoastTimesInverted(core));
+            w.Attention(Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgMaxCoast", psgs.MaxCoast, "s", 50), "#MechJeb_NewUI_PsgCoast_tooltip"), //Max coast
+                () => PsgAttention.CoastTimesInverted(core));
+            Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgUllageLead", core.Guidance.UllageLeadTime, "s", 50), "#MechJeb_NewUI_PsgUllageLead_tooltip"); //Ullage lead time
+            Tip(OptionRows.Field(g, "ω", core.AscentSettings.SpinupAngularVelocity, "rpm", 50), "#MechJeb_NewUI_PsgSpin_tooltip");
             UIText relight = g.Note(RelightNote);
             KodeWindow.ToneText(relight, Tone.Caution);
             KodeWindow.WrapToWidth(relight);
