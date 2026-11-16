@@ -216,8 +216,16 @@ namespace MuMech
                         table[m] += data.areaDrag * PhysicsGlobals.DragCubeMultiplier;
                     }
 
+                    // the frontal area nose first: a few degrees off it, the long sides would count
                     if (current)
+                    {
+                        Vector3 nose = p.partTransform.InverseTransformDirection(vessel.GetTransform().up);
+                        if (cubes.RotateDragVector)
+                            nose = cubes.DragVectorRotation * nose;
+                        cubes.AddSurfaceDragDirection(nose, 0, ref data);
                         _frontalArea += data.crossSectionalArea;
+                    }
+
                     continue;
                 }
 
