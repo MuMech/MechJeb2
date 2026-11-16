@@ -59,12 +59,6 @@ namespace MuMech
 
         public double Aref { get; private set; }
 
-        /// <summary>True when CdA is averaged along PSG's plan, false when over the default Mach range.</summary>
-        public bool FromPlan { get; private set; }
-
-        /// <summary>The Mach of the plan's maximum dynamic pressure (NaN without a plan).</summary>
-        public double MachAtMaxQ { get; private set; } = double.NaN;
-
         private Vessel? _vessel;
         private CelestialBody? _body;
         private int _partCount = -1;
@@ -114,8 +108,7 @@ namespace MuMech
                 _partCount = vessel.parts.Count;
             }
 
-            FromPlan = plan != null && AverageAlongPlan(plan, vessel);
-            if (!FromPlan)
+            if (plan == null || !AverageAlongPlan(plan, vessel))
                 AverageDefault();
 
             Aref = _frontalArea > 0 ? _frontalArea : CdA;
@@ -285,7 +278,6 @@ namespace MuMech
             for (double mach = 0.5; mach <= 2.0001; mach += 0.05, n++)
                 sum += CdAAt(mach);
             CdA = sum / n;
-            MachAtMaxQ = double.NaN;
         }
 
         // ∫ q/m × Cd·A(Mach) dt / ∫ q/m dt along the plan while in the atmosphere, with the body's own atmosphere curves and the
@@ -301,7 +293,7 @@ namespace MuMech
             const int STEPS = 400;
             double dt = (tf - t0) / STEPS;
             V3 w = 2 * PI / body.rotationPeriod * V3.northpole;
-            double sum = 0, weights = 0, maxQ = 0, machAtMaxQ = double.NaN;
+            double sum = 0, weights = 0;
 
             for (int i = 0; i <= STEPS; i++)
             {
@@ -327,19 +319,12 @@ namespace MuMech
                 double weight = q / plan.M(t);
                 sum += weight * cdA;
                 weights += weight;
-
-                if (q > maxQ)
-                {
-                    maxQ = q;
-                    machAtMaxQ = mach;
-                }
             }
 
             if (!(weights > 0))
                 return false;
 
             CdA = sum / weights;
-            MachAtMaxQ = machAtMaxQ;
             return true;
         }
     }

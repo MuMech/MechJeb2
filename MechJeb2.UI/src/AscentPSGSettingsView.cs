@@ -35,8 +35,8 @@ namespace MuMech.UI
             UpdateAero();
         }
 
-        // what AutoAero filled Cd and Aref with, and from what. Rebuilt only when the estimate changes.
-        string aeroCd = "", aeroAref = "", aeroSource = "";
+        // what AutoAero filled Cd and Aref with. Rebuilt only when they change.
+        string aeroCd = "", aeroAref = "";
         double aeroKey = double.NaN;
 
         void UpdateAero()
@@ -47,27 +47,12 @@ namespace MuMech.UI
             if (HighLogic.LoadedSceneIsFlight)
                 Psgs.UpdateAutoAero();
 
-            PSGAeroEstimate e = Psgs.AeroEstimate;
-            double key = ((Psgs.Cd * 7919 + Psgs.Aref) * 31 + e.CdA) * 31 + (int)e.Source * 2 + (e.FromPlan ? 1 : 0) +
-                (double.IsNaN(e.MachAtMaxQ) ? 0 : Math.Round(e.MachAtMaxQ, 2) * 1e-3);
+            double key = Psgs.Cd * 7919 + Psgs.Aref;
             if (key == aeroKey) return;
             aeroKey = key;
 
             aeroCd = Psgs.Cd.Val.ToString("0.###");
             aeroAref = Psgs.Aref.Val.ToString("0.###");
-            aeroSource = AeroSource(e);
-        }
-
-        static string AeroSource(PSGAeroEstimate e)
-        {
-            if (e.Source == PSGAeroEstimate.Model.NONE)
-                return "Worked out from the vessel on the ground, before the PSG solves; kept once it is airborne.";
-
-            string model = e.Source == PSGAeroEstimate.Model.FAR ? "FAR" : "the parts' drag cubes";
-            string where = e.FromPlan
-                ? $"averaged along PSG's ascent (maximum Q at Mach {e.MachAtMaxQ:0.0})"
-                : "averaged over Mach 0.5 to 2 until PSG has a plan";
-            return $"Drag area {e.CdA:0.###} m² from {model}, nose first, {where}.";
         }
 
         // the burns Min ΔV leaves out of the plan: some Δv, but under Min ΔV. Rebuilt only when that set changes, as the
@@ -289,16 +274,6 @@ namespace MuMech.UI
             Layout arefValue = aero.Value("Aref", () => aeroAref, "m²");
             w.Visible(cdValue.gameObject, () => Psgs.AutoAero);
             w.Visible(arefValue.gameObject, () => Psgs.AutoAero);
-            UIText aeroNote = aero.Note("");
-            KodeWindow.WrapToWidth(aeroNote);
-            string shownSource = null;
-            w.AddSync(() =>
-            {
-                if (ReferenceEquals(shownSource, aeroSource)) return;
-                shownSource = aeroSource;
-                aeroNote.Text(aeroSource);
-            });
-            w.Visible(aeroNote.transform.parent.gameObject, () => Psgs.AutoAero);
             UIText arefNote = aero.Note(ArefNote);
             KodeWindow.ToneText(arefNote, Tone.Caution);
             KodeWindow.WrapToWidth(arefNote);
