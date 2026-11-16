@@ -83,9 +83,6 @@ namespace MuMech.UI
             }
         }
 
-        // Localizer.Format(key, value.ToString("F2")) rebuilt only when the value changes
-        static Func<string> FloatLabel(string key, Func<float> value) => Memo.Of(value, v => Localizer.Format(key, v.ToString("F2")));
-
         // The setup problems in one status bar at the top, the options in a property grid, the running
         // state in a status bar at the bottom
         protected override void BuildContents(KodeWindow w)
@@ -95,52 +92,60 @@ namespace MuMech.UI
             Layout main = TargetGate(w, r);
 
             bool NoTargetPort() => !(Core.Target.Target is ModuleDockingNode);
+            // controlling from a port that is off the control axis is one problem with the port: one line for both
+            bool OffAxis() => noOnAxisNode && !noDockingPortControl;
             Layout problems = w.StatusBar(main, () => KodeWindow.Tone.Warn);
-            w.Visible(problems.gameObject, () => noDockingPortControl || noOnAxisNode || NoTargetPort());
-            w.Visible(GuidanceUi.Wrapped(problems, "#MechJeb_Docking_label2").gameObject, () => noDockingPortControl);
-            w.Visible(GuidanceUi.Wrapped(problems, "#MechJeb_Docking_label3").gameObject, NoTargetPort);
-            w.Visible(GuidanceUi.Wrapped(problems, "#MechJeb_Docking_label4").gameObject, () => noOnAxisNode);
+            w.Visible(problems.gameObject, () => noDockingPortControl || OffAxis() || NoTargetPort());
+            w.Visible(GuidanceUi.Wrapped(problems, "#MechJeb_NewUI_DockControlFromPort").gameObject, () => noDockingPortControl);
+            w.Visible(GuidanceUi.Wrapped(problems, "#MechJeb_NewUI_DockPortOffAxis").gameObject, OffAxis);
+            w.Visible(GuidanceUi.Wrapped(problems, "#MechJeb_NewUI_DockTargetAPort").gameObject, NoTargetPort);
 
             TargetPortSelector(w, main);
 
-            AutopilotSwitch(w, main);
+            EngageButton(w, main);
 
+            // the one setting without a switch in a grid of its own, so its label starts at the left edge
+            KodeWindow.PropertyGrid limits = w.Properties(main);
+            GridField(limits, "#MechJeb_Docking_label5", () => Ap?.speedLimit, "m/s"); //"Speed limit (0: none)"
+
+            // each override on one row, the distance in use under it
             KodeWindow.PropertyGrid g = w.Properties(main);
-            GridField(g, "#MechJeb_Docking_label5", () => Ap?.speedLimit, "m/s"); //"Speed limit"
-            g.Switch("#MechJeb_Docking_checkbox2", () => Ap != null && Ap.overrideSafeDistance, v => //"Override Safe Distance"
+            g.Switch("#MechJeb_NewUI_DockSafeDistance", () => Ap != null && Ap.overrideSafeDistance, v => //Override safe distance
             {
                 if (Ap != null) Ap.overrideSafeDistance = v;
-            });
-            Layout safe = GridField(g, "#MechJeb_Docking_checkbox3", () => Ap?.overridenSafeDistance, "m"); //"Safe Distance"
-            g.Dim(safe.gameObject, null, () => Ap == null || !Ap.overrideSafeDistance);
-            g.Switch("#MechJeb_Docking_checkbox4", () => Ap != null && Ap.overrideTargetSize, v => //"Override Start Distance"
+            }, () => Ap?.overridenSafeDistance.Text ?? "", s =>
+            {
+                if (Ap != null) Ap.overridenSafeDistance.Text = s;
+            }, 70, "m", () => Ap?.overridenSafeDistance.IsParsed ?? true);
+            InUse(g, () => Ap?.safeDistance ?? 0);
+            g.Switch("#MechJeb_NewUI_DockStartDistance", () => Ap != null && Ap.overrideTargetSize, v => //Override start distance
             {
                 if (Ap != null) Ap.overrideTargetSize = v;
-            });
-            Layout start = GridField(g, "#MechJeb_Docking_label6", () => Ap?.overridenTargetSize, "m"); //"Start Distance"
-            g.Dim(start.gameObject, null, () => Ap == null || !Ap.overrideTargetSize);
+            }, () => Ap?.overridenTargetSize.Text ?? "", s =>
+            {
+                if (Ap != null) Ap.overridenTargetSize.Text = s;
+            }, 70, "m", () => Ap?.overridenTargetSize.IsParsed ?? true);
+            InUse(g, () => Ap?.targetSize ?? 0);
             g.Switch("#MechJeb_Docking_checkbox7", () => Ap != null && Ap.stopOnContact, v => //"Stop on contact"
             {
                 if (Ap != null) Ap.stopOnContact = v;
             });
-            g.Switch("#MechJeb_Docking_checkbox6", () => Ap != null && Ap.forceRol, v => //"Force Roll :"
+            g.Switch("#MechJeb_NewUI_DockForceRoll", () => Ap != null && Ap.forceRol, v => //Force roll
             {
                 if (Ap != null) Ap.forceRol = v;
             }, () => Ap?.rol.Text ?? "", s =>
             {
                 if (Ap != null) Ap.rol.Text = s;
             }, 50, "°", () => Ap?.rol.IsParsed ?? true);
-            g.Switch("#MechJeb_Docking_checkbox5", () => Ap != null && Ap.drawBoundingBox, v => //"Draw Bounding Box"
+
+            // the bounding box tools, for checking the autopilot's idea of the vessels' size
+            Layout debug = w.Section(main, Localizer.Format("#MechJeb_NewUI_Debug"), false, "DockingDebug"); //Debug
+            KodeWindow.PropertyGrid dg = w.Properties(debug);
+            dg.Switch("#MechJeb_Docking_checkbox5", () => Ap != null && Ap.drawBoundingBox, v => //"Draw Bounding Box"
             {
                 if (Ap != null) Ap.drawBoundingBox = v;
             });
-
-            KodeWindow.Button(main, "#MechJeb_Docking_button", guidance.DumpBoundingBoxInfo, true); //"Dump Bounding Box Info"
-            Layout box = KodeWindow.Row(main);
-            UIText safeText = w.BoundLabel(box, FloatLabel("#MechJeb_Docking_label7", () => Ap?.safeDistance ?? 0), true); //"safeDistance "
-            UIText sizeText = w.BoundLabel(box, FloatLabel("#MechJeb_Docking_label8", () => Ap?.targetSize ?? 0), true); //"targetSize   "
-            KodeWindow.ToneText(safeText, KodeWindow.Tone.Dim);
-            KodeWindow.ToneText(sizeText, KodeWindow.Tone.Dim);
+            KodeWindow.Button(debug, "#MechJeb_Docking_button", guidance.DumpBoundingBoxInfo, true); //"Dump Bounding Box Info"
 
             Layout running = w.StatusBar(r, () => KodeWindow.Tone.Normal);
             w.Visible(running.gameObject, () => HasTarget && ApEnabled);
@@ -161,12 +166,22 @@ namespace MuMech.UI
             return main;
         }
 
-        void AutopilotSwitch(KodeWindow w, UIObject parent) =>
-            w.Toggle(parent, "#MechJeb_Docking_checkbox1", () => ApEnabled, v => //"Autopilot enabled"
-            {
-                if (v) Ap.Users.Add(guidance);
-                else Ap.Users.Clear(); // also a run kOS started
-            });
+        // Engage autopilot (the main action), Disengage autopilot while it runs. The setup problems above don't disable it:
+        // without a port pair the autopilot flies to the target vessel and stops short of it
+        void EngageButton(KodeWindow w, UIObject parent)
+        {
+            UIButton engage = KodeWindow.Button(parent, "#MechJeb_RZauto_button1", () => Ap?.Users.Add(guidance), ButtonRole.Primary, true); //Engage autopilot
+            w.Visible(engage.gameObject, () => Ap != null && !ApEnabled);
+            UIButton disengage = KodeWindow.Button(parent, "#MechJeb_RZauto_button2", () => Ap?.Users.Clear(), ButtonRole.Danger, true); //Disengage autopilot
+            w.Visible(disengage.gameObject, () => ApEnabled); // Clear: also a run kOS started
+        }
+
+        // "In use  10.00 m": the distance the autopilot works with, overridden or computed
+        static void InUse(KodeWindow.PropertyGrid g, Func<float> value)
+        {
+            Layout row = g.Value("#MechJeb_NewUI_DockInUse", Memo.Of(value, v => v.ToString("F2") + " m")); //In use
+            foreach (UIText t in row.GetComponentsInChildren<UIText>(true)) KodeWindow.ToneText(t, KodeWindow.Tone.Dim);
+        }
 
         void RunningLabels(KodeWindow w, UIObject running)
         {
@@ -192,14 +207,14 @@ namespace MuMech.UI
         // DrawTargetPortSelector: "Target port" and a dropdown of the ports, or a note when the target is out of range
         void TargetPortSelector(KodeWindow w, UIObject parent)
         {
-            Layout row = KodeWindow.Row(parent);
-            w.Visible(row.gameObject, () => portState != MechJebModuleDockingGuidance.PortSelectorState.Hidden);
-            KodeWindow.Label(row, "#MechJeb_Docking_targetPort");
-
-            // centred and word-wrapped in the room left by the label
-            UIText unavailable = GuidanceUi.Wrapped(row, "#MechJeb_Docking_targetPortUnavailable");
-            unavailable.tmpText.alignment = TextAlignmentOptions.Center;
+            // out of range: one line instead of the row, so the note doesn't wrap in the room left by the label
+            UIText unavailable = KodeWindow.Paragraph(parent, "#MechJeb_NewUI_DockPortUnavailable"); //Target port: available when the target vessel is nearby.
+            KodeWindow.ToneText(unavailable, KodeWindow.Tone.Dim);
             w.Visible(unavailable.gameObject, () => portState == MechJebModuleDockingGuidance.PortSelectorState.Unavailable);
+
+            Layout row = KodeWindow.Row(parent);
+            w.Visible(row.gameObject, () => portState == MechJebModuleDockingGuidance.PortSelectorState.Ready);
+            KodeWindow.Label(row, "#MechJeb_Docking_targetPort");
 
             Func<bool> ready = () => portState == MechJebModuleDockingGuidance.PortSelectorState.Ready;
             Func<bool> canSelect = () => guidance.targetPorts.Count > 0 && !ApEnabled;
