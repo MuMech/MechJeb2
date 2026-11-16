@@ -33,27 +33,21 @@ namespace MuMech.UI
             w.TitleButton("?", window.OpenHelp);
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 
+            KodeWindow.Header(r, "#MechJeb_NewUI_RoverHeading"); //Heading
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.ControlHeading", () => Ap != null && Ap.ControlHeading);
             // steppers (Shift: ×10)
             RoverUi.StepperRow(w, r, ed, "Editable:RoverController.heading", d => Ap.heading.Val += d);
 
             RoverUi.ValueRow(w, r, ed, "Value:RoverController.headingErr", () => Ap?.headingErr ?? 0, "-180.0 °");
+            KodeWindow.Header(r, "#MechJeb_NewUI_RoverSpeed"); //Speed
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.ControlSpeed", () => Ap != null && Ap.ControlSpeed);
             RoverUi.StepperRow(w, r, ed, "Editable:RoverController.speed", d => Ap.speed.Val += d);
 
             RoverUi.ValueRow(w, r, ed, "Value:RoverController.speedErr", () => Ap?.speedErr ?? 0, "-999.9 m/s");
-            RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.StabilityControl", () => Ap != null && Ap.StabilityControl);
 
-            GameObject eject = RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.BrakeOnEject", () => Ap != null && Ap.BrakeOnEject);
-            if (eject != null) w.Visible(eject, () => !Core.Settings.HideBrakeOnEject);
-
-            RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.BrakeOnEnergyDepletion", () => Ap != null && Ap.BrakeOnEnergyDepletion);
-            GameObject daylight = RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.WarpToDaylight", () => Ap != null && Ap.WarpToDaylight);
-            if (daylight != null) w.Visible(daylight, () => Ap != null && Ap.BrakeOnEnergyDepletion);
-
-            // "Target Speed"
+            // the speed the controller asks for now (the setting, slowed for turns and slopes)
             Layout tgt = KodeWindow.Row(r);
-            KodeWindow.Label(tgt, "#MechJeb_Rover_label1", true);
+            KodeWindow.Label(tgt, "#MechJeb_NewUI_RoverCommandedSpeed", true); //Commanded speed
             UIText tgtValue = KodeWindow.LiveLabel(tgt, "000.0", false);
             tgtValue.tmpText.alignment = TextAlignmentOptions.Right;
             var tgtText = new CharText(tgtValue.tmpText);
@@ -63,17 +57,28 @@ namespace MuMech.UI
                 tgtText.Commit();
             });
 
-            // "Waypoints" + "Index n of m"
+            KodeWindow.Header(r, "#MechJeb_NewUI_RoverSafety"); //Safety
+            RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.StabilityControl", () => Ap != null && Ap.StabilityControl);
+
+            GameObject eject = RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.BrakeOnEject", () => Ap != null && Ap.BrakeOnEject);
+            if (eject != null) w.Visible(eject, () => !Core.Settings.HideBrakeOnEject);
+
+            RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.BrakeOnEnergyDepletion", () => Ap != null && Ap.BrakeOnEnergyDepletion);
+            GameObject daylight = RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.WarpToDaylight", () => Ap != null && Ap.WarpToDaylight);
+            if (daylight != null) w.Visible(daylight, () => Ap != null && Ap.BrakeOnEnergyDepletion);
+
+            // "Waypoint  n of m", the target's buttons, then Drive / Stop and the waypoint list
+            KodeWindow.Header(r, "#MechJeb_Rover_label2"); //Waypoints
             Layout index = KodeWindow.Row(r);
-            KodeWindow.Label(index, "#MechJeb_Rover_label2", true);
-            UIText indexValue = KodeWindow.LiveLabel(index, "Index 000 of 000", false);
+            KodeWindow.Label(index, "#MechJeb_NewUI_RoverWaypoint", true); //Waypoint
+            UIText indexValue = KodeWindow.LiveLabel(index, "000 of 000", false);
             indexValue.tmpText.alignment = TextAlignmentOptions.Right;
             var indexText = new CharText(indexValue.tmpText);
             w.AddSync(() =>
             {
                 indexText.Clear();
-                if (Ap != null) indexText.Append("Index ").AppendInt(Ap.WaypointIndex + 1).Append(" of ").AppendInt(Ap.Waypoints.Count);
-                else indexText.Append("Index 0 of 0");
+                if (Ap != null) indexText.AppendInt(Ap.WaypointIndex + 1).Append(" of ").AppendInt(Ap.Waypoints.Count);
+                else indexText.Append("0 of 0");
                 indexText.Commit();
             });
 

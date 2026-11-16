@@ -12,8 +12,8 @@ namespace MuMech
         {
         }
 
-        // TODO: have the button say "disengage" when it is engaged
-        [ActionInfoItem("#MechJeb_HoverslamEngage", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamEngage_tooltip")] //Engage hoverslam
+        [ActionInfoItem("#MechJeb_HoverslamEngage", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamEngage_tooltip",
+            engagedName = "#MechJeb_HoverslamDisengage")] //Engage hoverslam, Disengage hoverslam
         public void ToggleEnabled() => Enabled = !Enabled;
 
         [EditableInfoItem("#MechJeb_HoverslamIgnitionLead", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamIgnitionLead_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Ignition lead
