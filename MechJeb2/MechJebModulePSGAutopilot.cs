@@ -29,6 +29,7 @@ namespace MuMech
         VERTICAL_ASCENT, // on the pad awaiting liftoff, then straight up to the pitch start height
         PITCH_PROGRAM,   // pitching over at the pitch rate until it meets the guidance pitch
         BURNING,         // flying a burn of the Solution
+        JETTISON,        // a burn the optimizer ended with propellant left: cut, and staged until its engines are gone
         COASTING,        // the Solution's coast
         TERMINAL,        // the end of a precise shutdown last stage: cut on the target's angular momentum
         TERMINAL_RCS,    // the RCS trim after the engines are cut
@@ -82,13 +83,9 @@ namespace MuMech
         // what guidance commands, for the UI and kOS
         public double Pitch;
         public double Heading;
-        public Vector3d Inertial = Vector3d.zero; // inertial in rotating coordinates
         public double Tgo;
         public double Vgo;
         public double CurrentPhaseTgo;
-
-        private V3 _inertial = V3.zero; // inertial in right-handed non-rotating
-        private double _throttle;
 
         // The PSGAutopilot owns this and can change the FlightPlan to reconcile stages.
         public Solution? Solution;
@@ -112,7 +109,7 @@ namespace MuMech
         public bool IsFinished => _state == PSGState.FINISHED;
 
         // flying the Solution, after the pitch program
-        private bool IsGuided => _state == PSGState.BURNING || IsCoasting || IsTerminal;
+        private bool IsGuided => _state == PSGState.BURNING || _state == PSGState.JETTISON || IsCoasting || IsTerminal;
 
         /// <summary>Set when the coast starts, and kept after it: the Solution's burns before the coast are behind the vessel.</summary>
         public bool HasCoasted { get; private set; }
@@ -123,9 +120,15 @@ namespace MuMech
         // what guidance does with RCS (PSGFeedback), said once at each change
         private ScreenMessage _rcsCoastMessage = null!, _rcsTrimMessage = null!, _rcsOffMessage = null!;
 
-        // the flight plan indices of the stages guidance cut and staged off itself, which the stage stats may not show gone yet;
-        // the indices are those of every Solution, since the stage list is frozen in flight
+        // the flight plan indices of the stages guidance cut and saw jettisoned (their engines gone from the vessel), which the
+        // stage stats may not show gone yet; the indices are those of every Solution, since the stage list is frozen in flight
         private readonly HashSet<int> _handedOff = new HashSet<int>();
+
+        // the persistentIds of the engine parts a jettison has to see leave the vessel (JettisonEnginesAttached)
+        private readonly HashSet<uint> _jettisonParts = new HashSet<uint>();
+
+        // the KSP stage JETTISON last saw, to tell a stage it fired
+        private int _jettisonStage;
 
         // the stage stats the Solution's flight plan was last reconciled with (NaN to reconcile again)
         private double _reconciledVacT = double.NaN;
@@ -219,8 +222,6 @@ namespace MuMech
             Tgo = Vgo = CurrentPhaseTgo = 0;
             Pitch = Heading = 0;
             _inertial = V3.zero;
-            Inertial = Vector3d.zero;
-            _throttle = 0;
         }
 
         public override void OnFixedUpdate()
@@ -240,9 +241,13 @@ namespace MuMech
 
             UpdateSpent();
 
+            UpdateJettison();
+
+            MaybeRotateLaunchSite();
+
             UpdateState();
 
-            UpdateGuidance();
+            UpdateDisplayVariables();
 
             TickState();
 
@@ -313,6 +318,16 @@ namespace MuMech
             if (desired == PSGState.COASTING && _state == PSGState.COASTING && CoastOver())
                 desired = PSGState.BURNING;
 
+            // a burn the optimizer ended with propellant left is cut at its planned end and jettisoned before the next burn flies
+            // (which can come before the pitch program has met guidance, like the coast)
+            if ((desired == PSGState.VERTICAL_ASCENT || desired == PSGState.PITCH_PROGRAM || desired == PSGState.BURNING) &&
+                JettisonDue(CurrentPhase(false)))
+                desired = PSGState.JETTISON;
+
+            // its engines are gone (UpdateJettison has moved CurrentPhase on to the next burn)
+            if (desired == PSGState.JETTISON && !JettisonDue(CurrentPhase(false)))
+                desired = PSGState.BURNING;
+
             if (desired == PSGState.BURNING)
             {
                 int p = CurrentPhase(false);
@@ -372,6 +387,7 @@ namespace MuMech
                 case PSGState.VERTICAL_ASCENT: OnEnterVerticalAscent(); break;
                 case PSGState.PITCH_PROGRAM:   OnEnterPitchProgram(); break;
                 case PSGState.BURNING:         OnEnterBurning(); break;
+                case PSGState.JETTISON:        OnEnterJettison(); break;
                 case PSGState.COASTING:        OnEnterCoasting(); break;
                 case PSGState.TERMINAL:        OnEnterTerminal(); break;
                 case PSGState.TERMINAL_RCS:    OnEnterTerminalRCS(); break;
@@ -399,6 +415,7 @@ namespace MuMech
                 case PSGState.VERTICAL_ASCENT: TickVerticalAscent(); break;
                 case PSGState.PITCH_PROGRAM:   TickPitchProgram(); break;
                 case PSGState.BURNING:         TickBurning(); break;
+                case PSGState.JETTISON:        TickJettison(); break;
                 case PSGState.COASTING:        TickCoasting(); break;
                 case PSGState.TERMINAL:        TickTerminal(); break;
                 case PSGState.TERMINAL_RCS:    TickTerminalRCS(); break;
@@ -460,12 +477,43 @@ namespace MuMech
         private void TickBurning()
         {
             SteerGuided();
+            ThrottleGuided();
+        }
 
-            // a burn the optimizer ended with propellant left is cut and staged off, then the next one flies
-            if (HandOff())
+        private void OnEnterJettison()
+        {
+            _jettisonStage = Vessel.currentStage;
+            Debug.Log($"[MechJebModulePSGAutopilot] jettisoning the burn of KSP stage {StageOf(CurrentPhase(false))} from KSP stage " +
+                $"{Vessel.currentStage}");
+        }
+
+        // Stages until the cut burn's engines are gone (UpdateJettison ends it): a fairing or an escape tower staged between the
+        // burn and its decoupler is staged off too.  Autostaging won't drop an engine with propellant left.
+        private void TickJettison()
+        {
+            // the burn is past its end, so the steering is locked
+            SteerGuided();
+
+            ThrustOff();
+
+            if (Solution == null)
                 return;
 
-            ThrottleGuided();
+            Status.Set($"Jettisoning stage {StageOf(CurrentPhase(false))}");
+
+            // one stage at a time: a stage fired last tick gets this one for its parts to leave the vessel
+            if (Vessel.currentStage != _jettisonStage)
+            {
+                _jettisonStage = Vessel.currentStage;
+                return;
+            }
+
+            // never at or past the stage autostaging stops at (UpdateJettison gives up there): that would be the payload
+            if (Vessel.currentStage <= AutostageFloor())
+                return;
+
+            // KSP refuses a stage during its staging cooldown, so this goes on until it is staged
+            Core.Staging.ImmediateStage();
         }
 
         private void OnEnterCoasting()
@@ -631,7 +679,7 @@ namespace MuMech
             return sb.Append(']').ToString();
         }
 
-        // gone from the stage stats, or cut and staged off by guidance itself
+        // gone from the stage stats, or cut and seen jettisoned by guidance itself (UpdateJettison)
         private bool PhaseDone(int p)
         {
             int index = Solution!.FlightPlanIndex(p);
@@ -747,32 +795,70 @@ namespace MuMech
         }
 
         // A burn the optimizer ends with propellant left, before another burn in a lower KSP stage, is cut at its planned end
-        // and staged off: autostaging won't drop an engine with propellant left.  True while it is being staged off.
-        private bool HandOff()
+        // and jettisoned (JETTISON): autostaging won't drop an engine with propellant left.
+        private bool JettisonDue(int p)
         {
             Solution solution = Solution!;
-            int p = CurrentPhase(false);
 
             // the burn before the coast is cut by the coast, and the last stage by terminal guidance or burning out
-            if (p < 0 || p >= solution.TerminalIndex() || solution.CoastPhase(p + 1) || !solution.Phases[p].PropellantLeft)
+            if (p < 0 || p >= solution.TerminalIndex() || solution.CoastPhase(p + 1) || !solution.Phases[p].PropellantLeft || IsGrounded())
                 return false;
 
-            if (VesselState.MET < solution.EndTime(p) || StageOf(p + 1) >= StageOf(p))
-                return false;
+            return VesselState.MET >= solution.EndTime(p) && StageOf(p + 1) < StageOf(p);
+        }
 
-            // staged: the stage stats will show it gone, and until then it is done
-            if (Vessel.currentStage < StageOf(p))
+        // The engines of burn p that leave the vessel with it are still on it: its planned engines but those a later stage burns
+        // too (a sustainer).  The stage stats would show them gone only after a fresh run, so this looks at the vessel's parts.
+        // With none to look for (no flight plan, or all of them burn on) a stage fired is enough.
+        private bool JettisonEnginesAttached(int p)
+        {
+            Solution solution = Solution!;
+            FlightPlan? plan  = solution.FlightPlan;
+            int index         = solution.FlightPlanIndex(p);
+
+            _jettisonParts.Clear();
+            if (plan != null && index >= 0)
             {
-                _handedOff.Add(solution.FlightPlanIndex(p));
-                return false;
+                foreach (EngineSignature s in plan.Stages[index].PlannedSignatures)
+                    _jettisonParts.Add(s.PartPersistentID);
+                for (int i = index + 1; i < plan.Stages.Count; i++)
+                    foreach (EngineSignature s in plan.Stages[i].PlannedSignatures)
+                        _jettisonParts.Remove(s.PartPersistentID);
             }
 
-            ThrustOff();
+            if (_jettisonParts.Count == 0)
+                return Vessel.currentStage >= StageOf(p);
 
-            // KSP refuses a stage during its staging cooldown, so this goes on until it is staged
-            Core.Staging.ImmediateStage();
+            foreach (Part part in Vessel.parts)
+                if (_jettisonParts.Contains(part.persistentId))
+                    return true;
 
-            return true;
+            return false;
+        }
+
+        // Before UpdateState: a burn due to be jettisoned whose engines are gone is done, so CurrentPhase moves on to the next burn
+        // (a burn already staged off by hand or by autostaging is never cut).  At the stage autostaging stops at nothing more is
+        // staged, and the next burn flies with the engines still on.
+        private void UpdateJettison()
+        {
+            if (Solution == null ||
+                !(_state == PSGState.VERTICAL_ASCENT || _state == PSGState.PITCH_PROGRAM || _state == PSGState.BURNING || _state == PSGState.JETTISON))
+                return;
+
+            int p = CurrentPhase(false);
+            if (!JettisonDue(p))
+                return;
+
+            if (!JettisonEnginesAttached(p))
+                Debug.Log($"[MechJebModulePSGAutopilot] jettisoned the burn of KSP stage {StageOf(p)} at MET {VesselState.MET:F2} " +
+                    $"in KSP stage {Vessel.currentStage}");
+            else if (Vessel.currentStage <= AutostageFloor())
+                Debug.Log($"[MechJebModulePSGAutopilot] [WARNING] can't jettison the burn of KSP stage {StageOf(p)}: its engines are " +
+                    $"still on in KSP stage {Vessel.currentStage}, where autostaging stops");
+            else
+                return;
+
+            _handedOff.Add(Solution.FlightPlanIndex(p));
         }
 
         // the last stage has no thrust left to give for a second: see TerminalSpentNow
@@ -847,20 +933,25 @@ namespace MuMech
 
         private bool LiftedOff() => Vessel.LiftedOff() && !Vessel.Landed;
 
-        /*
-         * Guidance
-         */
-
-        private void UpdateGuidance()
+        // Turns a Solution computed on the ground with the planet's rotation: to the launch site while the vessel waits on the pad,
+        // then to the vessel after liftoff until the first Solution computed in flight replaces it (which is never turned).
+        private void MaybeRotateLaunchSite()
         {
             if (Solution == null)
                 return;
 
             V3 r0 = VesselState.OrbitalPosition.WorldToV3Rotated();
 
-            // the launch site turns with the planet while we wait on the ground, so turn the Solution with it (only a Solution
-            // computed on the ground is turned)
             Solution.RotateToLaunchSite(r0);
+        }
+
+        // Updates Tgo/Vgo/CurrentPhaseTgo/Pitch/Heading -- "display" only and could be moved
+        private void UpdateDisplayVariables()
+        {
+            if (Solution == null)
+                return;
+
+            V3 r0 = VesselState.OrbitalPosition.WorldToV3Rotated();
 
             // the Solution's clock is MET, which stays at zero until liftoff, so on the ground this flies its first point
             int p = CurrentPhase(IsCoasting);
@@ -873,13 +964,14 @@ namespace MuMech
                     CurrentPhaseTgo = Solution.Tgo(VesselState.MET, p);
             }
 
-            // lock the inertial heading near the end of the phase for any staging event or terminal burnout
-            if (p >= 0 && (IsGrounded() || Solution.Tgo(VesselState.MET, p) > STEERING_LOCK_TIME))
-                (_inertial, _throttle) = Solution.InertialGuidance(p, VesselState.MET, VesselState.MinThrottle);
+            // no burn left to fly: Pitch and Heading keep their last values
+            if (p < 0)
+                return;
 
-            (double pitch, double heading) = Astro.ECIToPitchHeading(r0, _inertial);
+            (V3 inertial, _) = Solution.InertialGuidance(p, VesselState.MET, VesselState.MinThrottle);
 
-            Inertial = _inertial.V3ToWorldRotated();
+            (double pitch, double heading) = Astro.ECIToPitchHeading(r0, inertial);
+
             Pitch = Rad2Deg(pitch);
             Heading = Rad2Deg(heading);
         }
@@ -892,10 +984,14 @@ namespace MuMech
             if (Solution == null || !_allowThrottle)
                 return;
 
-            int coast = LiveCoastIndex();
-            int stage = coast >= 0 && (IsCoasting || !HasCoasted) ? StageOf(coast) : StageOf(Solution.TerminalIndex());
+            Core.Staging.AutoStageLimitRequest(AutostageFloor(), this);
+        }
 
-            Core.Staging.AutoStageLimitRequest(stage, this);
+        // the KSP stage autostaging stops at (see UpdateAutostageLimit)
+        private int AutostageFloor()
+        {
+            int coast = LiveCoastIndex();
+            return coast >= 0 && (IsCoasting || !HasCoasted) ? StageOf(coast) : StageOf(Solution!.TerminalIndex());
         }
 
         private double PitchProgramPitch()
@@ -916,12 +1012,21 @@ namespace MuMech
             return !MainBody.atmosphere || PitchProgramPitch() <= Pitch;
         }
 
+        private V3 _inertial = V3.zero; // For SteerGuided() to inertially lock steering
+
         private void SteerGuided()
         {
-            double ang = Vector3d.Angle(Inertial, VesselState.Forward);
+            if (Solution == null)
+                return;
+
+            int p = CurrentPhase(IsCoasting);
+            if (p >= 0 && (IsGrounded() || Solution.Tgo(VesselState.MET, p) > STEERING_LOCK_TIME))
+                (_inertial, _) = Solution.InertialGuidance(p, VesselState.MET, VesselState.MinThrottle);
+            Vector3d inertial = _inertial.V3ToWorldRotated();
+            double ang = Vector3d.Angle(inertial, VesselState.Forward);
             AscentStatusLevel severity = ang > 5 ? AscentStatusLevel.ERROR : ang > 1 ? AscentStatusLevel.WARNING : AscentStatusLevel.NORMAL;
             Status.Set($"Stable Guidance: {ang:F}° deviation", severity);
-            Core.Attitude.LimitedAttitudeTo(Inertial, _ascentSettings.ForceRoll, _ascentSettings.TurnRoll, ApplyAoALimiter, this);
+            Core.Attitude.LimitedAttitudeTo(inertial, _ascentSettings.ForceRoll, _ascentSettings.TurnRoll, ApplyAoALimiter, this);
         }
 
         private void ThrottleGuided()
@@ -933,7 +1038,18 @@ namespace MuMech
             if (VesselState.ThrustCurrent < VesselState.ThrustMinimum * 0.98)
                 Core.Attitude.Controller.Reset();
 
-            Core.Thrust.TargetThrottle = _throttle > 0 ? (float)_throttle : 1.0f;
+            // full throttle with no burn left to fly (only the vertical ascent and the pitch program get here without one: the
+            // guided states finish)
+            int p = CurrentPhase(false);
+            if (p < 0)
+            {
+                Core.Thrust.TargetThrottle = 1.0f;
+                return;
+            }
+
+            (_, double throttle) = Solution.InertialGuidance(p, VesselState.MET, VesselState.MinThrottle);
+
+            Core.Thrust.TargetThrottle = (float)throttle;
         }
 
         private void RCSOn()
