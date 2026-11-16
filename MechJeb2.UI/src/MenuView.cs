@@ -45,7 +45,9 @@ namespace MuMech.UI
 
         // ---- structure ----
 
-        static bool InMenu(DisplayModule m) => m.ShowInMenu && !m.TechLocked && m.ShowInCurrentScene;
+        // PSG Solution only while the ascent is a PSG one: under Classic it has nothing to show
+        static bool InMenu(DisplayModule m) => m.ShowInMenu && !m.TechLocked && m.ShowInCurrentScene &&
+                                               !(m is MechJebModulePSGSolutionGraph && m.Core.AscentSettings.AscentType != AscentType.PSG);
 
         int builtSignature;
         float nextCheck;
@@ -148,12 +150,33 @@ namespace MuMech.UI
         {
             if (m is MechJebModuleCustomInfoWindow) return 4;
             string n = m.GetType().Name;
-            if (n.Contains("Ascent") || n.Contains("Landing") || n.Contains("Spaceplane") || n.Contains("Rover") || n.Contains("Waypoint")) return 0;
+            if (n.Contains("Ascent") || n.Contains("PSG") || n.Contains("Landing") || n.Contains("Spaceplane") || n.Contains("Rover") ||
+                n.Contains("Waypoint")) return 0;
             if (n.Contains("Maneuver") || n.Contains("NodeEditor") || n.Contains("Warp")) return 1;
             if (n.Contains("Rendezvous") || n.Contains("Docking")) return 2;
             if (n.Contains("SmartASS") || n.Contains("SmartRcs") || n.Contains("Translatron") || n.Contains("Attitude") || n.Contains("RCSBalancer") ||
                 n.Contains("ThrustWindow")) return 3;
             return 5;
+        }
+
+        /// <summary>How many columns the groups take, each whole, with at most <paramref name="step"/> rows a column; the manual button last.</summary>
+        static int ColumnsFor(List<DisplayModule>[] groups, int header, int step)
+        {
+            int columns = 1, inColumn = 0;
+            foreach (List<DisplayModule> g in groups)
+            {
+                if (g.Count == 0) continue;
+                int size = g.Count + header;
+                if (inColumn > 0 && inColumn + size > step)
+                {
+                    columns++;
+                    inColumn = 0;
+                }
+
+                inColumn += size;
+            }
+
+            return columns;
         }
 
         /// <summary>The same toggles under one header per task, the groups in order, split into the menu's columns.</summary>
@@ -164,35 +187,41 @@ namespace MuMech.UI
             foreach (DisplayModule m in modules)
                 if (InMenu(m)) groups[Group(m)].Add(m);
 
-            int rows = 1; // the online manual button
+            // a group is never split between columns: a column is as tall as its share of the rows, or as the largest group
+            int header = KodeWindow.ShowHeaders ? 1 : 0;
+            int rows = 1, largest = 0; // the online manual button
             foreach (List<DisplayModule> g in groups)
-                if (g.Count > 0) rows += g.Count + (KodeWindow.ShowHeaders ? 1 : 0);
-            int step = Mathf.CeilToInt((float)rows / menu.columns);
+                if (g.Count > 0)
+                {
+                    rows += g.Count + header;
+                    largest = Math.Max(largest, g.Count + header);
+                }
+
+            // whole groups leave gaps at the column ends: a taller column until they fit in the menu's columns
+            int step = Math.Max(Mathf.CeilToInt((float)rows / menu.columns), largest);
+            while (ColumnsFor(groups, header, step) > Math.Max(menu.columns, 1)) step++;
 
             Layout column = KodeWindow.Panel(columns);
             int inColumn = 0;
             for (int g = 0; g < groups.Length; g++)
             {
                 if (groups[g].Count == 0) continue;
-                // a group starts a new column rather than leaving its header alone at the bottom of one
-                if (inColumn > 0 && inColumn + 2 > step)
+                int size = groups[g].Count + header;
+                // the whole group in the next column when it doesn't fit in this one
+                if (inColumn > 0 && inColumn + size > step)
                 {
                     column = KodeWindow.Panel(columns);
                     inColumn = 0;
                 }
+
                 KodeWindow.Header(column, groupKeys[g]);
-                if (KodeWindow.ShowHeaders) inColumn++;
                 foreach (DisplayModule module in groups[g])
                 {
-                    if (inColumn >= step)
-                    {
-                        column = KodeWindow.Panel(columns);
-                        inColumn = 0;
-                    }
                     DisplayModule m = module;
                     w.CheckBox(column, m.GetName(), () => m.Enabled, v => m.Enabled = v, () => ModuleTone(m)); // checkboxes, as proposal 10A
-                    inColumn++;
                 }
+
+                inColumn += size;
             }
             KodeWindow.Button(column, "#MechJeb_OnlineManualbutton", () => Application.OpenURL("https://github.com/MuMech/MechJeb2/wiki")); //"Online Manual"
         }

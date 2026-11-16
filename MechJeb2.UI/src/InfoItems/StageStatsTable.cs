@@ -57,9 +57,9 @@ namespace MuMech.UI
         {
             KodeWindow.Header(parent, "#MechJeb_InfoItems_label1"); //"Stage stats"
             Layout switches = KodeWindow.FlowWrap(parent, 10);
-            Switch(switches, "#MechJeb_InfoItems_timeSeconds", () => h.TimeSeconds, h.ToggleTimeSeconds); //"Seconds"
-            Switch(switches, "#MechJeb_InfoItems_hideEmpty", () => !h.ShowEmpty, h.ToggleShowEmpty);   //"Hide 0"
-            Switch(switches, "#MechJeb_InfoItems_rcs", () => h.ShowRcs, h.ToggleRcs);                  //"RCS"
+            Switch(switches, "#MechJeb_InfoItems_timeSeconds", () => h.TimeSeconds, h.ToggleTimeSeconds, "#MechJeb_NewUI_StatsSeconds_tooltip"); //"Seconds"
+            Switch(switches, "#MechJeb_InfoItems_hideEmpty", () => !h.ShowEmpty, h.ToggleShowEmpty, "#MechJeb_NewUI_StatsHideEmpty_tooltip");   //"Hide 0"
+            Switch(switches, "#MechJeb_InfoItems_rcs", () => h.ShowRcs, h.ToggleRcs, "#MechJeb_NewUI_StatsRcs_tooltip");                  //"RCS"
             w.Segmented(parent, MechJebStageStatsHelper.DisplayStateNames, () => h.DisplayState, i =>
             {
                 // the helper only cycles: step to the chosen set
@@ -69,7 +69,10 @@ namespace MuMech.UI
             if (HighLogic.LoadedSceneIsEditor) EditorEnvironment(parent);
         }
 
-        void Switch(UIObject parent, string text, System.Func<bool> get, System.Action toggle) =>
+        void Switch(UIObject parent, string text, System.Func<bool> get, System.Action toggle, string tooltip) =>
+            Tooltips.Add(SwitchToggle(parent, text, get, toggle).transform.parent.gameObject, tooltip);
+
+        UnityEngine.UI.Toggle SwitchToggle(UIObject parent, string text, System.Func<bool> get, System.Action toggle) =>
             w.SwitchRow(parent, text, get, v =>
             {
                 if (v != get()) toggle();
