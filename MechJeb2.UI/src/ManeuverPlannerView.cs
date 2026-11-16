@@ -38,8 +38,10 @@ namespace MuMech.UI
         // before the bindings: forced "create" mode without nodes, and the selected operation's per-frame work
         protected override void BeforeSync()
         {
-            if (planner.PlannerNodeCount() == 0) planner.CreateNodeMode = true;
-            if (!HasVessel) return;
+            if (planner.PlannerNodeCount() == 0 && planner.Mode != MechJebModuleManeuverPlanner.NodeMode.New)
+                planner.Mode = MechJebModuleManeuverPlanner.NodeMode.New;
+            // a folded "Create a maneuver" has no operation on screen to update
+            if (!HasVessel || !planner.showCreation) return;
             // no catch: KodeView logs a BeforeSync failure once and the bindings still run
             planner.GetOrbitAndUT(out Orbit o, out double ut);
             planner.CurrentOperation.ViewUpdate(o, ut, Core.Target);
@@ -77,14 +79,34 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            // with nodes: add a node or change the last one; a new node goes after the last one
-            string[] modes = { Localizer.Format("#MechJeb_NewUI_NodeNew"), Localizer.Format("#MechJeb_NewUI_NodeChangeLast") }; //New node, Change the last node
+            // the node creation folds away (folded by default under Principia, which plans its own maneuvers); the fold is saved
+            Layout create = w.Section(r, "#MechJeb_NewUI_CreateManeuver", planner.showCreation, c => BuildCreation(w, c)); //Create a maneuver
+            w.AddSync(() =>
+            {
+                bool open = create.gameObject.activeSelf;
+                if (planner.showCreation != open) planner.showCreation = open;
+            });
+
+            BuildExecute(w, r);
+        }
+
+        void BuildCreation(KodeWindow w, UIObject r)
+        {
+            // with nodes: add a node, change the last one or add to it; a new node goes after the last one
+            string[] modes =
+            {
+                Localizer.Format("#MechJeb_NewUI_NodeNew"), Localizer.Format("#MechJeb_NewUI_NodeChangeLast"), Localizer.Format("#MechJeb_NewUI_NodeAddToLast")
+            }; //New node, Change the last node, Add to the last node
             Layout mode = KodeWindow.Row(r);
-            w.Segmented(mode, modes, () => planner.CreateNodeMode ? 0 : 1, i => planner.CreateNodeMode = i == 0);
+            w.Segmented(mode, modes, () => (int)planner.Mode, i => planner.Mode = (MechJebModuleManeuverPlanner.NodeMode)i);
             w.Visible(mode.gameObject, () => planner.PlannerNodeCount() > 0);
             UIText after = KodeWindow.Paragraph(r, "#MechJeb_NewUI_NodeGoesAfterLast"); //The new node goes after the last one.
             KodeWindow.ToneText(after, KodeWindow.Tone.Dim);
-            w.Visible(after.gameObject, () => planner.PlannerNodeCount() > 0 && planner.CreateNodeMode);
+            w.Visible(after.gameObject, () => planner.PlannerNodeCount() > 0 && planner.Mode == MechJebModuleManeuverPlanner.NodeMode.New);
+            UIText added = KodeWindow.Paragraph(r, "#MechJeb_NewUI_NodeAddedToLast");
+            //The burn is computed after the last node, then added to it.
+            KodeWindow.ToneText(added, KodeWindow.Tone.Dim);
+            w.Visible(added.gameObject, () => planner.PlannerNodeCount() > 0 && planner.Mode == MechJebModuleManeuverPlanner.NodeMode.AddToLast);
 
             // the operations sorted by group (stable), so each group is listed once under its header
             Operation[] operations = planner.Operations;
@@ -109,8 +131,8 @@ namespace MuMech.UI
             OperationPanelsFor(w, r);
 
             Layout problem = w.StatusBar(r, () => KodeWindow.Tone.Warn);
-            OpUi.DynamicParagraph(w, problem, () => planner.CurrentOperation.GetErrorMessage() ?? "");
-            w.Visible(problem.gameObject, () => !string.IsNullOrEmpty(planner.CurrentOperation.GetErrorMessage()));
+            OpUi.DynamicParagraph(w, problem, Problem);
+            w.Visible(problem.gameObject, () => Problem().Length > 0);
 
             // destructive on the left, the main action last on the right
             KodeWindow.ActionBarRow bar = KodeWindow.ActionBar(r);
@@ -119,7 +141,17 @@ namespace MuMech.UI
             UIButton createExecute = bar.Normal("#MechJeb_Maneu_button2", () => CreateNodes(true)); //"Create and execute"
             w.Visible(createExecute.gameObject, () => HasNode);
             bar.Primary("#MechJeb_Maneu_button1", () => CreateNodes(false)); //"Create node"
+        }
 
+        // the operation's error, else why Add to the last node did nothing
+        string Problem()
+        {
+            string error = planner.CurrentOperation.GetErrorMessage();
+            return !string.IsNullOrEmpty(error) ? error : planner.AddError ?? "";
+        }
+
+        void BuildExecute(KodeWindow w, UIObject r)
+        {
             Layout exec = KodeWindow.Panel(r);
             w.Visible(exec.gameObject, () => HasNode);
             KodeWindow.Header(exec, "#MechJeb_NewUI_Execute"); //Execute
