@@ -52,6 +52,14 @@ namespace MuMech
         //Use RCS for rotation
         public bool rcsForRotation = true;
 
+        [Persistent(pass = (int)Pass.GLOBAL), ToggleInfoItem("#MechJeb_rcsGimbalOnly", InfoItem.Category.Thrust)]
+        //Gimbals before RCS
+        public bool rcsGimbalOnly = true;
+
+        // the thrusters stop pitching and yawing when their torque is below this fraction of the gimbals'
+        [Persistent(pass = (int)Pass.GLOBAL), EditableInfoItem("#MechJeb_rcsGimbalThreshold", InfoItem.Category.Thrust)]
+        public readonly EditableDouble rcsGimbalThreshold = 0.1;
+
         public MechJebModuleRCSController(MechJebCore core)
             : base(core)
         {

@@ -199,7 +199,11 @@ namespace MuMech
         public float LastThrottle;
         private bool _userCommandingRotation => _userCommandingRotationSmoothed > 0;
         private int _userCommandingRotationSmoothed;
-        private bool _lastDisableThrusters;
+        // 0: the thrusters rotate, 1: no pitch or yaw (the gimbals do it), 2: no rotation
+        private int _lastRcsRotationOff;
+
+        // set once the gimbals out-torque the thrusters, kept until the engines stop: with the flags off the thrusters' torque reads 0
+        private bool _gimbalOnly;
 
         public enum TMode
         {
@@ -936,11 +940,20 @@ namespace MuMech
             // "Use RCS for rotation" off: the thrusters don't rotate the vessel, whether the pilot or the attitude controller (SmartASS and
             // every autopilot) does the turning
             bool disableThrusters = (_userCommandingRotation || Core.Attitude.Enabled) && !Core.RCS.rcsForRotation;
-            if (disableThrusters != _lastDisableThrusters || (disableThrusters && Vessel.parts.Count != _rcsPartCount))
+
+            // "Gimbals before RCS": while the engines burn and their gimbals give far more pitch and yaw torque than the thrusters, MechJeb's
+            // attitude control leaves pitch and yaw to the gimbals. The thrusters keep roll, and get everything back when the engines stop,
+            // or while another mod has taken MechJeb's controls (RP-1 without enough avionics)
+            _gimbalOnly = Core.RCS.rcsGimbalOnly && Core.Attitude.Enabled && !Core.DeactivateControl && VesselState.ThrustCurrent > 0 && (_gimbalOnly ||
+                GimbalOutTorquesRcs(VesselState.TorqueGimbal.Positive.x, VesselState.RCSTorqueAvailable.Positive.x) &&
+                GimbalOutTorquesRcs(VesselState.TorqueGimbal.Positive.z, VesselState.RCSTorqueAvailable.Positive.z));
+
+            int rcsRotationOff = disableThrusters ? 2 : _gimbalOnly ? 1 : 0;
+            if (rcsRotationOff != _lastRcsRotationOff || (rcsRotationOff > 0 && Vessel.parts.Count != _rcsPartCount))
             {
-                _lastDisableThrusters = disableThrusters;
-                if (disableThrusters)
-                    DisableRcsRotation();
+                _lastRcsRotationOff = rcsRotationOff;
+                if (rcsRotationOff > 0)
+                    DisableRcsRotation(rcsRotationOff == 1);
                 else
                     RestoreRcsRotation();
             }
@@ -958,7 +971,9 @@ namespace MuMech
         // are caught again
         private int _rcsPartCount = -1;
 
-        private void DisableRcsRotation()
+        private bool GimbalOutTorquesRcs(double gimbal, double rcs) => gimbal > 0 && rcs < gimbal * Core.RCS.rcsGimbalThreshold;
+
+        private void DisableRcsRotation(bool keepRoll = false)
         {
             // thrusters that left this vessel get their own flags back, unless the other vessel's MechJeb has already taken them over
             RestoreRcsRotation(true);
@@ -966,11 +981,11 @@ namespace MuMech
             _rcsPartCount = Vessel.parts.Count;
             foreach (ModuleRCS pm in Vessel.FindPartModulesImplementing<ModuleRCS>())
             {
-                if (_rcsRotationSaved.TryGetValue(pm, out (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner) v))
-                    _rcsRotationSaved[pm] = (v.pitch, v.yaw, v.roll, this);
-                else
-                    _rcsRotationSaved[pm] = (pm.enablePitch, pm.enableYaw, pm.enableRoll, this);
-                pm.enablePitch = pm.enableRoll = pm.enableYaw = false;
+                if (!_rcsRotationSaved.TryGetValue(pm, out (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner) v))
+                    v = (pm.enablePitch, pm.enableYaw, pm.enableRoll, this);
+                _rcsRotationSaved[pm] = (v.pitch, v.yaw, v.roll, this);
+                pm.enablePitch = pm.enableYaw = false;
+                pm.enableRoll  = keepRoll && v.roll;
             }
         }
 
