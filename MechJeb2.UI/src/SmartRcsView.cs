@@ -28,7 +28,8 @@ namespace MuMech.UI
             UIObject r = w.Root;
             Layout body = KodeWindow.Panel(r);
 
-            UIText choose = KodeWindow.Label(body, "#MechJeb_SmartRcs_label1"); //"Choose a target"
+            UIText choose = KodeWindow.Label(body, "#MechJeb_SmartRcs_label1"); //"No target: select a vessel."
+            KodeWindow.ToneText(choose, KodeWindow.Tone.Dim);
             w.Visible(choose.gameObject, NoTarget);
             Layout targets = KodeWindow.UniformGrid(body, 2);
             w.Visible(targets.gameObject, () => !NoTarget());

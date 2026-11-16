@@ -14,7 +14,7 @@ The new UI's Settings window has three settings for this. All are saved globally
 
 | Setting | Field | Values | Effect |
 |---|---|---|---|
-| New UI skin | `UiSkin` | Classic, Flat (default), Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
+| Skin | `UiSkin` | Classic, Flat (default), Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
 | Compact | `UiCompact` | on (default) / off | Tighter margins and rows, in every skin (`Theme.Compact`). MechJeb's IMGUI skin no longer decides this. A custom window's own Compact switch can follow it, or override it on or off. |
 | Section headers | `UiSectionHeaders` | on (default) / off | The headers the views add to long windows (`KodeWindow.Header`). Changing it rebuilds the open windows. |
 
@@ -334,6 +334,17 @@ Custom Window Editor's window and preset selectors are dropdowns too (proposal 6
 | Custom Window Editor | Window and preset dropdowns |
 | Ascent Guidance | Buttons by role, buttons that open the settings windows (selected while open), status bars |
 | Rover, Waypoint Help, Rendezvous, Warp Helper | Steppers, switches, the topic choice, buttons by role |
+
+## Conventions
+
+- **Switch or checkbox.** A switch for a setting on a row of its own (`Switch`, `SwitchRow`, a `PropertyGrid` switch row); a
+  checkbox (`Toggle`) for a choice in a list or a table (the menu, the PSG Stages table, the debug arrows).
+- **Labels.** No colon after a label: the grid lines up label and field. Sentence case ("Lead time", "Speed"); capitals only
+  for mode names, which are capitals everywhere they appear (Smart A.S.S.'s and Translatron's modes, AUTO).
+- **Empty states.** "No X: do Y." in the dim tone ("No target: select a vessel or docking port.").
+- **Headers.** A header over two controls or more; one control needs none.
+- **Buttons.** One Primary per window, the main action. A disabled button is grey whatever its role: give it the Primary role
+  only while it can be pressed, and say why it is off on a dim line under it.
 
 ## Rules learned
 
