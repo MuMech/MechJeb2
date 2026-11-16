@@ -67,7 +67,6 @@ namespace MuMech.UI
             UIText current = w.BoundLabel(body, Localizer.Format("#MechJeb_Trans_current_spd") + "-000.0km/s", SpeedText, true);
             w.Visible(current, () => Thrust.Tmode != MechJebModuleThrustController.TMode.OFF);
 
-            KodeWindow.Header(body, "Automation");
             string panic = KodeWindow.Loc("#MechJeb_Trans_PANIC"), noPanic = KodeWindow.Loc("#MechJeb_Trans_NOPANIC");
             UIButton p = KodeWindow.Padded(MiscViewKit.BoundButton(w, body, () => tr.Aborting ? noPanic : panic, tr.PanicSwitch, null, true), 6);
             w.BindRole(p, () => tr.Aborting ? ButtonRole.Selected : ButtonRole.Danger);

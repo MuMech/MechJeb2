@@ -108,12 +108,14 @@ namespace MuMech.UI
             };
         }
 
-        void TargetButtons(KodeWindow w, UIObject r, bool flexible)
+        /// <summary>Pick on map, then Enter coordinates (no target yet) or Clear target, on one row.</summary>
+        void TargetButtons(KodeWindow w, UIObject parent, bool flexible)
         {
-            UIButton enter = KodeWindow.Button(r, "#MechJeb_LandingGuidance_button1", () => //Enter target coordinates
+            Layout r = KodeWindow.Row(parent);
+            KodeWindow.Button(r, "#MechJeb_NewUI_PickOnMap", () => Core.Target.PickPositionTargetOnMap(), flexible); //Pick on map
+            UIButton enter = KodeWindow.Button(r, "#MechJeb_NewUI_EnterCoordinates", () => //Enter coordinates
                 Core.Target.SetPositionTarget(Body, Core.Target.targetLatitude, Core.Target.targetLongitude), flexible);
             w.Visible(enter.gameObject, () => !HasPositionTarget);
-            KodeWindow.Button(r, "#MechJeb_LandingGuidance_button2", () => Core.Target.PickPositionTargetOnMap(), flexible); //Pick target on map
             // Clear target, except while the landing autopilot flies to it
             UIButton clear = KodeWindow.Button(r, "#MechJeb_LandingGuidance_buttonClear", () => Core.Target.Unset(), flexible); //Clear target
             w.Visible(clear.gameObject, () => HasPositionTarget);
@@ -125,7 +127,7 @@ namespace MuMech.UI
         {
             Layout siteRow = KodeWindow.Row(r);
             new ComboBox(w, siteRow, () => guidance._landingSiteIdx, i => guidance._landingSiteIdx = i, SiteNames);
-            KodeWindow.Button(siteRow, "Set", () =>
+            UIButton set = KodeWindow.Button(siteRow, "#MechJeb_NewUI_SetSite", () => //Set
             {
                 SiteNames();
                 if (siteIndexes.Count == 0) return;
@@ -134,6 +136,7 @@ namespace MuMech.UI
                     MechJebModuleLandingGuidance.LandingSites[siteIndexes[Mathf.Clamp(guidance._landingSiteIdx, 0, siteIndexes.Count - 1)]];
                 Core.Target.SetPositionTarget(Body, site.Latitude, site.Longitude);
             });
+            Tooltips.Add(set.gameObject, "#MechJeb_NewUI_SetSite_tooltip"); //Make the chosen landing site the target.
             w.Visible(siteRow.gameObject, () => SiteNames().Length > 0);
         }
 
@@ -145,11 +148,21 @@ namespace MuMech.UI
             Layout land = KodeWindow.Row(p);
             w.Visible(land.gameObject, () => Core.Landing != null && !Core.Landing.Enabled);
             UIButton atTarget = KodeWindow.Button(land, "#MechJeb_LandingGuidance_button4", () => Core.Landing.LandAtPositionTarget(guidance),
-                ButtonRole.Primary, true); //Land at target
-            GuidanceUi.Enable(w, atTarget, () => HasPositionTarget && !LandedOrSplashed);
+                true); //Land at target
+            // the main action's colour only while it can be pressed: a disabled button is grey whatever its role
+            w.BindRole(atTarget, () => CanLandAtTarget ? ButtonRole.Primary : ButtonRole.Normal);
+            GuidanceUi.Enable(w, atTarget, () => CanLandAtTarget);
             UIButton somewhere = KodeWindow.Button(land, "#MechJeb_LandingGuidance_button5", () => Core.Landing.LandUntargeted(guidance), true); //Land somewhere
             GuidanceUi.Enable(w, somewhere, () => !LandedOrSplashed);
+
+            // why a land button is off
+            string landed = Localizer.Format("#MechJeb_NewUI_LandedNothingToLand"), noTarget = Localizer.Format("#MechJeb_NewUI_LandNeedsTarget");
+            UIText reason = KodeWindow.WrapToWidth(w.BoundLabel(p, () => LandedOrSplashed ? landed : noTarget, true));
+            KodeWindow.ToneText(reason, KodeWindow.Tone.Dim);
+            w.Visible(reason.gameObject, () => Core.Landing != null && !Core.Landing.Enabled && (LandedOrSplashed || !HasPositionTarget));
         }
+
+        bool CanLandAtTarget => HasPositionTarget && !LandedOrSplashed;
 
         /// <summary>Status, step and descent mode while landing; each text is made when what it shows changes.</summary>
         void RunningLabels(KodeWindow w, UIObject running)
@@ -171,9 +184,12 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
+            KodeWindow.Header(r, "#MechJeb_NewUI_LandingTarget"); //Target
+            SiteRow(w, r);
+            TargetButtons(w, r, true);
+
             Layout target = KodeWindow.Panel(r);
             w.Visible(target.gameObject, () => HasPositionTarget);
-            KodeWindow.Header(target, "#MechJeb_LandingGuidance_label1"); //Target coordinates:
             Layout coords = KodeWindow.Row(target);
             Layout fields = KodeWindow.Panel(coords);
             AngleFields(w, fields, "Lat", () => Core.Target.targetLatitude, EditableAngle.Direction.NS);
@@ -190,9 +206,8 @@ namespace MuMech.UI
             KodeWindow.IconButton(pad[Dir.S], Sprites.Arrow(Sprites.Direction.Down), () => Move(true, -10));
 
             foreach (UIText t in TargetReadouts(w, target)) KodeWindow.ToneText(t, KodeWindow.Tone.Dim);
-            TargetButtons(w, r, true);
-            SiteRow(w, r);
 
+            KodeWindow.Header(r, "#MechJeb_NewUI_Prediction"); //Prediction
             new LandingPredictionsBlock(w, r, guidance);
 
             Layout autopilot = KodeWindow.Panel(r);
@@ -224,13 +239,13 @@ namespace MuMech.UI
             {
                 if (Core.Landing != null) Core.Landing.DeployGears = v;
             });
-            Layout gears = StageField(g, "#MechJeb_LandingGuidance_label4", () => Core.Landing?.LimitGearsStage); //Stage Limit:
+            Layout gears = StageField(g, "#MechJeb_NewUI_GearStageLimit", () => Core.Landing?.LimitGearsStage); //Lowest gear stage: gear of lower stages stays stowed
             g.Dim(gears.gameObject, null, () => Core.Landing == null || !Core.Landing.DeployGears);
             g.Switch("#MechJeb_LandingGuidance_checkbox3", () => Core.Landing != null && Core.Landing.DeployChutes, v => //Deploy Parachutes
             {
                 if (Core.Landing != null) Core.Landing.DeployChutes = v;
             });
-            Layout chutes = StageField(g, "#MechJeb_LandingGuidance_label5", () => Core.Landing?.LimitChutesStage); //Stage Limit:
+            Layout chutes = StageField(g, "#MechJeb_NewUI_ChuteStageLimit", () => Core.Landing?.LimitChutesStage); //Lowest parachute stage: chutes of lower stages stay packed
             g.Dim(chutes.gameObject, null, () => Core.Landing == null || !Core.Landing.DeployChutes);
             g.Switch("#MechJeb_LandingGuidance_jettison", () => Core.Landing != null && Core.Landing.JettisonBeforeEntry, v => //Jettison stage before entry
             {
