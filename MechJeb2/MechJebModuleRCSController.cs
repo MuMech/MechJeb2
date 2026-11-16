@@ -42,9 +42,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool rcsManualPID;
 
-        [Persistent(pass = (int)Pass.GLOBAL), ToggleInfoItem("#MechJeb_RCSThrottle", InfoItem.Category.Thrust)]
-        //RCS throttle when 0kn thrust
-        public bool rcsThrottle = true;
+        // RCS throttle when 0kn thrust. Per craft and off by default: KSP's "Fore by Throttle" on the RCS parts is the usual way to
+        // thrust forward on RCS, and this is a fallback for a craft built without it. Its own name in the files: KSP reads a value
+        // whatever its pass, so the global "rcsThrottle" of older versions would turn it on for every craft
+        [Persistent(name = "rcsThrottlePerCraft", pass = (int)(Pass.LOCAL | Pass.TYPE)), ToggleInfoItem("#MechJeb_RCSThrottle", InfoItem.Category.Thrust)]
+        public bool rcsThrottle;
 
         [Persistent(pass = (int)Pass.GLOBAL), ToggleInfoItem("#MechJeb_rcsForRotation", InfoItem.Category.Thrust)]
         //Use RCS for rotation
