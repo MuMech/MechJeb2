@@ -94,9 +94,14 @@ namespace MuMech
                 _nextTable = Time.unscaledTime + TABLE_PERIOD;
             }
 
-            FromPlan = plan != null && AverageAlongPlan(plan, vessel.mainBody, met);
-            if (!FromPlan)
+            // once the rest of the plan is above the atmosphere, the last average along it stays: drag no longer matters there
+            if (plan != null && AverageAlongPlan(plan, vessel.mainBody, met))
+                FromPlan = true;
+            else if (plan == null || !FromPlan)
+            {
+                FromPlan = false;
                 AverageDefault();
+            }
 
             Aref = _frontalArea > 0 ? _frontalArea : CdA;
             Cd = Aref > 0 ? CdA / Aref : 0;
@@ -239,7 +244,12 @@ namespace MuMech
             }
 
             _frontalArea = VesselState.FARVesselRefArea.Call(vessel);
-            return true;
+
+            // FAR gives no force until it has built the vessel's shape, a moment after it loads: read again next time
+            for (int m = 0; m < _machs.Length; m++)
+                if (_cdA[m] > 0)
+                    return true;
+            return false;
         }
 
         private void AverageDefault()
