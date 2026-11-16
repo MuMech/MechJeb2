@@ -22,8 +22,22 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public int _operationId;
 
-        // Creation or replacement mode
-        private bool _createNode = true;
+        /// <summary>What Create node does with the planner's nodes.</summary>
+        internal enum NodeMode { New, ChangeLast, AddToLast }
+
+        private NodeMode _mode = NodeMode.New;
+
+        // the new UI's "Create a maneuver" fold: open, except under Principia, which plans its own maneuvers
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showCreation = !ReflectionUtils.IsLoadedPrincipia;
+
+        // why the last Add to the last node did nothing, for the operation it was tried with
+        private string _addError;
+        private Operation _addErrorOp;
+
+        // the share of the orbital period an added burn may be away from the last node; a hyperbolic orbit allows a minute
+        private const double ADD_MAX_PERIOD_SHARE = 0.02;
+        private const double ADD_MAX_SECONDS_HYPERBOLIC = 60;
 
         // ---- shared with the new UI (MechJeb2.UI.ManeuverPlannerView) ----
 
@@ -38,11 +52,18 @@ namespace MuMech
 
         internal Operation CurrentOperation => _operation[OperationId];
 
-        internal bool CreateNodeMode
+        internal NodeMode Mode
         {
-            get => _createNode;
-            set => _createNode = value;
+            get => _mode;
+            set
+            {
+                _mode = value;
+                _addError = null;
+            }
         }
+
+        /// <summary>Why the last Add to the last node with the selected operation did nothing, or null.</summary>
+        internal string AddError => _addErrorOp == CurrentOperation ? _addError : null;
 
         private MechJebModuleLandingPredictions _predictor;
 
@@ -87,11 +108,11 @@ namespace MuMech
         /// The orbit and universal time the next maneuver is computed from: after the last node when there is one, or, when
         /// changing the last node, after the node before it.
         /// </summary>
-        internal void GetOrbitAndUT(out Orbit o, out double ut) => GetOrbitAndUT(_createNode, out o, out ut);
+        internal void GetOrbitAndUT(out Orbit o, out double ut) => GetOrbitAndUT(_mode != NodeMode.ChangeLast, out o, out ut);
 
         /// <summary>
-        /// GetOrbitAndUT for a given mode rather than the window's: after the last node to create new ones (<paramref name="createNode"/>),
-        /// after the node before it to change the last one.
+        /// GetOrbitAndUT for a given mode rather than the window's: after the last node to create new ones or add to the last one
+        /// (<paramref name="createNode"/>), after the node before it to change the last one.
         /// </summary>
         internal void GetOrbitAndUT(bool createNode, out Orbit o, out double ut)
         {
@@ -108,8 +129,16 @@ namespace MuMech
         /// <summary>The Create node / Create and execute buttons.</summary>
         internal void CreateNodes(bool execute, Orbit o, double ut)
         {
+            _addError = null;
             // the operation has an error to show: leave the nodes alone, and don't execute the ones that were already there
-            if (PlaceNodes(CurrentOperation, o, ut, !_createNode) == null)
+            if (_mode == NodeMode.AddToLast)
+            {
+                if (!AddToLastNode(CurrentOperation, o, ut))
+                    return;
+                // a second click would add the burn again
+                _mode = NodeMode.New;
+            }
+            else if (PlaceNodes(CurrentOperation, o, ut, _mode == NodeMode.ChangeLast) == null)
                 return;
 
             if (execute && Core.Node != null)
@@ -134,6 +163,45 @@ namespace MuMech
             for (int i = 0; i < nodeList.Count; i++)
                 placed.Add(Vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT));
             return placed;
+        }
+
+        /// <summary>
+        /// Add <paramref name="op"/>'s burn, made from the orbit after the last planner node (see GetOrbitAndUT), to that node:
+        /// one node at the last node's time with the sum of both burns. False, with the nodes left alone, when the operation
+        /// fails (its GetErrorMessage says why), makes more than one burn, or puts its burn too far from the last node (AddError
+        /// says why).
+        /// </summary>
+        internal bool AddToLastNode(Operation op, Orbit o, double ut)
+        {
+            ManeuverNode last = LastPlannerNode();
+            if (last == null)
+                return PlaceNodes(op, o, ut, false) != null;
+
+            List<ManeuverParameters> nodeList = op.MakeNodes(o, ut, Core.Target);
+            if (nodeList == null)
+                return false;
+
+            _addErrorOp = op;
+            if (nodeList.Count != 1)
+            {
+                _addError = Localizer.Format("#MechJeb_NewUI_AddOneBurnOnly"); //Add to the last node takes a maneuver of one burn.
+                return false;
+            }
+
+            Orbit after = last.nextPatch;
+            double maxGap = after.eccentricity < 1 ? ADD_MAX_PERIOD_SHARE * after.period : ADD_MAX_SECONDS_HYPERBOLIC;
+            double gap = Math.Abs(nodeList[0].UT - last.UT);
+            if (gap > maxGap)
+            {
+                _addError = Localizer.Format("#MechJeb_NewUI_AddTooFar", GuiUtils.TimeToDHMS(gap), GuiUtils.TimeToDHMS(maxGap));
+                //This burn is <<1>> from the last node, more than <<2>>: create it as a new node.
+                return false;
+            }
+
+            // both burns are impulses at the last node's time, so their world vectors add
+            Vector3d sum = last.WorldDeltaV() + nodeList[0].dV;
+            last.UpdateNode(last.patch.DeltaVToManeuverNodeCoordinates(last.UT, sum), last.UT);
+            return true;
         }
 
         public List<ManeuverNode> GetManeuverNodes()

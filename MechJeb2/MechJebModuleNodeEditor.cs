@@ -14,13 +14,13 @@ namespace MuMech
         internal EditableDouble normalPlus = 0;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble progradeDelta = 0;
+        public EditableDouble progradeDelta = 1;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble radialPlusDelta = 0;
+        public EditableDouble radialPlusDelta = 1;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble normalPlusDelta = 0;
+        public EditableDouble normalPlusDelta = 1;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableTime timeOffset = 0;
