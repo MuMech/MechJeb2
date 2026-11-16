@@ -275,8 +275,8 @@ namespace MuMech.UI
             });
         }
 
-        static void Magnitude<T>(Panel<T> p, string label, Func<T, Vector3d> get) where T : BaseAttitudeController =>
-            p.Vec(label, get, WithMagnitude, VectorTemplate);
+        static void Magnitude<T>(Panel<T> p, string label, Func<T, Vector3d> get, UIObject parent = null) where T : BaseAttitudeController =>
+            p.Vec(label, get, WithMagnitude, VectorTemplate, parent);
 
         static Vector3d Moi(Vessel v) => v == null ? Vector3d.zero : (Vector3d)v.MOI;
 
@@ -354,12 +354,13 @@ namespace MuMech.UI
 
         static void BuildKos(Panel<KosAttitudeController> p)
         {
-            p.Edit("MaxStoppingTime", c => c.MaxStoppingTime, 40);
-            p.Edit("RollControlRange", c => c.RollControlRange, 40);
-            p.Vec("Actuation", c => c._actuation);
-            p.Vec("phiVector", c => c._phiVector);
-            p.Vec("TargetTorque", c => c._targetTorque);
-            p.Vec("ControlTorque", c => c._controlTorque);
+            p.Edit("Max stopping time", c => c.MaxStoppingTime, 40);
+            p.Edit("Roll control range", c => c.RollControlRange, 40);
+            Layout diag = Diagnostics(p, "KosControllerDiagnostics");
+            p.Vec("Actuation", c => c._actuation, parent: diag);
+            p.Vec("Phi vector", c => c._phiVector, parent: diag);
+            p.Vec("Target torque", c => c._targetTorque, parent: diag);
+            p.Vec("Control torque", c => c._controlTorque, parent: diag);
         }
 
         // ---- HybridController ----
@@ -370,13 +371,14 @@ namespace MuMech.UI
             p.Edit("#MechJeb_HybridController_label1", c => c.MaxStoppingTime, 60); //"MaxStoppingTime"
             p.ToggleEdit("#MechJeb_HybridController_checkbox2", c => c.UseControlRange, (c, v) => c.UseControlRange = v, //"RollControlRange"
                 c => c.RollControlRange, 60);
-            p.Vec("#MechJeb_HybridController_label2", c => c._actuation); //"Actuation"
-            p.Vec("#MechJeb_HybridController_label3", c => c._phiVector); //"phiVector"
-            p.Vec("Omega", c => c._omega);
-            p.Vec("MaxOmega", c => c._maxOmega);
-            p.Vec("#MechJeb_HybridController_label4", c => c._targetTorque); //"TargetTorque"
-            p.Vec("#MechJeb_HybridController_label5", c => c._controlTorque); //"ControlTorque"
-            Magnitude(p, "#MechJeb_HybridController_label6", c => p.Att.Inertia); //"Inertia"
+            Layout diag = Diagnostics(p, "HybridControllerDiagnostics");
+            p.Vec("#MechJeb_HybridController_label2", c => c._actuation, parent: diag); //"Actuation"
+            p.Vec("#MechJeb_HybridController_label3", c => c._phiVector, parent: diag); //"Phi vector"
+            p.Vec("Omega", c => c._omega, parent: diag);
+            p.Vec("Max omega", c => c._maxOmega, parent: diag);
+            p.Vec("#MechJeb_HybridController_label4", c => c._targetTorque, parent: diag); //"Target torque"
+            p.Vec("#MechJeb_HybridController_label5", c => c._controlTorque, parent: diag); //"Control torque"
+            Magnitude(p, "#MechJeb_HybridController_label6", c => p.Att.Inertia, diag); //"Inertia"
         }
 
         // ---- BetterController ----
@@ -397,55 +399,63 @@ namespace MuMech.UI
             Cell(head, "Velocity", COL, false);
             Cell(head, "Position", COL, false);
 
-            Grid(p, "Kp", c => c.VelKp, c => c.PosKp);
-            Grid(p, "Ti", c => c.VelTi, c => c.PosTi);
-            Grid(p, "Td", c => c.VelTd, c => c.PosTd);
-            Grid(p, "N", c => c.VelN, c => c.PosN);
-            Grid(p, "B", c => c.VelB, c => c.PosB);
-            Grid(p, "C", c => c.VelC, c => c.PosC);
-            Grid(p, "Deadband", c => c.VelDeadband, c => c.PosDeadband);
-            Grid(p, "SmoothIn", c => c.VelSmoothIn, c => c.PosSmoothIn);
-            Grid(p, "SmoothOut", c => c.VelSmoothOut, c => c.PosSmoothOut);
+            Grid(p, "Gain (Kp)", "Proportional gain of the PID.", c => c.VelKp, c => c.PosKp);
+            Grid(p, "Integral time (Ti)", "Integral time constant, in seconds: smaller corrects a lasting error faster.", c => c.VelTi, c => c.PosTi);
+            Grid(p, "Derivative time (Td)", "Derivative time constant, in seconds: larger damps more.", c => c.VelTd, c => c.PosTd);
+            Grid(p, "Filter (N)", "Derivative filter: the derivative term is low-pass filtered at N / Td.", c => c.VelN, c => c.PosN);
+            Grid(p, "P weight (B)", "Setpoint weight of the proportional term.", c => c.VelB, c => c.PosB);
+            Grid(p, "D weight (C)", "Setpoint weight of the derivative term.", c => c.VelC, c => c.PosC);
+            Grid(p, "Deadband", "Errors smaller than this are treated as zero.", c => c.VelDeadband, c => c.PosDeadband);
+            Grid(p, "Smooth in", "Smoothing of the input.", c => c.VelSmoothIn, c => c.PosSmoothIn);
+            Grid(p, "Smooth out", "Smoothing of the output.", c => c.VelSmoothOut, c => c.PosSmoothOut);
 
-            // each Clegg toggle in its column, under the Velocity and Position fields
+            // "Clegg" once, as the row's label, a toggle under each of the Velocity and Position fields
             Layout clegg = p.Row();
-            Cell(clegg, "", COL1, true);
-            p.Tog(Column(clegg, COL), "Clegg", c => c.VelClegg, (c, v) => c.VelClegg = v);
-            p.Tog(Column(clegg, COL), "Clegg", c => c.PosClegg, (c, v) => c.PosClegg = v);
+            Tooltips.Add(Cell(clegg, "Clegg", COL1, true).gameObject, "Clegg integrator: the integral term resets when the error changes sign.");
+            p.Tog(Column(clegg, COL), "", c => c.VelClegg, (c, v) => c.VelClegg = v);
+            p.Tog(Column(clegg, COL), "", c => c.PosClegg, (c, v) => c.PosClegg = v);
 
-            p.Vec("Pos PTerm", c => new Vector3d(c._posPID[0].PTerm, c._posPID[1].PTerm, c._posPID[2].PTerm), PlainSci, SciTemplate);
-            p.Vec("Pos ITerm", c => new Vector3d(c._posPID[0].ITerm, c._posPID[1].ITerm, c._posPID[2].ITerm), PlainSci, SciTemplate);
-            p.Vec("Pos DTerm", c => new Vector3d(c._posPID[0].DTerm, c._posPID[1].DTerm, c._posPID[2].DTerm), PlainSci, SciTemplate);
-            p.Vec("Vel PTerm", c => new Vector3d(c._velPID[0].PTerm, c._velPID[1].PTerm, c._velPID[2].PTerm), PlainSci, SciTemplate);
-            p.Vec("Vel ITerm", c => new Vector3d(c._velPID[0].ITerm, c._velPID[1].ITerm, c._velPID[2].ITerm), PlainSci, SciTemplate);
-            p.Vec("Vel DTerm", c => new Vector3d(c._velPID[0].DTerm, c._velPID[1].DTerm, c._velPID[2].DTerm), PlainSci, SciTemplate);
-
-            p.Edit("Smooth Torque", c => c.SmoothTorque, 50);
+            p.Edit("Smooth torque", c => c.SmoothTorque, 50);
             p.Edit("Soften", c => c.Soften, 50);
-            p.Button("Reset Tuning Values", c => c.Defaults());
+            p.Button("Reset tuning values", c => c.Defaults());
 
-            p.Vec("Current", c => c._current);
-            p.Vec("Desired", c => c._desired);
-            p.Vec("Error", c => c._error);
-            p.Vec("TargetOmega", c => c._targetOmega);
-            p.Vec("Omega", c => c._vessel == null ? Vector3d.zero : c._vessel.angularVelocityD);
-            p.Vec("#MechJeb_HybridController_label2", c => c._actuation); //"Actuation"
-            p.Vec("#MechJeb_HybridController_label4", c => c._targetTorque); //"TargetTorque"
-            p.Vec("#MechJeb_HybridController_label5", c => c._controlTorque); //"ControlTorque"
-            p.Vec("TargetAlpha", c => c._targetAlpha);
-            p.Vec("MaxAlpha", c => c._maxAlpha);
-            p.Vec("MOI", c => Moi(c._vessel));
-            p.Vec("Response Speed", c => p.Att.VesselState == null ? Vector3d.zero : p.Att.VesselState.TorqueResponseSpeed);
+            Layout diag = Diagnostics(p, "BetterControllerDiagnostics");
+            p.Vec("Pos P term", c => new Vector3d(c._posPID[0].PTerm, c._posPID[1].PTerm, c._posPID[2].PTerm), PlainSci, SciTemplate, diag);
+            p.Vec("Pos I term", c => new Vector3d(c._posPID[0].ITerm, c._posPID[1].ITerm, c._posPID[2].ITerm), PlainSci, SciTemplate, diag);
+            p.Vec("Pos D term", c => new Vector3d(c._posPID[0].DTerm, c._posPID[1].DTerm, c._posPID[2].DTerm), PlainSci, SciTemplate, diag);
+            p.Vec("Vel P term", c => new Vector3d(c._velPID[0].PTerm, c._velPID[1].PTerm, c._velPID[2].PTerm), PlainSci, SciTemplate, diag);
+            p.Vec("Vel I term", c => new Vector3d(c._velPID[0].ITerm, c._velPID[1].ITerm, c._velPID[2].ITerm), PlainSci, SciTemplate, diag);
+            p.Vec("Vel D term", c => new Vector3d(c._velPID[0].DTerm, c._velPID[1].DTerm, c._velPID[2].DTerm), PlainSci, SciTemplate, diag);
+
+            // a second grid under the first, in the same fold
+            Layout state = KodeWindow.Panel(diag);
+            p.Vec("Current", c => c._current, parent: state);
+            p.Vec("Desired", c => c._desired, parent: state);
+            p.Vec("Error", c => c._error, parent: state);
+            p.Vec("Target omega", c => c._targetOmega, parent: state);
+            p.Vec("Omega", c => c._vessel == null ? Vector3d.zero : c._vessel.angularVelocityD, parent: state);
+            p.Vec("#MechJeb_HybridController_label2", c => c._actuation, parent: state); //"Actuation"
+            p.Vec("#MechJeb_HybridController_label4", c => c._targetTorque, parent: state); //"Target torque"
+            p.Vec("#MechJeb_HybridController_label5", c => c._controlTorque, parent: state); //"Control torque"
+            p.Vec("Target alpha", c => c._targetAlpha, parent: state);
+            p.Vec("Max alpha", c => c._maxAlpha, parent: state);
+            p.Vec("MOI", c => Moi(c._vessel), parent: state);
+            p.Vec("Response speed", c => p.Att.VesselState == null ? Vector3d.zero : p.Att.VesselState.TorqueResponseSpeed, parent: state);
         }
 
         /// <summary>A text in a cell of fixed width (or a flexible one), so the columns of a grid line up with its fields.</summary>
-        static void Cell(UIObject row, string text, float width, bool flexible)
+        static UIText Cell(UIObject row, string text, float width, bool flexible)
         {
             UIText t = KodeWindow.Label(row, text, flexible);
             var le = t.gameObject.GetComponent<LayoutElement>() ?? t.gameObject.AddComponent<LayoutElement>();
             le.minWidth = flexible ? 60 : width;
             if (!flexible) le.preferredWidth = width;
+            return t;
         }
+
+        /// <summary>The controller's live read-outs, folded under "Diagnostics" (closed at first, remembered for the session per key).</summary>
+        static Layout Diagnostics<T>(Panel<T> p, string key) where T : BaseAttitudeController =>
+            p.W.Section(p.Parent, KSP.Localization.Localizer.Format("#MechJeb_NewUI_Diagnostics"), false, key); //Diagnostics
 
         /// <summary>A fixed-width column in a grid row, for a widget that would otherwise stretch (a toggle row).</summary>
         static Layout Column(UIObject row, float width)
@@ -459,11 +469,11 @@ namespace MuMech.UI
             return col;
         }
 
-        static void Grid(Panel<BetterController> p, string label, Func<BetterController, EditableDoubleMult> vel,
+        static void Grid(Panel<BetterController> p, string label, string tooltip, Func<BetterController, EditableDoubleMult> vel,
             Func<BetterController, EditableDoubleMult> pos)
         {
             Layout row = p.Row();
-            Cell(row, label, 100, true);
+            Tooltips.Add(Cell(row, label, 100, true).gameObject, tooltip);
             p.Fld(row, vel, 56);
             p.Fld(row, pos, 56);
         }
