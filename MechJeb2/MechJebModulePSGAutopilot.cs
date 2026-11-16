@@ -247,6 +247,8 @@ namespace MuMech
 
             UpdateState();
 
+            UpdateSteering();
+
             UpdateDisplayVariables();
 
             TickState();
@@ -1012,16 +1014,26 @@ namespace MuMech
             return !MainBody.atmosphere || PitchProgramPitch() <= Pitch;
         }
 
-        private V3 _inertial = V3.zero; // For SteerGuided() to inertially lock steering
+        private V3 _inertial = V3.zero; // the guided steering (UpdateSteering), which SteerGuided flies
+
+        // The guided steering, kept from the pad on (not only in the guided states) so the lock always has a direction to hold: it
+        // follows the Solution until STEERING_LOCK_TIME before the end of the phase, then holds still through the staging or the
+        // burnout.  With none yet (a Solution that arrives, or an engage that starts, inside the lock) it takes the Solution's.
+        private void UpdateSteering()
+        {
+            if (Solution == null)
+                return;
+
+            int p = CurrentPhase(IsCoasting);
+            if (p >= 0 && (IsGrounded() || _inertial == V3.zero || Solution.Tgo(VesselState.MET, p) > STEERING_LOCK_TIME))
+                (_inertial, _) = Solution.InertialGuidance(p, VesselState.MET, VesselState.MinThrottle);
+        }
 
         private void SteerGuided()
         {
             if (Solution == null)
                 return;
 
-            int p = CurrentPhase(IsCoasting);
-            if (p >= 0 && (IsGrounded() || Solution.Tgo(VesselState.MET, p) > STEERING_LOCK_TIME))
-                (_inertial, _) = Solution.InertialGuidance(p, VesselState.MET, VesselState.MinThrottle);
             Vector3d inertial = _inertial.V3ToWorldRotated();
             double ang = Vector3d.Angle(inertial, VesselState.Forward);
             AscentStatusLevel severity = ang > 5 ? AscentStatusLevel.ERROR : ang > 1 ? AscentStatusLevel.WARNING : AscentStatusLevel.NORMAL;
