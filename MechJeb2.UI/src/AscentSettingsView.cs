@@ -139,8 +139,9 @@ namespace MuMech.UI
             w.Attention(arefField, () => PsgAttention.ArefUnset(Core));
             w.Visible(cdField.gameObject, () => !Psgs.AutoAero);
             w.Visible(arefField.gameObject, () => !Psgs.AutoAero);
-            Layout cdValue = aero.Value("Cd", () => aeroCd);
-            Layout arefValue = aero.Value("Aref", () => aeroAref, "m²");
+            // sized from templates: the values are still empty when the window is made under Classic or with the switch off
+            Layout cdValue = aero.Value("Cd", () => aeroCd, null, "0.000");
+            Layout arefValue = aero.Value("Aref", () => aeroAref, "m²", "000.000");
             w.Visible(cdValue.gameObject, () => Psgs.AutoAero);
             w.Visible(arefValue.gameObject, () => Psgs.AutoAero);
             Tooltips.Add(cdField.gameObject, "#MechJeb_NewUI_PsgCd_tooltip");

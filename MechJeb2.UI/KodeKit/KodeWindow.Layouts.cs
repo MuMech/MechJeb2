@@ -784,13 +784,17 @@ namespace KodeKit
                 return row;
             }
 
-            /// <summary>label value [unit]: a read-out in the label and field columns, its unit in the unit column as a field's.</summary>
-            public Layout Value(string label, Func<string> value, string unit = null)
+            /// <summary>
+            /// label value [unit]: a read-out in the label and field columns, its unit in the unit column as a field's. The value's
+            /// cell is sized from <paramref name="template"/> (its longest text) when given, else from the value when the row is made.
+            /// </summary>
+            public Layout Value(string label, Func<string> value, string unit = null, string template = null)
             {
                 Layout row = Row();
                 Empty(row);
                 Label(row, label);
-                w.BoundLabel(row, value).tmpText.alignment = TextAlignmentOptions.Right;
+                UIText v = template != null ? w.BoundLabel(row, template, value) : w.BoundLabel(row, value);
+                v.tmpText.alignment = TextAlignmentOptions.Right;
                 if (unit != null) Label(row, unit);
                 return row;
             }
