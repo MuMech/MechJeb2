@@ -18,6 +18,9 @@ namespace MuMech
     ///     over the mass (its share of the drag losses); with no plan yet, over Mach 0.5 to 2, where an ascent meets its maximum
     ///     dynamic pressure. In stock aerodynamics each stage of the plan has its own table, without the parts dropped by then.
     ///     <para />
+    ///     The estimate is worked out while the vessel is on the ground, along the plan from the pad, and stays once it is airborne:
+    ///     a vessel first seen in flight gets one estimate, along the plan from where it is.
+    ///     <para />
     ///     Aref is the vessel's frontal area (the drag cube faces towards the airflow) or FAR's reference area, and Cd the drag area
     ///     over it.
     /// </summary>
@@ -65,10 +68,6 @@ namespace MuMech
         private Vessel? _vessel;
         private CelestialBody? _body;
         private int _partCount = -1;
-        private float _nextTable;
-
-        // the table is read again this often, as parts deploy and fairings open without the part count changing
-        private const float TABLE_PERIOD = 10;
 
         /// <summary>The drag area of the vessel as it is at <paramref name="mach" />, read off the table (0 before the first update).</summary>
         public double CdAAt(double mach) => CdAAt(_cdA, mach);
@@ -89,39 +88,35 @@ namespace MuMech
         }
 
         /// <summary>
-        ///     Reads the vessel again if needed and averages the table along <paramref name="plan" /> (a solution in SI units, its
-        ///     clock the mission time, as the guidance flies), from <paramref name="met" /> on. False while nothing can be worked out:
-        ///     no vessel, a body without atmosphere, a vessel still packed.
+        ///     On the ground, reads the vessel again if it changed and averages the table along <paramref name="plan" /> (a solution
+        ///     in SI units). Airborne, keeps the estimate it has. False while nothing can be worked out: no vessel, a body without
+        ///     atmosphere, a vessel still packed.
         /// </summary>
-        public bool Update(Vessel? vessel, Solution? plan, double met)
+        public bool Update(Vessel? vessel, Solution? plan)
         {
             if (vessel == null || vessel.mainBody == null || !vessel.mainBody.atmosphere || vessel.packed)
                 return false;
 
-            // FAR's read is slow (tens of milliseconds), so only a changed vessel is read again; stock's also every TABLE_PERIOD
-            bool changed = vessel != _vessel || vessel.mainBody != _body || vessel.parts.Count != _partCount ||
-                vessel.currentStage != _currentStage || Source == Model.NONE;
-            if (changed || (Source == Model.STOCK && Time.unscaledTime >= _nextTable))
+            bool onGround = vessel.situation == Vessel.Situations.PRELAUNCH || vessel.LandedOrSplashed;
+            if (!onGround && vessel == _vessel && Source != Model.NONE)
+                return CdA > 0;
+
+            // FAR's read is slow (tens of milliseconds), so only a changed vessel is read again
+            if (vessel != _vessel || vessel.mainBody != _body || vessel.parts.Count != _partCount ||
+                vessel.currentStage != _currentStage || Source == Model.NONE)
             {
                 _currentStage = vessel.currentStage;
-                if (changed)
-                    _stageTables.Clear();
+                _stageTables.Clear();
                 if (!ReadTable(vessel))
                     return false;
                 _vessel = vessel;
                 _body = vessel.mainBody;
                 _partCount = vessel.parts.Count;
-                _nextTable = Time.unscaledTime + TABLE_PERIOD;
             }
 
-            // once the rest of the plan is above the atmosphere, the last average along it stays: drag no longer matters there
-            if (plan != null && AverageAlongPlan(plan, vessel, met))
-                FromPlan = true;
-            else if (plan == null || !FromPlan)
-            {
-                FromPlan = false;
+            FromPlan = plan != null && AverageAlongPlan(plan, vessel);
+            if (!FromPlan)
                 AverageDefault();
-            }
 
             Aref = _frontalArea > 0 ? _frontalArea : CdA;
             Cd = Aref > 0 ? CdA / Aref : 0;
@@ -182,7 +177,6 @@ namespace MuMech
         {
             bool current = stage == _currentStage;
             Array.Clear(table, 0, table.Length);
-            Array.Clear(_surfaceCdA, 0, _surfaceCdA.Length);
             if (current)
                 _frontalArea = 0;
 
@@ -194,8 +188,6 @@ namespace MuMech
                 if (p.ShieldedFromAirstream || (p.rb == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts) || p.IsLaunchClamp() ||
                     (!current && Dropped(p, stage)))
                     continue;
-
-                AddLiftingSurfaceDrag(p, forward);
 
                 DragCubeList cubes = p.DragCubes;
                 bool cube = p.dragModel == Part.DragModel.DEFAULT || (p.dragModel == Part.DragModel.CUBE && !cubes.None);
@@ -235,35 +227,7 @@ namespace MuMech
             }
 
             for (int m = 0; m < _machs.Length; m++)
-                table[m] = table[m] * PhysicsGlobals.DragMultiplier + _surfaceCdA[m];
-        }
-
-        private readonly double[] _surfaceCdA = new double[_machs.Length];
-
-        // The drag wings, fins and control surfaces add on top of their drag cubes (ModuleLiftingSurface.GetDragVector, with the
-        // surface at rest): dragCurve at the airflow's angle to the lift axis × dragMachCurve × deflectionLiftCoeff × the lift
-        // drag multiplier. That force is in kN for a dynamic pressure in Pa, so × 1000 for the table's kPa.
-        private void AddLiftingSurfaceDrag(Part p, Vector3 forward)
-        {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                if (!(p.Modules[i] is ModuleLiftingSurface ls) || !ls.isEnabled || !ls.useInternalDragModel)
-                    continue;
-                if (ls.nodeEnabled && p.FindAttachNode(ls.attachNodeName)?.attachedPart != null)
-                    continue;
-
-                Transform t = string.IsNullOrEmpty(ls.transformName) ? null : p.FindModelTransform(ls.transformName);
-                if (t == null)
-                    t = ls.transform;
-                Vector3 liftVector = ls.transformDir == ModuleLiftingSurface.TransformDir.Z ? t.forward :
-                    ls.transformDir == ModuleLiftingSurface.TransformDir.Y ? t.up : t.right;
-                float liftDot = Vector3.Dot(forward, liftVector * ls.transformSign);
-                float absDot = ls.omnidirectional ? Mathf.Abs(liftDot) : Mathf.Clamp01(liftDot);
-
-                double drag = ls.dragCurve.Evaluate(absDot) * ls.deflectionLiftCoeff * PhysicsGlobals.LiftDragMultiplier * 1000;
-                for (int m = 0; m < _machs.Length; m++)
-                    _surfaceCdA[m] += drag * ls.dragMachCurve.Evaluate((float)_machs[m]);
-            }
+                table[m] *= PhysicsGlobals.DragMultiplier;
         }
 
         // FlightIntegrator.CalculateDragValue for a part without drag cubes; forward is the direction of flight
@@ -326,10 +290,10 @@ namespace MuMech
 
         // ∫ q/m × Cd·A(Mach) dt / ∫ q/m dt along the plan while in the atmosphere, with the body's own atmosphere curves and the
         // air turning with the body. False if the plan has no time left in the atmosphere.
-        private bool AverageAlongPlan(Solution plan, Vessel vessel, double met)
+        private bool AverageAlongPlan(Solution plan, Vessel vessel)
         {
             CelestialBody body = vessel.mainBody;
-            double t0 = Max(plan.T0, met);
+            double t0 = plan.T0;
             double tf = plan.Tf;
             if (!(tf > t0))
                 return false;
