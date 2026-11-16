@@ -36,6 +36,27 @@ namespace MuMech.UI
         protected override void BeforeSync()
         {
             psg = Settings.AscentType == AscentType.PSG;
+            if (psg) UpdateAero();
+        }
+
+        // what AutoAero filled Cd and Aref with. Rebuilt only when they change.
+        string aeroCd = "", aeroAref = "";
+        double aeroKey = double.NaN;
+
+        void UpdateAero()
+        {
+            if (!Psgs.AutoAero)
+                return;
+
+            if (HighLogic.LoadedSceneIsFlight)
+                Psgs.UpdateAutoAero();
+
+            double key = Psgs.Cd * 7919 + Psgs.Aref;
+            if (key == aeroKey) return;
+            aeroKey = key;
+
+            aeroCd = Psgs.Cd.Val.ToString("0.###");
+            aeroAref = Psgs.Aref.Val.ToString("0.###");
         }
 
         // "° (x.x°)" after the AoA field, formatted when the tenth changes
@@ -109,8 +130,16 @@ namespace MuMech.UI
             w.Visible(dragModel.gameObject, () => psg);
             g = w.Group(dragModel, "#MechJeb_NewUI_DragModel"); //Drag model
             KodeWindow.PropertyGrid aero = w.Properties(g);
-            OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50);
-            w.Attention(OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50), () => PsgAttention.ArefUnset(Core));
+            OptionRows.Switch(aero, "Cd and Aref from the vessel", () => Psgs.AutoAero, v => Psgs.AutoAero = v);
+            Layout cdField = OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50);
+            Layout arefField = OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50);
+            w.Attention(arefField, () => PsgAttention.ArefUnset(Core));
+            w.Visible(cdField.gameObject, () => !Psgs.AutoAero);
+            w.Visible(arefField.gameObject, () => !Psgs.AutoAero);
+            Layout cdValue = aero.Value("Cd", () => aeroCd);
+            Layout arefValue = aero.Value("Aref", () => aeroAref, "m²");
+            w.Visible(cdValue.gameObject, () => Psgs.AutoAero);
+            w.Visible(arefValue.gameObject, () => Psgs.AutoAero);
             UIText arefNote = aero.Note(ArefNote);
             KodeWindow.ToneText(arefNote, Tone.Caution);
             KodeWindow.WrapToWidth(arefNote);

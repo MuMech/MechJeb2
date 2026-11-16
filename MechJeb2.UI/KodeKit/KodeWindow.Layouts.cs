@@ -784,13 +784,14 @@ namespace KodeKit
                 return row;
             }
 
-            /// <summary>label value: a read-out in the label and field columns.</summary>
-            public Layout Value(string label, Func<string> value)
+            /// <summary>label value [unit]: a read-out in the label and field columns, its unit in the unit column as a field's.</summary>
+            public Layout Value(string label, Func<string> value, string unit = null)
             {
                 Layout row = Row();
                 Empty(row);
                 Label(row, label);
                 w.BoundLabel(row, value).tmpText.alignment = TextAlignmentOptions.Right;
+                if (unit != null) Label(row, unit);
                 return row;
             }
 

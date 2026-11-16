@@ -382,6 +382,9 @@ namespace MechJebLib.PSG
 
         public int KSPStage(int phase) => Phases[phase].KSPStage;
 
+        /// <summary>The KSP stage of the phase flown at <paramref name="t" />.</summary>
+        public int KSPStageAt(double t) => Phases[IndexFor(t)].KSPStage;
+
         public int MJPhase(int phase) => Phases[phase].MJPhase;
 
         // -1 without a FlightPlan
