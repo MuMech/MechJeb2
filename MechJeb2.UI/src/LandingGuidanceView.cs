@@ -239,13 +239,13 @@ namespace MuMech.UI
             {
                 if (Core.Landing != null) Core.Landing.DeployGears = v;
             });
-            Layout gears = StageField(g, "#MechJeb_NewUI_GearStageLimit", () => Core.Landing?.LimitGearsStage); //Only gear of stage ≥
+            Layout gears = StageField(g, "#MechJeb_NewUI_GearStageLimit", () => Core.Landing?.LimitGearsStage); //Lowest gear stage: gear of lower stages stays stowed
             g.Dim(gears.gameObject, null, () => Core.Landing == null || !Core.Landing.DeployGears);
             g.Switch("#MechJeb_LandingGuidance_checkbox3", () => Core.Landing != null && Core.Landing.DeployChutes, v => //Deploy Parachutes
             {
                 if (Core.Landing != null) Core.Landing.DeployChutes = v;
             });
-            Layout chutes = StageField(g, "#MechJeb_NewUI_ChuteStageLimit", () => Core.Landing?.LimitChutesStage); //Only parachutes of stage ≥
+            Layout chutes = StageField(g, "#MechJeb_NewUI_ChuteStageLimit", () => Core.Landing?.LimitChutesStage); //Lowest parachute stage: chutes of lower stages stay packed
             g.Dim(chutes.gameObject, null, () => Core.Landing == null || !Core.Landing.DeployChutes);
             g.Switch("#MechJeb_LandingGuidance_jettison", () => Core.Landing != null && Core.Landing.JettisonBeforeEntry, v => //Jettison stage before entry
             {
