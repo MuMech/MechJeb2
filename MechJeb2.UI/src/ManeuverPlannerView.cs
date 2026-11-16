@@ -90,24 +90,16 @@ namespace MuMech.UI
             BuildExecute(w, r);
         }
 
+        // the create buttons' texts by node mode: create, replace the last node, add to it
+        static readonly string[] createKeys = { "#MechJeb_Maneu_button1", "#MechJeb_NewUI_NodeReplace", "#MechJeb_NewUI_NodeAdd" };
+        //Create node, Replace node, Add to node
+        static readonly string[] createExecuteKeys = { "#MechJeb_Maneu_button2", "#MechJeb_NewUI_NodeReplaceExecute", "#MechJeb_NewUI_NodeAddExecute" };
+        //Create and execute, Replace and execute, Add and execute
+        static readonly string[] hintKeys = { "#MechJeb_NewUI_NodeGoesAfterLast", "#MechJeb_NewUI_NodeReplacesLast", "#MechJeb_NewUI_NodeAddedToLast" };
+        //Computed after the last node. / Computed after the node before the last, which is removed. / Computed after the last node, then added to it.
+
         void BuildCreation(KodeWindow w, UIObject r)
         {
-            // with nodes: add a node, change the last one or add to it; a new node goes after the last one
-            string[] modes =
-            {
-                Localizer.Format("#MechJeb_NewUI_NodeNew"), Localizer.Format("#MechJeb_NewUI_NodeChangeLast"), Localizer.Format("#MechJeb_NewUI_NodeAddToLast")
-            }; //New node, Change the last node, Add to the last node
-            Layout mode = KodeWindow.Row(r);
-            w.Segmented(mode, modes, () => (int)planner.Mode, i => planner.Mode = (MechJebModuleManeuverPlanner.NodeMode)i);
-            w.Visible(mode.gameObject, () => planner.PlannerNodeCount() > 0);
-            UIText after = KodeWindow.Paragraph(r, "#MechJeb_NewUI_NodeGoesAfterLast"); //The new node goes after the last one.
-            KodeWindow.ToneText(after, KodeWindow.Tone.Dim);
-            w.Visible(after.gameObject, () => planner.PlannerNodeCount() > 0 && planner.Mode == MechJebModuleManeuverPlanner.NodeMode.New);
-            UIText added = KodeWindow.Paragraph(r, "#MechJeb_NewUI_NodeAddedToLast");
-            //The burn is computed after the last node, then added to it.
-            KodeWindow.ToneText(added, KodeWindow.Tone.Dim);
-            w.Visible(added.gameObject, () => planner.PlannerNodeCount() > 0 && planner.Mode == MechJebModuleManeuverPlanner.NodeMode.AddToLast);
-
             // the operations sorted by group (stable), so each group is listed once under its header
             Operation[] operations = planner.Operations;
             var order = new int[operations.Length];
@@ -134,13 +126,39 @@ namespace MuMech.UI
             OpUi.DynamicParagraph(w, problem, Problem);
             w.Visible(problem.gameObject, () => Problem().Length > 0);
 
-            // destructive on the left, the main action last on the right
+            // with nodes: what Create does with them, just above the buttons, and where the burn is computed from
+            string[] modes =
+            {
+                Localizer.Format("#MechJeb_NewUI_NodeNew"), Localizer.Format("#MechJeb_NewUI_NodeChangeLast"), Localizer.Format("#MechJeb_NewUI_NodeAddToLast")
+            }; //New node, Replace last, Add to last
+            Layout mode = KodeWindow.Row(r);
+            w.Segmented(mode, modes, () => (int)planner.Mode, i => planner.Mode = (MechJebModuleManeuverPlanner.NodeMode)i);
+            w.Visible(mode.gameObject, () => planner.PlannerNodeCount() > 0);
+            for (int i = 0; i < hintKeys.Length; i++)
+            {
+                int m = i;
+                UIText hint = KodeWindow.Paragraph(r, hintKeys[i]);
+                KodeWindow.ToneText(hint, KodeWindow.Tone.Dim);
+                w.Visible(hint.gameObject, () => planner.PlannerNodeCount() > 0 && (int)planner.Mode == m);
+            }
+
+            // destructive on the left, the main action last on the right; the create buttons say what they do to the nodes
             KodeWindow.ActionBarRow bar = KodeWindow.ActionBar(r);
             UIButton removeAll = bar.Danger("#MechJeb_Maneu_button3", () => planner.Vessel.RemoveAllManeuverNodes()); //Remove ALL nodes
             GuidanceUi.Enable(w, removeAll, () => AnyNode);
-            UIButton createExecute = bar.Normal("#MechJeb_Maneu_button2", () => CreateNodes(true)); //"Create and execute"
+            UIButton createExecute = bar.Normal(createExecuteKeys[0], () => CreateNodes(true));
             w.Visible(createExecute.gameObject, () => HasNode);
-            bar.Primary("#MechJeb_Maneu_button1", () => CreateNodes(false)); //"Create node"
+            Tooltips.Add(createExecute.gameObject, "#MechJeb_NewUI_NodeThenExecute_tooltip"); //Then executes the next node.
+            UIButton create = bar.Primary(createKeys[0], () => CreateNodes(false));
+            int shown = 0;
+            w.AddSync(() =>
+            {
+                int m = planner.PlannerNodeCount() > 0 ? (int)planner.Mode : 0;
+                if (m == shown) return;
+                shown = m;
+                create.Text(Localizer.Format(createKeys[m]));
+                createExecute.Text(Localizer.Format(createExecuteKeys[m]));
+            });
         }
 
         // why Add to the last node did nothing, then the operation's error or warning

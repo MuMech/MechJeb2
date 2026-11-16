@@ -131,7 +131,14 @@ namespace MuMech
         {
             _addError = null;
             // the operation has an error to show: leave the nodes alone, and don't execute the ones that were already there
-            if (_mode == NodeMode.AddToLast ? !AddToLastNode(CurrentOperation, o, ut) : PlaceNodes(CurrentOperation, o, ut, _mode == NodeMode.ChangeLast) == null)
+            if (_mode == NodeMode.AddToLast)
+            {
+                if (!AddToLastNode(CurrentOperation, o, ut))
+                    return;
+                // a second click would add the burn again
+                _mode = NodeMode.New;
+            }
+            else if (PlaceNodes(CurrentOperation, o, ut, _mode == NodeMode.ChangeLast) == null)
                 return;
 
             if (execute && Core.Node != null)
