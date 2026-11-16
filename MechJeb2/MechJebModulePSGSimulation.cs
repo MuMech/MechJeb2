@@ -131,6 +131,45 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble Aref = new EditableDouble(0.0);
 
+        /// <summary>
+        ///     Cd and Aref are worked out from the vessel (AeroEstimate) and written into their fields before each solve, instead of
+        ///     the values typed in.
+        /// </summary>
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool AutoAero = true;
+
+        /// <summary>The vessel's drag area as AutoAero fills Cd and Aref with it, kept up to date by UpdateAutoAero.</summary>
+        public readonly PSGAeroEstimate AeroEstimate = new PSGAeroEstimate();
+
+        private float _nextAeroEstimate;
+
+        /// <summary>
+        ///     With AutoAero, works out the vessel's drag area again (at most twice a second) and fills Cd and Aref with it. The PSG
+        ///     Settings window calls it too, so the fields show the estimate before the ascent is engaged.
+        /// </summary>
+        public void UpdateAutoAero()
+        {
+            if (!AutoAero || Time.unscaledTime < _nextAeroEstimate)
+                return;
+            _nextAeroEstimate = Time.unscaledTime + 0.5f;
+
+            Solution? plan = Core.Guidance.Solution ?? Core.Guidance.PadSolution;
+            if (!AeroEstimate.Update(Vessel, plan, VesselState.MET))
+                return;
+
+            Cd.Val = Round(AeroEstimate.Cd, 3);
+            Aref.Val = Round(AeroEstimate.Aref, 3);
+        }
+
+        // A setup saved with an Aref typed in and no AutoAero value keeps that Aref and its Cd.
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+            bool autoSaved = (type != null && type.HasValue(nameof(AutoAero))) || (global != null && global.HasValue(nameof(AutoAero)));
+            if (!autoSaved && Aref > 0)
+                AutoAero = false;
+        }
+
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LimitQa = new EditableDouble(2000);
 
@@ -654,6 +693,7 @@ namespace MuMech
                     double rho1 = MainBody.GetDensity(MainBody.GetPressure(r1), MainBody.GetTemperature(r1));
 
                     double h0 = r1 / Log(rho0 / rho1);
+                    UpdateAutoAero();
                     double cd = Cd;
                     double aRef = Aref;
                     double qAlphaMax = QAlphaLimit;
