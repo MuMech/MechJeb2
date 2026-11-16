@@ -26,13 +26,15 @@ namespace MuMech.UI
             settings.ApplySettings();
         }
 
+        // four groups: how the windows look, how they behave, the menu, and the two flight options; the restore button last
         protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
+            MechJebModuleCustomWindowEditor editor = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+            MechJebModuleMenu menu = Core.GetComputerModule<MechJebModuleMenu>();
 
-            KodeWindow.Button(r, "#MechJeb_Settings_button1", settings.RestoreFactoryDefaults, true); //"\nRestore factory default settings\n"
-
-            Layout scale = KodeWindow.Row(r);
+            UIObject look = w.Group(r, "#MechJeb_NewUI_Appearance"); //Appearance
+            Layout scale = KodeWindow.Row(look);
             KodeWindow.Label(scale, "#MechJeb_Settings_label2", true); //"UI Scale:"
             for (int i = 0; i < MechJebModuleSettings.UiScalePresets.Length; i++)
             {
@@ -63,51 +65,18 @@ namespace MuMech.UI
                 Changed();
             });
 
-            w.Toggle(r, "#MechJeb_Settings_checkbox1", () => settings.DontUseDropDownMenu, v => //"Replace drop down menu with arrow selector"
+            // the new UI's look: its skin, spacing and section headers (KodeHost rebuilds the windows when the headers change)
+            Layout skin = KodeWindow.Row(look);
+            KodeWindow.Label(skin, "#MechJeb_NewUI_Skin");
+            string[] skins = Locs("#MechJeb_NewUI_SkinClassic", "#MechJeb_NewUI_SkinFlat", "#MechJeb_NewUI_SkinGlass", "#MechJeb_NewUI_SkinZTheme");
+            new ComboBox(w, skin, () => settings.UiSkin, i =>
             {
-                settings.DontUseDropDownMenu = v;
+                settings.UiSkin = i;
                 Changed();
-            });
-            w.Toggle(r, "Show Advanced Window Settings", () => settings.ShowAdvancedWindowSettings, v =>
-            {
-                settings.ShowAdvancedWindowSettings = v;
-                Changed();
-            });
-
-            MechJebModuleCustomWindowEditor editor = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-            RoverUi.ToggleRow(w, r, editor, "Toggle:Settings.HideBrakeOnEject");
-            RoverUi.ToggleRow(w, r, editor, "Toggle:Settings.UseTitlebarDragging");
-            RoverUi.ToggleRow(w, r, editor, "Toggle:Menu.useAppLauncher");
-            GameObject hideButton = RoverUi.ToggleRow(w, r, editor, "Toggle:Menu.hideButton");
-            MechJebModuleMenu menu = Core.GetComputerModule<MechJebModuleMenu>();
-            if (hideButton != null) w.Visible(hideButton, () => ToolbarManager.ToolbarAvailable || menu.useAppLauncher);
-
-            KodeWindow.Header(r, "#MechJeb_MenuHeader", true); //Menu
-            MenuView.BuildMenuPosition(w, r, menu);
-
-            // how long the menu takes to slide open or closed
-            Layout anim = KodeWindow.Row(r);
-            KodeWindow.Label(anim, "#MechJeb_MenuAnimationTime");
-            w.Slider(anim, () => settings.MenuAnimationTime, v => settings.MenuAnimationTime = Mathf.Round(v * 20) / 20, 0f, 1f);
-            float shownTime = -1;
-            string timeText = "";
-            w.BoundLabel(anim, () =>
-            {
-                if (settings.MenuAnimationTime != shownTime)
-                {
-                    shownTime = settings.MenuAnimationTime;
-                    timeText = shownTime.ToString("0.00") + " s";
-                }
-                return timeText;
-            }).transform.parent.GetComponent<UnityEngine.UI.LayoutElement>().preferredWidth = 40;
-            Tooltips.Add(anim.gameObject, "#MechJeb_MenuAnimationTime_tooltip");
-
-            RoverUi.ToggleRow(w, r, editor, "Toggle:Settings.RssMode");
-
-            w.Toggle(r, "#MechJeb_Settings_checkbox2", () => Core.Warp.activateSASOnWarp, v => Core.Warp.activateSASOnWarp = v); //"Activate SAS on Warp"
+            }, () => skins);
 
             // the new UI's window opacity (KodeHost applies it to the theme)
-            Layout opacity = KodeWindow.Row(r);
+            Layout opacity = KodeWindow.Row(look);
             KodeWindow.Label(opacity, "#MechJeb_NewUI_Opacity");
             w.Slider(opacity, () => settings.UiOpacity, v =>
             {
@@ -126,29 +95,95 @@ namespace MuMech.UI
                 }
                 return pctText;
             }).transform.parent.GetComponent<UnityEngine.UI.LayoutElement>().preferredWidth = 40;
-            Tooltips.Add(opacity.gameObject, "How opaque the new UI's window backgrounds are. Lower lets more of the scene show through.");
 
-            // the new UI's look: its skin, spacing and section headers (KodeHost rebuilds the windows when the headers change)
-            Layout skin = KodeWindow.Row(r);
-            KodeWindow.Label(skin, "#MechJeb_NewUI_Skin");
-            string[] skins = Locs("#MechJeb_NewUI_SkinClassic", "#MechJeb_NewUI_SkinFlat", "#MechJeb_NewUI_SkinGlass", "#MechJeb_NewUI_SkinZTheme");
-            new ComboBox(w, skin, () => settings.UiSkin, i =>
-            {
-                settings.UiSkin = i;
-                Changed();
-            }, () => skins);
-
-            w.Toggle(r, "#MechJeb_NewUI_Compact", () => settings.UiCompact, v =>
+            w.Toggle(look, "#MechJeb_NewUI_Compact", () => settings.UiCompact, v =>
             {
                 settings.UiCompact = v;
                 Changed();
             });
 
-            w.Toggle(r, "#MechJeb_NewUI_SectionHeaders", () => settings.UiSectionHeaders, v =>
+            w.Toggle(look, "#MechJeb_NewUI_SectionHeaders", () => settings.UiSectionHeaders, v =>
             {
                 settings.UiSectionHeaders = v;
                 Changed();
             });
+
+            UIObject windows = w.Group(r, "#MechJeb_NewUI_Windows"); //Windows
+            RoverUi.ToggleRow(w, windows, editor, "Toggle:Settings.UseTitlebarDragging");
+            w.Toggle(windows, "#MechJeb_Settings_checkbox1", () => settings.DontUseDropDownMenu, v => //"Replace drop down menu with arrow selector"
+            {
+                settings.DontUseDropDownMenu = v;
+                Changed();
+            });
+            // it shows the refresh rate of Ascent Guidance and the custom windows, nothing else: named for that
+            UnityEngine.UI.Toggle refresh = w.Toggle(windows, "#MechJeb_NewUI_ShowRefreshRate", () => settings.ShowAdvancedWindowSettings, v => //Show refresh-rate settings
+            {
+                settings.ShowAdvancedWindowSettings = v;
+                Changed();
+            });
+            Tooltips.Add(refresh.gameObject, "#MechJeb_NewUI_ShowRefreshRate_tooltip");
+
+            RoverUi.ToggleRow(w, windows, editor, "Toggle:Settings.HideBrakeOnEject");
+
+            UIObject menuGroup = w.Group(r, "#MechJeb_MenuHeader"); //Menu
+            RoverUi.ToggleRow(w, menuGroup, editor, "Toggle:Menu.useAppLauncher");
+            GameObject hideButton = RoverUi.ToggleRow(w, menuGroup, editor, "Toggle:Menu.hideButton");
+            if (hideButton != null) w.Visible(hideButton, () => ToolbarManager.ToolbarAvailable || menu.useAppLauncher);
+            MenuView.BuildMenuPosition(w, menuGroup, menu);
+            // how long the menu takes to slide open or closed
+            Layout anim = KodeWindow.Row(menuGroup);
+            KodeWindow.Label(anim, "#MechJeb_MenuAnimationTime");
+            w.Slider(anim, () => settings.MenuAnimationTime, v => settings.MenuAnimationTime = Mathf.Round(v * 20) / 20, 0f, 1f);
+            float shownTime = -1;
+            string timeText = "";
+            w.BoundLabel(anim, () =>
+            {
+                if (settings.MenuAnimationTime != shownTime)
+                {
+                    shownTime = settings.MenuAnimationTime;
+                    timeText = shownTime.ToString("0.00") + " s";
+                }
+                return timeText;
+            }).transform.parent.GetComponent<UnityEngine.UI.LayoutElement>().preferredWidth = 40;
+            Tooltips.Add(anim.gameObject, "#MechJeb_MenuAnimationTime_tooltip");
+
+
+            UIObject flight = w.Group(r, "#MechJeb_NewUI_Flight"); //Flight
+            RoverUi.ToggleRow(w, flight, editor, "Toggle:Settings.RssMode");
+            w.Toggle(flight, "#MechJeb_Settings_checkbox2", () => Core.Warp.activateSASOnWarp, v => Core.Warp.activateSASOnWarp = v); //"Activate SAS on Warp"
+
+            BuildRestore(w, r);
+        }
+
+        // how long the confirmation waits for its second click
+        const float ConfirmSeconds = 10f;
+
+        float armedUntil = float.NegativeInfinity;
+
+        bool Armed => Time.unscaledTime < armedUntil;
+
+        /// <summary>
+        /// "Restore factory default settings" deletes the global settings and this vessel type's, and can't be undone: it is the
+        /// last row, and asks again (in the Danger colour, with Cancel) before it does; the question goes after ConfirmSeconds.
+        /// </summary>
+        void BuildRestore(KodeWindow w, UIObject r)
+        {
+            UIButton ask = KodeWindow.Button(r, "#MechJeb_NewUI_RestoreDefaults", () => armedUntil = Time.unscaledTime + ConfirmSeconds, true); //Restore factory default settings…
+            w.Visible(ask.gameObject, () => !Armed);
+
+            Layout confirm = KodeWindow.Panel(r);
+            UIText warning = KodeWindow.Paragraph(confirm, "#MechJeb_NewUI_RestoreWarning"); //This deletes all MechJeb settings, ...
+            KodeWindow.ToneText(warning, KodeWindow.Tone.Warn);
+            Layout buttons = KodeWindow.Row(confirm);
+            UIButton delete = KodeWindow.Button(buttons, "#MechJeb_NewUI_RestoreConfirm", () => //Delete all MechJeb settings
+            {
+                armedUntil = float.NegativeInfinity;
+                settings.RestoreFactoryDefaults();
+            }, true);
+            KodeWindow.Role(delete, ButtonRole.Danger);
+            KodeWindow.Button(buttons, "#MechJeb_NewUI_Cancel", () => armedUntil = float.NegativeInfinity); //Cancel
+            // hidden once its texts are made (TMP sets up under an active parent)
+            w.Visible(confirm.gameObject, () => Armed);
         }
 
         static string[] Locs(params string[] keys)
