@@ -54,7 +54,7 @@ namespace MuMech.UI
             aeroKey = key;
 
             aeroCd = Psgs.Cd.Val.ToString("0.###");
-            aeroAref = Psgs.Aref.Val.ToString("0.###") + " m²";
+            aeroAref = Psgs.Aref.Val.ToString("0.###");
             aeroSource = AeroSource(e);
         }
 
@@ -286,7 +286,7 @@ namespace MuMech.UI
             w.Visible(cdField.gameObject, () => !Psgs.AutoAero);
             w.Visible(arefField.gameObject, () => !Psgs.AutoAero);
             Layout cdValue = aero.Value("Cd", () => aeroCd);
-            Layout arefValue = aero.Value("Aref", () => aeroAref);
+            Layout arefValue = aero.Value("Aref", () => aeroAref, "m²");
             w.Visible(cdValue.gameObject, () => Psgs.AutoAero);
             w.Visible(arefValue.gameObject, () => Psgs.AutoAero);
             UIText aeroNote = aero.Note("");
