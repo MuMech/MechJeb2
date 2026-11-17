@@ -25,12 +25,6 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble PitchRate = new EditableDouble(PITCH_RATE_DEFAULT);
 
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult TurnStartAltitude = new EditableDoubleMult(500, 1000);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult TurnStartVelocity = new EditableDoubleMult(50);
-
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public int AscentTypeInteger;
@@ -40,8 +34,10 @@ namespace MuMech
             get => (AscentType)AscentTypeInteger;
             set
             {
+                bool changed = AscentTypeInteger != (int)value;
                 AscentTypeInteger = (int)value;
                 DisableAscentModules();
+                if (changed) CloseOtherTypeWindows();
             }
         }
 
@@ -50,18 +46,33 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult DesiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
 
+        /// <summary>The target inclination, for both ascent types (PSGSimulation.Inc is this one).</summary>
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble DesiredInclination = new EditableDouble(0.0);
+
+        // false until the PSG inclination saved before the two were shared was taken over (ShareInclinationIfNeeded). Per vessel
+        // type only: a global true would skip the other types, which still have their own PSG inclination to take over
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.TYPE)]
+        public bool InclinationShared;
+
+        /// <summary>
+        ///     Classic and PSG had an inclination each; there is one now. Once, a PSG ascent keeps the PSG one it had. The core
+        ///     calls this after its settings reload and saves at once when it returns true.
+        /// </summary>
+        public bool ShareInclinationIfNeeded()
+        {
+            if (InclinationShared) return false;
+            EditableDouble saved = Core.PSGSimulation.SavedPsgInclination;
+            if (AscentType == AscentType.PSG && !double.IsNaN(saved.Val))
+                DesiredInclination.Val = saved.Val;
+            InclinationShared = true;
+            return true;
+        }
 
         // has no effect: nothing reads it. Kept so that kOS scripts setting RELATIVELAN still run.
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool RelativeLAN = false;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool CorrectiveSteering = false;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble CorrectiveSteeringGain = new EditableDouble(3.0);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool ForceRoll = true;
@@ -72,14 +83,36 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble TurnRoll = new EditableDouble(0);
 
+        /// <summary>
+        ///     The ascent's own throttle limits: the thrust controller reads them instead of the general ones (Utilities) while an
+        ///     ascent autopilot is engaged.
+        /// </summary>
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly ThrustLimitSet ThrustLimits = new ThrustLimitSet();
+
+        /// <summary>The ascent's own staging rules: the staging controller reads them while an ascent autopilot is engaged.</summary>
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly StagingRuleSet StagingRules = new StagingRuleSet();
+
+        /// <summary>The ascent's own Auto-warp: the launch countdown, the coast and the Classic circularization burn use it.</summary>
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool Autowarp = true;
+
+        // false until the ascent's own values were first copied from the general ones (InitOwnValuesIfNeeded)
+        [UsedImplicitly]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool OwnValuesInitialized;
+
+        /// <summary>The limits a PSG ascent flies with: the ascent's own, without the throttle cap and the electric limit.</summary>
+        public IThrustLimits PsgThrustLimits => _psgThrustLimits ??= new ThrustLimitsWithoutThrottleCap(ThrustLimits);
+
+        private IThrustLimits _psgThrustLimits;
+
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool AutoDeploySolarPanels = true;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool AutoDeployAntennas = true;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool SkipCircularization = false;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble RollAltitude = new EditableDouble(50);
@@ -107,16 +140,7 @@ namespace MuMech
             }
         }
 
-        /* classic AoA limiter */
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool LimitAoA = true;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble MaxAoA = 5;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult AOALimitFadeoutPressure = new EditableDoubleMult(2500);
-
+        // whether the ascent autopilot's AoA limiter is currently limiting, for the settings window
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool LimitingAoA = false;
 
@@ -130,88 +154,16 @@ namespace MuMech
         public readonly EditableInt WarpCountDown = 11;
 
         /*
-         * "Classic" ascent path settings
-         */
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult TurnEndAltitude = new EditableDoubleMult(60000, 1000);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble TurnEndAngle = 0;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult TurnShapeExponent = new EditableDoubleMult(0.4, 0.01);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool AutoPath = true;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public float AutoTurnPerc = 0.05f;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public float AutoTurnSpdFactor = 18.5f;
-
-        public double AutoTurnStartAltitude =>
-            Vessel.mainBody.atmosphere ? Vessel.mainBody.RealMaxAtmosphereAltitude() * AutoTurnPerc : Vessel.terrainAltitude + 25;
-
-        public double AutoTurnStartVelocity => Vessel.mainBody.atmosphere
-            ? AutoTurnSpdFactor * AutoTurnSpdFactor * AutoTurnSpdFactor * 0.015625f
-            : double.PositiveInfinity;
-
-        public double AutoTurnEndAltitude =>
-            Vessel.mainBody.atmosphere
-                ? Math.Min(Vessel.mainBody.RealMaxAtmosphereAltitude() * 0.85, DesiredOrbitAltitude)
-                : Math.Min(30000, DesiredOrbitAltitude * 0.85);
-
-        /*
          * PSG Staging values
          */
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public int CoastLocation = -1;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableInt LastStage = -1;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableInt CoastStageInternal = -1;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool CoastStageFlag;
-
-        public int CoastStage => CoastStageFlag ? CoastStageInternal.Val : -1;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool SpinupStageFlag = true;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableInt SpinupStageInternal = -1;
-
-        public int SpinupStage => SpinupStageFlag ? SpinupStageInternal.Val : -1;
+        // which stages burn, how, and where the coast and its spin-up go are the PSG plan's (PSGSimulation.LogicalPlan)
 
         [Persistent(pass = (int)Pass.TYPE)]
         public readonly EditableDouble SpinupLeadTime = 50;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(TAU / 6.0, TAU / 60.0);
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableIntList UnguidedStagesInternal = new EditableIntList();
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool UnguidedStagesFlag;
-
-        private readonly List<int> _emptyList = new List<int>();
-
-        public List<int> UnguidedStages => UnguidedStagesFlag ? UnguidedStagesInternal.Val : _emptyList;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableIntList FixedStagesInternal = new EditableIntList();
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool FixedStagesFlag;
-
-        public List<int> FixedStages => FixedStagesFlag ? FixedStagesInternal.Val : _emptyList;
 
         public bool OptimizeStageFlag => !Core.PSGSimulation.LogicalPlan?.AllFixedBurnTimes() ?? true;
 
@@ -223,6 +175,39 @@ namespace MuMech
         public bool LaunchingToMatchLan;
         public bool LaunchingToLan;
         public bool OverrideWarpToPlane;
+
+        /// <summary>
+        ///     An ascent autopilot's engage: its own throttle limits, staging rules and Auto-warp apply instead of the general ones
+        ///     until it disengages (ReleaseOwnValues). PSG flies without the throttle cap and the electric limit.
+        /// </summary>
+        public void ApplyOwnValues(object autopilot, bool psg)
+        {
+            Core.Thrust.SetLimitsOverride(autopilot, psg ? PsgThrustLimits : ThrustLimits);
+            Core.Staging.SetRulesOverride(autopilot, StagingRules);
+            Core.Node.SetAutowarpOverride(autopilot, () => Autowarp);
+        }
+
+        public void ReleaseOwnValues(object autopilot)
+        {
+            Core.Thrust.ClearLimitsOverride(autopilot);
+            Core.Staging.ClearRulesOverride(autopilot);
+            Core.Node.ClearAutowarpOverride(autopilot);
+        }
+
+        /// <summary>
+        ///     The ascent's own throttle limits, staging rules and Auto-warp start as a copy of the general ones, once: an ascent
+        ///     flies as before until the player changes one side. The core calls this after its settings reload and saves at once
+        ///     when it returns true.
+        /// </summary>
+        public bool InitOwnValuesIfNeeded()
+        {
+            if (OwnValuesInitialized) return false;
+            MuMech.ThrustLimits.Copy(Core.Thrust, ThrustLimits);
+            MuMech.StagingRules.Copy(Core.Staging, StagingRules);
+            Autowarp             = Core.Node.Autowarp;
+            OwnValuesInitialized = true;
+            return true;
+        }
 
         /*
          * Helpers for dealing with switching between modules
@@ -240,22 +225,57 @@ namespace MuMech
             };
         }
 
+        // the windows of the other ascent type have nothing to show: Classic's path editor, PSG's stage table and solution
+        private void CloseOtherTypeWindows()
+        {
+            if (AscentType == AscentType.PSG)
+                Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>().Enabled = false;
+            else
+            {
+                Core.GetComputerModule<MechJebModuleAscentPSGStagesMenu>().Enabled = false;
+                Core.GetComputerModule<MechJebModulePSGSolutionGraph>().Enabled = false;
+            }
+        }
+
         private void DisableAscentModules()
         {
             foreach (AscentType type in _values)
                 if (type != AscentType)
-                    GetAscentModule(type).Enabled = false;
+                    GetAscentModule(type).Users.Clear(); // no user is left to keep it engaged later
         }
 
-        public override void OnStart(PartModule.StartState state)
+        // A load writes AscentTypeInteger and _autostage without their setters: apply what the setters do
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
-            base.OnStart(state);
+            int oldAscentType = AscentTypeInteger;
 
-            if (ForceResetROSettings && ReflectionUtils.IsLoadedRealismOverhaul)
-            {
-                ApplyRODefaults();
-                ForceResetROSettings = false;
-            }
+            base.OnLoad(local, type, global);
+
+            if (AscentTypeInteger != oldAscentType)
+                DisableAscentModules();
+
+            IAscentAutopilot autopilot = AscentAutopilot;
+            if (autopilot == null || !autopilot.Enabled)
+                return;
+
+            if (_autostage)
+                Core.Staging.Users.Add(autopilot);
+            else
+                Core.Staging.Users.Remove(autopilot);
+        }
+
+        /// <summary>
+        ///     Applies the RO defaults once per install with RO. The core calls this after its settings reload, which would
+        ///     otherwise put the saved values back over them, and saves at once when it returns true.
+        /// </summary>
+        public bool ApplyRODefaultsIfNeeded()
+        {
+            if (!ForceResetROSettings || !ReflectionUtils.IsLoadedRealismOverhaul)
+                return false;
+
+            ApplyRODefaults();
+            ForceResetROSettings = false;
+            return true;
         }
 
         private void ApplyRODefaults()
@@ -263,13 +283,6 @@ namespace MuMech
             PitchStartHeight.Val = PITCH_START_HEIGHT_DEFAULT;
             PitchRate.Val = PITCH_RATE_DEFAULT;
             LaunchLANDifference.Val = LAUNCH_LAN_DIFFERENCE;
-
-            SpinupStageFlag = false;
-            SpinupStageInternal.Val = -1;
-            CoastStageFlag = false;
-            CoastStageInternal.Val = -1;
-            UnguidedStagesFlag = false;
-            FixedStagesFlag = false;
 
             DesiredOrbitAltitude.Val = 145000;
 
@@ -310,7 +323,6 @@ namespace MuMech
 
             // open the PSG ascent settings windows for new users
             MechJebModuleAscentMenu ascentMenu = Core.GetComputerModule<MechJebModuleAscentMenu>();
-            ascentMenu._lastPSGSettingsEnabled = true;
             ascentMenu._lastSettingsMenuEnabled = true;
 
             // long stats
@@ -323,6 +335,11 @@ namespace MuMech
 
             // Disable 'kill roll' toggle
             Core.Node.KillRollRotation = false;
+
+            // the ascent flies with its own values: they get the same defaults
+            MuMech.ThrustLimits.Copy(Core.Thrust, ThrustLimits);
+            MuMech.StagingRules.Copy(Core.Staging, StagingRules);
+            OwnValuesInitialized = true;
         }
 
         private const double LAUNCH_LAN_DIFFERENCE = 0;

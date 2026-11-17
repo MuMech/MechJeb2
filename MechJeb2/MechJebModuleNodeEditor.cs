@@ -14,19 +14,22 @@ namespace MuMech
         internal EditableDouble normalPlus = 0;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble progradeDelta = 0;
+        public EditableDouble progradeDelta = 1;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble radialPlusDelta = 0;
+        public EditableDouble radialPlusDelta = 1;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble normalPlusDelta = 0;
+        public EditableDouble normalPlusDelta = 1;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableTime timeOffset = 0;
 
         internal ManeuverNode node;
         private ManeuverGizmo gizmo;
+
+        // the node's burn as the three fields last read or wrote it
+        private Vector3d fieldsDeltaV;
 
         internal enum Snap { PERIAPSIS, APOAPSIS, REL_ASCENDING, REL_DESCENDING, EQ_ASCENDING, EQ_DESCENDING }
 
@@ -35,11 +38,14 @@ namespace MuMech
 
         internal readonly string[] snapStrings = { Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"), Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6") }; //"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
 
-        private void GizmoUpdateHandler(Vector3d dV, double UT)
+        private void GizmoUpdateHandler(Vector3d dV, double UT) => LoadFields(dV);
+
+        private void LoadFields(Vector3d dV)
         {
             prograde = dV.z;
             radialPlus = dV.x;
             normalPlus = dV.y;
+            fieldsDeltaV = dV;
         }
 
         internal void MergeNext(int index)
@@ -52,18 +58,17 @@ namespace MuMech
             next.RemoveSelf();
         }
 
-        /// <summary>Make `newNode` the edited node: reload the fields when it changed and follow its gizmo.</summary>
+        /// <summary>
+        /// Make `newNode` the edited node and follow its gizmo. The fields are reloaded when the node changed, or when its burn was
+        /// changed elsewhere: KSP's own node panel, a gizmo with this window closed, or a merge.
+        /// </summary>
         internal void SelectNode(ManeuverNode newNode)
         {
             ManeuverNode oldNode = node;
             node = newNode;
 
-            if (node != oldNode)
-            {
-                prograde = node.DeltaV.z;
-                radialPlus = node.DeltaV.x;
-                normalPlus = node.DeltaV.y;
-            }
+            if (node != oldNode || node.DeltaV != fieldsDeltaV)
+                LoadFields(node.DeltaV);
 
             if (gizmo != node.attachedGizmo)
             {
@@ -74,7 +79,11 @@ namespace MuMech
         }
 
         /// <summary>Write the three edited components to the node.</summary>
-        internal void UpdateNodeFromFields() => node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+        internal void UpdateNodeFromFields()
+        {
+            node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+            fieldsDeltaV = node.DeltaV;
+        }
 
         /// <summary>Move the node by `dt` seconds. A move to a non-finite time or into the past is refused: the stock game misbehaves with either.</summary>
         internal void ShiftNode(double dt) => MoveNode(node.UT + dt);
@@ -82,8 +91,31 @@ namespace MuMech
         /// <summary>Move the node by `orbits` periods of its orbit. A hyperbolic orbit has no period, so the node stays.</summary>
         internal void ShiftNodeOrbits(int orbits)
         {
-            if (node.patch.eccentricity < 1)
+            if (node.patch.eccentricity < 1 && OnNodePatch(node.UT + orbits * node.patch.period))
                 ShiftNode(orbits * node.patch.period);
+        }
+
+        // whether UT is on the node's patch: a time computed from the patch's orbit before the patch starts, or past its sphere of
+        // influence change, is a point of an orbit the vessel does not follow then
+        private bool OnNodePatch(double UT)
+        {
+            Orbit o = node.patch;
+            if (o.patchStartTransition != Orbit.PatchTransitionType.INITIAL && UT < o.StartUT)
+                return false;
+
+            // KSP cuts the patch of a node after the first at the node (MANEUVER, EndUT = node.UT): where the patch ends without
+            // the node is solved again, on a copy
+            if (o.patchEndTransition == Orbit.PatchTransitionType.MANEUVER)
+            {
+                // the encounter search only looks between StartUT and EndUT, which KSP sets to one period before it solves a patch
+                var uncut = new Orbit(o) { StartUT = o.StartUT };
+                uncut.EndUT = uncut.eccentricity < 1 ? uncut.StartUT + uncut.period : uncut.period;
+                PatchedConics.CalculatePatch(uncut, new Orbit(), o.epoch, new PatchedConics.SolverParameters(),
+                    Vessel.patchedConicSolver.targetBody);
+                o = uncut;
+            }
+
+            return o.patchEndTransition == Orbit.PatchTransitionType.FINAL || UT <= o.EndUT;
         }
 
         private void MoveNode(double UT)
@@ -136,7 +168,8 @@ namespace MuMech
                     break;
             }
 
-            MoveNode(UT);
+            if (OnNodePatch(UT))
+                MoveNode(UT);
         }
 
         private static readonly string[] relativityModeStrings = { "0", "1", "2", "3", "4" };

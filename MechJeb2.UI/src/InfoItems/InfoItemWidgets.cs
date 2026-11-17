@@ -11,7 +11,7 @@ using UnityEngine.UI;
 namespace MuMech.UI
 {
     /// <summary>
-    /// Builds the KodeKit widget of one InfoItem (what InfoItem.DrawItem draws in IMGUI), for custom info windows and
+    /// Builds the KodeKit widget of one InfoItem, for custom info windows and
     /// any other window that shows registry items. Values are refreshed by the owner through Refresh() at its rate.
     /// </summary>
     public class InfoItemWidgets
@@ -46,13 +46,13 @@ namespace MuMech.UI
             }
         }
 
-        // the modern layout puts each run of toggles and fields in one property grid, so their labels and fields line up
+        // each run of toggles and fields goes in one property grid, so their labels and fields line up
         KodeWindow.PropertyGrid grid;
         UIObject gridParent;
 
         public void Add(UIObject parent, InfoItem item)
         {
-            if (KodeWindow.ModernLayout && (item is ToggleInfoItem || item is EditableInfoItem))
+            if (item is ToggleInfoItem || item is EditableInfoItem)
             {
                 AddOption(parent, item);
                 return;
@@ -67,23 +67,16 @@ namespace MuMech.UI
                 case ValueInfoItem v:
                     AddValue(parent, v);
                     break;
-                case ToggleInfoItem t:
-                    UnityEngine.UI.Toggle toggle = w.Toggle(parent, item.localizedName, () => t.Value, x => t.Value = x);
-                    Tooltip(KodeWindow.LabelOf(toggle).gameObject, item);
-                    break;
-                case EditableInfoItem e:
-                    AddEditable(parent, e);
-                    break;
                 case ActionInfoItem a:
                     UIButton b = KodeWindow.Button(parent, item.localizedName, a.Invoke, true);
                     Tooltip(b.gameObject, item);
+                    if (a.EngagedModule != null) EngageForm(b, a);
+                    else ApplyColor(b.GetComponentInChildren<TMP_Text>(), true);
                     break;
                 case GeneralInfoItem g:
-                    if (GeneralItemBuilders.TryBuild(w, parent, g, refresh))
-                        break;
-                    // not ported: the IMGUI method inside the window, refreshed like MechJebModuleCustomInfoWindow does
-                    new ImguiBlock(parent, g.DrawItem);
-                    refresh.Add(g.UpdateItem);
+                    // another mod's item has no builder: its IMGUI method can't be shown, so its name only
+                    if (!GeneralItemBuilders.TryBuild(w, parent, g, refresh))
+                        KodeWindow.Label(parent, item.localizedName);
                     break;
                 default:
                     KodeWindow.Label(parent, item.localizedName);
@@ -98,38 +91,42 @@ namespace MuMech.UI
             KodeWindow.Label(parent, item.localizedName);
         }
 
+        // an action that engages its module: Primary with its name while the module is off, Danger with the engaged name
+        // while it is on. The role's colours, not the window's text colour: the role says what the button does
+        void EngageForm(UIButton b, ActionInfoItem a)
+        {
+            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
+            w.BindRole(b, () => a.EngagedModule.Enabled ? ButtonRole.Danger : ButtonRole.Primary);
+            w.AddSync(() =>
+            {
+                string text = a.EngagedModule.Enabled ? a.LocalizedEngagedName : a.localizedName;
+                if (!ReferenceEquals(label.text, text)) label.text = text;
+            });
+        }
+
         static void Tooltip(GameObject go, InfoItem item)
         {
             if (!string.IsNullOrEmpty(item.localizedTooltip)) Tooltips.Add(go, item.localizedTooltip);
         }
 
-        /// <summary>A header item: its text (bold; the modern layout's header style) over a hairline, or the line alone.</summary>
+        /// <summary>A header item: its text (the header style) over a hairline, or the line alone.</summary>
         void AddHeader(UIObject parent, HeaderInfoItem h)
         {
-            UIText text;
-            if (KodeWindow.ModernLayout)
-                text = KodeWindow.Header(parent, h.Text, true);
-            else
-            {
-                text = KodeWindow.Label(parent, h.Text);
-                KodeWindow.Styled(text.gameObject, th => text.tmpText.fontStyle = FontStyles.Bold);
-                ApplyColor(text.tmpText);
-            }
+            UIText text = KodeWindow.Header(parent, h.Text, true);
             text.gameObject.SetActive(h.Text.Length > 0);
-            // the editor changes the text in place (the modern header drops a trailing colon, as when it was built)
+            // the editor changes the text in place (the header drops a trailing colon, as when it was built)
             string shown = h.Text;
-            bool modern = KodeWindow.ModernLayout;
             w.AddSync(() =>
             {
                 if (ReferenceEquals(h.Text, shown)) return;
                 shown = h.Text;
-                text.tmpText.text = modern ? shown.TrimEnd(':', ' ', ' ') : shown;
+                text.tmpText.text = shown.TrimEnd(':', ' ', ' ');
                 text.gameObject.SetActive(shown.Length > 0);
             });
             KodeWindow.Rule(parent);
         }
 
-        /// <summary>The modern layout's option row of a toggle ([switch] label) or a field (label [field] unit).</summary>
+        /// <summary>The option row of a toggle ([switch] label) or a field (label [field] unit).</summary>
         void AddOption(UIObject parent, InfoItem item)
         {
             if (grid == null || gridParent != parent)
@@ -155,18 +152,6 @@ namespace MuMech.UI
             Tooltip(cells.GetChild(1).gameObject, item);
             ApplyColor(cells.GetChild(1).GetComponentInChildren<TMP_Text>());
             if (cells.childCount > 3) ApplyColor(cells.GetChild(3).GetComponentInChildren<TMP_Text>());
-        }
-
-        void AddEditable(UIObject parent, EditableInfoItem e)
-        {
-            IEditable ed = e.Editable;
-            if (ed == null) return;
-            Layout row = KodeWindow.Row(parent);
-            UIText label = KodeWindow.Label(row, e.localizedName, true);
-            Tooltip(label.gameObject, e);
-            Func<bool> valid = ed is EditableDoubleMult m ? (Func<bool>)(() => m.IsParsed) : null;
-            EditFields.Field(w, row, () => ed.Text, s => ed.Text = s, e.width, valid);
-            if (!string.IsNullOrEmpty(e.rightLabel)) KodeWindow.Label(row, e.rightLabel);
         }
 
         // ---- values ----
@@ -321,7 +306,7 @@ namespace MuMech.UI
         /// <summary>Cut-off values show their whole text on hover; off for an overlay, which must not catch the pointer.</summary>
         public bool ValueTooltips = true;
 
-        void ApplyColor(TMP_Text t)
+        void ApplyColor(TMP_Text t, bool button = false)
         {
             if (TextColor == null) return;
             Color? shown = null;
@@ -332,7 +317,15 @@ namespace MuMech.UI
                 Color? c = TextColor();
                 if (c == shown) return;
                 shown = c;
-                t.color = c ?? Theme.Current.Text;
+                if (c.HasValue)
+                {
+                    t.color = c.Value;
+                    return;
+                }
+
+                // no colour of its own any more: the one the theme gives this text
+                Theme th = KodeWindow.ThemeOf(t.gameObject);
+                t.color = button ? th.Button.TextColor : th.Text;
             });
         }
 
@@ -396,10 +389,7 @@ namespace MuMech.UI
         {
             string f = item.Format;
             if (f == ValueInfoItem.TIME)
-            {
-                long day = KSPUtil.dateTimeFormatter.Day, year = KSPUtil.dateTimeFormatter.Year;
-                ct.AppendDHMS(d, item.TimeDecimalPlaces, (int)(day / 3600), (int)(year / day));
-            }
+                ct.AppendDHMS(d, item.TimeDecimalPlaces);
             else if (f == ValueInfoItem.ANGLE) ct.AppendDMS(d);
             else if (f == ValueInfoItem.ANGLE_NS) ct.AppendDMS(d).Append(d > 0 ? " N" : " S");
             else if (f == ValueInfoItem.ANGLE_EW) ct.AppendDMS(d).Append(d > 0 ? " E" : " W");

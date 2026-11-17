@@ -29,6 +29,12 @@ namespace MuMech
             Debug.Log("Enabling PSG Ascent Autopilot");
             _mode = AscentMode.PRELAUNCH;
 
+            AscentSettings.ApplyOwnValues(this, true);
+
+            // Each engage plans from the current settings and stages: Drive rebuilds the flight plan, so the plan of an earlier
+            // engage, with the stages it marked done, is not flown again. The simulation, which freezes the plan, is disabled here.
+            Core.PSGSimulation.FlightPlan = null;
+
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
             if (AscentSettings.Autostage) Core.Staging.Users.Add(this);
@@ -48,7 +54,9 @@ namespace MuMech
             Core.Thrust.Users.Remove(this);
             Core.Staging.Users.Remove(this);
             Countdown.Users.Remove(this);
-            AscentSettings.LaunchingToPlane = AscentSettings.LaunchingToMatchLan = AscentSettings.LaunchingToLan = false;
+            AscentSettings.ReleaseOwnValues(this);
+
+            Countdown.Abort();
 
             Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
 
@@ -72,12 +80,12 @@ namespace MuMech
             if (Core.PSGSimulation.FlightPlan == null)
             {
                 Core.StageStats.RequestUpdate();
-                Core.PSGSimulation.UpdateLogicalPlan(AscentSettings);
+                Core.PSGSimulation.UpdateLogicalPlan();
             }
 
             if (Countdown.Active)
             {
-                if (Countdown.TMinus <= AscentSettings.WarpCountDown)
+                if (Countdown.TMinus <= Math.Max(AscentSettings.WarpCountDown, 0))
                 {
                     Core.PSGSimulation.Users.Add(this);
                     Core.Guidance.AssertStart(false);
@@ -103,9 +111,8 @@ namespace MuMech
 
             if (Countdown.HoldForLiftoff(Status)) return;
 
-            // null when a part's blacklist removed the controller
-            Core.Solarpanel?.DriveForAscent();
-            Core.AntennaControl?.DriveForAscent();
+            Core.Solarpanel.DriveForAscent();
+            Core.AntennaControl.DriveForAscent();
 
             // TODO: at some point we probably still need to:
             // 1. model vertical rise and pitchover in the solver
@@ -132,6 +139,27 @@ namespace MuMech
 
         private double _pitchStartTime;
 
+        private string _awaitingComputing;
+        private string _awaitingProgress, _awaitingProgressFrom;
+
+        // "Awaiting liftoff: computing the ascent, step 2 of 5 (1m 12s)", rebuilt only when the progress text changes
+        private string AwaitingComputing()
+        {
+            string progress = Core.PSGSimulation.ProgressShort;
+            if (progress == null)
+                return _awaitingComputing ??= Localizer.Format("#MechJeb_Ascent_status12") + ": computing the ascent…"; //"Awaiting liftoff"
+
+            if (!ReferenceEquals(progress, _awaitingProgressFrom))
+            {
+                _awaitingProgressFrom = progress;
+                _awaitingProgress     = Localizer.Format("#MechJeb_Ascent_status12") + ": " + progress;
+            }
+
+            return _awaitingProgress;
+        }
+
+        private const double MIN_PITCH_RATE = 0.1; // degrees per second
+
         private void DriveVerticalAscent()
         {
             //during the vertical ascent we just thrust straight up at max throttle
@@ -142,7 +170,11 @@ namespace MuMech
 
             if (!liftedOff)
             {
-                Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
+                // the first solve can take minutes on a slow machine: say so, or the pad looks stuck
+                if (Core.Guidance.Solution == null)
+                    Status.Set(AwaitingComputing()); //"Awaiting liftoff: computing the ascent…"
+                else
+                    Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
                 return;
             }
 
@@ -160,11 +192,20 @@ namespace MuMech
         private void DrivePitchProgram()
         {
             double dt = VesselState.MET - _pitchStartTime;
-            double theta = dt * AscentSettings.PitchRate;
+            // a rate of 0 or less would hold the pitch at 90 and never hand over to guidance in an atmosphere
+            double theta = dt * Math.Max(AscentSettings.PitchRate, MIN_PITCH_RATE);
             // not below the horizon while waiting for guidance (no solution yet, or none at all)
             double pitch = Math.Max(90 - theta, 0);
 
-            Status.Set(Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}")); //Pitch program <<1>>° to guidance
+            // without a solution the guidance pitch is 0, so "N° to guidance" would be the pitch itself: say what is missing instead,
+            // since the pitch program goes on down to the horizon
+            if (Core.Guidance.Solution == null)
+                Status.Set($"No guidance yet, pitch program at {pitch:F0}°. " +
+                    PSGFeedback.OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, true, false,
+                        Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0),
+                    AscentStatusLevel.WARNING);
+            else
+                Status.Set(Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}")); //Pitch program <<1>>° to guidance
 
             if (CheckForGuidanceTransition(pitch))
             {
@@ -207,9 +248,36 @@ namespace MuMech
             }
         }
 
+        private string _lockStatus, _lockStatusId;
+
+        // Drive doesn't run while another mod has taken MechJeb's controls (DeactivateControl: RP-1 sets it when the avionics on
+        // board can't support the vessel, RemoteTech without a connection), so the status would freeze on its last value
+        public override void OnFixedUpdate()
+        {
+            if (_mode == AscentMode.GUIDANCE && Core.DeactivateControl)
+                SetLockStatus();
+        }
+
+        // says why MechJeb can't fly the vessel while another mod has taken its controls; the string is rebuilt only when the lock
+        // named changes
+        private void SetLockStatus()
+        {
+            string lockId = PSGFeedback.SteeringLockId();
+            if (lockId != _lockStatusId || _lockStatus == null)
+            {
+                _lockStatusId = lockId;
+                _lockStatus   = PSGFeedback.LockStatus(lockId);
+            }
+
+            Status.Set(_lockStatus, AscentStatusLevel.ERROR);
+        }
+
         private Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
         {
-            double lim = Clamp(Core.PSGSimulation.LimitQa, 0, 10000);
+            double lim = Core.PSGSimulation.QAlphaLimit;
+            if (lim <= 0)
+                return desiredThrustVector;
+
             AscentSettings.LimitingAoA = VesselState.DynamicPressure * Vector3.Angle(VesselState.SurfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
             if (AscentSettings.LimitingAoA)
             {

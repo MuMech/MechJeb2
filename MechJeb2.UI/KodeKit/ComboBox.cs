@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace KodeKit
 {
     /// <summary>
-    /// GuiUtils.ComboBox for uGUI: a button showing the current entry; clicking it opens a popup list
+    /// A drop-down: a button showing the current entry; clicking it opens a popup list
     /// above every window, positioned under the button, clamped on screen, at the window's scale.
     /// A click on an entry selects it; a click anywhere else closes the popup without a change.
     /// </summary>
@@ -26,6 +26,8 @@ namespace KodeKit
         readonly TMP_Text label;
         GameObject popup;
         RectTransform list;
+        // the entries array the open popup's rows were made from: a list that changes comes as a new array, which closes it
+        string[] popupEntries;
 
         public bool IsOpen => popup != null;
         public RectTransform PopupList => list;
@@ -36,11 +38,19 @@ namespace KodeKit
 
         static string Arrow(TMP_Text t) => t.font != null && t.font.HasCharacter('↓') ? "↓" : "v";
 
+        /// <param name="entries">
+        /// The entries, read every frame: the same array while the list is the same, a new array when it changes (an open popup
+        /// closes on a new array).
+        /// </param>
         /// <param name="dots">Each entry's colour, as a dot before its text in the button and the popup (the arrow selector shows the text alone).</param>
         public ComboBox(KodeWindow w, UIObject parent, Func<int> get, Action<int> set, Func<string[]> entries, bool flexible = true, Func<int, Color> dots = null)
         {
             this.get = get;
-            this.set = w.Edits(set);
+            Action<int> edit = w.Edits(set);
+            this.set = i =>
+            {
+                if (IsEnabled) edit(i);
+            };
             this.entries = entries;
             this.dots = dots;
             Button = KodeWindow.Button(parent, "", Toggle, flexible);
@@ -74,10 +84,21 @@ namespace KodeKit
             Color dotColor = Color.white;
             Image dot = dots != null ? Dot(Button, () => dotColor) : null;
 
+            // a locked selector is dimmed: the field look has no disabled state of its own
+            CanvasGroup dim = Button.gameObject.AddComponent<CanvasGroup>();
             string shown = null;
             w.AddSync(() =>
             {
+                bool on = IsEnabled;
+                if (Button.interactable != on)
+                {
+                    Button.interactable = on;
+                    dim.alpha = on ? 1 : LockedAlpha;
+                }
+                if (!on && IsOpen) Close();
+
                 string[] e = this.entries();
+                if (IsOpen && e != popupEntries) Close();
                 int i = Mathf.Clamp(this.get(), 0, Math.Max(0, e.Length - 1));
                 string s = e.Length == 0 ? "" : e[i];
                 if (s == shown) return;
@@ -97,7 +118,7 @@ namespace KodeKit
             Layout arrows = KodeWindow.Row(parent);
             if (!flexible) arrows.GetComponent<UnityEngine.UI.LayoutElement>().flexibleWidth = 0;
             arrows.transform.SetSiblingIndex(Button.transform.GetSiblingIndex() + 1);
-            KodeWindow.Button(arrows, "<", () =>
+            UIButton previous = KodeWindow.Button(arrows, "<", () =>
             {
                 int n = this.entries().Length;
                 if (n > 0) this.set((Mathf.Clamp(this.get(), 0, n - 1) - 1 + n) % n);
@@ -130,14 +151,22 @@ namespace KodeKit
                     if (this.entries() != fitted) FitWidest();
                 });
             }
-            KodeWindow.Button(arrows, ">", () =>
+            UIButton next = KodeWindow.Button(arrows, ">", () =>
             {
                 int n = this.entries().Length;
                 if (n > 0) this.set((Mathf.Clamp(this.get(), 0, n - 1) + 1) % n);
             });
+            CanvasGroup dimArrows = arrows.gameObject.AddComponent<CanvasGroup>();
             bool useArrows = !UseArrowSelector();
             w.AddSync(() =>
             {
+                bool on = IsEnabled;
+                if (previous.interactable != on)
+                {
+                    previous.interactable = next.interactable = on;
+                    dimArrows.alpha = on ? 1 : LockedAlpha;
+                }
+
                 bool a = UseArrowSelector();
                 if (a == useArrows) return;
                 useArrows = a;
@@ -151,6 +180,17 @@ namespace KodeKit
         /// long list (the planner's operations) reads as a few short ones.
         /// </summary>
         public Func<int, string> Group;
+
+        /// <summary>
+        /// When set and false, the selection is fixed: the button and the arrows are greyed out, and an open list closes
+        /// (checked every frame).
+        /// </summary>
+        public Func<bool> Enabled;
+
+        bool IsEnabled => Enabled == null || Enabled();
+
+        /// <summary>The opacity of a control that is shown but locked.</summary>
+        public const float LockedAlpha = 0.45f;
 
         /// <summary>When set and true, combos show as [&lt;] entry [&gt;] arrow selectors instead (checked every frame).</summary>
         public static Func<bool> UseArrowSelector;
@@ -220,6 +260,7 @@ namespace KodeKit
             panel.gameObject.AddComponent<WindowBehaviour>(); // click-through lock while hovered
 
             string[] e = entries();
+            popupEntries = e;
             var rows = new UIButton[e.Length];
             string lastGroup = null;
             for (int i = 0; i < e.Length; i++)
@@ -320,14 +361,17 @@ namespace KodeKit
 
         void Select(int i)
         {
+            // the row picks the entry it shows, or nothing if the list changed since the popup opened
+            bool same = entries() == popupEntries;
             Close();
-            if (i != get()) set(i);
+            if (same && i != get()) set(i);
         }
 
         public void Close()
         {
             if (popup != null) UnityEngine.Object.Destroy(popup);
             popup = null;
+            popupEntries = null;
             list = null;
             Blocker = null;
             Scroll = null;

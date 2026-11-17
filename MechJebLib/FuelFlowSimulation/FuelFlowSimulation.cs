@@ -99,7 +99,13 @@ namespace MechJebLib.FuelFlowSimulation
                     break;
 
                 UpdateRcsDrains(vessel);
-                double dt = MinimumRcsTimeStep();
+
+                // nothing the thrusters draw would ever run out (air an intake gathers, a ratio of 0): the vessel would never change again
+                double maxTime = RCSMaxTime();
+                if (maxTime >= double.MaxValue)
+                    break;
+
+                double dt = MinimumTimeStep(maxTime);
 
                 ApplyRcsDrains(dt);
                 vessel.UpdateMass();
@@ -162,7 +168,13 @@ namespace MechJebLib.FuelFlowSimulation
                 if (AllowedToStage(vessel))
                     return;
 
-                double dt = MinimumTimeStep();
+                // the running engines draw nothing that runs out, only massless propellants (an ElectricCharge-only engine) or
+                // air an intake gathers: the vessel would never change again, so the stage ends here as if they had burned out
+                double maxTime = ResourceMaxTime();
+                if (maxTime >= double.MaxValue)
+                    return;
+
+                double dt = MinimumTimeStep(maxTime);
 
                 if (dt >= 0.02 && activeEngines != vessel.ActiveEngines.Count)
                 {
@@ -170,6 +182,8 @@ namespace MechJebLib.FuelFlowSimulation
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
                     GetNextSegment(vessel);
+                    // this segment carries on the stage's burn with the engines that are still running, none ignite
+                    _currentSegment.SpoolUpTime = 0;
                     activeEngines = vessel.ActiveEngines.Count;
                 }
 
@@ -281,8 +295,11 @@ namespace MechJebLib.FuelFlowSimulation
                 _sourcesRCS.Add(p);
             }
 
+            // shared in proportion to what each tank holds, as for the engines (see UpdateResourceDrainsAndResidualsInParts)
+            double total = TotalAmount(_sourcesRCS, resourceId);
+
             for (int i = 0; i < _sourcesRCS.Count; i++)
-                UpdateRCSDrainsInPart(_sourcesRCS[i], resourceConsumption / _sourcesRCS.Count, resourceId);
+                UpdateRCSDrainsInPart(_sourcesRCS[i], resourceConsumption * Share(_sourcesRCS[i], resourceId, total), resourceId);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -386,9 +403,30 @@ namespace MechJebLib.FuelFlowSimulation
                 _sources.Add(p);
             }
 
+            // like KSP's PartSet.ProcessRequest, the demand is shared between the tanks of the highest priority (or all of them,
+            // without priority) in proportion to what each one holds, whatever the flow mode, _BALANCE or not: the tanks of a
+            // group run dry together.  an equal split would run a smaller tank dry first, and drop it, or stage, early.
+            double total = TotalAmount(_sources, resourceId);
+
             for (int i = 0; i < _sources.Count; i++)
-                UpdateResourceDrainsAndResidualsInPart(_sources[i], resourceConsumption / _sources.Count, resourceId, residual);
+                UpdateResourceDrainsAndResidualsInPart(_sources[i], resourceConsumption * Share(_sources[i], resourceId, total), resourceId,
+                    residual);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double TotalAmount(List<SimPart> sources, int resourceId)
+        {
+            double total = 0;
+            for (int i = 0; i < sources.Count; i++)
+                if (sources[i].TryGetResource(resourceId, out SimResource resource))
+                    total += resource.Amount;
+            return total;
+        }
+
+        // the share of the demand this source takes.  every source holds more than its threshold, so the total is positive.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double Share(SimPart source, int resourceId, double total) =>
+            source.TryGetResource(resourceId, out SimResource resource) ? resource.Amount / total : 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateResourceDrainsAndResidualsInPart(SimPart p, double resourceConsumption, int resourceId, double residual)
@@ -396,14 +434,6 @@ namespace MechJebLib.FuelFlowSimulation
             _partsWithResourceDrains.Add(p);
             p.AddResourceDrain(resourceId, resourceConsumption);
             p.UpdateResourceResidual(residual, resourceId);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double MinimumRcsTimeStep()
-        {
-            double maxTime = RCSMaxTime();
-
-            return maxTime < double.MaxValue && maxTime > 0.001 ? maxTime : 0.001;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -418,12 +448,7 @@ namespace MechJebLib.FuelFlowSimulation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double MinimumTimeStep()
-        {
-            double maxTime = ResourceMaxTime();
-
-            return maxTime < double.MaxValue && maxTime > 0.001 ? maxTime : 0.001;
-        }
+        private static double MinimumTimeStep(double maxTime) => maxTime > 0.001 ? maxTime : 0.001;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double ResourceMaxTime()
@@ -439,8 +464,9 @@ namespace MechJebLib.FuelFlowSimulation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FinishRcsSegment(bool max, double deltaTime, double startMass, double endMass, double rcsThrust)
         {
-            double rcsDeltaV = rcsThrust * deltaTime / (startMass - endMass) * Log(startMass / endMass);
-            double rcsISP = rcsDeltaV / (G0 * Log(startMass / endMass));
+            // no mass drained (rounding, in a very short step) would be 0/0
+            double rcsDeltaV = startMass > endMass ? rcsThrust * deltaTime / (startMass - endMass) * Log(startMass / endMass) : 0;
+            double rcsISP = startMass > endMass ? rcsDeltaV / (G0 * Log(startMass / endMass)) : 0;
 
             if (_currentSegment.RcsISP == 0)
                 _currentSegment.RcsISP = rcsISP;

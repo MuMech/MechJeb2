@@ -8,9 +8,9 @@ using UnityEngine.UI;
 namespace MuMech.UI
 {
     /// <summary>
-    /// Native KodeKit versions of GeneralInfoItem methods (IMGUI draw methods registered as info items), by item id.
-    /// Items without a builder are hosted with ImguiBlock. Builders take the refresh list for work done at the
-    /// window's refresh rate.
+    /// The KodeKit widgets of MechJeb's GeneralInfoItems, by item id: their methods in MechJeb2 are empty and only register
+    /// the item. Another mod's item has no builder and shows as its name only. Builders take the refresh list for work done at the
+    /// window's refresh rate: the value readouts that walk parts or bodies run there, not every frame.
     /// </summary>
     public static partial class GeneralItemBuilders
     {
@@ -33,11 +33,11 @@ namespace MuMech.UI
             },
 
             // MechJebModuleInfoItems
-            ["General:InfoItems.DockingGuidanceVelocity"] = (w, p, t, r) => DockingVelocity(w, p, (MechJebModuleInfoItems)t),
-            ["General:InfoItems.DockingGuidanceAngularVelocity"] = (w, p, t, r) => DockingAngularVelocity(w, p, (MechJebModuleInfoItems)t),
-            ["General:InfoItems.DockingGuidancePosition"] = (w, p, t, r) => DockingPosition(w, p, (MechJebModuleInfoItems)t),
-            ["General:InfoItems.AllPlanetPhaseAngles"] = (w, p, t, r) => PhaseAngles(w, p, (MechJebModuleInfoItems)t, true),
-            ["General:InfoItems.AllMoonPhaseAngles"] = (w, p, t, r) => PhaseAngles(w, p, (MechJebModuleInfoItems)t, false),
+            ["General:InfoItems.DockingGuidanceVelocity"] = (w, p, t, r) => DockingVelocity(w, p, r, (MechJebModuleInfoItems)t),
+            ["General:InfoItems.DockingGuidanceAngularVelocity"] = (w, p, t, r) => DockingAngularVelocity(w, p, r, (MechJebModuleInfoItems)t),
+            ["General:InfoItems.DockingGuidancePosition"] = (w, p, t, r) => DockingPosition(w, p, r, (MechJebModuleInfoItems)t),
+            ["General:InfoItems.AllPlanetPhaseAngles"] = (w, p, t, r) => PhaseAngles(w, p, r, (MechJebModuleInfoItems)t, true),
+            ["General:InfoItems.AllMoonPhaseAngles"] = (w, p, t, r) => PhaseAngles(w, p, r, (MechJebModuleInfoItems)t, false),
             ["General:InfoItems.LatLonClipbardCopy"] = (w, p, t, r) =>
             {
                 var items = (MechJebModuleInfoItems)t;
@@ -51,8 +51,8 @@ namespace MuMech.UI
 
             // MechJebModuleRCSBalancer, MechJebModuleRCSController
             ["General:RCSBalancer.RCSBalancerInfoItem"] = (w, p, t, r) => RcsBalancerInfo(w, p, (MechJebModuleRCSBalancer)t),
-            ["General:RCSBalancer.RCSThrusterStateInfoItem"] = (w, p, t, r) => RcsThrusterStates(w, p, (MechJebModuleRCSBalancer)t),
-            ["General:RCSBalancer.RCSPartThrottlesInfoItem"] = (w, p, t, r) => RcsPartThrottles(w, p, (MechJebModuleRCSBalancer)t),
+            ["General:RCSBalancer.RCSThrusterStateInfoItem"] = (w, p, t, r) => RcsThrusterStates(w, p, r, (MechJebModuleRCSBalancer)t),
+            ["General:RCSBalancer.RCSPartThrottlesInfoItem"] = (w, p, t, r) => RcsPartThrottles(w, p, r, (MechJebModuleRCSBalancer)t),
             ["General:RCSBalancer.ControlVectorInfoItem"] = (w, p, t, r) => ControlVector(w, p),
             ["General:RCSController.PIDGUI"] = (w, p, t, r) => RcsPid(w, p, (MechJebModuleRCSController)t),
 
@@ -88,7 +88,7 @@ namespace MuMech.UI
             ["General:VesselState.DebugString"] = (w, p, t, r) => VesselDebugString(w, p),
             ["General:VesselState.RCSTranslation"] = (w, p, t, r) => RcsVector(w, p, "#MechJeb_RCSTranslation", () => ((VesselState)t).RCSThrustAvailable), //"RCS Translation"
             ["General:VesselState.RCSTorque"] = (w, p, t, r) => RcsVector(w, p, "#MechJeb_RCSTorque", () => ((VesselState)t).RCSTorqueAvailable), //"RCS Torque"
-            ["General:VesselState.TorqueCompare"] = (w, p, t, r) => TorqueCompare(w, p, (VesselState)t),
+            ["General:VesselState.TorqueCompare"] = (w, p, t, r) => TorqueCompare(w, p, r, (VesselState)t),
         };
 
         public static bool Has(string id) => builders.ContainsKey(id);
@@ -101,7 +101,7 @@ namespace MuMech.UI
             return true;
         }
 
-        /// <summary>Build a general item by id from its module (for windows that call the IMGUI method directly).</summary>
+        /// <summary>Build a general item by id from its module (for windows that show the item among their own rows).</summary>
         public static void Build(KodeWindow w, UIObject parent, string id, object target, List<Action> refresh = null) =>
             builders[id](w, parent, target, refresh ?? new List<Action>());
 
@@ -110,6 +110,8 @@ namespace MuMech.UI
         /// <summary>SolarPanelDeployButton / AntennaDeployButton: auto-deploy toggle + "Toggle ... (currently ...)" button.</summary>
         static void DeployButton(KodeWindow w, UIObject parent, MechJebModuleDeployableController c, string autoKey)
         {
+            // a part's blacklist can leave the core without the controller
+            if (c == null) return;
             w.Toggle(parent, autoKey, () => c.AutoDeploy, v => c.AutoDeploy = v);
             UIButton b = KodeWindow.Button(parent, c.CurrentButtonText ?? " ", c.ToggleDeploy, true);
             string shown = c.CurrentButtonText;
@@ -122,61 +124,17 @@ namespace MuMech.UI
             });
         }
 
-        /// <summary>MechJebModuleStagingController.AutostageSettingsInfoItem, in a box (a property grid in the modern layout).</summary>
+        /// <summary>MechJebModuleStagingController.AutostageSettingsInfoItem, as a property grid.</summary>
         static void AutostageSettings(KodeWindow w, UIObject parent, MechJebModuleStagingController s)
         {
-            if (KodeWindow.ModernLayout)
-            {
-                ModernRows.AutostageSettings(w, parent, s);
-                return;
-            }
-
-            LayoutPanel box = KodeWindow.Box(parent);
-
-            Layout limit = KodeWindow.Row(box);
-            KodeWindow.Label(limit, "#MechJeb_Ascent_label42", true); //"Stop at stage #"
-            EditUi.Field(w, limit, () => s.AutostageLimit, 40);
-
-            Layout delays = KodeWindow.Row(box);
-            KodeWindow.Label(delays, "Delays: ");
-            KodeWindow.Space(delays, 30);
-            KodeWindow.Label(delays, "pre: ");
-            EditUi.Field(w, delays, () => s.AutostagePreDelay, 35);
-            KodeWindow.Label(delays, "s");
-            KodeWindow.FlexibleSpace(delays);
-            KodeWindow.Label(delays, "post: ");
-            EditUi.Field(w, delays, () => s.AutostagePostDelay, 35);
-            KodeWindow.Label(delays, "s");
-
-            ClampAutostageThrust(w, box, s);
-
-            KodeWindow.Label(box, "#MechJeb_Ascent_label38"); //"Stage fairings when:"
-            ToggledField(w, box, s._sFairingMaxDynamicPressure.Trim(), () => s.FairingMaxDynamicPressureEnabled,
-                v => s.FairingMaxDynamicPressureEnabled = v, s.FairingMaxDynamicPressure, "kPa", 50, () => KodeWindow.Tone.Normal);
-            ToggledField(w, box, s._sFairingMinAltitude.Trim(), () => s.FairingMinAltitudeEnabled,
-                v => s.FairingMinAltitudeEnabled = v, s.FairingMinAltitude, "km", 50, () => KodeWindow.Tone.Normal);
-            ToggledField(w, box, s._sFairingMaxAerothermalFlux.Trim(), () => s.FairingMaxAerothermalFluxEnabled,
-                v => s.FairingMaxAerothermalFluxEnabled = v, s.FairingMaxAerothermalFlux, "W/m²", 50, () => KodeWindow.Tone.Normal);
-
-            Layout hot = KodeWindow.Row(box);
-            w.Toggle(hot, "#MechJeb_Ascent_hotStaging", () => s.HotStaging, v => s.HotStaging = v); //"Support hotstaging"
-            KodeWindow.FlexibleSpace(hot);
-            KodeWindow.Label(hot, s._sLeadTime);
-            EditUi.Field(w, hot, () => s.HotStagingLeadTime, 35);
-            KodeWindow.Label(hot, "s");
-
-            Layout solids = KodeWindow.Row(box);
-            w.Toggle(solids, "#MechJeb_Ascent_dropSolids", () => s.DropSolids, v => s.DropSolids = v); //"Drop solids early"
-            KodeWindow.FlexibleSpace(solids);
-            EditUi.Field(w, solids, () => s.DropSolidsTwrPct, 35);
-            KodeWindow.Label(solids, "% rocket accel");
+            OptionRows.AutostageSettings(w, parent, s, s);
         }
 
         static void ClampAutostageThrust(KodeWindow w, UIObject parent, MechJebModuleStagingController s)
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, CachedLocalizer.Instance.MechJebAscentLabel44, true); //"Clamp AutoStage Thrust "
-            EditFields.Field(w, row, () => s.ClampAutoStageThrustPct.Text, x => ModernRows.SetClamp(s, x), 50, () => s.ClampAutoStageThrustPct.IsParsed);
+            EditFields.Field(w, row, () => s.ClampAutoStageThrustPct.Text, x => OptionRows.SetClamp(s, x), 50, () => s.ClampAutoStageThrustPct.IsParsed);
             KodeWindow.Label(row, "%");
         }
 
@@ -194,16 +152,7 @@ namespace MuMech.UI
 
         static void Separator(UIObject parent)
         {
-            if (KodeWindow.ModernLayout)
-            {
-                KodeWindow.Rule(parent);
-                return;
-            }
-
-            UIEmpty line = parent.Add<UIEmpty>("Separator");
-            line.PreferredHeight(2).FlexibleLayout(true, false).Finish();
-            Image img = line.gameObject.AddComponent<Image>();
-            KodeWindow.Styled(line.gameObject, th => img.color = th.Dim * new Color(1, 1, 1, 0.6f));
+            KodeWindow.Rule(parent);
         }
     }
 }

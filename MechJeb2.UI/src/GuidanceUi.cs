@@ -16,6 +16,34 @@ namespace MuMech.UI
         /// <summary>A static text that wraps to the window width instead of widening the window.</summary>
         public static UIText Wrapped(UIObject parent, string textOrKey) => KodeWindow.Paragraph(parent, textOrKey);
 
+        /// <summary>
+        /// The target's name, read again only when the target or its vessel's name changes: a docking port localizes its name
+        /// on every call.
+        /// </summary>
+        public sealed class TargetName
+        {
+            ITargetable shownTarget;
+            string shownVesselName;
+            string name;
+
+            public string Get(MechJebModuleTargetController t)
+            {
+                ITargetable target = t.Target;
+                // a port that left its vessel has none (the controller names it "")
+                string vesselName = target is PartModule pm
+                    ? pm != null && pm.vessel != null ? pm.vessel.vesselName : null
+                    : target?.GetVessel()?.vesselName;
+                if (name == null || !ReferenceEquals(target, shownTarget) || !ReferenceEquals(vesselName, shownVesselName))
+                {
+                    shownTarget = target;
+                    shownVesselName = vesselName;
+                    name = t.Name ?? "";
+                }
+
+                return name;
+            }
+        }
+
         /// <summary>The rendezvous windows' state: 0 = no target, 1 = target in another sphere of influence, 2 = usable target.</summary>
         public static int RendezvousMode(MechJebCore core, Orbit orbit)
         {
@@ -27,7 +55,7 @@ namespace MuMech.UI
         public static Layout RendezvousGate(KodeWindow w, UIObject r, Func<int> mode, string noneKey, string otherKey)
         {
             Layout none = KodeWindow.Panel(r);
-            Wrapped(none, noneKey);
+            KodeWindow.ToneText(Wrapped(none, noneKey), KodeWindow.Tone.Dim); // the empty state: "No target: ..."
             w.Visible(none.gameObject, () => mode() == 0);
 
             Layout other = KodeWindow.Panel(r);
@@ -39,7 +67,7 @@ namespace MuMech.UI
             return main;
         }
 
-        /// <summary>A wrapping text in the theme's warning colour (GuiUtils.YellowLabel).</summary>
+        /// <summary>A wrapping text in the theme's warning colour.</summary>
         public static UIText Warning(KodeWindow w, UIObject parent, string textOrKey)
         {
             UIText t = Wrapped(parent, textOrKey);
@@ -67,12 +95,12 @@ namespace MuMech.UI
             return t;
         }
 
-        /// <summary>GuiUtils.SimpleLabel: a label on the left, a live value on the right.</summary>
+        /// <summary>A label on the left, a live value on the right.</summary>
         public static UIText Pair(KodeWindow w, UIObject parent, string key, string template, Action<CharText> fill, Func<bool> active = null)
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, key, true);
-            // GuiUtils.SimpleLabel: the value flush right (the cell is as wide as the template, often wider than the value)
+            // the value flush right (the cell is as wide as the template, often wider than the value)
             UIText value = Live(w, row, template, false, fill, active);
             value.tmpText.alignment = TextAlignmentOptions.Right;
             return value;
@@ -151,7 +179,7 @@ namespace MuMech.UI
         }
 
         /// <summary>
-        /// The modern layout's "AUTO": while <paramref name="auto"/> holds, <paramref name="body"/> stays in view but greyed
+        /// The "AUTO" state: while <paramref name="auto"/> holds, <paramref name="body"/> stays in view but greyed
         /// and inert, and a status bar under it says which module is in control (<paramref name="controller"/>).
         /// </summary>
         public static Layout AutoBar(KodeWindow w, UIObject parent, GameObject body, string autoKey, Func<bool> auto, Func<object> controller)
@@ -161,7 +189,7 @@ namespace MuMech.UI
             w.Badge(row, autoKey, KodeWindow.Tone.Warn);
             object shownUser = null;
             string text = Localizer.Format("#MechJeb_NewUI_OtherInControl"); //Another autopilot is in control
-            w.BoundLabel(row, () =>
+            w.Wrap(w.BoundLabel(row, () =>
             {
                 object u = controller();
                 if (ReferenceEquals(u, shownUser)) return text;
@@ -169,7 +197,7 @@ namespace MuMech.UI
                 string name = UserName(u);
                 text = name != null ? Localizer.Format("#MechJeb_NewUI_InControl", name) : Localizer.Format("#MechJeb_NewUI_OtherInControl"); //<<1>> is in control
                 return text;
-            }, true);
+            }, true));
             w.Visible(bar.gameObject, auto);
 
             CanvasGroup group = body.GetComponent<CanvasGroup>() ?? body.AddComponent<CanvasGroup>();
@@ -186,16 +214,26 @@ namespace MuMech.UI
             return bar;
         }
 
-        /// <summary>A module's name for the player: its window title, or its type name in words ("Node Executor").</summary>
+        /// <summary>
+        /// A module's name for the player: its window title, or its type name in words ("Node Executor"). An acronym
+        /// stays whole and is split from the word after it ("Ascent PSG Autopilot").
+        /// </summary>
         public static string UserName(object user)
         {
             if (user is DisplayModule d) return d.GetName();
             if (!(user is ComputerModule)) return null;
-            string type = user.GetType().Name.Replace("MechJebModule", "");
+            return SplitWords(user.GetType().Name.Replace("MechJebModule", ""));
+        }
+
+        /// <summary>A PascalCase name in words: "AscentPSGAutopilot" → "Ascent PSG Autopilot".</summary>
+        private static string SplitWords(string type)
+        {
             var sb = new System.Text.StringBuilder(type.Length + 4);
             for (int i = 0; i < type.Length; i++)
             {
-                if (i > 0 && char.IsUpper(type[i]) && !char.IsUpper(type[i - 1])) sb.Append(' ');
+                if (i > 0 && char.IsUpper(type[i]) &&
+                    (!char.IsUpper(type[i - 1]) || (i + 1 < type.Length && char.IsLower(type[i + 1]))))
+                    sb.Append(' ');
                 sb.Append(type[i]);
             }
             return sb.ToString();
@@ -210,7 +248,8 @@ namespace MuMech.UI
             return null;
         }
 
-        public static int HoursPerDay => KSPUtil.dateTimeFormatter.Day / 3600;
-        public static int DaysPerYear => KSPUtil.dateTimeFormatter.Year / KSPUtil.dateTimeFormatter.Day;
+        /// <summary>GuiUtils.TimeToDHMS(seconds, decimalPlaces) without allocations, with the game's day and year lengths.</summary>
+        public static CharText AppendDHMS(this CharText ct, double seconds, int decimalPlaces) =>
+            ct.AppendDHMS(seconds, decimalPlaces, KSPUtil.dateTimeFormatter.Day, KSPUtil.dateTimeFormatter.Year);
     }
 }

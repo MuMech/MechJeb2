@@ -126,6 +126,15 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         protected override void Clear()
         {
             base.Clear();
+            G = 0;
+            Isp = 0;
+            Thrust = 0;
+            RcsEnabled = false;
+            _savedRcsEnabled = false;
+            ISPMult = 0;
+            ThrustPercentage = 0;
+            MaxFuelFlow = 0;
+            MassFlowRate = 0;
             Propellants.Clear();
             PropellantFlowModes.Clear();
             ResourceConsumptions.Clear();
@@ -158,6 +167,16 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                     continue;
 
                 totalDensity += p.ratio * density;
+            }
+
+            // like KSP's ModuleRCS (getMaxFuelFlow is 0 for a mixture with no density): without a propellant that has mass and
+            // counts for the Isp there is no fuel flow, so no thrust.  KSP's maxFuelFlow already is 0 for such a thruster.
+            if (totalDensity <= 0)
+            {
+                PropellantFlowModes.Clear();
+                MassFlowRate = 0;
+                Thrust = 0;
+                return;
             }
 
             // this is also the volume flow rate of the non-ignoreForIsp fuels.  although this is a bit janky since the p.ratios in most

@@ -140,12 +140,16 @@ namespace MuMech
         protected readonly bool
             variabledt = false; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.
 
-        public bool noSkipToFreefall = false;
+        // a prediction follows the vessel from where it is through up to MAX_ORBITS_FREE orbits; the landing autopilot sets its own
+        // values while it flies and puts these back when it stops
+        public const double MAX_ORBITS_FREE = 4;
+
+        public bool noSkipToFreefall = true;
 
         private readonly Queue readyResults = new Queue();
 
         private Random random;
-        public double maxOrbits = 1;
+        public double maxOrbits = MAX_ORBITS_FREE;
 
         private double lastSimTime;
         private double lastSimSteps;
@@ -180,6 +184,18 @@ namespace MuMech
             errorStopwatch.Reset();
 
             ClearResults();
+            RemoveAerobrakeNode();
+        }
+
+        // The aerobrake node shows what the atmosphere will do, not a burn, but it is a real maneuver node, and the node executor burns
+        // the first node there is: it goes when the predictions stop and when the node executor starts, and none is made while the
+        // executor runs.
+        public void RemoveAerobrakeNode()
+        {
+            if (aerobrakeNode != null && Vessel != null && Vessel.patchedConicSolver != null &&
+                Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
+                aerobrakeNode.RemoveSelf();
+            aerobrakeNode = null;
         }
 
         // a result from before the predictor was disabled says nothing about the vessel when it is enabled again
@@ -324,7 +340,8 @@ namespace MuMech
                     readyResults.Enqueue(newResult);
                 }
 
-                if (newResult.MultiplierHasError)
+                // which kind of run this was is decided by the simulation's input, as in the catch below
+                if (sim.InputMultiplierHasError)
                 {
                     //see how long the simulation took
                     errorStopwatch.Stop();
@@ -463,7 +480,7 @@ namespace MuMech
 
         protected void MaintainAerobrakeNode()
         {
-            if (makeAerobrakeNodes)
+            if (makeAerobrakeNodes && !Core.Node.Enabled)
             {
                 //Remove node after finishing aerobraking:
                 if (aerobrakeNode != null && Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
@@ -522,7 +539,7 @@ namespace MuMech
             }
             else
             {
-                //Remove aerobrake node when it is turned off:
+                //Remove aerobrake node when it is turned off or the node executor runs:
                 if (aerobrakeNode != null && Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                 {
                     aerobrakeNode.RemoveSelf();

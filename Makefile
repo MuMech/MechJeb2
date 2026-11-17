@@ -28,6 +28,7 @@ MECHJEBFILES := $(shell find MechJeb2 -name "*.cs")
 MECHJABLIBFILES := $(shell find MechJebLib -name "*.cs")
 MECHJABLIBIBINDINGSFILES := $(shell find MechJebLibBindings -name "*.cs")
 ALGLIBFILES := $(shell find alglib -name "*.cs")
+MECHJEBUIFILES := $(shell find MechJeb2.UI/src MechJeb2.UI/KodeKit MechJeb2.UI/KodeUI -name "*.cs")
 
 RESGEN2 := resgen2
 CSC     := csc
@@ -49,7 +50,7 @@ info:
 	@echo "  KSP Data: ${KSPDIR}"
 	@echo "================================"
 
-build: build/MechJeb2.dll build/MechJebLib.dll build/MechJebLibBindings.dll build/alglib.dll
+build: build/MechJeb2.dll build/MechJebLib.dll build/MechJebLibBindings.dll build/alglib.dll build/MechJeb2.UI.dll
 
 # Build alglib first (no dependencies beyond system)
 build/alglib.dll: ${ALGLIBFILES}
@@ -116,13 +117,40 @@ build/MechJeb2.dll: ${MECHJEBFILES} build/MechJebLib.dll build/MechJebLibBinding
 		-out:$@ \
 		-resource:build/Resources.resources,MuMech.Properties.Resources.resources
 
+# Build the UI, MechJeb's windows (KodeUI and KodeKit compiled in). Required: MechJeb has no other windows
+build/MechJeb2.UI.dll: ${MECHJEBUIFILES} build/MechJeb2.dll build/MechJebLibBindings.dll build/MechJebLib.dll build/alglib.dll
+	mkdir -p build
+	${CSC} /noconfig /target:library /checked- /nowarn:1701,1702,2008,0414,0649,0168,0219 /langversion:8.0 /nostdlib+ /platform:AnyCPU /warn:4 /errorendlocation /highentropyva- /optimize+ /debug- /filealign:512 \
+		/reference:"${MANAGED}/Assembly-CSharp.dll" \
+		/reference:"${MANAGED}/Assembly-CSharp-firstpass.dll" \
+		/reference:"${MANAGED}/mscorlib.dll" \
+		/reference:"${MANAGED}/System.Core.dll" \
+		/reference:"${MANAGED}/System.dll" \
+		/reference:"${MANAGED}/UnityEngine.dll" \
+		/reference:"${MANAGED}/UnityEngine.CoreModule.dll" \
+		/reference:"${MANAGED}/UnityEngine.UI.dll" \
+		/reference:"${MANAGED}/UnityEngine.UIModule.dll" \
+		/reference:"${MANAGED}/UnityEngine.IMGUIModule.dll" \
+		/reference:"${MANAGED}/UnityEngine.TextRenderingModule.dll" \
+		/reference:"${MANAGED}/UnityEngine.InputLegacyModule.dll" \
+		/reference:"${MANAGED}/UnityEngine.ImageConversionModule.dll" \
+		/reference:"${MANAGED}/UnityEngine.Physics2DModule.dll" \
+		/reference:"build/MechJeb2.dll" \
+		/reference:"build/MechJebLibBindings.dll" \
+		/reference:"build/MechJebLib.dll" \
+		/reference:"build/alglib.dll" \
+		/recurse:"MechJeb2.UI/src/*.cs" \
+		/recurse:"MechJeb2.UI/KodeKit/*.cs" \
+		/recurse:"MechJeb2.UI/KodeUI/*.cs" \
+		-out:$@
+
 package: build ${MECHJEBFILES}
 	mkdir -p package/MechJeb2/Plugins
 	cp -r Parts package/MechJeb2/
 	cp -r Icons package/MechJeb2/
 	cp -r Bundles package/MechJeb2/
 	cp -r Localization package/MechJeb2/
-	cp build/MechJeb2.dll build/MechJebLib.dll build/MechJebLibBindings.dll build/alglib.dll package/MechJeb2/Plugins/
+	cp build/MechJeb2.dll build/MechJebLib.dll build/MechJebLibBindings.dll build/alglib.dll build/MechJeb2.UI.dll package/MechJeb2/Plugins/
 	cp LICENSE.md README.md package/MechJeb2/
 
 %.tar.gz:
@@ -146,7 +174,7 @@ install: build
 	cp -r Icons "${KSPDIR}"/GameData/MechJeb2/
 	cp -r Bundles "${KSPDIR}"/GameData/MechJeb2/
 	cp -r Localization "${KSPDIR}"/GameData/MechJeb2/
-	cp build/MechJeb2.dll build/MechJebLib.dll build/MechJebLibBindings.dll build/alglib.dll "${KSPDIR}"/GameData/MechJeb2/Plugins/
+	cp build/MechJeb2.dll build/MechJebLib.dll build/MechJebLibBindings.dll build/alglib.dll build/MechJeb2.UI.dll "${KSPDIR}"/GameData/MechJeb2/Plugins/
 
 uninstall: info
 	rm -rf "${KSPDIR}"/GameData/MechJeb2/Plugins

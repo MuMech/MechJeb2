@@ -188,11 +188,13 @@ namespace MuMech
                 burnTime -= bt;
             }
 
-            if (burnTime > 0 && lastNonZeroIndex > -1) // we ain't gonna make it
+            // the burn outlasts the propellant: count the rest at the last stage's final acceleration, the delta-v still missing, since
+            // burning it from the stage's start mass again would take it past its empty mass (a negative mass, NaN in Release)
+            if (burnTime > 0 && lastNonZeroIndex > -1)
             {
                 FuelStats stage = _vacStats[lastNonZeroIndex];
 
-                dv += Astro.DeltaVFromMassThrustIspBurntime(stage.StartMass, stage.Thrust, stage.Isp, burnTime);
+                dv += stage.Thrust / stage.EndMass * burnTime;
             }
 
             return dv;
@@ -206,7 +208,9 @@ namespace MuMech
         {
             double r = GetGroundRadius();
 
-            if (!Vessel.VesselOffGround() || Orbit.PeA > 0 || Orbit.ApR < r + VerticalAltitude)
+            // an ellipse that never rises above the final descent height has nothing to plan; ApR is negative on a hyperbola, which always
+            // rises again
+            if (!Vessel.VesselOffGround() || Orbit.PeA > 0 || (Orbit.eccentricity < 1 && Orbit.ApR < r + VerticalAltitude))
             {
                 Reset();
                 return;
@@ -277,13 +281,13 @@ namespace MuMech
                 // for every stage, we need to include a coast for the correct staging delays.
                 if (deltaStage > 0)
                 {
-                    double stagingDelay = Core.Staging.AutostagePreDelay;
+                    double stagingDelay = Core.Staging.Rules.AutostagePreDelay;
 
                     if (deltaStage > 1)
                     {
                         // XXX: tiny bug, if the stage doesn't decouple the next stage doesn't get a post-delay,
                         //      probably not worth the effort to fix.
-                        double nextDelay = Core.Staging.AutostagePreDelay + Core.Staging.AutostagePostDelay;
+                        double nextDelay = Core.Staging.Rules.AutostagePreDelay + Core.Staging.Rules.AutostagePostDelay;
                         if (nextDelay < PhysicsGlobals.StagingCooldownTimer)
                             nextDelay = PhysicsGlobals.StagingCooldownTimer;
 

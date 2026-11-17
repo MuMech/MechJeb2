@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -9,7 +10,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class MechJebModuleThrustController : ComputerModule
+    public class MechJebModuleThrustController : ComputerModule, IThrustLimits
     {
         public enum DifferentialThrottleStatus
         {
@@ -28,6 +29,10 @@ namespace MuMech
         public float TransSpdAct;
         private float _transPrevThrust;
         public bool TransKillH = false;
+
+        // Set by the PANIC abort from its engage until its decouplers have fired: the throttle stays at 0 whatever another
+        // autopilot asks for
+        public bool PanicCut;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitDynamicPressure;
@@ -119,6 +124,11 @@ namespace MuMech
         private double[] _diffBoundL = new double[0];
         private double[] _diffBoundU = new double[0];
 
+        // The solver, its solution and its report, reused with the buffers above: created again only when the engine count changes
+        private alglib.minqpstate _diffState;
+        private double[] _diffX = new double[0];
+        private readonly alglib.minqpreport _diffReport = new alglib.minqpreport();
+
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool ElectricThrottle;
 
@@ -127,6 +137,47 @@ namespace MuMech
 
         [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL)]
         public readonly EditableDoubleMult ElectricThrottleHi = new EditableDoubleMult(0.15, 0.01);
+
+        // the fields above are the general throttle limits (Utilities): the controller is also their IThrustLimits
+        bool IThrustLimits.LimitToPreventOverheats { get => LimitToPreventOverheats; set => LimitToPreventOverheats = value; }
+        bool IThrustLimits.LimitDynamicPressure { get => LimitDynamicPressure; set => LimitDynamicPressure = value; }
+        EditableDouble IThrustLimits.MaxDynamicPressure => MaxDynamicPressure;
+        bool IThrustLimits.LimitAcceleration { get => LimitAcceleration; set => LimitAcceleration = value; }
+        EditableDouble IThrustLimits.MaxAcceleration => MaxAcceleration;
+        bool IThrustLimits.LimitThrottle { get => LimitThrottle; set => LimitThrottle = value; }
+        EditableDoubleMult IThrustLimits.MaxThrottle => MaxThrottle;
+        bool IThrustLimits.LimiterMinThrottle { get => LimiterMinThrottle; set => LimiterMinThrottle = value; }
+        EditableDoubleMult IThrustLimits.MinThrottle => MinThrottle;
+        bool IThrustLimits.ElectricThrottle { get => ElectricThrottle; set => ElectricThrottle = value; }
+        EditableDoubleMult IThrustLimits.ElectricThrottleLo => ElectricThrottleLo;
+        EditableDoubleMult IThrustLimits.ElectricThrottleHi => ElectricThrottleHi;
+        bool IThrustLimits.LimitToPreventUnstableIgnition { get => LimitToPreventUnstableIgnition; set => LimitToPreventUnstableIgnition = value; }
+        bool IThrustLimits.AutoRCSUllaging { get => AutoRCSUllaging; set => AutoRCSUllaging = value; }
+
+        private IThrustLimits _limitsOverride;
+
+        /// <summary>The module whose own throttle limits apply now (SetLimitsOverride), null while the general ones do.</summary>
+        public object LimitsOverrideUser { get; private set; }
+
+        /// <summary>The throttle limits that apply now: an engaged autopilot's own set, or the general ones (this controller's fields).</summary>
+        public IThrustLimits Limits => _limitsOverride ?? this;
+
+        /// <summary>
+        ///     An autopilot's own throttle limits apply instead of the general ones until it calls ClearLimitsOverride. The general
+        ///     values are not written. The last call wins.
+        /// </summary>
+        public void SetLimitsOverride(object user, IThrustLimits limits)
+        {
+            LimitsOverrideUser = user;
+            _limitsOverride    = limits;
+        }
+
+        public void ClearLimitsOverride(object user)
+        {
+            if (!ReferenceEquals(LimitsOverrideUser, user)) return;
+            LimitsOverrideUser = null;
+            _limitsOverride    = null;
+        }
 
         [GeneralInfoItem("#MechJeb_ElectricLimit", InfoItem.Category.Thrust)] //Electric limit
         public void LimitElectricInfoItem() { }
@@ -148,7 +199,11 @@ namespace MuMech
         public float LastThrottle;
         private bool _userCommandingRotation => _userCommandingRotationSmoothed > 0;
         private int _userCommandingRotationSmoothed;
-        private bool _lastDisableThrusters;
+        // 0: the thrusters rotate, 1: no pitch or yaw (the gimbals do it), 2: no rotation
+        private int _lastRcsRotationOff;
+
+        // set once the gimbals out-torque the thrusters, kept until the engines stop: with the flags off the thrusters' torque reads 0
+        private bool _gimbalOnly;
 
         public enum TMode
         {
@@ -176,18 +231,29 @@ namespace MuMech
 
         private ScreenMessage _preventingUnstableIgnitionsMessage;
 
+        private MechJebModuleHoverslamAutopilot _hoverslamAutopilot;
+
+        // The landing autopilot and the hoverslam brake towards the ground, where the dynamic pressure limit, a setting for the ascent,
+        // would cut the thrust they need to stop.
+        private bool BrakingToLand =>
+            (Core.Landing != null && Core.Landing.Enabled) || (_hoverslamAutopilot != null && _hoverslamAutopilot.Enabled);
+
         public override void OnStart(PartModule.StartState state)
         {
             _preventingUnstableIgnitionsMessage =
                 new ScreenMessage(Localizer.Format("#MechJeb_Ascent_srcmsg1"), 2f,
                     ScreenMessageStyle.UPPER_CENTER); //"<color=orange>[MechJeb]: Killing throttle to prevent unstable ignition</color>"
             _pid = new PIDController(0.05, 0.000001, 0.05);
+            _hoverslamAutopilot = Core.GetComputerModule<MechJebModuleHoverslamAutopilot>();
             // Permanent self-pin: keep this module always Enabled so its throttle limiters and
             // auto-RCS-ullaging run every tick as an always-on safety service, even when no autopilot
             // is driving the throttle (e.g. the player is flying manually). Active throttle control is
             // gated separately on there being a *second* user (see Users.Count > 1 in Drive()). If the
             // R&D tech is missing (unlockTechs in the part cfgs) the module is TechLocked and stays disabled.
             Users.Add(this);
+
+            GameEvents.onProtoVesselSave.Add(OnProtoVesselSave);
+            GameEvents.onProtoVesselSave.Add(SaveThrustLimits);
 
             base.OnStart(state);
         }
@@ -206,11 +272,12 @@ namespace MuMech
 
         public void RequestActiveThrottle(float target, bool enforceMinimum = true, bool allowZero = false)
         {
-            if (enforceMinimum && LimiterMinThrottle)
+            IThrustLimits limits = Limits;
+            if (enforceMinimum && limits.LimiterMinThrottle)
                 if (allowZero && target == 0)
                     TargetThrottle = 0;
                 else
-                    TargetThrottle = Mathf.Max(target, (float)MinThrottle);
+                    TargetThrottle = Mathf.Max(target, (float)limits.MinThrottle);
             else
                 TargetThrottle = target;
         }
@@ -226,13 +293,26 @@ namespace MuMech
         // Call this function to set the throttle for a burn with dV delta-V remaining.
         // timeConstant controls how quickly we throttle down toward the end of the burn.
         // This function is nice because it will correctly handle engine spool-up/spool-down times.
-        public void ThrustForDv(double dV, double timeConstant)
+        public void ThrustForDv(double dV, double timeConstant) => ThrustForDv(dV, timeConstant, VesselState.Forward);
+
+        // The same, for a burn along axis (a unit vector): the thrust counts along that axis, so a burn that aims the engines'
+        // thrust (INERTIAL_COT) throttles on that thrust, not on its part along the control forward.
+        public void ThrustForDv(double dV, double timeConstant, Vector3d axis)
         {
             timeConstant += VesselState.MaxEngineResponseTime;
-            double spooldownDv = VesselState.CurrentThrustAcceleration * VesselState.MaxEngineResponseTime;
+            double maxAcceleration = VesselState.MaxThrustAccelerationAlong(axis);
+            double spooldownDv = VesselState.CurrentThrustAccelerationAlong(axis) * VesselState.MaxEngineResponseTime;
             double desiredAcceleration = (dV - spooldownDv) / timeConstant;
 
-            TargetThrottle = Mathf.Clamp((float)(desiredAcceleration / VesselState.MaxThrustAcceleration), 0.01f, 1.00f);
+            // with no thrust along the axis there is no ratio to take: full throttle while dV is wanted, as a ratio over a tiny
+            // positive thrust gives, and never NaN or a throttle stuck at the floor from a tiny negative one
+            if (maxAcceleration <= 0)
+            {
+                TargetThrottle = desiredAcceleration > 0 ? 1.00f : 0.01f;
+                return;
+            }
+
+            TargetThrottle = Mathf.Clamp((float)(desiredAcceleration / maxAcceleration), 0.01f, 1.00f);
         }
 
         /* the current throttle limit, this may include transient condition such as limiting to zero due to unstable propellants in RF */
@@ -286,9 +366,15 @@ namespace MuMech
                 _userCommandingRotationSmoothed--;
             }
 
-            if (Tmode != TMode.OFF && VesselState.ThrustAvailable > 0)
+            // ThrustAvailable is the thrust along the control forward: on a control point that faces away from the engines it is 0 or
+            // negative, and Kill H/S, which aims the engines themselves, must run there too
+            bool killH = Tmode == TMode.KEEP_VERTICAL && TransKillH;
+            if (Tmode != TMode.OFF && (killH ? VesselState.ThrustVectorMaxThrottle.sqrMagnitude > 0 : VesselState.ThrustAvailable > 0))
             {
                 double spd = 0;
+                // Kill H/S: the angle between the thrust and where it's wanted, and whether the horizontal speed calls for full throttle
+                double aimError = 0;
+                bool killHFull = false;
 
                 switch (Tmode)
                 {
@@ -305,11 +391,12 @@ namespace MuMech
                             var hsdir = Vector3.ProjectOnPlane(VesselState.SurfaceVelocity, VesselState.Up);
                             Vector3 dir = -hsdir + VesselState.Up * Math.Max(Math.Abs(spd), 20 * MainBody.GeeASL);
                             Vector3d rot;
+                            // High and fast: full throttle straight against the horizontal velocity. Decided every tick, so once the horizontal
+                            // speed is down the vertical speed is held again, and the mode stays KEEP_VERTICAL throughout
                             if (Math.Min(VesselState.AltitudeASL, VesselState.AltitudeTrue) > 5000 &&
                                 hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * MainBody.GeeASL) * 2)
                             {
-                                Tmode = TMode.DIRECT;
-                                TransSpdAct = 100;
+                                killHFull = true;
                                 rot = -hsdir;
                             }
                             else
@@ -317,13 +404,31 @@ namespace MuMech
                                 rot = dir.normalized;
                             }
 
-                            Core.Attitude.AttitudeTo(rot, AttitudeReference.INERTIAL, null);
+                            // Aim the engines' thrust along rot, not the control forward, which a control point can turn away from the engines (a
+                            // lander can's "forward" or "reverse" point). The target is the whole attitude: the vessel's own, turned by what takes
+                            // its thrust to rot. A forward direction alone leaves roll to the controller, and with the thrust off the forward axis
+                            // any roll moves the thrust. When the thrust is on rot this is the current attitude, so it holds; with the engines on
+                            // the forward axis it aims the control forward. The thrust is not zero: this block only runs when the engines give some
+                            Vector3d thrustDir = VesselState.ThrustVectorMaxThrottle;
+                            Transform t = Vessel.GetTransform();
+                            QuaternionD current = QuaternionD.LookRotation(t.up, -t.forward);
+                            Core.Attitude.AttitudeTo(MathExtensions.FromToRotation(thrustDir, rot) * current, AttitudeReference.INERTIAL, null);
+
+                            // The throttle waits on the thrust's own error. The attitude controller's error is the control forward's, which
+                            // under-reads it on a control point off the engine axis: with the forward on the turn's axis it reads 0 whatever the
+                            // thrust error
+                            aimError = Vector3d.Angle(thrustDir, rot);
                         }
 
                         break;
                 }
 
-                double tErr = (TransSpdAct - spd) / VesselState.MaxThrustAcceleration;
+                // Kill H/S aims the thrust itself (above), so its full magnitude counts: MaxThrustAcceleration is the part along the control
+                // forward, which is 0 or negative on a control point turned away from the engines
+                double maxAccel = Tmode == TMode.KEEP_VERTICAL && TransKillH
+                    ? VesselState.ThrustVectorMaxThrottle.magnitude / VesselState.Mass
+                    : VesselState.MaxThrustAcceleration;
+                double tErr = (TransSpdAct - spd) / maxAccel;
                 if ((Tmode == TMode.KEEP_ORBITAL && Vector3d.Dot(VesselState.Forward, VesselState.OrbitalVelocity) < 0) ||
                     (Tmode == TMode.KEEP_SURFACE && Vector3d.Dot(VesselState.Forward, VesselState.SurfaceVelocity) < 0))
                 {
@@ -335,12 +440,16 @@ namespace MuMech
 
                 if (Tmode != TMode.KEEP_VERTICAL
                     || !TransKillH
-                    || Core.Attitude.AttitudeError < 2
-                    || (Math.Min(VesselState.AltitudeASL, VesselState.AltitudeTrue) < 1000 && Core.Attitude.AttitudeError < 90))
+                    || aimError < 2
+                    || (Math.Min(VesselState.AltitudeASL, VesselState.AltitudeTrue) < 1000 && aimError < 90))
                 {
                     if (Tmode == TMode.DIRECT)
                     {
                         _transPrevThrust = TargetThrottle = TransSpdAct / 100.0F;
+                    }
+                    else if (killHFull)
+                    {
+                        _transPrevThrust = TargetThrottle = 1;
                     }
                     else
                     {
@@ -355,7 +464,7 @@ namespace MuMech
                     bool useDiffThrottle = VesselState.TorqueDifferentialThrottle.x > VesselState.TorqueAvailable.x * 10 ||
                         VesselState.TorqueDifferentialThrottle.z > VesselState.TorqueAvailable.z * 10;
 
-                    if (Core.Attitude.AttitudeError >= 2 && (useGimbal || (useDiffThrottle && Core.Thrust.DifferentialThrottle)))
+                    if (useGimbal || (useDiffThrottle && Core.Thrust.DifferentialThrottle))
                     {
                         _transPrevThrust = TargetThrottle = 0.1F;
                     }
@@ -372,6 +481,9 @@ namespace MuMech
             if (Users.Count > 1)
                 s.mainThrottle = TargetThrottle;
 
+            if (PanicCut)
+                s.mainThrottle = 0;
+
             // before any comparison or Mathf.Min, which turn a NaN request into the throttle limit (often full throttle)
             if (float.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
 
@@ -380,15 +492,16 @@ namespace MuMech
 
             Limiter = LimitMode.NONE;
 
-            if (LimitThrottle)
+            IThrustLimits limits = Limits;
+            if (limits.LimitThrottle)
             {
-                if (MaxThrottle < ThrottleLimit)
+                if (limits.MaxThrottle < ThrottleLimit)
                 {
-                    SetFixedLimit((float)MaxThrottle, LimitMode.THROTTLE);
+                    SetFixedLimit((float)limits.MaxThrottle, LimitMode.THROTTLE);
                 }
             }
 
-            if (LimitDynamicPressure)
+            if (limits.LimitDynamicPressure && !BrakingToLand)
             {
                 float limit = MaximumDynamicPressureThrottle();
                 if (limit < ThrottleLimit)
@@ -397,7 +510,7 @@ namespace MuMech
                 }
             }
 
-            if (LimitToPreventOverheats)
+            if (limits.LimitToPreventOverheats)
             {
                 float limit = (float)TemperatureSafetyThrottle();
                 if (limit < ThrottleLimit)
@@ -406,7 +519,7 @@ namespace MuMech
                 }
             }
 
-            if (LimitAcceleration)
+            if (limits.LimitAcceleration)
             {
                 float limit = AccelerationLimitedThrottle();
                 if (limit < ThrottleLimit)
@@ -415,7 +528,7 @@ namespace MuMech
                 }
             }
 
-            if (ElectricThrottle && ElectricEngineRunning())
+            if (limits.ElectricThrottle && ElectricEngineRunning())
             {
                 float limit = ElectricThrottleLimit();
                 if (limit < ThrottleLimit)
@@ -438,23 +551,23 @@ namespace MuMech
             // Any limiters which can limit to non-zero values must come before this, any
             // limiters (like ullage) which enforce zero throttle should come after.  The
             // minThrottle setting has authority over any other limiter that sets non-zero throttle.
-            if (LimiterMinThrottle && Limiter != LimitMode.NONE)
+            if (limits.LimiterMinThrottle && Limiter != LimitMode.NONE)
             {
-                if (MinThrottle > ThrottleFixedLimit)
+                if (limits.MinThrottle > ThrottleFixedLimit)
                 {
-                    SetFixedLimit((float)MinThrottle, LimitMode.MIN_THROTTLE);
+                    SetFixedLimit((float)limits.MinThrottle, LimitMode.MIN_THROTTLE);
                 }
 
-                if (MinThrottle > ThrottleLimit)
+                if (limits.MinThrottle > ThrottleLimit)
                 {
-                    SetTempLimit((float)MinThrottle, LimitMode.MIN_THROTTLE);
+                    SetTempLimit((float)limits.MinThrottle, LimitMode.MIN_THROTTLE);
                 }
             }
 
             ProcessUllage(s);
 
             /* prevent unstable ignitions */
-            if (LimitToPreventUnstableIgnition && s.mainThrottle > 0.0F && ThrottleLimit > 0.0F)
+            if (limits.LimitToPreventUnstableIgnition && s.mainThrottle > 0.0F && ThrottleLimit > 0.0F)
             {
                 if (VesselState.LowestUllage < 0.996) // prevent ignition if there is any chance of failure
                 {
@@ -519,15 +632,37 @@ namespace MuMech
         public override void OnDestroy()
         {
             DisableDifferentialThrottle();
+            GameEvents.onProtoVesselSave.Remove(OnProtoVesselSave);
+            RestoreRcsRotation();
+            GameEvents.onProtoVesselSave.Remove(SaveThrustLimits);
             base.OnDestroy();
+        }
+
+        // thrustPercentage is persistent: a save while the differential throttle holds it writes the engines' own limits instead, or a
+        // load would take the last solution for them. KSP snapshots the parts when it builds the ProtoVessel from the live vessel, then
+        // fires this with no node. The dictionary is keyed by engine, so any vessel's snapshot is patched.
+        private void SaveThrustLimits(GameEvents.FromToAction<ProtoVessel, ConfigNode> data)
+        {
+            if (_thrustLimitsBeforeDifferentialThrottle.Count == 0 || data.from == null || data.to != null)
+                return;
+
+            foreach (ProtoPartSnapshot part in data.from.protoPartSnapshots)
+            foreach (ProtoPartModuleSnapshot module in part.modules)
+            {
+                if (!(module.moduleRef is ModuleEngines engine) || module.moduleValues == null ||
+                    !_thrustLimitsBeforeDifferentialThrottle.TryGetValue(engine, out float limit))
+                    continue;
+                module.moduleValues.SetValue("thrustPercentage", limit.ToString(CultureInfo.InvariantCulture));
+            }
         }
 
         //A throttle setting that throttles down when the dynamic pressure exceed a set value
         private float MaximumDynamicPressureThrottle()
         {
-            if (MaxDynamicPressure <= 0) return 1.0F;
+            double maxQ = Limits.MaxDynamicPressure;
+            if (maxQ <= 0) return 1.0F;
 
-            double pressureRatio = VesselState.DynamicPressure / MaxDynamicPressure;
+            double pressureRatio = VesselState.DynamicPressure / maxQ;
 
             if (pressureRatio < 1.0) return 1.0F; //full throttle if under maximum dynamic pressure
 
@@ -766,8 +901,8 @@ namespace MuMech
         private float ElectricThrottleLimit()
         {
             double totalElectric = Vessel.MaxResourceAmount(PartResourceLibrary.ElectricityHashcode);
-            double lowJuice = totalElectric * ElectricThrottleLo;
-            double highJuice = totalElectric * ElectricThrottleHi;
+            double lowJuice = totalElectric * Limits.ElectricThrottleLo;
+            double highJuice = totalElectric * Limits.ElectricThrottleHi;
             double curElectric = Vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
 
             if (curElectric <= lowJuice)
@@ -783,7 +918,7 @@ namespace MuMech
         //The throttle setting that will give an acceleration of maxAcceleration
         private float AccelerationLimitedThrottle()
         {
-            double throttleForMaxAccel = (MaxAcceleration - VesselState.MinThrustAcceleration) / (VesselState.MaxThrustAcceleration - VesselState.MinThrustAcceleration);
+            double throttleForMaxAccel = (Limits.MaxAcceleration - VesselState.MinThrustAcceleration) / (VesselState.MaxThrustAcceleration - VesselState.MinThrustAcceleration);
             return Mathf.Clamp((float)throttleForMaxAccel, 0, 1);
         }
 
@@ -802,23 +937,104 @@ namespace MuMech
                 FlightInputHandler.SetNeutralControls();
             }
 
-            bool disableThrusters = _userCommandingRotation && !Core.RCS.rcsForRotation;
-            if (disableThrusters != _lastDisableThrusters)
+            // "Use RCS for rotation" off: the thrusters don't rotate the vessel, whether the pilot or the attitude controller (SmartASS and
+            // every autopilot) does the turning
+            bool disableThrusters = (_userCommandingRotation || Core.Attitude.Enabled) && !Core.RCS.rcsForRotation;
+
+            // "Gimbals before RCS": while the engines burn and their gimbals give far more pitch and yaw torque than the thrusters, MechJeb's
+            // attitude control leaves pitch and yaw to the gimbals. The thrusters keep roll, and get everything back when the engines stop,
+            // or while another mod has taken MechJeb's controls (RP-1 without enough avionics)
+            _gimbalOnly = Core.RCS.rcsGimbalOnly && Core.Attitude.Enabled && !Core.DeactivateControl && VesselState.ThrustCurrent > 0 && (_gimbalOnly ||
+                GimbalOutTorquesRcs(VesselState.TorqueGimbal.Positive.x, VesselState.RCSTorqueAvailable.Positive.x) &&
+                GimbalOutTorquesRcs(VesselState.TorqueGimbal.Positive.z, VesselState.RCSTorqueAvailable.Positive.z));
+
+            int rcsRotationOff = disableThrusters ? 2 : _gimbalOnly ? 1 : 0;
+            if (rcsRotationOff != _lastRcsRotationOff || (rcsRotationOff > 0 && Vessel.parts.Count != _rcsPartCount))
             {
-                _lastDisableThrusters = disableThrusters;
-                List<ModuleRCS> rcsModules = Vessel.FindPartModulesImplementing<ModuleRCS>();
-                foreach (ModuleRCS pm in rcsModules)
+                _lastRcsRotationOff = rcsRotationOff;
+                if (rcsRotationOff > 0)
+                    DisableRcsRotation(rcsRotationOff == 1);
+                else
+                    RestoreRcsRotation();
+            }
+        }
+
+        // The rotation flags of the thrusters MechJeb turned off, with their own values (an editor setting) to give back, and the
+        // controller that turned them off. Shared by every core: a thruster that leaves with an undock keeps its own values when the
+        // other vessel's MechJeb turns it off in turn, and the save of any vessel can write them.
+        private static readonly Dictionary<ModuleRCS, (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner)> _rcsRotationSaved =
+            new Dictionary<ModuleRCS, (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner)>();
+
+        private static readonly List<ModuleRCS> _rcsToRestore = new List<ModuleRCS>();
+
+        // the part count when the flags were last turned off: thrusters that come with a docking or go with staging or an undock
+        // are caught again
+        private int _rcsPartCount = -1;
+
+        private bool GimbalOutTorquesRcs(double gimbal, double rcs) => gimbal > 0 && rcs < gimbal * Core.RCS.rcsGimbalThreshold;
+
+        private void DisableRcsRotation(bool keepRoll = false)
+        {
+            // thrusters that left this vessel get their own flags back, unless the other vessel's MechJeb has already taken them over
+            RestoreRcsRotation(true);
+
+            _rcsPartCount = Vessel.parts.Count;
+            foreach (ModuleRCS pm in Vessel.FindPartModulesImplementing<ModuleRCS>())
+            {
+                if (!_rcsRotationSaved.TryGetValue(pm, out (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner) v))
+                    v = (pm.enablePitch, pm.enableYaw, pm.enableRoll, this);
+                _rcsRotationSaved[pm] = (v.pitch, v.yaw, v.roll, this);
+                pm.enablePitch = pm.enableYaw = false;
+                pm.enableRoll  = keepRoll && v.roll;
+            }
+        }
+
+        // Gives back the flags of the thrusters this controller turned off; with onlyDeparted, only of those no longer on its vessel.
+        // Entries of destroyed thrusters are dropped.
+        private void RestoreRcsRotation(bool onlyDeparted = false)
+        {
+            _rcsToRestore.Clear();
+            foreach (KeyValuePair<ModuleRCS, (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner)> kv in _rcsRotationSaved)
+            {
+                if (kv.Key == null || (kv.Value.owner == this && (!onlyDeparted || kv.Key.part == null || kv.Key.part.vessel != Vessel)))
+                    _rcsToRestore.Add(kv.Key);
+            }
+
+            foreach (ModuleRCS pm in _rcsToRestore)
+            {
+                if (pm != null)
                 {
-                    if (disableThrusters)
-                    {
-                        pm.enablePitch = pm.enableRoll = pm.enableYaw = false;
-                    }
-                    else
-                    {
-                        // TODO : Check the protopart for the original values (slow) ? Or use a dict to save them (hard with save) ?
-                        pm.enablePitch = pm.enableRoll = pm.enableYaw = true;
-                    }
+                    (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner) v = _rcsRotationSaved[pm];
+                    pm.enablePitch = v.pitch;
+                    pm.enableYaw   = v.yaw;
+                    pm.enableRoll  = v.roll;
                 }
+
+                _rcsRotationSaved.Remove(pm);
+            }
+
+            _rcsToRestore.Clear();
+            if (!onlyDeparted)
+                _rcsPartCount = -1;
+        }
+
+        // The flags are persistent: a save while they are off writes the thrusters' own values instead, or the vessel would keep them off.
+        // KSP snapshots the parts when it builds the ProtoVessel from the live vessel, then fires this with no node. Any vessel's
+        // snapshot is patched, so a thruster that left with an undock is saved with its own values too.
+        private void OnProtoVesselSave(GameEvents.FromToAction<ProtoVessel, ConfigNode> data)
+        {
+            if (_rcsRotationSaved.Count == 0 || data.from == null || data.to != null)
+                return;
+
+            foreach (ProtoPartSnapshot part in data.from.protoPartSnapshots)
+            foreach (ProtoPartModuleSnapshot module in part.modules)
+            {
+                if (!(module.moduleRef is ModuleRCS rcs) || module.moduleValues == null ||
+                    !_rcsRotationSaved.TryGetValue(rcs, out (bool pitch, bool yaw, bool roll, MechJebModuleThrustController owner) v))
+                    continue;
+                module.moduleValues.SetValue("enablePitch", v.pitch.ToString());
+                module.moduleValues.SetValue("enableYaw", v.yaw.ToString());
+                module.moduleValues.SetValue("enableRoll", v.roll.ToString());
             }
         }
 
@@ -833,7 +1049,7 @@ namespace MuMech
             if (!ReflectionUtils.IsLoadedRealFuels)
                 return;
 
-            if (!AutoRCSUllaging || s.mainThrottle <= 0F || ThrottleLimit <= 0F)
+            if (!Limits.AutoRCSUllaging || s.mainThrottle <= 0F || ThrottleLimit <= 0F)
                 return;
 
             if (!Vessel.hasEnabledRCSModules())
@@ -841,17 +1057,20 @@ namespace MuMech
 
             bool stableUllage = VesselState.LowestUllage >= 0.996;
 
+            // VesselState counts the RCS thrust with the group off too: these tests take it as zero then, as they always have
+            double rcsThrustUp = Vessel.ActionGroups[KSPActionGroup.RCS] ? VesselState.RCSThrustAvailable.Up : 0;
+
             // ullage may dramatically drop below stable (by as much as to 0.76 in a single tick) so
             // we cannot "detect" low ullage and compensate, but must apply RCS until thrust has come
             // up sufficiently.
-            if (stableUllage && VesselState.ThrustCurrent > VesselState.RCSThrustAvailable.Up)
+            if (stableUllage && VesselState.ThrustCurrent > rcsThrustUp)
                 return;
 
             // if desiredThrust is less than the RCS thrust then don't worry about ullage.  avoids RCS
             // being applied when the user is doing dribble throttle (unlikely with RF loaded, but possible).
             double desiredThrust = (VesselState.ThrustAvailable - VesselState.ThrustMinimum) * s.mainThrottle + VesselState.ThrustMinimum;
 
-            if (stableUllage && desiredThrust < VesselState.RCSThrustAvailable.Up)
+            if (stableUllage && desiredThrust < rcsThrustUp)
                 return;
 
             // limit the throttle only if we aren't already burning (don't waste ignitions)
@@ -923,12 +1142,15 @@ namespace MuMech
             }
 
 
-            if (_diffB.Length != n)
+            if (_diffB.Length != n || _diffState == null)
             {
                 _diffA = new double[n, n];
                 _diffB = new double[n];
                 _diffBoundL = new double[n];
                 _diffBoundU = new double[n];
+                _diffX = new double[n];
+                alglib.minqpcreate(n, out _diffState);
+                alglib.minqpsetalgodensegenipm(_diffState, 0.0);
             }
 
             double[,] a = _diffA;
@@ -951,15 +1173,15 @@ namespace MuMech
                 boundU[i] = mainThrottle;
             }
 
-            alglib.minqpcreate(n, out alglib.minqpstate state);
+            alglib.minqpstate state = _diffState;
             alglib.minqpsetquadraticterm(state, a, false);
             alglib.minqpsetlinearterm(state, b);
             alglib.minqpsetbc(state, boundL, boundU);
-            alglib.minqpsetalgodensegenipm(state, 0.0);
             //var t1 = stopwatch.ElapsedMilliseconds;
             alglib.minqpoptimize(state);
             //var t2 = stopwatch.ElapsedMilliseconds;
-            alglib.minqpresults(state, out double[] x, out alglib.minqpreport _);
+            alglib.minqpresultsbuf(state, ref _diffX, _diffReport);
+            double[] x = _diffX;
             //var t3 = stopwatch.ElapsedMilliseconds;
             //UnityEngine.Debug.LogFormat("[DiffThrottle] t1: {0}, t2: {1}, t3: {2}", t1, t2 - t1, t3 - t2);
 

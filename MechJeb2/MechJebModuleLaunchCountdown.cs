@@ -7,6 +7,7 @@ namespace MuMech
     /// <summary>
     ///     The launch sequence the ascent autopilots share: the countdown, warping to it, staging at T-0 and the prelaunch hold.
     ///     An engaged autopilot adds itself to Users, so a countdown started while no autopilot is engaged doesn't run until one is.
+    ///     The countdown owns the launch mode (the three Launching* flags of the ascent settings): only Abort ends it, not a window.
     /// </summary>
     public class MechJebModuleLaunchCountdown : ComputerModule
     {
@@ -17,24 +18,33 @@ namespace MuMech
         private double _launchTime;
         private double _lastTMinus = 999;
 
+        private enum LaunchKind { PLANE_OF_TARGET, TARGET_LAN, LAN }
+
+        // what the countdown counts down to, to time it again when an autopilot is engaged after T-0
+        private LaunchKind _launchKind;
+
         public bool Active { get; private set; }
 
         public double TMinus => _launchTime - VesselState.Time;
+
+        /// <summary>The target's LAN when a launch into its plane or to its LAN started: the LAN that launch flies to.</summary>
+        public double TargetLan { get; private set; }
 
         // Starting a countdown flushes the PSG solution and the optimizer restarts cold late in the countdown, which can take longer
         // than the countdown does. Staging with no solution would release the rocket at zero throttle, so T-0 waits for one.
         private bool WaitingForGuidance => AscentSettings.AscentType == AscentType.PSG && Core.Guidance.Solution == null;
 
-        // the inclination the selected ascent type flies
-        public EditableDouble InclinationSetting =>
-            AscentSettings.AscentType == AscentType.PSG ? Core.PSGSimulation.Inc : AscentSettings.DesiredInclination;
+        // the target inclination, one for both ascent types
+        public EditableDouble InclinationSetting => AscentSettings.DesiredInclination;
 
         /// <summary>Counts down to the next launch into the target's plane and sets the inclination to match. Returns the launch UT.</summary>
         public double StartToPlaneOfTarget()
         {
             AscentSettings.LaunchingToPlane = true;
+            _launchKind                     = LaunchKind.PLANE_OF_TARGET;
 
             Orbit targetOrbit = Core.Target.TargetOrbit;
+            TargetLan = targetOrbit.LAN;
             (double timeToPlane, double inclination) = Astro.MinimumTimeToPlane(
                 MainBody.rotationPeriod,
                 VesselState.Latitude,
@@ -50,27 +60,32 @@ namespace MuMech
         public double StartToTargetLan()
         {
             AscentSettings.LaunchingToMatchLan = true;
-            return Start(TimeToPlane(Core.Target.TargetOrbit.LAN - AscentSettings.LaunchLANDifference));
+            _launchKind                        = LaunchKind.TARGET_LAN;
+            TargetLan = Core.Target.TargetOrbit.LAN;
+            return Start(TimeToPlane(TargetLan - AscentSettings.LaunchLANDifference));
         }
 
         /// <summary>Counts down to the next launch to the PSG LAN setting at the set inclination. Returns the launch UT.</summary>
         public double StartToLan()
         {
             AscentSettings.LaunchingToLan = true;
+            _launchKind                   = LaunchKind.LAN;
             return Start(TimeToPlane(Core.PSGSimulation.LAN));
         }
 
-        // whether the countdown asked the warp controller for a warp, so Abort, Disengage and unticking Auto-warp end it
+        // whether the countdown asked the warp controller for a warp, so Abort (also on Disengage) and unticking Auto-warp end it
         private bool _warping;
 
+        /// <summary>
+        ///     Stops the countdown and ends the launch to plane or LAN, whose flags the PSG guidance keeps flying to after T-0.
+        ///     Disengaging an ascent autopilot calls it, so a countdown never outlives the launch it was started for.
+        /// </summary>
         public void Abort()
         {
             Active = false;
+            AscentSettings.LaunchingToPlane = AscentSettings.LaunchingToMatchLan = AscentSettings.LaunchingToLan = false;
             StopWarping();
         }
-
-        // the autopilot disengaged: the countdown stops running, and so does its warp
-        protected override void OnModuleDisabled() => StopWarping();
 
         private void StopWarping()
         {
@@ -101,8 +116,7 @@ namespace MuMech
                 return false;
             }
 
-            // null when a part's blacklist removed the controller
-            if (Core.Solarpanel?.RetractForLaunch() ?? true)
+            if (Core.Solarpanel.RetractForLaunch())
                 return true;
 
             status.Set(Localizer.Format("#MechJeb_Ascent_status5")); //"Retracting solar panels"
@@ -122,6 +136,29 @@ namespace MuMech
             return true;
         }
 
+        // The countdown only runs while an autopilot is engaged. One started with none engaged and engaged after T-0 counts down
+        // to the next launch of the same kind, rather than launch at once, off the window it was timed for.
+        protected override void OnModuleEnabled()
+        {
+            if (!Active || TMinus >= 0)
+                return;
+
+            switch (_launchKind)
+            {
+                case LaunchKind.PLANE_OF_TARGET:
+                    if (Core.Target.TargetOrbit != null) StartToPlaneOfTarget();
+                    else Abort();
+                    break;
+                case LaunchKind.TARGET_LAN:
+                    if (Core.Target.TargetOrbit != null) StartToTargetLan();
+                    else Abort();
+                    break;
+                case LaunchKind.LAN:
+                    StartToLan();
+                    break;
+            }
+        }
+
         public override void OnFixedUpdate()
         {
             if (!Active)
@@ -129,7 +166,8 @@ namespace MuMech
 
             if (TMinus < 3 * VesselState.DeltaT || (TMinus > 10.0 && _lastTMinus < 1.0))
             {
-                if (!WaitingForGuidance)
+                // StageManager stages the active vessel, so T-0 holds while the player is on another one
+                if (!WaitingForGuidance && Vessel.isActiveVessel)
                 {
                     if (VesselState.ThrustAvailable < 10E-4) // only stage if we have no engines active
                         StageManager.ActivateNextStage();
@@ -140,9 +178,9 @@ namespace MuMech
             }
             else
             {
-                if (Core.Node.Autowarp)
+                if (AscentSettings.Autowarp)
                 {
-                    Core.Warp.AutopilotWarpToUT(_launchTime - AscentSettings.WarpCountDown);
+                    Core.Warp.AutopilotWarpToUT(_launchTime - System.Math.Max(AscentSettings.WarpCountDown, 0)); // never past T-0
                     _warping = true;
                 }
                 else

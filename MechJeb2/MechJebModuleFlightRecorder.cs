@@ -126,27 +126,13 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly double Precision = 0.2;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool Downrange = true;
-
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool RealAtmo = false;
-
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool Stages = false;
-
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public int HSize = 4;
-
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public int VSize = 2;
-
         private static readonly int _typeCount = Enum.GetValues(typeof(RecordType)).Length;
 
         public readonly double[] Maximums;
         public readonly double[] Minimums;
 
-        private readonly bool _paused = false;
+        // false until a record sets Minimums and Maximums: after a Mark, and after a load that keeps the saved mark
+        private bool _extremesSet;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL), ValueInfoItem("#MechJeb_MarkUT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
         //Mark UT
@@ -179,9 +165,14 @@ namespace MuMech
 
             // markVector is the position of the mark, as it was at the time the mark was made.
             CelestialBody markBody = MarkCelestialBody;
-            Vector3d markVector = markBody.GetSurfaceNVector(MarkLatitude, MarkLongitude - TimeSinceMark * 360.0 / markBody.rotationPeriod);
+            double rotation = markBody.rotationPeriod != 0 ? TimeSinceMark * 360.0 / markBody.rotationPeriod : 0;
+            Vector3d markVector = markBody.GetSurfaceNVector(MarkLatitude, MarkLongitude - rotation);
             Vector3d vesselVector = VesselState.CoM - markBody.transform.position;
-            double traversedAngle = Vector3d.Angle(markVector, vesselVector);
+            // the angle from the mark to the vessel in the direction the vessel moves, 0-360°: an unsigned angle would fold back
+            // after half an orbit
+            Vector3d normal = Vector3d.Cross(vesselVector, VesselState.OrbitalVelocity);
+            double traversedAngle = Math.Atan2(Vector3d.Dot(Vector3d.Cross(markVector, vesselVector), normal.normalized),
+                Vector3d.Dot(markVector, vesselVector)) * UtilMath.Rad2Deg;
             double circularOrbitAngle = 360 * TimeSinceMark / Orbit.CircularOrbitPeriod();
             return Clamp360(circularOrbitAngle - traversedAngle);
         }
@@ -214,8 +205,7 @@ namespace MuMech
 
         [ValueInfoItem("#MechJeb_DistanceFromMark", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")] //Distance from mark
         public double DistanceFromMark() =>
-            Vector3d.Distance(VesselState.CoM,
-                MarkCelestialBody.GetWorldSurfacePosition(MarkLatitude, MarkLongitude, MarkAltitude) - MarkCelestialBody.position);
+            Vector3d.Distance(VesselState.CoM, MarkCelestialBody.GetWorldSurfacePosition(MarkLatitude, MarkLongitude, MarkAltitude));
 
         [UsedImplicitly, ValueInfoItem("#MechJeb_DownrangeDistance", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
         //Downrange distance
@@ -243,11 +233,7 @@ namespace MuMech
             MarkBodyIndex = FlightGlobals.Bodies.IndexOf(MainBody);
             MaxDragGees = 0;
             TimeSinceMark = 0;
-            for (int t = 0; t < Maximums.Length; t++)
-            {
-                Minimums[t] = double.MaxValue;
-                Maximums[t] = double.MinValue;
-            }
+            _extremesSet = false;
 
             // a lowered HistorySize applies from here
             if (History.Length > MaxHistorySize)
@@ -297,9 +283,6 @@ namespace MuMech
                 (1 - Vector3d.Dot(VesselState.OrbitalVelocity.normalized, VesselState.Forward));
 
             MaxDragGees = Math.Max(MaxDragGees, VesselState.DragAcceleration / 9.81);
-
-            if (_paused)
-                return;
 
             //int oldHistoryIdx = historyIdx;
 
@@ -355,9 +338,11 @@ namespace MuMech
             for (int t = 0; t < _typeCount; t++)
             {
                 double current = History[idx][(RecordType)t];
-                Minimums[t] = Math.Min(Minimums[t], current);
-                Maximums[t] = Math.Max(Maximums[t], current);
+                Minimums[t] = _extremesSet ? Math.Min(Minimums[t], current) : current;
+                Maximums[t] = _extremesSet ? Math.Max(Maximums[t], current) : current;
             }
+
+            _extremesSet = true;
         }
 
         public void DumpCsv()

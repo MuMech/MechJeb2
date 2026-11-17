@@ -12,7 +12,7 @@ namespace MuMech.UI
     /// <summary>
     /// MechJebModuleCustomInfoWindow (every custom info window: "Vessel Info", "Delta-V Stats", users' own...) in KodeKit.
     /// Built once from the window's item list; rebuilt when the list changes in the window editor. Values refresh at the
-    /// window's refresh rate like UpdateWindowItems.
+    /// window's refresh rate.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleCustomInfoWindow))]
     public class CustomInfoWindowView : KodeView
@@ -73,20 +73,14 @@ namespace MuMech.UI
                 title.text = shownTitle;
             });
 
-            // "E": edit this window, "C": copy its sharing string; the modern layout draws them as icons beside the close button
-            void TitleAction(UnityEngine.Sprite icon, string letter, string tooltipKey, System.Action click)
-            {
-                if (KodeWindow.ModernLayout) w.TitleIcon(icon, tooltipKey, click);
-                else Tooltips.Add(w.TitleButton(letter, click).gameObject, tooltipKey); // localized when shown
-            }
-
+            // edit this window, copy its sharing string: icons beside the close button
             if (window.Core.GetComputerModule<MechJebModuleCustomWindowEditor>() is { TechLocked: false } editor)
-                TitleAction(Sprites.Edit, "E", "#MechJeb_NewUI_EditWindow_tooltip", () => //Edit this window
+                w.TitleIcon(Sprites.Edit, "#MechJeb_NewUI_EditWindow_tooltip", () => //Edit this window
                 {
                     editor.Enabled = true;
                     editor.editedWindow = window;
                 });
-            TitleAction(Sprites.Copy, "C", "#MechJeb_NewUI_CopyWindow_tooltip", () => //Copy this window's configuration
+            w.TitleIcon(Sprites.Copy, "#MechJeb_NewUI_CopyWindow_tooltip", () => //Copy this window's configuration
             {
                 MuUtils.SystemClipboard = window.ToSharingString();
                 ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg1", window.GetName()), 3.0f,
@@ -116,9 +110,10 @@ namespace MuMech.UI
             KodeWindow.Label(rate, "Update Interval", true);
             EditFields.Field(w, rate, () => window.refreshRate.Text, s =>
             {
+                int old = window.refreshRate;
                 window.refreshRate.Text = s;
                 if (window.refreshRate < 1) window.refreshRate.Val = 1;
-                window.UpdateRefreshRate();
+                if (window.refreshRate != old) window.Dirty = true;
             }, 60);
             KodeWindow.Label(rate, "Hz");
             w.Visible(rate.gameObject, () => GuiUtils.ShowAdvancedWindowSettings);
@@ -126,51 +121,11 @@ namespace MuMech.UI
             // the bottom-right corner resizes the window, and fixes its width
             rootSize = w.Root.GetComponent<LayoutElement>();
             shownWidth = -1;
-            grip = AddGrip(w);
+            grip = ResizeGrip.Add(w, (width, _) => window.FixedWidth = Mathf.RoundToInt(width), () => window.WidthFixed = true);
             // a Locked window keeps its size as well as its place: no grip, as no title bar drag
             w.Visible(grip.gameObject, () => !window.WindowLocked);
 
             widgets.Refresh();
-        }
-
-        static Sprite gripSprite;
-
-        // three diagonal stripes in the bottom-right corner, the usual resize grip (KodeUI's sprites have none)
-        static Sprite GripSprite
-        {
-            get
-            {
-                if (gripSprite != null) return gripSprite;
-                const int n = 12;
-                var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Point };
-                for (int y = 0; y < n; y++)
-                for (int x = 0; x < n; x++)
-                {
-                    int d = n - 1 - x + y; // 0 in the bottom-right corner
-                    tex.SetPixel(x, y, d < n && d % 4 >= 2 ? Color.white : Color.clear);
-                }
-                tex.Apply();
-                return gripSprite = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f));
-            }
-        }
-
-        ResizeGrip AddGrip(KodeWindow w)
-        {
-            var go = new GameObject("ResizeGrip", typeof(RectTransform), typeof(Image), typeof(LayoutElement), typeof(ResizeGrip));
-            go.transform.SetParent(w.Root.transform, false);
-            go.GetComponent<LayoutElement>().ignoreLayout = true;
-            var rt = (RectTransform)go.transform;
-            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(1, 0);
-            rt.anchoredPosition = Vector2.zero;
-            rt.sizeDelta = new Vector2(12, 12);
-            var img = go.GetComponent<Image>();
-            img.sprite = GripSprite;
-            KodeWindow.Styled(go, th => img.color = new Color(th.Text.r, th.Text.g, th.Text.b, 0.45f));
-            var g = go.GetComponent<ResizeGrip>();
-            g.Root = w.Root.rectTransform;
-            g.Resized = width => window.FixedWidth = Mathf.RoundToInt(width);
-            g.Done = () => window.WidthFixed = true;
-            return g;
         }
 
         // the window's width: its values' (Auto), or the fixed one, also while the grip is dragged in Auto
@@ -212,46 +167,6 @@ namespace MuMech.UI
             for (int i = 0; i < built.Length; i++)
                 if (items[i] != built[i]) return true;
             return false;
-        }
-
-        /// <summary>Drags the window's right edge: the new width, in the window's own units, as the pointer moves.</summary>
-        sealed class ResizeGrip : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
-        {
-            public RectTransform Root;
-            public System.Action<float> Resized;
-            public System.Action Done;
-            public bool Dragging { get; private set; }
-            float offset;
-
-            bool Local(PointerEventData e, out float x)
-            {
-                bool ok = RectTransformUtility.ScreenPointToLocalPointInRectangle(Root, e.position, e.pressEventCamera, out Vector2 p);
-                x = p.x + Root.pivot.x * Root.rect.width; // from the window's left edge
-                return ok;
-            }
-
-            public void OnBeginDrag(PointerEventData e)
-            {
-                if (!Local(e, out float x)) return;
-                offset = Root.rect.width - x;
-                Dragging = true;
-                Resized(Root.rect.width);
-            }
-
-            public void OnDrag(PointerEventData e)
-            {
-                if (Dragging && Local(e, out float x)) Resized(x + offset);
-            }
-
-            public void OnEndDrag(PointerEventData e)
-            {
-                if (!Dragging) return;
-                Dragging = false;
-                Done();
-            }
-
-            // hidden mid-drag (the window locked, or closed): the drag gets no end, so end it here
-            void OnDisable() => OnEndDrag(null);
         }
     }
 }

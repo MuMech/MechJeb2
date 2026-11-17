@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation.PartModules;
 
@@ -26,14 +27,47 @@ namespace MechJebLib.FuelFlowSimulation
             //
             // OR: could probably find all the decouplers with the lowest inverseStage and then
             // form an algorithm to pick which side of which decoupler was considered the "root".
+
+            // a new, empty craft in the editor: there is nothing to decouple
+            if (v.Parts.Count == 0)
+                return;
+
             SimPart rootPart = FindRootPart(v.Parts);
 
             // int.MinValue marks parts which the recursion has not visited yet
             foreach (SimPart p in v.Parts)
                 p.DecoupledInStage = int.MinValue;
 
-            CalculateDecoupledInStageRecursively(v, rootPart, null, -1);
+            List<SimPart> visited = _visited ??= new List<SimPart>();
+            visited.Clear();
+
+            try
+            {
+                // first every part's DecoupledInStage, then the per-stage lists: the lists run up to CurrentStage, which a
+                // part found late in the traversal can raise, and the parts visited before it must be in the new top entries too
+                CalculateDecoupledInStageRecursively(v, rootPart, null, -1);
+
+                int maxDecoupledInStage = int.MinValue;
+                foreach (SimPart p in visited)
+                    maxDecoupledInStage = Math.Max(maxDecoupledInStage, p.DecoupledInStage);
+
+                // in the VAB the CurrentStage often is 1 too low, this hack fixes that.
+                if (maxDecoupledInStage + 1 > v.CurrentStage)
+                    v.SetCurrentStage(maxDecoupledInStage + 1);
+
+                foreach (SimPart p in visited)
+                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+            }
+            finally
+            {
+                visited.Clear();
+            }
         }
+
+        // the parts in the order the traversal visits them, which is the order they go into the per-stage lists.  the vessel
+        // managers build on the main thread, the unit tests in parallel.
+        [ThreadStatic]
+        private static List<SimPart>? _visited;
 
         private static SimPart FindRootPart(IReadOnlyList<SimPart> parts)
         {
@@ -99,7 +133,7 @@ namespace MechJebLib.FuelFlowSimulation
                                 {
                                     // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                     p.DecoupledInStage = p.InverseStage;
-                                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                    Visit(p);
                                     return p.DecoupledInStage;
                                 }
 
@@ -109,14 +143,14 @@ namespace MechJebLib.FuelFlowSimulation
                                     {
                                         // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                         p.DecoupledInStage = p.InverseStage;
-                                        TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                        Visit(p);
                                         return p.DecoupledInStage;
                                     }
 
                                     // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.
                                     // The part and other children are dropped with the traversalParent.
                                     p.DecoupledInStage = parentDecoupledInStage;
-                                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                    Visit(p);
                                     CalculateDecoupledInStageRecursively(v, decouple.AttachedPart, p, p.InverseStage);
                                     return p.DecoupledInStage;
                                 }
@@ -124,21 +158,23 @@ namespace MechJebLib.FuelFlowSimulation
 
                             break;
                         case SimModuleDockingNode dockingNode:
-                            if (dockingNode.StagingEnabled && p.StagingOn)
+                            // as in KSP's ModuleDockingNode.OnActive, a port that isn't staged, or has its staging disabled, never
+                            // decouples: whatever is docked to it stays on the vessel
+                            if (dockingNode is { Staged: true, StagingEnabled: true } && p.StagingOn)
                                 if (dockingNode.AttachedPart != null)
                                 {
-                                    if (dockingNode.AttachedPart == parent && dockingNode.Staged)
+                                    if (dockingNode.AttachedPart == parent)
                                     {
                                         // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                         p.DecoupledInStage = p.InverseStage;
-                                        TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                        Visit(p);
                                         return p.DecoupledInStage;
                                     }
 
                                     // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.
                                     // The part and other children are dropped with the traversalParent.
                                     p.DecoupledInStage = parentDecoupledInStage;
-                                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                    Visit(p);
                                     CalculateDecoupledInStageRecursively(v, dockingNode.AttachedPart, p, p.InverseStage);
                                     return p.DecoupledInStage;
                                 }
@@ -149,7 +185,7 @@ namespace MechJebLib.FuelFlowSimulation
                             {
                                 // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                 p.DecoupledInStage = p.InverseStage;
-                                TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                Visit(p);
                                 return p.DecoupledInStage;
                             }
 
@@ -158,7 +194,7 @@ namespace MechJebLib.FuelFlowSimulation
                             p.DecoupledInStage = p.InverseStage > parentDecoupledInStage
                                 ? p.InverseStage
                                 : parentDecoupledInStage;
-                            TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                            Visit(p);
                             return p.DecoupledInStage;
                     }
                 }
@@ -166,16 +202,15 @@ namespace MechJebLib.FuelFlowSimulation
 
             // not decoupling this part
             p.DecoupledInStage = parentDecoupledInStage;
-            TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+            Visit(p);
             return p.DecoupledInStage;
         }
 
+        // DecoupledInStage is set: the part goes into the per-stage lists once the traversal is done
+        private static void Visit(SimPart part) => _visited!.Add(part);
+
         private static void TrackPartDecoupledInStage(SimVessel v, SimPart part, int stage)
         {
-            // in the VAB the CurrentStage often is 1 too low, this hack fixes that.
-            if (stage + 1 > v.CurrentStage)
-                v.SetCurrentStage(stage + 1);
-
             for (int i = stage + 1; i <= v.CurrentStage; i++)
                 v.PartsRemainingInStage[i].Add(part);
 

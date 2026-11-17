@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Text;
-using MechJebLib.FuelFlowSimulation;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.PSG
@@ -10,6 +9,9 @@ namespace MechJebLib.PSG
         public bool AllowShutdown;
 
         public bool Unguided;
+
+        // only on a coast, which must be guided: spin the vessel up during it, at the spin-up rate, before the next stage
+        public bool Spinup;
 
         // This leaks KSPStage information into the logical plan and is only valid for COAST_DEDICATED
         public int KSPStage;
@@ -27,6 +29,8 @@ namespace MechJebLib.PSG
                 sb.Append($" kspStage: {KSPStage}");
             if (Unguided)
                 sb.Append(" (unguided)");
+            if (Spinup)
+                sb.Append(" (spin-up)");
             sb.Append(!AllowShutdown ? " (no shutdown)" : " (allow shutdown)");
             if (!SkipToNextBurn)
                 sb.Append(" (no advance)");
@@ -51,6 +55,11 @@ namespace MechJebLib.PSG
 
             RemoveInvalidCoasts();
             ComputeSkipToNextBurn();
+
+            // the spin-up rides on a guided coast only
+            foreach (LogicalPlanStage stage in Stages)
+                if (stage.StageType == StageType.BURN || stage.Unguided)
+                    stage.Spinup = false;
         }
 
         private void RemoveInvalidCoasts()
@@ -115,100 +124,6 @@ namespace MechJebLib.PSG
                 if (stage.SkipToNextBurn)
                     num++;
             return num;
-        }
-
-        // This is to be deprecated, the LogicalPlan should become the thing the UI/UX generates directly, this is just
-        // a back-compatibility layer for now to convert all the old settings.
-        // TODO in UI/UX overhaul: if you have one KSPstage with two MJstages that are both > minDeltaV you need to be able to
-        // target a coast to BEFORE/AFTER/DURING either of the MJstages (more evidence KSP stage #'s are the wrong user-facing API)
-        public static LogicalPlan GenerateLogicalPlan(List<FuelStats> vacStats, List<int> unguidedStages, List<int> fixedStages, int lastStage, double minDeltaV, int coastStage, int coastLocation)
-        {
-            var plan = new LogicalPlan();
-
-            if (vacStats.Count > 0 && lastStage <= vacStats[vacStats.Count - 1].KSPStage)
-            {
-                lastStage = Clamp(lastStage, 0,  vacStats[vacStats.Count - 1].KSPStage);
-
-                bool addedCoast = false;
-
-                // we're counting down the rocket from the top
-                foreach (FuelStats stats in vacStats)
-                {
-                    int kspStage = stats.KSPStage;
-
-                    // skip until we find the configured "top"
-                    if (stats.KSPStage < lastStage)
-                        continue;
-
-                    // this catches dedicated coast phases
-                    if (coastStage >= 0 && stats.KSPStage > coastStage && !addedCoast)
-                    {
-                        var stage2 = new LogicalPlanStage();
-                        stage2.StageType = StageType.COAST_DEDICATED;
-                        stage2.Unguided = unguidedStages.Contains(stats.KSPStage);
-                        stage2.AllowShutdown = !fixedStages.Contains(stats.KSPStage);
-                        stage2.KSPStage = coastStage;
-                        plan.Stages.Add(stage2);
-                        addedCoast  = true;
-                    }
-
-                    // skip all the tiny stages
-                    if (stats.DeltaV < minDeltaV)
-                        continue;
-
-                    bool doingCoastAfter = coastStage == kspStage && coastLocation == 1;
-                    bool doingCoastDuring = coastStage == kspStage && coastLocation == 0;
-                    bool doingCoastBefore = coastStage == kspStage && coastLocation == -1;
-
-                    if (doingCoastAfter && !addedCoast)
-                    {
-                        var stage2 = new LogicalPlanStage();
-                        stage2.StageType = StageType.COAST_AFTER;
-                        stage2.Unguided = unguidedStages.Contains(stats.KSPStage);
-                        stage2.AllowShutdown = !fixedStages.Contains(stats.KSPStage);
-                        plan.Stages.Add(stage2);
-                        addedCoast  = true;
-                    }
-
-                    if (doingCoastDuring && !addedCoast)
-                    {
-                        var stage3 = new LogicalPlanStage();
-                        stage3.StageType = StageType.BURN;
-                        stage3.Unguided = unguidedStages.Contains(stats.KSPStage);
-                        stage3.AllowShutdown = !fixedStages.Contains(stats.KSPStage);
-                        plan.Stages.Add(stage3);
-
-                        var stage2 = new LogicalPlanStage();
-                        stage2.StageType = StageType.COAST_DURING;
-                        stage2.Unguided = unguidedStages.Contains(stats.KSPStage);
-                        stage2.AllowShutdown = !fixedStages.Contains(stats.KSPStage);
-                        plan.Stages.Add(stage2);
-                        addedCoast  = true;
-                    }
-
-                    var stage = new LogicalPlanStage();
-                    stage.StageType = StageType.BURN;
-                    stage.Unguided = unguidedStages.Contains(stats.KSPStage);
-                    stage.AllowShutdown = !fixedStages.Contains(stats.KSPStage);
-                    plan.Stages.Add(stage);
-
-                    if (doingCoastBefore && !addedCoast)
-                    {
-                        var stage2 = new LogicalPlanStage();
-                        stage2.StageType = StageType.COAST_BEFORE;
-                        stage2.Unguided = unguidedStages.Contains(stats.KSPStage);
-                        stage2.AllowShutdown = !fixedStages.Contains(stats.KSPStage);
-                        plan.Stages.Add(stage2);
-                        addedCoast  = true;
-                    }
-                }
-            }
-
-            plan.RemoveInvalidCoasts();
-
-            plan.ComputeSkipToNextBurn();
-
-            return plan;
         }
     }
 }

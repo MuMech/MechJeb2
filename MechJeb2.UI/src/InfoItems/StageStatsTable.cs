@@ -41,8 +41,7 @@ namespace MuMech.UI
             this.w = w;
             h = helper;
 
-            if (KodeWindow.ModernLayout) ModernToolbar(parent);
-            else ClassicToolbar(parent);
+            Toolbar(parent);
 
             grid = KodeWindow.Row(parent);
             // columns at the top: a row's default centres them, so one shorter than the others would sit half a row lower
@@ -53,14 +52,14 @@ namespace MuMech.UI
             Refresh();
         }
 
-        // modern layout: the on/off options as switches side by side, the display set as one choice
-        void ModernToolbar(UIObject parent)
+        // the on/off options as switches side by side, the display set as one choice
+        void Toolbar(UIObject parent)
         {
             KodeWindow.Header(parent, "#MechJeb_InfoItems_label1"); //"Stage stats"
             Layout switches = KodeWindow.FlowWrap(parent, 10);
-            Switch(switches, "#MechJeb_InfoItems_timeSeconds", () => h.TimeSeconds, h.ToggleTimeSeconds); //"Seconds"
-            Switch(switches, "#MechJeb_InfoItems_hideEmpty", () => !h.ShowEmpty, h.ToggleShowEmpty);   //"Hide 0"
-            Switch(switches, "#MechJeb_InfoItems_rcs", () => h.ShowRcs, h.ToggleRcs);                  //"RCS"
+            Switch(switches, "#MechJeb_InfoItems_timeSeconds", () => h.TimeSeconds, h.ToggleTimeSeconds, "#MechJeb_NewUI_StatsSeconds_tooltip"); //"Seconds"
+            Switch(switches, "#MechJeb_InfoItems_hideEmpty", () => !h.ShowEmpty, h.ToggleShowEmpty, "#MechJeb_NewUI_StatsHideEmpty_tooltip");   //"Hide 0"
+            Switch(switches, "#MechJeb_InfoItems_rcs", () => h.ShowRcs, h.ToggleRcs, "#MechJeb_NewUI_StatsRcs_tooltip");                  //"RCS"
             w.Segmented(parent, MechJebStageStatsHelper.DisplayStateNames, () => h.DisplayState, i =>
             {
                 // the helper only cycles: step to the chosen set
@@ -70,41 +69,15 @@ namespace MuMech.UI
             if (HighLogic.LoadedSceneIsEditor) EditorEnvironment(parent);
         }
 
-        void Switch(UIObject parent, string text, System.Func<bool> get, System.Action toggle) =>
+        void Switch(UIObject parent, string text, System.Func<bool> get, System.Action toggle, string tooltip) =>
+            Tooltips.Add(SwitchToggle(parent, text, get, toggle).transform.parent.gameObject, tooltip);
+
+        UnityEngine.UI.Toggle SwitchToggle(UIObject parent, string text, System.Func<bool> get, System.Action toggle) =>
             w.SwitchRow(parent, text, get, v =>
             {
                 if (v != get()) toggle();
                 Refresh();
             });
-
-        void ClassicToolbar(UIObject parent)
-        {
-            Layout bar = KodeWindow.Row(parent);
-            KodeWindow.Label(bar, "#MechJeb_InfoItems_label1", true); //"Stage stats"
-            ToolbarButton(bar, () => h.TimeSeconds ? "s" : "dhms", h.ToggleTimeSeconds);
-            ToolbarButton(bar, () => h.ShowEmpty ? CachedLocalizer.Instance.MechJebInfoItemsShowEmpty : CachedLocalizer.Instance.MechJebInfoItemsHideEmpty,
-                h.ToggleShowEmpty);
-            ToolbarButton(bar, () => MechJebStageStatsHelper.DisplayStateNames[h.DisplayState], h.CycleDisplayState);
-            ToolbarButton(bar, () => h.ShowRcs ? CachedLocalizer.Instance.MechJebInfoItemsRcs : CachedLocalizer.Instance.MechJebInfoItemsEngine, h.ToggleRcs);
-            if (HighLogic.LoadedSceneIsEditor) EditorEnvironment(parent);
-        }
-
-        void ToolbarButton(UIObject parent, System.Func<string> text, System.Action onClick)
-        {
-            UIButton b = KodeWindow.Button(parent, text(), () =>
-            {
-                onClick();
-                Refresh();
-            });
-            string shown = text();
-            w.AddSync(() =>
-            {
-                string s = text();
-                if ((object)s == shown) return; // constant strings: a reference check is enough
-                shown = s;
-                b.Text(s);
-            });
-        }
 
         // body combo + altitude and mach sliders (editor only)
         void EditorEnvironment(UIObject parent)
@@ -231,7 +204,9 @@ namespace MuMech.UI
                     for (int i = 0; i < c.Cells.Count; i++)
                     {
                         bool on = i < rows;
-                        if (c.Cells[i].gameObject.activeSelf != on) c.Cells[i].gameObject.SetActive(on);
+                        // the cell, not its text: the cell holds the row's height in the column
+                        GameObject cell = KodeWindow.CellOf(c.Cells[i]);
+                        if (cell.activeSelf != on) cell.SetActive(on);
                     }
                 }
                 // only once every column has its cells: a rebuild that threw half way is tried again at the next refresh
@@ -239,9 +214,8 @@ namespace MuMech.UI
                 builtRows = rows;
             }
 
-            // the modern layout highlights the stage that burns now and dims the units
-            bool modern = KodeWindow.ModernLayout;
-            int current = modern ? CurrentRow(stages) : -1;
+            // the stage that burns now is highlighted, the units dimmed
+            int current = CurrentRow(stages);
             Theme th = Theme.Current;
             double gee = h.GeeASL;
             foreach (Column c in columns)
@@ -254,17 +228,11 @@ namespace MuMech.UI
                     if (decimals >= 0) ct.Append(v, decimals);
                     else if (decimals == MechJebStageStatsHelper.SI) ct.AppendSI(v);
                     else if (h.TimeSeconds) ct.Append(v, 2).Append('s');
-                    else
-                    {
-                        long day = KSPUtil.dateTimeFormatter.Day, year = KSPUtil.dateTimeFormatter.Year;
-                        ct.AppendDHMS(v, 1, (int)(day / 3600), (int)(year / day));
-                    }
+                    else ct.AppendDHMS(v, 1);
                     int length = ct.Length + (unit?.Length ?? 0);
-                    if (modern && !string.IsNullOrEmpty(unit)) ct.Append("<alpha=#80>").Append(unit);
-                    else ct.Append(unit);
+                    if (!string.IsNullOrEmpty(unit)) ct.Append("<alpha=#80>").Append(unit);
                     FitWidth(c, length);
                     ct.Commit();
-                    if (!modern) continue;
                     Color want = row == current ? th.Accent : th.Text;
                     if (c.Cells[row].tmpText.color != want) c.Cells[row].tmpText.color = want;
                 }

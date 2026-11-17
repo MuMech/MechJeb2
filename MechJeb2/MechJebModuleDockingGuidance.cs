@@ -11,8 +11,6 @@ namespace MuMech
     {
         public MechJebModuleDockingGuidance(MechJebCore core) : base(core) { }
 
-        private MechJebModuleDockingAutopilot autopilot;
-
         private static readonly char[] DockingNodeTypeSeparator = { ',' };
 
         // KSP changes a docking-port target back to its parent vessel while the
@@ -20,8 +18,6 @@ namespace MuMech
         // choice locally so that cycling does not jump back to the first port.
         internal ModuleDockingNode selectedTargetPort;
         private Vessel selectedTargetVessel;
-
-        public override void OnStart(PartModule.StartState state) => autopilot = Core.GetComputerModule<MechJebModuleDockingAutopilot>();
 
         internal enum PortSelectorState { Hidden, Unavailable, Ready }
 
@@ -76,7 +72,7 @@ namespace MuMech
 
             foreach (ModuleDockingNode port in targetVessel.GetModules<ModuleDockingNode>())
             {
-                if (IsAvailableTargetPort(port) && port.GetTransform() != null && ArePortsCompatible(referencePort, port))
+                if (IsSelectableTargetPort(referencePort, port))
                     targetPorts.Add(port);
             }
 
@@ -118,6 +114,10 @@ namespace MuMech
 
             return Core.Target.Target?.GetVessel();
         }
+
+        // A port the selector offers: free, and one the port this vessel is controlled from can dock with.
+        internal static bool IsSelectableTargetPort(ModuleDockingNode referencePort, ModuleDockingNode port) =>
+            IsAvailableTargetPort(port) && port.GetTransform() != null && ArePortsCompatible(referencePort, port);
 
         private static bool IsAvailableTargetPort(ModuleDockingNode port) =>
             port != null && !IsDockedState(port.state);
@@ -164,9 +164,10 @@ namespace MuMech
         internal void SelectTargetPort(ModuleDockingNode targetPort)
         {
             selectedTargetPort = targetPort;
+            // so the selector, which drops the choice when the target vessel changes, keeps it when this sets the target
+            selectedTargetVessel = targetPort.vessel;
+            // also KSP's own target, so other docking aids see the port change at once
             Core.Target.Set(targetPort);
-            // Keep KSP's global target in sync so other docking aids observe the port change immediately.
-            FlightGlobals.fetch.SetVesselTarget(targetPort);
         }
 
         internal static string GetPortName(ModuleDockingNode port)
@@ -178,10 +179,9 @@ namespace MuMech
             return port.part?.partInfo?.title ?? port.part?.name ?? "?";
         }
 
-        protected override void OnModuleDisabled()
-        {
-            if (autopilot != null) autopilot.Users.Remove(this);
-        }
+        protected override bool AutopilotEngaged => (_dockingAutopilot ??= Core.GetComputerModule<MechJebModuleDockingAutopilot>()) != null && _dockingAutopilot.Enabled;
+
+        private MechJebModuleDockingAutopilot _dockingAutopilot;
 
         public override string GetName() => Localizer.Format("#MechJeb_Docking_title"); //"Docking Autopilot"
 

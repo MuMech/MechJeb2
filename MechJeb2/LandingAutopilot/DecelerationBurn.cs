@@ -41,7 +41,7 @@ namespace MuMech
                     Core.Attitude.AttitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
                     bool warpReady = Core.Attitude.AttitudeAngleFromTarget() < 5 && Core.vessel.angularVelocity.magnitude < 0.001;
 
-                    if (warpReady && Core.Node.Autowarp)
+                    if (warpReady && Core.Landing.Autowarp)
                         Core.Warp.AutopilotWarpToUT(decelerationStartTime - 5);
 
                     else if (!MuUtils.PhysicsRunning())

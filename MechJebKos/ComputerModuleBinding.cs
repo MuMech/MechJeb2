@@ -26,6 +26,9 @@ namespace MuMech.MechJebKos
 
         protected T Module => Core.GetComputerModule<T>() ?? throw new KOSException($"MechJeb module {typeof(T).Name} is not available on this vessel.");
 
+        // the module, or null without throwing, for cleanup outside a suffix call (e.g. when a kOS program ends)
+        protected T? TryModule => _core()?.GetComputerModule<T>();
+
         protected abstract void InitializeSuffixes();
 
         // For modules that do cooperative engage/disengage through the module's Users pool.

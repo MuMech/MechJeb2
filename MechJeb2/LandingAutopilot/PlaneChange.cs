@@ -23,8 +23,8 @@ namespace MuMech
                     Core.vessel.mainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) - MainBody.position;
                 Vector3d currentRadialVector = Core.VesselState.CoM - Core.vessel.mainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
-                //this calculation seems like it might be be working right:
-                double timeToTarget = Orbit.TimeOfTrueAnomaly(Core.vessel.orbit.trueAnomaly * UtilMath.Rad2Deg + angleToTarget, VesselState.Time) -
+                // TimeOfTrueAnomaly takes radians, like Orbit.trueAnomaly; angleToTarget is in degrees.
+                double timeToTarget = Orbit.TimeOfTrueAnomaly(Core.vessel.orbit.trueAnomaly + angleToTarget * UtilMath.Deg2Rad, VesselState.Time) -
                     VesselState.Time;
                 double planetRotationAngle = 360 * timeToTarget / MainBody.rotationPeriod;
                 var planetRotation = Quaternion.AngleAxis((float)planetRotationAngle, MainBody.angularVelocity);
@@ -39,7 +39,7 @@ namespace MuMech
                 {
                     Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.MaxThrustAcceleration))));
                 }
-                else if (_planeChangeTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
+                else if (_planeChangeTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.Limits.LimiterMinThrottle)
                 {
                     Core.Thrust.RequestActiveThrottle(0.0f);
                 }
@@ -87,7 +87,7 @@ namespace MuMech
                 }
                 else
                 {
-                    if (Core.Node.Autowarp) Core.Warp.WarpRegularAtRate((float)(Orbit.period / 6));
+                    if (Core.Landing.Autowarp) Core.Warp.WarpRegularAtRate((float)(Orbit.period / 6));
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status15"); //"Moving to low orbit plane change burn point"
                 }
 

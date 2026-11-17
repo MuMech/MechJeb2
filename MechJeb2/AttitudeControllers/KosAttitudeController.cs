@@ -2,6 +2,7 @@ extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech.AttitudeControllers
 {
@@ -115,6 +116,12 @@ namespace MuMech.AttitudeControllers
 
             _phiVector = PhiVector();
 
+            // the roll control range gates roll on the miss of the axes that are controlled: with pitch and yaw free it never closes
+            double phiControlled = SafeAcos(Math.Cos(_phiVector[0] * Ac.AxisControl.x) * Math.Cos(_phiVector[2] * Ac.AxisControl.z));
+
+            // an axis left free (SmartASS's Force toggles, an ascent without forced roll) is not steered
+            _phiVector.Scale(Ac.AxisControl);
+
             for (int i = 0; i < 3; i++)
             {
                 _maxOmega[i] = _controlTorque[i] * MaxStoppingTime / Ac.VesselState.MoI[i];
@@ -124,10 +131,18 @@ namespace MuMech.AttitudeControllers
             _targetOmega[1] = _rollRatePI.Update(-_phiVector[1], 0, _maxOmega[1]);
             _targetOmega[2] = _yawRatePI.Update(-_phiVector[2], 0, _maxOmega[2]);
 
-            if (Math.Abs(_phiTotal) > RollControlRange)
+            if (phiControlled > RollControlRange)
             {
                 _targetOmega[1] = 0;
                 _rollRatePI.ResetI();
+            }
+
+            // a rate requested by SetOmegaTarget (the spin-up) replaces the one that steers to the attitude; _omega is the opposite
+            // of the vessel's angular velocity
+            for (int i = 0; i < 3; i++)
+            {
+                if (IsFinite(Ac.OmegaTarget[i]))
+                    _targetOmega[i] = -Ac.OmegaTarget[i];
             }
 
             _targetTorque[0] = _pitchPI.Update(_omega[0], _targetOmega[0], Ac.VesselState.MoI[0], _controlTorque[0]);

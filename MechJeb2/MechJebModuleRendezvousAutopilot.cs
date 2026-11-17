@@ -24,6 +24,25 @@ namespace MuMech
 
         public string status = "";
 
+        //What the last plan was for, as the status says it: NONE before the first one.
+        public enum Phases
+        {
+            NONE, MATCH_PLANES, CIRCULARIZE, PHASING_ORBIT, HOHMANN, MATCH_AT_CLOSEST_APPROACH, CLOSE_IN, MATCH_VELOCITIES
+        }
+
+        public Phases Phase { get; private set; }
+
+        //Why the last run ended: NONE while it runs, or before the first one.
+        public enum StopReasons
+        {
+            NONE, ARRIVED, DISENGAGED, NO_TARGET, TARGET_IS_BODY, OTHER_SOI, TARGET_LANDED, VESSEL_LANDED, ORBIT_TOO_LOW, PLANNING_FAILED
+        }
+
+        public StopReasons StopReason { get; private set; }
+
+        //The message it stopped on a problem with, or "".
+        public string StopMessage { get; private set; } = "";
+
         //The physics ticks in a row that planning may fail before we give up: a failure can pass as the orbits move on.
         private const int MAX_FAILED_TICKS = 50;
         private int _failedTicks;
@@ -31,6 +50,9 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             status = "";
+            Phase = Phases.NONE;
+            StopReason = StopReasons.NONE;
+            StopMessage = "";
             _failedTicks = 0;
             if (Vessel.patchedConicsUnlocked() && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
                 ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_RZauto_nodesRemoved"), 5);
@@ -41,7 +63,14 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             Core.Node.AutowarpInhibited = false;
-            Core.Node.Abort(); //make sure we turn off node executor if we get disabled suddenly
+            // stop the node executor it runs if it gets disabled suddenly; a node executor it does not run, the warp and the
+            // attitude users are left alone
+            if (Core.Node.Users.Contains(this))
+                Core.Node.Abort();
+
+            //turned off by its users: the window, kOS or PANIC
+            if (StopReason == StopReasons.NONE)
+                StopReason = StopReasons.DISENGAGED;
         }
 
         //The earliest time for the middle of a burn of this size: the node executor centers a burn on its node, and only starts it
@@ -66,32 +95,50 @@ namespace MuMech
         }
 
         //Why the autopilot can't run for this target and vessel, or null if it can.
-        private string Problem()
+        internal string Problem(out StopReasons reason)
         {
+            reason = StopReasons.NO_TARGET;
             if (!Core.Target.NormalTargetExists) return Localizer.Format("#MechJeb_RZauto_label1"); //"Select a target to rendezvous with."
+            reason = StopReasons.TARGET_IS_BODY;
             if (Core.Target.Target is CelestialBody) return Localizer.Format("#MechJeb_RZauto_noBody"); //"The autopilot can't rendezvous with a body."
+            reason = StopReasons.OTHER_SOI;
             if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return Localizer.Format("#MechJeb_RZauto_label2"); //"Rendezvous target must be in the same sphere of influence."
 
             Vessel target = Core.Target.Target.GetVessel();
+            reason = StopReasons.TARGET_LANDED;
             if (target != null && target.LandedOrSplashed) return Localizer.Format("#MechJeb_RZauto_landedTarget"); //"The autopilot needs a target in orbit."
+            reason = StopReasons.VESSEL_LANDED;
             if (Vessel.LandedOrSplashed || Vessel.situation == Vessel.Situations.PRELAUNCH) return Localizer.Format("#MechJeb_RZauto_landedVessel"); //"The autopilot can't run on the ground."
 
+            reason = StopReasons.NONE;
             return null;
         }
 
-        //The window may be closed, so the status alone isn't enough.
-        private void Stop(string reason)
+        //The window may be closed, so the status alone isn't enough. The first reason counts: clearing the users runs
+        //OnModuleDisabled, which would call it DISENGAGED.
+        private void Stop(StopReasons reason, string message)
         {
-            status = reason;
-            ScreenMessages.PostScreenMessage(reason, 5);
+            status = message;
+            ScreenMessages.PostScreenMessage(message, 5);
+            Finish(reason, message);
+        }
+
+        private void Finish(StopReasons reason, string message)
+        {
+            if (StopReason == StopReasons.NONE)
+            {
+                StopReason = reason;
+                StopMessage = message;
+            }
+
             Users.Clear();
         }
 
         //This one also runs during time warp, where Drive doesn't.
         public override void OnFixedUpdate()
         {
-            string problem = Problem();
-            if (problem != null) Stop(problem);
+            string problem = Problem(out StopReasons reason);
+            if (problem != null) Stop(reason, problem);
         }
 
         //The time to close a distance at the closing speed limit, and at least long enough to turn around and stop at the end. A
@@ -144,10 +191,10 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            string problem = Problem();
+            string problem = Problem(out StopReasons reason);
             if (problem != null)
             {
-                Stop(problem);
+                Stop(reason, problem);
                 return;
             }
 
@@ -163,7 +210,8 @@ namespace MuMech
                 //a plan that failed half way can leave a node that makes no sense alone
                 if (!Core.Node.Enabled) Vessel.RemoveAllManeuverNodes();
 
-                if (++_failedTicks >= MAX_FAILED_TICKS) Stop(Localizer.Format("#MechJeb_RZauto_failed", e.Message)); //"Stopped, the next burn can't be planned: <<1>>"
+                if (++_failedTicks >= MAX_FAILED_TICKS)
+                    Stop(StopReasons.PLANNING_FAILED, Localizer.Format("#MechJeb_RZauto_failed", e.Message)); //"Stopped, the next burn can't be planned: <<1>>"
             }
         }
 
@@ -197,7 +245,7 @@ namespace MuMech
                 && Core.Target.RelativeVelocity.magnitude < 1)
             {
                 //finished
-                Users.Clear();
+                Finish(StopReasons.ARRIVED, "");
                 Core.Thrust.ThrustOff();
                 status = Localizer.Format("#MechJeb_RZauto_statu1"); //"Successful rendezvous"
             }
@@ -207,6 +255,7 @@ namespace MuMech
                 double UT = VesselState.Time;
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, UT, Core.Target.TargetOrbit);
                 Vessel.PlaceManeuverNode(Orbit, dV, UT);
+                Phase = Phases.MATCH_VELOCITIES;
                 status = Localizer.Format("#MechJeb_RZauto_statu2", desiredDistance.ToString()); //"Within " +  + "m: matching velocities."
             }
             else if (Core.Target.Distance < VesselState.Radius / 25)
@@ -221,6 +270,7 @@ namespace MuMech
                     Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, closestApproachUT, Core.Target.TargetOrbit);
                     Vessel.PlaceManeuverNode(Orbit, dV, BurnUTToStopAtDesiredDistance(closestApproachUT));
 
+                    Phase = Phases.MATCH_AT_CLOSEST_APPROACH;
                     status = Localizer.Format("#MechJeb_RZauto_statu3"); //"Planning to match velocities at closest approach."
                 }
                 else
@@ -237,6 +287,7 @@ namespace MuMech
 
                     Vessel.PlaceManeuverNode(Orbit, dV, UT);
 
+                    Phase = Phases.CLOSE_IN;
                     //The time limit in ClosingTime can leave us above the closing speed limit: say so, or the setting looks ignored.
                     status = Core.Target.Distance / closingTime > maxClosingSpeed * 1.001
                         ? Localizer.Format("#MechJeb_RZauto_statu10") //"Close to target: plotting intercept above the max closing velocity, which would take too long"
@@ -250,6 +301,7 @@ namespace MuMech
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, closestApproachUT, Core.Target.TargetOrbit);
                 Vessel.PlaceManeuverNode(Orbit, dV, BurnUTToStopAtDesiredDistance(closestApproachUT));
 
+                Phase = Phases.MATCH_AT_CLOSEST_APPROACH;
                 status = Localizer.Format("#MechJeb_RZauto_statu5"); //"On intercept course. Planning to match velocities at closest approach."
             }
             else if (Orbit.RelativeInclination(Core.Target.TargetOrbit) < 0.05 && Orbit.eccentricity < 0.05)
@@ -280,6 +332,7 @@ namespace MuMech
 
                     Vessel.PlaceManeuverNode(Orbit, hohmannDV, hohmannUT);
 
+                    Phase = Phases.HOHMANN;
                     status = Localizer.Format("#MechJeb_RZauto_statu6",
                         numPhasingOrbits.ToString("F2")); //"Planning Hohmann transfer for intercept after " +  + " phasing orbits."
                 }
@@ -294,6 +347,7 @@ namespace MuMech
                     foreach (ManeuverParameters maneuver in maneuvers)
                         Vessel.PlaceManeuverNode(Orbit, maneuver.dV, maneuver.UT);
 
+                    Phase = Phases.PHASING_ORBIT;
                     status = Localizer.Format("#MechJeb_RZauto_statu7", numPhasingOrbits.ToString("F1"), maxPhasingOrbits.Text,
                         (phasingOrbitRadius - MainBody.Radius)
                        .ToSI(0)); //"Next intercept window would be <<1>> orbits away, which is more than the maximum of <<2>> phasing orbits. Increasing phasing rate by establishing new phasing orbit at <<3>>m
@@ -325,14 +379,13 @@ namespace MuMech
                 }
                 else
                 {
-                    status = Localizer.Format("#MechJeb_RZauto_orbitTooLow"); //"The orbit is too low to rendezvous from."
-                    ScreenMessages.PostScreenMessage(status, 5);
-                    Users.Clear();
+                    Stop(StopReasons.ORBIT_TOO_LOW, Localizer.Format("#MechJeb_RZauto_orbitTooLow")); //"The orbit is too low to rendezvous from."
                     return;
                 }
 
                 Vessel.PlaceManeuverNode(Orbit, dV, UT);
 
+                Phase = Phases.CIRCULARIZE;
                 status = Localizer.Format("#MechJeb_RZauto_statu8"); //"Circularizing."
             }
             else
@@ -348,6 +401,7 @@ namespace MuMech
                 {
                     Vessel.PlaceManeuverNode(Orbit, dV, UT);
 
+                    Phase = Phases.MATCH_PLANES;
                     status = Localizer.Format("#MechJeb_RZauto_statu9"); //"Matching planes."
                 }
                 else
@@ -356,6 +410,7 @@ namespace MuMech
                     UT = VesselState.Time + 15;
                     Vessel.PlaceManeuverNode(Orbit, OrbitalManeuverCalculator.DeltaVToCircularize(Orbit, UT), UT);
 
+                    Phase = Phases.CIRCULARIZE;
                     status = Localizer.Format("#MechJeb_RZauto_statu8"); //"Circularizing."
                 }
             }

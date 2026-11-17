@@ -4,8 +4,8 @@
  */
 
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
-using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.FuelFlowSimulation.PartModules;
 using static MechJebLib.Utils.Statics;
@@ -29,6 +29,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             private static readonly FieldContext _pfDecoupled = Assembly("ProceduralFairings").Class("Keramzit.ProceduralFairingDecoupler").Field("decoupled");
             private static readonly FieldContext _rfPredictedMaximumResiduals = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("predictedMaximumResiduals");
+            private static readonly FieldContext _rfIgnited = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("ignited", BindingFlags.NonPublic | BindingFlags.Instance);
 
             private static readonly bool _isProcFairingsLoadedCorrectly;
             private static readonly bool _isRealFuelsLoadedCorrectly;
@@ -37,7 +38,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             static SimVesselUpdater()
             {
                 _isProcFairingsLoadedCorrectly = IsLoadedProceduralFairing && _pfDecoupled.IsValid;
-                _isRealFuelsLoadedCorrectly = IsLoadedRealFuels && _rfPredictedMaximumResiduals.IsValid;
+                _isRealFuelsLoadedCorrectly = IsLoadedRealFuels && _rfPredictedMaximumResiduals.IsValid && _rfIgnited.IsValid;
             }
 
             public SimVesselUpdater(SimVesselManager manager)
@@ -51,7 +52,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void UpdateParts()
             {
-                _vessel.ResetCurrentStage(StageManager.CurrentStage);
+                _vessel.ResetCurrentStage(_manager.KspCurrentStage);
 
                 // FIXME: could track only parts that matter to the sim (engines+tanks) and only loop over them here
                 foreach (SimPart part in _vessel.Parts)
@@ -166,11 +167,24 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.MultIsp = kspEngine.multIsp;
                 engine.FlowMultiplier = kspEngine.flowMultiplier;
                 engine.MultFlow = kspEngine.multFlow;
-                engine.NoPropellants = kspEngine is { flameout: true, statusL2: "No propellants" };
+                engine.IndependentThrottle = kspEngine.independentThrottle;
+                engine.IndependentThrottlePercentage = kspEngine.independentThrottlePercentage;
+                engine.CurrentThrottle = kspEngine.currentThrottle;
+                engine.EngineIgnited = kspEngine.EngineIgnited;
+                engine.Flameout = kspEngine.flameout;
+                // in flight KSP has already fired the current stage: an engine of it that is not ignited was shut down
+                // (or never lit, with its staging turned off), and stays off
+                engine.IsShutdown = !HighLogic.LoadedSceneIsEditor && part.InverseStage >= _vessel.CurrentStage &&
+                                    !engine.EngineIgnited;
+                engine.NoPropellants = engine.Flameout && kspEngine.statusL2 == "No propellants";
                 engine.ModuleResiduals = 0;
+                engine.Ignited = false;
 
                 if (engine.IsModuleEnginesRf && _isRealFuelsLoadedCorrectly)
+                {
                     engine.ModuleResiduals = _rfPredictedMaximumResiduals.GetValue<double>(kspEngine);
+                    engine.Ignited = _rfIgnited.GetValue<bool>(kspEngine);
+                }
 
                 part.EngineResiduals = Max(part.EngineResiduals, engine.ModuleResiduals);
             }
@@ -186,8 +200,9 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                 decoupler.Staged = kspModuleDockingNode.staged;
 
-                if (!(kspModuleDockingNode.referenceNode.attachedPart is null))
-                    decoupler.AttachedPart = _partMapping[kspModuleDockingNode.referenceNode.attachedPart];
+                // null when nothing is attached, or the part isn't one of the ship's
+                Part? attached = kspModuleDockingNode.referenceNode?.attachedPart;
+                decoupler.AttachedPart = !(attached is null) && _partMapping.TryGetValue(attached, out SimPart simAttached) ? simAttached : null;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -216,8 +231,10 @@ namespace MechJebLibBindings.FuelFlowSimulation
                     attach = kspModuleDecouple.ExplosiveNode;
                 }
 
-                if (attach is { attachedPart: { } })
-                    decoupler.AttachedPart = _partMapping[attach.attachedPart];
+                // null when nothing is attached, or the part isn't one of the ship's (in the editor, one being dragged)
+                decoupler.AttachedPart = attach is { attachedPart: { } } && _partMapping.TryGetValue(attach.attachedPart, out SimPart simAttached)
+                    ? simAttached
+                    : null;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

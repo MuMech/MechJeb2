@@ -8,7 +8,7 @@ using UnityEngine;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleAscentClassicPathMenu ("Ascent Path Editor") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleAscentClassicPathMenu ("Ascent Path Editor") in KodeKit.
     /// The path picture is native: the atmosphere texture in a RawImage with the planned path and the flown trajectory as line meshes,
     /// rebuilt only when the path parameters or the recorded history change.
     /// </summary>
@@ -22,23 +22,23 @@ namespace MuMech.UI
         protected override float MinWidth => 300;
 
         MechJebCore Core => menu.Core;
-        MechJebModuleAscentSettings Settings => menu.AscentSettings;
+        MechJebModuleAscentClassicAutopilot Autopilot => menu.Autopilot;
 
         bool HasVessel => Core.vessel != null && Core.vessel.mainBody != null;
 
-        // the atmosphere texture WindowGUI refreshed before drawing
+        // the atmosphere texture, refreshed before the bindings
         protected override void BeforeSync()
         {
             if (HasVessel) menu.UpdateAtmoTextureIfNeeded();
         }
 
-        /// <summary>A "value.ToSI(digits) + suffix" text, formatted only when the value changes.</summary>
+        /// <summary>A "value.ToSI(digits) + suffix" text, formatted only when the value changes at the shown precision.</summary>
         sealed class SiText
         {
             readonly Func<double> value;
             readonly int digits;
             readonly string suffix;
-            double last = double.NaN;
+            double lastKey = double.NaN;
             string text;
 
             public SiText(Func<double> value, int digits, string suffix)
@@ -51,9 +51,11 @@ namespace MuMech.UI
             public string Get()
             {
                 double v = HasValue ? value() : 0;
-                if (text == null || !v.Equals(last))
+                // an airless body's turn start follows the terrain every frame
+                double key = v.RoundToSI(digits);
+                if (text == null || !key.Equals(lastKey))
                 {
-                    last = v;
+                    lastKey = key;
                     text = v.ToSI(digits) + suffix;
                 }
 
@@ -68,47 +70,58 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            w.Toggle(r, "#MechJeb_AscentPathEd_auto", () => Settings.AutoPath, v => Settings.AutoPath = v); //Automatic Altitude Turn
+            // Automatic | Manual: the turn from the two sliders, or from the three fields
+            Layout mode = KodeWindow.Row(r);
+            KodeWindow.Label(mode, "#MechJeb_NewUI_PathTurn"); //Turn
+            string[] modes = { KodeWindow.Loc("#MechJeb_NewUI_PathAutomatic"), KodeWindow.Loc("#MechJeb_NewUI_PathManual") }; //Automatic, Manual
+            w.Segmented(mode, modes, () => Autopilot.AutoPath ? 0 : 1, i => Autopilot.AutoPath = i == 0);
 
-            // automatic path: sliders
-            Layout sliders = KodeWindow.Panel(r);
-            w.Visible(sliders.gameObject, () => Settings.AutoPath);
-            Layout altitude = KodeWindow.Row(sliders);
-            KodeWindow.Label(altitude, "#MechJeb_AscentPathEd_label1"); //"Altitude: "
-            // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
-            w.Slider(altitude, () => Settings.AutoTurnPerc * 200f, v => Settings.AutoTurnPerc = Mathf.Floor(v) / 200f, 1f, 210.5f);
-            Layout velocity = KodeWindow.Row(sliders);
-            KodeWindow.Label(velocity, "#MechJeb_AscentPathEd_label2"); //"Velocity: "
-            w.Slider(velocity, () => Settings.AutoTurnSpdFactor * 2f, v => Settings.AutoTurnSpdFactor = Mathf.Floor(v) / 2f, 8f, 160f);
-
-            // automatic path: the resulting turn
+            // automatic: each slider on its own row, the window's full width (a short slider is too coarse to set), under its label
+            // and the value it gives; then the end altitude
             Layout auto = KodeWindow.Panel(r);
-            w.Visible(auto.gameObject, () => Settings.AutoPath);
-            var startAlt = new SiText(() => Settings.AutoTurnStartAltitude, 2, "m ") { Available = () => HasVessel };
-            var startVel = new SiText(() => Settings.AutoTurnStartVelocity, 3, "m/s") { Available = () => HasVessel };
-            var endAlt = new SiText(() => Settings.AutoTurnEndAltitude, 2, "m") { Available = () => HasVessel };
-            Layout start = KodeWindow.Row(auto);
-            KodeWindow.Label(start, "#MechJeb_AscentPathEd_label3"); //"Turn start when Altitude is "
-            w.BoundLabel(start, "999.99km ", startAlt.Get);
-            KodeWindow.Label(start, "#MechJeb_AscentPathEd_label4"); //"or Velocity reach "
-            w.BoundLabel(start, "9.999km/s", startVel.Get);
-            Layout end = KodeWindow.Row(auto);
-            KodeWindow.Label(end, "#MechJeb_AscentPathEd_label5"); //"Turn end altitude: "
-            w.BoundLabel(end, "999.99km", endAlt.Get, true).tmpText.alignment = TMPro.TextAlignmentOptions.MidlineRight;
+            w.Visible(auto.gameObject, () => Autopilot.AutoPath);
+            var startAlt = new SiText(() => Autopilot.AutoTurnStartAltitude, 2, "m") { Available = () => HasVessel };
+            var startVel = new SiText(() => Autopilot.AutoTurnStartVelocity, 3, "m/s") { Available = () => HasVessel };
+            var endAlt = new SiText(() => Autopilot.AutoTurnEndAltitude, 2, "m") { Available = () => HasVessel };
+            SliderRows(w, auto, "#MechJeb_NewUI_PathStartAltitude", startAlt.Get, //Start altitude
+                // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
+                () => Autopilot.AutoTurnPerc * 200f, v => Autopilot.AutoTurnPerc = Mathf.Floor(v) / 200f, 1f, 210.5f);
+            SliderRows(w, auto, "#MechJeb_NewUI_PathStartSpeed", startVel.Get, //Start speed
+                () => Autopilot.AutoTurnSpdFactor * 2f, v => Autopilot.AutoTurnSpdFactor = Mathf.Floor(v) / 2f, 8f, 160f);
+            LabelAndValue(w, auto, "#MechJeb_NewUI_PathEndAltitude", endAlt.Get); //End altitude
 
             // manual path: the three fields
             Layout manual = KodeWindow.Panel(r);
-            w.Visible(manual.gameObject, () => !Settings.AutoPath);
-            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label6", Settings.TurnStartAltitude, "km"); //"Turn start altitude:"
-            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label7", Settings.TurnStartVelocity, "m/s"); //"Turn start velocity:"
-            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label8", Settings.TurnEndAltitude, "km"); //"Turn end altitude:"
+            w.Visible(manual.gameObject, () => !Autopilot.AutoPath);
+            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label6", Autopilot.TurnStartAltitude, "km"); //"Turn start altitude:"
+            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label7", Autopilot.TurnStartVelocity, "m/s"); //"Turn start velocity:"
+            AscentUi.SimpleBox(w, manual, "#MechJeb_AscentPathEd_label8", Autopilot.TurnEndAltitude, "km"); //"Turn end altitude:"
 
-            AscentUi.SimpleBox(w, r, "#MechJeb_AscentPathEd_label9", Settings.TurnEndAngle, "°"); //"Final flight path angle:"
-            AscentUi.SimpleBox(w, r, "#MechJeb_AscentPathEd_label10", Settings.TurnShapeExponent, "%"); //"Turn shape:"
+            AscentUi.SimpleBox(w, r, "#MechJeb_AscentPathEd_label9", Autopilot.TurnEndAngle, "°"); //"Final flight path angle:"
 
-            w.Slider(r, () => (float)Settings.TurnShapeExponent, v => menu.ApplyTurnShapeSlider(v, Settings.TurnShapeExponent), 0f, 1f);
+            // the turn shape: its slider and its field on one row
+            Layout shape = KodeWindow.Row(r);
+            KodeWindow.Label(shape, "#MechJeb_AscentPathEd_label10"); //"Turn shape:"
+            w.Slider(shape, () => (float)Autopilot.TurnShapeExponent, v => menu.ApplyTurnShapeSlider(v, Autopilot.TurnShapeExponent), 0.1f, 1f);
+            EditUi.Field(w, shape, Autopilot.TurnShapeExponent, 50);
+            KodeWindow.Label(shape, "%");
 
             BuildPathPicture(w, r);
+        }
+
+        // the label and the value the slider gives on one row, the slider on the next, across the window
+        static void SliderRows(KodeWindow w, UIObject parent, string key, Func<string> value, Func<float> get, Action<float> set, float min, float max)
+        {
+            LabelAndValue(w, parent, key, value);
+            w.Slider(KodeWindow.Row(parent), get, set, min, max);
+        }
+
+        // the label on the left, the value on the right
+        static void LabelAndValue(KodeWindow w, UIObject parent, string key, Func<string> value)
+        {
+            Layout row = KodeWindow.Row(parent);
+            KodeWindow.Label(row, key, true);
+            w.BoundLabel(row, value).tmpText.alignment = TMPro.TextAlignmentOptions.Right;
         }
 
         // the texture's own size, as GUILayout.Box(texture) shows it; the height sets the meters-per-pixel scale

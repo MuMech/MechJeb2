@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Interpolants
@@ -35,6 +36,21 @@ namespace MechJebLib.Interpolants
         private int _direction;
 
         public bool IsEmpty => _nodes.Count == 0;
+
+        public int NodeCount => _nodes.Count;
+
+        // the start of node i, in the order the nodes were appended
+        public double NodeLeftT(int i) => _nodes[i].LeftT;
+
+        // the end of node i
+        public double NodeRightT(int i) => _nodes[i].RightT;
+
+        // adds the times each node interpolates through (InterpolantNode.Knots), node by node
+        public void Knots(List<double> into)
+        {
+            foreach (InterpolantNode<T> n in _nodes)
+                n.Knots(into);
+        }
 
         protected Interpolant() { }
 
@@ -136,6 +152,29 @@ namespace MechJebLib.Interpolants
             return lo > 0 ? lo - 1 : 0;
         }
 
+        /// <summary>
+        ///     Changes units in place: the time axis is stretched by timeScale, so the value that was at x is now at
+        ///     timeScale·x, and every value is multiplied by yScale (elementwise for a Vec, whose derivatives scale by
+        ///     yScale / timeScale).
+        /// </summary>
+        public void Rescale(double timeScale, T yScale)
+        {
+            Check.PositiveFinite(timeScale, nameof(timeScale));
+
+            foreach (InterpolantNode<T> n in _nodes)
+            {
+                n.LeftT  *= timeScale;
+                n.RightT *= timeScale;
+                n.Rescale(timeScale, yScale);
+            }
+
+            _firstT    *= timeScale;
+            _lastT     *= timeScale;
+            MinT       *= timeScale;
+            MaxT       *= timeScale;
+            _lastIndex =  -1;
+        }
+
         public T Evaluate(double x)
         {
             int i = FindIndex(x);
@@ -160,8 +199,14 @@ namespace MechJebLib.Interpolants
 
         public abstract Typ Evaluate(double t);
 
+        // adds the times the node interpolates through, which may lie inside its bounds; none for a node that doesn't
+        public virtual void Knots(List<double> into) { }
+
         // a copy with its own pooled storage, disposing either one leaves the other intact
         public abstract InterpolantNode<Typ> DeepCopy();
+
+        // the node's own part of Interpolant.Rescale, which has already stretched LeftT and RightT
+        internal abstract void Rescale(double timeScale, Typ yScale);
 
         protected TNode CopyBoundsTo<TNode>(TNode node) where TNode : InterpolantNode<Typ>
         {

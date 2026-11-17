@@ -2,7 +2,6 @@ extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using JetBrainsAnnotations::JetBrains.Annotations;
@@ -15,7 +14,7 @@ using Logger = MechJebLib.Utils.Logger;
 
 namespace MuMech
 {
-    public class MechJebCore : PartModule, IComparable<MechJebCore>
+    public class MechJebCore : PartModule
     {
         private readonly List<ComputerModule> _unorderedComputerModules = new List<ComputerModule>();
         private readonly List<ComputerModule> _modulesToLoad = new List<ComputerModule>();
@@ -29,6 +28,9 @@ namespace MuMech
         private readonly List<Callback> _postDrawQueue = new List<Callback>();
 
         private static List<Type> _moduleRegistry;
+
+        // every module has passed UnlockCheck: Update stops asking until a module is added or reloaded
+        private bool _allUnlockChecked;
 
         private bool _ready;
 
@@ -71,7 +73,10 @@ namespace MuMech
         [UsedImplicitly]
         public MechJebCore MasterMechJeb => vessel.GetMasterMechJeb();
 
-        // Allow other mods to kill MJ ability to control vessel (RemoteTech, RO...)
+        // Lets other mods (RemoteTech, RP-1...) take the flight controls from MechJeb: while it is set, no module's Drive runs, so
+        // MechJeb neither steers, throttles nor translates, and the throttle stays where it was. It cuts only that: the modules'
+        // OnFixedUpdate and OnUpdate still run, so autostaging, time warp, deployables and the SAS and RCS action groups
+        // that an engaged autopilot toggles go on.
         [UsedImplicitly]
         public bool DeactivateControl
         {
@@ -91,9 +96,6 @@ namespace MuMech
                 mj._deactivateControl = value;
             }
         }
-
-        [KSPField(isPersistant = false)]
-        public string blacklist = "";
 
         [KSPField]
         private ConfigNode _partSettings;
@@ -141,7 +143,7 @@ namespace MuMech
 
             if (masterMechJeb == null) return;
 
-            MechJebModuleLandingGuidance moduleLandingGuidance = GetComputerModule<MechJebModuleLandingGuidance>();
+            MechJebModuleLandingGuidance moduleLandingGuidance = masterMechJeb.GetComputerModule<MechJebModuleLandingGuidance>();
 
             moduleLandingGuidance?.SetAndLandTargetKSC();
         }
@@ -152,7 +154,7 @@ namespace MuMech
 
             if (masterMechJeb == null) return;
 
-            MechJebModuleLandingGuidance moduleLandingGuidance = GetComputerModule<MechJebModuleLandingGuidance>();
+            MechJebModuleLandingGuidance moduleLandingGuidance = masterMechJeb.GetComputerModule<MechJebModuleLandingGuidance>();
 
             moduleLandingGuidance?.LandSomewhere();
         }
@@ -248,13 +250,13 @@ namespace MuMech
                 return;
 
             IAscentAutopilot autopilot = masterMechJeb.AscentSettings.AscentAutopilot;
-            MechJebModuleAscentMenu ascentMenu = GetComputerModule<MechJebModuleAscentMenu>();
+            MechJebModuleAscentMenu ascentMenu = masterMechJeb.GetComputerModule<MechJebModuleAscentMenu>();
 
             if (autopilot == null || ascentMenu == null)
                 return;
 
             if (autopilot.Enabled)
-                autopilot.Users.Remove(ascentMenu);
+                autopilot.Users.Clear(); // whoever engaged it, as the window's Disengage
             else
                 autopilot.Users.Add(ascentMenu);
         }
@@ -307,6 +309,11 @@ namespace MuMech
         private bool _wasMasterAndFocus;
         private static Vessel _lastFocus;
 
+        // the core that last loaded the settings files for _lastFocus
+        private static MechJebCore _lastFocusMaster;
+
+        private bool _wasNotMasterInEditor;
+
         public bool someModuleAreLocked; // True if any module was locked by the R&D system
 
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one.
@@ -327,15 +334,6 @@ namespace MuMech
             _controlledVessel = vessel;
 
             return false;
-        }
-
-        [UsedImplicitly]
-        public int GetImportance() => part.State == PartStates.DEAD ? 0 : GetInstanceID();
-
-        public int CompareTo(MechJebCore other)
-        {
-            if (other == null) return 1;
-            return GetImportance().CompareTo(other.GetImportance());
         }
 
         public T GetComputerModule<T>() where T : ComputerModule
@@ -371,7 +369,7 @@ namespace MuMech
 
         [UsedImplicitly]
         public ComputerModule GetComputerModule(string type) =>
-            _unorderedComputerModules.FirstOrDefault(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant()); //null if none
+            _unorderedComputerModules.FirstOrDefault(a => string.Equals(a.GetType().Name, type, StringComparison.OrdinalIgnoreCase)); //null if none
 
         public void AddComputerModule(ComputerModule module)
         {
@@ -381,6 +379,8 @@ namespace MuMech
 
         private void ClearModulesCache()
         {
+            // a module added or loaded again has not been checked against the tech tree
+            _allUnlockChecked = false;
             _sortedModules.Clear();
             _sortedDisplayModules.Clear();
         }
@@ -409,6 +409,20 @@ namespace MuMech
 
         public void ReloadAllComputerModules()
         {
+            // Disengage everything first, through each module's own disable path, which releases the throttle, the attitude, the
+            // warp and what it set on parts: the new modules start idle and would not
+            foreach (ComputerModule module in GetComputerModules<ComputerModule>())
+            {
+                try
+                {
+                    module.Users.Clear();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception while disabled for a reload: " + e);
+                }
+            }
+
             //Dispose of all the existing computer modules
             foreach (ComputerModule module in _unorderedComputerModules) module.OnDestroy();
             _unorderedComputerModules.Clear();
@@ -424,7 +438,7 @@ namespace MuMech
 
             //Start fresh
             OnLoad(null);
-            OnStart(HighLogic.LoadedSceneIsEditor ? StartState.Editor : StartState.Flying);
+            OnStart(part.GetModuleStartState());
         }
 
         public override void OnStart(StartState state)
@@ -451,6 +465,8 @@ namespace MuMech
             GameEvents.onVesselChange.Add(UnlockControl);
             GameEvents.onVesselWasModified.Add(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Add(OnVesselStandardModification);
+            GameEvents.onGameSceneLoadRequested.Add(OnGameSceneLoadRequested);
+            Camera.onPostRender += OnCameraPostRender;
 
             _lastSettingsSaveTime = Time.time;
 
@@ -466,13 +482,6 @@ namespace MuMech
                 {
                     Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnStart: " + e);
                 }
-            }
-
-            if (vessel != null && this != vessel.GetMasterMechJeb())
-            {
-                vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
-                vessel.OnFlyByWire += OnFlyByWire;
-                _controlledVessel = vessel;
             }
 
             Logger.GlobalRegister(SafePrint);
@@ -513,18 +522,6 @@ namespace MuMech
             CachedLocalizer.Bootstrap();
 
             Dispatcher.CreateDispatcher();
-
-            foreach (ComputerModule module in GetComputerModules<ComputerModule>())
-            {
-                try
-                {
-                    module.OnAwake();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnAwake: " + e);
-                }
-            }
         }
 
         public void FixedUpdate()
@@ -548,12 +545,17 @@ namespace MuMech
 
             Profiler.BeginSample("MechJebCore.FixedUpdate");
 
-            if (!_wasMasterAndFocus && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel))
+            // FlightGlobals.ready is false in the editor, so this runs in flight only; the editor reloads in Update
+            if (!_wasMasterAndFocus && vessel.isActiveVessel)
             {
-                if (HighLogic.LoadedSceneIsFlight && _lastFocus != null && _lastFocus.loaded && _lastFocus.GetMasterMechJeb() != null)
+                // The previous focus's master saves its settings before this core loads them. When this core is that master but
+                // another core loaded them (the master changed on the focused vessel), this core still holds what it loaded at
+                // scene start: it reloads the files without writing over them.
+                MechJebCore lastFocusMaster = _lastFocus != null && _lastFocus.loaded ? _lastFocus.GetMasterMechJeb() : null;
+                if (lastFocusMaster != null && (lastFocusMaster != this || _lastFocusMaster == this))
                 {
                     Print("Focus changed! Forcing " + _lastFocus.vesselName + " to save");
-                    _lastFocus.GetMasterMechJeb().OnSave(null);
+                    lastFocusMaster.OnSave(null);
                 }
 
                 // Clear the modules cache
@@ -561,8 +563,17 @@ namespace MuMech
 
                 OnLoad(null); // Force Global reload
 
+                // after the reload, which would put the saved values back over them, and saved at once so it happens once
+                // the RO defaults first: a new RO install's ascent starts from them
+                bool roDefaults = AscentSettings.ApplyRODefaultsIfNeeded();
+                bool ownValues = AscentSettings.InitOwnValuesIfNeeded() | (Landing != null && Landing.InitOwnValuesIfNeeded()) |
+                                 AscentSettings.ShareInclinationIfNeeded();
+                if (ownValues | roDefaults)
+                    OnSave(null);
+
                 _wasMasterAndFocus = true;
                 _lastFocus = vessel;
+                _lastFocusMaster = this;
             }
 
             if (vessel == null)
@@ -581,6 +592,9 @@ namespace MuMech
                 Profiler.EndSample();
                 return;
             }
+
+            // the rover controller enables itself from its switches, which nothing else watches while it is disabled
+            Rover?.UpdateUsers();
 
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
@@ -636,12 +650,33 @@ namespace MuMech
 
         public void Update()
         {
-            if (this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
+            bool isMaster = this == vessel.GetMasterMechJeb();
+            if (HighLogic.LoadedSceneIsEditor && !isMaster)
+                _wasNotMasterInEditor = true;
+
+            // the windows' click-through lock, while this core's windows are shown; released as soon as they aren't
+            bool windowsShown = ShowGui && isMaster && _ready &&
+                (HighLogic.LoadedSceneIsEditor || (FlightGlobals.ready && vessel == FlightGlobals.ActiveVessel && part.State != PartStates.DEAD));
+            if (windowsShown)
+                PreventClickthrough();
+            else if (_weLockedInputs)
+                UnlockControl();
+
+            if (!isMaster || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
             {
                 return;
             }
 
             Profiler.BeginSample("MechJebCore.Update");
+
+            // A core that becomes master in the editor (the master's part was removed) loads the settings files, which the
+            // previous master kept up to date, rather than saving over them what it loaded when its part was placed
+            if (_wasNotMasterInEditor && HighLogic.LoadedSceneIsEditor)
+            {
+                _wasNotMasterInEditor = false;
+                ClearModulesCache();
+                OnLoad(null);
+            }
 
             //periodically save settings in case we quit unexpectedly
             Profiler.BeginSample("MechJebCore.Update.OnSave");
@@ -661,8 +696,9 @@ namespace MuMech
 
             Profiler.EndSample();
 
-            if (ResearchAndDevelopment.Instance != null && _unorderedComputerModules.Any(a => !a.UnlockChecked))
+            if (ResearchAndDevelopment.Instance != null && !_allUnlockChecked)
             {
+                bool allChecked = true;
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
                     try
@@ -673,7 +709,11 @@ namespace MuMech
                     {
                         Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in UnlockCheck: " + e);
                     }
+
+                    allChecked &= module.UnlockChecked;
                 }
+
+                _allUnlockChecked = allChecked;
             }
 
             Profiler.BeginSample("OnMenuUpdate");
@@ -749,18 +789,25 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
                 Print("Loading Mechjeb " + version);
 
+            // the names of the modules this core has, compared as GetComputerModule(string) does
+            var loadedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (ComputerModule module in _unorderedComputerModules)
+                loadedNames.Add(module.GetType().Name);
+
             foreach (Type t in _moduleRegistry)
             {
                 // one module whose constructor throws (another mod's included) must not keep the ones after it from existing
                 try
                 {
                     if (t != typeof(ComputerModule) && t != typeof(DisplayModule) && t != typeof(MechJebModuleCustomInfoWindow)
-                        && t != typeof(AutopilotModule)
-                        && !blacklist.Contains(t.Name) && GetComputerModule(t.Name) == null)
+                        && t != typeof(AutopilotModule) && !loadedNames.Contains(t.Name))
                     {
                         ConstructorInfo constructorInfo = t.GetConstructor(new[] { typeof(MechJebCore) });
                         if (constructorInfo != null)
+                        {
                             AddComputerModule((ComputerModule)constructorInfo.Invoke(new object[] { this }));
+                            loadedNames.Add(t.Name);
+                        }
                     }
                 }
                 catch (Exception e)
@@ -791,22 +838,10 @@ namespace MuMech
             Spinup = GetComputerModule<MechJebModuleSpinupController>();
             Hoverslam = GetComputerModule<MechJebModuleHoverslamSimulation>();
             SmartASS = GetComputerModule<MechJebModuleSmartASS>();
-
-            // a window goes with its logic module when a blacklist removed that one
-            foreach (DisplayModule window in GetComputerModules<DisplayModule>().ToList())
-                if (window.LogicModuleName != null && GetComputerModule(window.LogicModuleName) == null)
-                    RemoveComputerModule(window);
         }
 
         public override void OnLoad(ConfigNode sfsNode)
         {
-            if (GuiUtils.Skin == null)
-            {
-                //GuiUtils.skin = new GUISkin();
-                // ReSharper disable once ObjectCreationAsStatement
-                new GameObject("zombieGUILoader", typeof(ZombieGUILoader));
-            }
-
             try
             {
                 bool generateDefaultWindows = false;
@@ -962,16 +997,6 @@ namespace MuMech
                     windowEditor.AddDefaultWindows();
                 }
             }
-            catch (ReflectionTypeLoadException ex)
-            {
-                Debug.LogError("MechJeb caught a ReflectionTypeLoadException. Those DLL are not built for this KSP version:");
-                IEnumerable<Assembly> brokenAssembly = ex.Types.Where(x => x != null).Select(x => x.Assembly).Distinct();
-                foreach (Assembly assembly in brokenAssembly)
-                {
-                    Debug.LogError(assembly.GetName().Name + " " + assembly.GetName().Version + " " +
-                        assembly.Location.Remove(0, Path.GetFullPath(KSPUtil.ApplicationRootPath).Length));
-                }
-            }
             catch (Exception e)
             {
                 Debug.LogError("MechJeb caught exception in core OnLoad: " + e);
@@ -1065,6 +1090,15 @@ namespace MuMech
                     ConfigNodeWriter.Save(global, MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
                 }
 
+                // The modules are clean once the global file is written (a vessel that lost the focus leaves it to the new
+                // focus's master, which reloads it). A write that throws leaves them dirty, so the periodic save tries again; a
+                // module whose own OnSave threw is clean too, or it would rewrite both files every five seconds.
+                if (global != null)
+                {
+                    foreach (ComputerModule module in GetComputerModules<ComputerModule>())
+                        module.Dirty = false;
+                }
+
                 Profiler.EndSample();
             }
             catch (Exception e)
@@ -1078,9 +1112,18 @@ namespace MuMech
         public void OnDestroy()
         {
             // FlightGlobals is already gone when the game quits from flight, and with it the active vessel: Update's periodic save has to do
-            if (this == vessel.GetMasterMechJeb() && (vessel == null || (FlightGlobals.fetch != null && vessel.isActiveVessel)))
+            // each step on its own: one that throws must not keep the modules from their OnDestroy, where they leave the static
+            // GameEvents
+            try
             {
-                OnSave(null);
+                if (this == vessel.GetMasterMechJeb() && (vessel == null || (FlightGlobals.fetch != null && vessel.isActiveVessel)))
+                {
+                    OnSave(null);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("MechJeb caught exception saving in core OnDestroy: " + e);
             }
 
             RemoveGameEvents();
@@ -1123,6 +1166,17 @@ namespace MuMech
             GameEvents.onVesselChange.Remove(UnlockControl);
             GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
+            GameEvents.onGameSceneLoadRequested.Remove(OnGameSceneLoadRequested);
+            Camera.onPostRender -= OnCameraPostRender;
+        }
+
+        // The last save of a scene. KSP sets the next scene's flags before it destroys this one, so the save in OnDestroy does
+        // not run when leaving flight or the editor; this event comes before both. It saves whether or not a module is dirty:
+        // settings set from code (kOS) do not mark it.
+        private void OnGameSceneLoadRequested(GameScenes scene)
+        {
+            if (this == vessel.GetMasterMechJeb() && (HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel)))
+                OnSave(null);
         }
 
         private void OnFlyByWire(FlightCtrlState s)
@@ -1142,12 +1196,20 @@ namespace MuMech
 
         private bool _vesselStateFailed;
 
+        // the UT of the last VesselState.Update that threw
+        private double _vesselStateFailedUT = double.NaN;
+
         // VesselState.Update runs in FixedUpdate and in Drive, which is called from the vessel's OnFlyByWire chain: an exception
         // must not leave here (it would reach stock's and other mods' FlyByWire callbacks). The modules skip the tick
         // (_vesselStateFailed), _ready keeps its value as it did when the exception left (so the windows stay up), and the
-        // first failure of a run is logged.
+        // first failure of a run is logged. VesselState.Update returns at once when it already ran this tick, even when that
+        // run threw half-way, so the second call of a tick that failed fails too, without running it again.
         private bool UpdateVesselState()
         {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (_vesselStateFailed && _vesselStateFailedUT == Planetarium.GetUniversalTime())
+                return _ready;
+
             try
             {
                 bool ready = VesselState.Update();
@@ -1156,6 +1218,7 @@ namespace MuMech
             }
             catch (Exception e)
             {
+                _vesselStateFailedUT = Planetarium.GetUniversalTime();
                 if (!_vesselStateFailed)
                 {
                     _vesselStateFailed = true;
@@ -1227,68 +1290,38 @@ namespace MuMech
             if (_weLockedInputs) UnlockControl();
         }
 
-        private void OnGUI()
+        /// <summary>
+        /// A GL drawing (map markers, trajectories, the docking boxes) run once per frame, after the camera the player sees
+        /// renders: the planetarium camera in the map view, the near flight camera otherwise. It draws over the scene and
+        /// under the UI.
+        /// </summary>
+        internal void AddToPostDrawQueue(Callback c) => _postDrawQueue.Add(c);
+
+        private void OnCameraPostRender(Camera cam)
         {
-            if (!ShowGui || this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
-            {
-                // we no longer draw, so nothing can release the lock for us
-                if (_weLockedInputs) UnlockControl();
+            if (_postDrawQueue.Count == 0 || !HighLogic.LoadedSceneIsFlight) return;
+            Camera shown = MapView.MapIsEnabled ? PlanetariumCamera.Camera : FlightCamera.fetch != null ? FlightCamera.fetch.mainCamera : null;
+            if (cam != shown) return;
+            // the windows' conditions (see Update): F2 hides the drawings with the windows
+            if (!ShowGui || !_ready || !FlightGlobals.ready || vessel != FlightGlobals.ActiveVessel || part.State == PartStates.DEAD ||
+                this != vessel.GetMasterMechJeb())
                 return;
-            }
 
-            Profiler.BeginSample("MechJebCore.OnGUI");
-
-            if (HighLogic.LoadedSceneIsEditor || (FlightGlobals.ready && vessel == FlightGlobals.ActiveVessel && part.State != PartStates.DEAD))
+            Profiler.BeginSample("MechJebCore.OnCameraPostRender");
+            for (int i = 0; i < _postDrawQueue.Count; i++)
             {
-                Matrix4x4 previousGuiMatrix = GUI.matrix;
-                GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(GuiUtils.Scale, GuiUtils.Scale, 1));
-
-                GuiUtils.ComboBox.DrawGUI();
-
-                GuiUtils.LoadSkin((GuiUtils.SkinType)Settings.SkinId);
-
-                GUI.skin = GuiUtils.Skin;
-
-                foreach (ComputerModule computerModule in GetComputerModules<DisplayModule>())
+                try
                 {
-                    var module = (DisplayModule)computerModule;
-                    Profiler.BeginSample(module.ProfilerName);
-                    try
-                    {
-                        if (module.Enabled && !MechJebUiHost.Owns(module)) module.DrawGUI(HighLogic.LoadedSceneIsEditor);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in DrawGUI: " + e);
-                    }
-
-                    Profiler.EndSample();
+                    _postDrawQueue[i]();
                 }
-
-                PreventClickthrough();
-                GUI.matrix = previousGuiMatrix;
-
-                for (int i = 0; i < _postDrawQueue.Count; i++)
+                catch (Exception e)
                 {
-                    try
-                    {
-                        _postDrawQueue[i]();
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogException(e);
-                    }
+                    Debug.LogException(e);
                 }
-            }
-            else if (_weLockedInputs)
-            {
-                UnlockControl();
             }
 
             Profiler.EndSample();
         }
-
-        internal void AddToPostDrawQueue(Callback c) => _postDrawQueue.Add(c);
 
         // VAB/SPH description
         public override string GetInfo() => Localizer.Format("#MechJeb_MechJebInfo_VABSPH"); //"Attitude control by MechJeb™"
@@ -1296,7 +1329,7 @@ namespace MuMech
         //Lifted this more or less directly from the Kerbal Engineer source. Thanks cybutek!
         private void PreventClickthrough()
         {
-            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this) || MechJebUiHost.MouseOverHostWindow();
+            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
             switch (_weLockedInputs)
             {
                 case false when mouseOverWindow && !Input.GetMouseButton(1):
@@ -1310,6 +1343,10 @@ namespace MuMech
 
         private const string LOCK_ID = "MechJeb_noclick";
 
+        // What a pointer over a window locks in flight: the clicks that would go through to the scene, not the keyboard's flight
+        // controls (staging, throttle, warp, quicksave...). A text field locks the keyboard itself while it has the focus.
+        private const ControlTypes HOVER_LOCK = ControlTypes.ALLBUTCAMERAS & ~ControlTypes.KEYBOARDINPUT;
+
         private void LockControl()
         {
             if (HighLogic.LoadedSceneIsEditor)
@@ -1318,7 +1355,7 @@ namespace MuMech
             }
             else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
             {
-                InputLockManager.SetControlLock(ControlTypes.ALLBUTCAMERAS, LOCK_ID);
+                InputLockManager.SetControlLock(HOVER_LOCK, LOCK_ID);
             }
 
             _weLockedInputs = true;
@@ -1326,17 +1363,11 @@ namespace MuMech
 
         private void UnlockControl(Vessel v) => UnlockControl();
 
+        // EditorLogic.Unlock is RemoveControlLock: called directly, it needs neither the editor nor the scene flags, which already
+        // name the next scene when the core is destroyed
         private void UnlockControl()
         {
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                EditorLogic.fetch.Unlock(LOCK_ID);
-            }
-            else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
-            {
-                InputLockManager.RemoveControlLock(LOCK_ID);
-            }
-
+            InputLockManager.RemoveControlLock(LOCK_ID);
             _weLockedInputs = false;
         }
 

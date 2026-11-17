@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleRoverWindow ("Rover Autopilot") in KodeKit, row for row with its WindowGUI.
+    /// MechJebModuleRoverWindow ("Rover Autopilot") in KodeKit.
     /// The registry items it draws (toggles, editable fields, values) are rebuilt from the same InfoItems.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleRoverWindow))]
@@ -33,41 +33,21 @@ namespace MuMech.UI
             w.TitleButton("?", window.OpenHelp);
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 
+            KodeWindow.Header(r, "#MechJeb_NewUI_RoverHeading"); //Heading
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.ControlHeading", () => Ap != null && Ap.ControlHeading);
-            // modern layout: steppers (Shift: ×10) instead of a field and two 18 px buttons
-            Layout heading = KodeWindow.ModernLayout
-                ? RoverUi.StepperRow(w, r, ed, "Editable:RoverController.heading", d => Ap.heading.Val += d)
-                : RoverUi.EditableRow(w, r, ed, "Editable:RoverController.heading");
-            if (heading != null && !KodeWindow.ModernLayout)
-            {
-                KodeWindow.Button(heading, "-", () => Ap.heading.Val -= Alt ? 5 : 1).PreferredWidth(18);
-                KodeWindow.Button(heading, "+", () => Ap.heading.Val += Alt ? 5 : 1).PreferredWidth(18);
-            }
+            // steppers (Shift: ×10)
+            RoverUi.StepperRow(w, r, ed, "Editable:RoverController.heading", d => Ap.heading.Val += d);
 
             RoverUi.ValueRow(w, r, ed, "Value:RoverController.headingErr", () => Ap?.headingErr ?? 0, "-180.0 °");
+            KodeWindow.Header(r, "#MechJeb_NewUI_RoverSpeed"); //Speed
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.ControlSpeed", () => Ap != null && Ap.ControlSpeed);
-            Layout speed = KodeWindow.ModernLayout
-                ? RoverUi.StepperRow(w, r, ed, "Editable:RoverController.speed", d => Ap.speed.Val += d)
-                : RoverUi.EditableRow(w, r, ed, "Editable:RoverController.speed");
-            if (speed != null && !KodeWindow.ModernLayout)
-            {
-                KodeWindow.Button(speed, "-", () => Ap.speed.Val -= Alt ? 5 : 1).PreferredWidth(18);
-                KodeWindow.Button(speed, "+", () => Ap.speed.Val += Alt ? 5 : 1).PreferredWidth(18);
-            }
+            RoverUi.StepperRow(w, r, ed, "Editable:RoverController.speed", d => Ap.speed.Val += d);
 
             RoverUi.ValueRow(w, r, ed, "Value:RoverController.speedErr", () => Ap?.speedErr ?? 0, "-999.9 m/s");
-            RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.StabilityControl", () => Ap != null && Ap.StabilityControl);
 
-            GameObject eject = RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.BrakeOnEject", () => Ap != null && Ap.BrakeOnEject);
-            if (eject != null) w.Visible(eject, () => !Core.Settings.HideBrakeOnEject);
-
-            RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.BrakeOnEnergyDepletion", () => Ap != null && Ap.BrakeOnEnergyDepletion);
-            GameObject daylight = RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.WarpToDaylight", () => Ap != null && Ap.WarpToDaylight);
-            if (daylight != null) w.Visible(daylight, () => Ap != null && Ap.BrakeOnEnergyDepletion);
-
-            // "Target Speed"
+            // the speed the controller asks for now (the setting, slowed for turns and slopes)
             Layout tgt = KodeWindow.Row(r);
-            KodeWindow.Label(tgt, "#MechJeb_Rover_label1", true);
+            KodeWindow.Label(tgt, "#MechJeb_NewUI_RoverCommandedSpeed", true); //Commanded speed
             UIText tgtValue = KodeWindow.LiveLabel(tgt, "000.0", false);
             tgtValue.tmpText.alignment = TextAlignmentOptions.Right;
             var tgtText = new CharText(tgtValue.tmpText);
@@ -77,17 +57,28 @@ namespace MuMech.UI
                 tgtText.Commit();
             });
 
-            // "Waypoints" + "Index n of m"
+            KodeWindow.Header(r, "#MechJeb_NewUI_RoverSafety"); //Safety
+            RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.StabilityControl", () => Ap != null && Ap.StabilityControl);
+
+            GameObject eject = RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.BrakeOnEject", () => Ap != null && Ap.BrakeOnEject);
+            if (eject != null) w.Visible(eject, () => !Core.Settings.HideBrakeOnEject);
+
+            RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.BrakeOnEnergyDepletion", () => Ap != null && Ap.BrakeOnEnergyDepletion);
+            GameObject daylight = RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.WarpToDaylight", () => Ap != null && Ap.WarpToDaylight);
+            if (daylight != null) w.Visible(daylight, () => Ap != null && Ap.BrakeOnEnergyDepletion);
+
+            // "Waypoint  n of m", the target's buttons, then Drive / Stop and the waypoint list
+            KodeWindow.Header(r, "#MechJeb_Rover_label2"); //Waypoints
             Layout index = KodeWindow.Row(r);
-            KodeWindow.Label(index, "#MechJeb_Rover_label2", true);
-            UIText indexValue = KodeWindow.LiveLabel(index, "Index 000 of 000", false);
+            KodeWindow.Label(index, "#MechJeb_NewUI_RoverWaypoint", true); //Waypoint
+            UIText indexValue = KodeWindow.LiveLabel(index, "000 of 000", false);
             indexValue.tmpText.alignment = TextAlignmentOptions.Right;
             var indexText = new CharText(indexValue.tmpText);
             w.AddSync(() =>
             {
                 indexText.Clear();
-                if (Ap != null) indexText.Append("Index ").AppendInt(Ap.WaypointIndex + 1).Append(" of ").AppendInt(Ap.Waypoints.Count);
-                else indexText.Append("Index 0 of 0");
+                if (Ap != null) indexText.AppendInt(Ap.WaypointIndex + 1).Append(" of ").AppendInt(Ap.Waypoints.Count);
+                else indexText.Append("0 of 0");
                 indexText.Commit();
             });
 
@@ -137,12 +128,12 @@ namespace MuMech.UI
             return b;
         }
 
-        // ---- registry items (the InfoItems the IMGUI windows draw with InfoItem.DrawItem) ----
+        // ---- registry items (InfoItems) ----
 
         static InfoItem Find(MechJebModuleCustomWindowEditor ed, string id) => ed?.registry.Find(i => i.id == id);
 
         /// <summary>
-        /// A ToggleInfoItem as InfoItem.DrawItem draws it (its key as the label, so it follows a language switch); the
+        /// A ToggleInfoItem (its key as the label, so it follows a language switch); the
         /// value is read through <paramref name="get"/>, or the item's compiled getter. Returns its row.
         /// </summary>
         public static GameObject ToggleRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Func<bool> get = null)
@@ -153,7 +144,7 @@ namespace MuMech.UI
             return KodeWindow.RowOf(t);
         }
 
-        /// <summary>The modern layout's EditableInfoItem with nudges: label [−][field][+] unit; − and + add ∓1 (×10 with Shift).</summary>
+        /// <summary>An EditableInfoItem with nudges: label [−][field][+] unit; − and + add ∓1 (×10 with Shift).</summary>
         public static Layout StepperRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Action<double> add)
         {
             if (!(Find(ed, id) is EditableInfoItem item) || item.Editable == null) return null;
@@ -168,7 +159,7 @@ namespace MuMech.UI
             return row;
         }
 
-        /// <summary>An EditableInfoItem as GuiUtils.SimpleTextBox draws it: label, field, right label. Returns the row so buttons can be added.</summary>
+        /// <summary>An EditableInfoItem: label, field, right label. Returns the row so buttons can be added.</summary>
         public static Layout EditableRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id)
         {
             if (!(Find(ed, id) is EditableInfoItem item) || item.Editable == null) return null;
@@ -182,7 +173,7 @@ namespace MuMech.UI
             return row;
         }
 
-        /// <summary>A ValueInfoItem as ValueInfoItem.DrawItem draws it: label and the formatted value (garbage-free).</summary>
+        /// <summary>A ValueInfoItem: label and the formatted value (garbage-free).</summary>
         public static void ValueRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Func<double> get, string template)
         {
             if (!(Find(ed, id) is ValueInfoItem item)) return;

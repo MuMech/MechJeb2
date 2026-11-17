@@ -10,7 +10,6 @@ using KSP.Localization;
 using UnityEngine;
 using UnityEngine.Profiling;
 using static MechJebLib.Utils.Statics;
-using Object = UnityEngine.Object;
 
 namespace MuMech
 {
@@ -18,6 +17,12 @@ namespace MuMech
     {
         [Persistent(pass = (int)Pass.GLOBAL)]
         public string title = Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_title"); //Custom Info Window
+
+        // names the window whatever its title: the id of its toolbar button
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public string id = NewId();
+
+        internal static string NewId() => "Window_" + Guid.NewGuid().ToString("N");
 
         [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.GLOBAL)]
         public List<InfoItem> items = new List<InfoItem>();
@@ -109,50 +114,13 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public Color text = new Color(1, 1, 1, 1);
 
-        public Texture2D background;
-
-
-        private float refreshInterval = 0.1f;
-        private float lastRefresh = float.NegativeInfinity;
-
+        // values refresh this many times a second (the view's own timer)
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt refreshRate = 10;
-
-        public void UpdateRefreshRate() => refreshInterval = (float)(1d / refreshRate);
-
-        public override void OnDestroy()
-        {
-            if (background)
-            {
-                Object.Destroy(background);
-            }
-
-            base.OnDestroy();
-        }
 
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             //Do nothing: custom info windows will be saved in MechJebModuleCustomWindowEditor.OnSave
-        }
-
-        public virtual void UpdateWindowItems()
-        {
-            float now = Time.realtimeSinceStartup;
-            if (now - lastRefresh < refreshInterval) return;
-            foreach (InfoItem item in items)
-                if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
-                    item.UpdateItem();
-            lastRefresh = now;
-        }
-
-        public void Init()
-        {
-            if (!background)
-            {
-                background = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-                background.SetPixel(0, 0, backgroundColor);
-                background.Apply();
-            }
         }
 
         public string ToSharingString()
@@ -219,7 +187,19 @@ namespace MuMech
     {
         public readonly List<InfoItem> registry = new List<InfoItem>();
         public MechJebModuleCustomInfoWindow editedWindow;
-        internal int selectedItemIndex = -1;
+        private int _selectedItemIndex = -1;
+        private MechJebModuleCustomInfoWindow _selectedItemWindow;
+
+        // the selected item of the edited window: a selection made in another window is none in this one
+        internal int selectedItemIndex
+        {
+            get => _selectedItemWindow == editedWindow ? _selectedItemIndex : -1;
+            set
+            {
+                _selectedItemIndex = value;
+                _selectedItemWindow = editedWindow;
+            }
+        }
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public InfoItem.Category itemCategory = InfoItem.Category.Orbit;
@@ -315,11 +295,18 @@ namespace MuMech
 
             //Load custom info windows, which are stored in our ConfigNode:
             ConfigNode[] windowNodes = global.GetNodes(typeof(MechJebModuleCustomInfoWindow).Name);
+            HashSet<string> usedIds = UsedButtonKeys(false);
             foreach (ConfigNode windowNode in windowNodes)
             {
                 var window = new MechJebModuleCustomInfoWindow(Core);
 
                 ConfigNode.LoadObjectFromConfig(window, windowNode);
+
+                // a window saved without an id takes it from its title; the copy of a window's node gets its own
+                if (string.IsNullOrEmpty(windowNode.GetValue("id")))
+                    window.id = IdFromTitle(window.title, usedIds);
+                else if (!usedIds.Add(window.id))
+                    usedIds.Add(window.id = MechJebModuleCustomInfoWindow.NewId());
 
                 // migrate the pre-rename keys, the old keys are dropped on the next save
                 // [ this should get deleted sometime after the 2.16 dev branch is released ]
@@ -327,8 +314,6 @@ namespace MuMech
                     window.isOverlay = loadedOverlay;
                 if (windowNode.HasValue("LockedConfig") && bool.TryParse(windowNode.GetValue("LockedConfig"), out bool loadedLocked))
                     window.windowLocked = loadedLocked;
-
-                window.UpdateRefreshRate();
 
                 bool useOldConfig = true;
                 if (windowNode.HasValue("enabledEditor"))
@@ -377,8 +362,13 @@ namespace MuMech
                     ConfigNode[] itemNodes = itemCollection.GetNodes("InfoItem");
                     foreach (ConfigNode itemNode in itemNodes)
                     {
-                        InfoItem match = InfoItem.Find(registry, itemNode.GetValue("id"));
+                        string id = itemNode.GetValue("id");
+                        InfoItem match = InfoItem.Find(registry, id);
                         if (match != null) window.items.Add(match);
+                        // an item of a module this game no longer has (a removed mod, a blacklisted module): the next save
+                        // writes the window without it
+                        else if (_reported.Add(window.id + "/" + id))
+                            Print($"custom window \"{window.title}\": no info item \"{id}\" in this game, it is dropped from the window");
                     }
                 }
 
@@ -415,7 +405,6 @@ namespace MuMech
 
                 windowNode.AddValue("enabledFlight", window.EnabledFlight);
                 windowNode.AddValue("enabledEditor", window.EnabledEditor);
-                window.Dirty = false;
             }
 
             if (_backup != null)
@@ -427,6 +416,9 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state) => editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
 
         private static readonly Dictionary<Type, List<Tuple<MemberInfo, Attribute>>> _cache = new Dictionary<Type, List<Tuple<MemberInfo, Attribute>>>();
+
+        // the skipped and dropped items already logged: every MechJeb part loads, several times a session
+        private static readonly HashSet<string> _reported = new HashSet<string>();
 
         private void RegisterInfoItems(object obj)
         {
@@ -466,37 +458,77 @@ namespace MuMech
 
             foreach ((MemberInfo member, Attribute attribute) in _cache[objType])
             {
-                switch (attribute)
+                // a member that cannot be bound (a mod's action with parameters, say) loses its item, not the windows read after
+                try
                 {
-                    case ValueInfoItemAttribute item:
-                        _valueInfoItemStopwatch.Start();
-                        registry.Add(new ValueInfoItem(obj, member, item));
-                        _valueInfoItemStopwatch.Stop();
-                        break;
-                    case ActionInfoItemAttribute item:
-                        _actionInfoItemStopwatch.Start();
-                        registry.Add(new ActionInfoItem(obj, (MethodInfo)member, item));
-                        _actionInfoItemStopwatch.Stop();
-                        break;
-                    case ToggleInfoItemAttribute item:
-                        _toggleInfoItemStopwatch.Start();
-                        registry.Add(new ToggleInfoItem(obj, member, item));
-                        _toggleInfoItemStopwatch.Stop();
-                        break;
-                    case GeneralInfoItemAttribute item:
-                        _generalInfoItemStopwatch.Start();
-                        registry.Add(new GeneralInfoItem(obj, (MethodInfo)member, item));
-                        _generalInfoItemStopwatch.Stop();
-                        break;
-                    case EditableInfoItemAttribute item:
-                        _editableInfoItemStopwatch.Start();
-                        registry.Add(new EditableInfoItem(obj, member, item));
-                        _editableInfoItemStopwatch.Stop();
-                        break;
+                    switch (attribute)
+                    {
+                        case ValueInfoItemAttribute item:
+                            _valueInfoItemStopwatch.Start();
+                            registry.Add(new ValueInfoItem(obj, member, item));
+                            _valueInfoItemStopwatch.Stop();
+                            break;
+                        case ActionInfoItemAttribute item:
+                            _actionInfoItemStopwatch.Start();
+                            registry.Add(new ActionInfoItem(obj, (MethodInfo)member, item));
+                            _actionInfoItemStopwatch.Stop();
+                            break;
+                        case ToggleInfoItemAttribute item:
+                            _toggleInfoItemStopwatch.Start();
+                            registry.Add(new ToggleInfoItem(obj, member, item));
+                            _toggleInfoItemStopwatch.Stop();
+                            break;
+                        case GeneralInfoItemAttribute item:
+                            _generalInfoItemStopwatch.Start();
+                            registry.Add(new GeneralInfoItem(obj, (MethodInfo)member, item));
+                            _generalInfoItemStopwatch.Stop();
+                            break;
+                        case EditableInfoItemAttribute item:
+                            _editableInfoItemStopwatch.Start();
+                            registry.Add(new EditableInfoItem(obj, member, item));
+                            _editableInfoItemStopwatch.Stop();
+                            break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    // the item's stopwatch was left running
+                    _valueInfoItemStopwatch.Stop();
+                    _actionInfoItemStopwatch.Stop();
+                    _toggleInfoItemStopwatch.Stop();
+                    _generalInfoItemStopwatch.Stop();
+                    _editableInfoItemStopwatch.Stop();
+
+                    if (_reported.Add(objType.FullName + "." + member.Name))
+                        Print($"cannot make the info item of {objType.Name}.{member.Name}, skipped: {e.Message}");
                 }
             }
 
             Profiler.EndSample();
+        }
+
+        // the toolbar button ids in use: the other modules', and with customWindows the ids of this MechJeb's custom windows
+        private HashSet<string> UsedButtonKeys(bool customWindows)
+        {
+            var used = new HashSet<string>();
+            foreach (DisplayModule module in Core.GetComputerModules<DisplayModule>())
+                if (customWindows || !(module is MechJebModuleCustomInfoWindow))
+                    used.Add(MechJebModuleMenu.ButtonKey(module));
+            return used;
+        }
+
+        // An id made from the title, numbered when it is taken: each MechJeb of the game gives the same windows the same
+        // ids, with nothing saved yet. A title that leaves nothing a config file can hold gets a random id.
+        private static string IdFromTitle(string title, HashSet<string> used)
+        {
+            string name = MechJebModuleMenu.GetCleanName(title ?? "");
+            if (name.Length == 0 || MuUtils.SanitizeConfigText(name) != name)
+                name = MechJebModuleCustomInfoWindow.NewId();
+
+            string id = name;
+            for (int n = 1; !used.Add(id); n++)
+                id = name + "_" + n;
+            return id;
         }
 
         internal void AddNewWindow()
@@ -513,17 +545,20 @@ namespace MuMech
         {
             if (editedWindow == null) return;
 
-            editedWindow.OnDestroy(); // frees the window's background texture
+            editedWindow.OnDestroy();
             Core.RemoveComputerModule(editedWindow);
             editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
+            selectedItemIndex = -1; // lets go of the removed window
+            Dirty = true;           // the windows are saved by this module: the next save drops the removed one
         }
 
-        // ---- editing actions, shared by WindowGUI and MechJeb2.UI's editor ----
+        // ---- editing actions, for MechJeb2.UI's editor ----
 
         internal void AddItem(InfoItem item)
         {
             if (editedWindow == null) return;
             editedWindow.items.Add(item.ForWindow());
+            editedWindow.Dirty = true;
         }
 
         /// <summary>The selected item when it is a header, so the editor can show its text field.</summary>
@@ -543,6 +578,8 @@ namespace MuMech
         {
             if (editedWindow == null || selectedItemIndex < 0 || selectedItemIndex >= editedWindow.items.Count) return;
             editedWindow.items.RemoveAt(selectedItemIndex);
+            selectedItemIndex = -1;
+            editedWindow.Dirty = true;
         }
 
         /// <summary>Move the selected item up (-1) or down (+1) in the edited window.</summary>
@@ -555,15 +592,13 @@ namespace MuMech
             editedWindow.items.RemoveAt(selectedItemIndex);
             editedWindow.items.Insert(to, item);
             selectedItemIndex = to;
+            editedWindow.Dirty = true;
         }
 
         internal void SetBackgroundColor(Color c)
         {
             if (editedWindow == null || editedWindow.backgroundColor == c) return;
-            editedWindow.Init();
             editedWindow.backgroundColor = c;
-            editedWindow.background.SetPixel(0, 0, c);
-            editedWindow.background.Apply();
             editedWindow.Dirty = true;
         }
 
@@ -601,20 +636,20 @@ namespace MuMech
             ShowInEditor = true;
         }
 
+        private static readonly int[] _defaultPresets = { 0, 1, 2, 3, 4, 5, 6, 7, 10, 12 };
+
         public void AddDefaultWindows()
         {
             Profiler.BeginSample("MechJebModuleCustomWindowEditor.AddDefaultWindows");
 
-            CreateWindowFromSharingString(CustomWindowPresets.presets[0].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[1].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[2].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[3].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[4].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[5].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[6].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[7].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[10].sharingString).Enabled = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[12].sharingString).Enabled = false;
+            // every MechJeb of the game makes these windows before the first save: their ids come from their titles
+            HashSet<string> usedIds = UsedButtonKeys(true);
+            foreach (int preset in _defaultPresets)
+            {
+                MechJebModuleCustomInfoWindow window = CreateWindowFromSharingString(CustomWindowPresets.presets[preset].sharingString);
+                window.Enabled = false;
+                window.id = IdFromTitle(window.title, usedIds);
+            }
 
             Profiler.EndSample();
         }
@@ -687,7 +722,6 @@ namespace MuMech
             showInFlight = attribute.showInFlight;
         }
 
-        public virtual void DrawItem()   { }
         public virtual void UpdateItem() { }
 
         /// <summary>What a window gets when the editor adds this item: the shared item itself, or a copy for items with their own state.</summary>
@@ -770,7 +804,7 @@ namespace MuMech
         public double Scale => scale;
         public float Width => width;
 
-        /// <summary>The value as DrawItem shows it (refreshed like DrawItem does).</summary>
+        /// <summary>The value as the item shows it.</summary>
         public string StringValue
         {
             get
@@ -911,6 +945,12 @@ namespace MuMech
     {
         private readonly Action action;
 
+        /// <summary>The module the action engages and disengages, when its attribute names a label for the engaged state; else null.</summary>
+        public readonly ComputerModule EngagedModule;
+
+        /// <summary>The label while <see cref="EngagedModule"/> is enabled.</summary>
+        public readonly string LocalizedEngagedName;
+
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
             : base(attribute)
         {
@@ -919,6 +959,12 @@ namespace MuMech
             id = GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
             action = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
+
+            if (!string.IsNullOrEmpty(attribute.engagedName) && obj is ComputerModule module)
+            {
+                EngagedModule        = module;
+                LocalizedEngagedName = Localizer.Format(attribute.engagedName);
+            }
 
 
             Profiler.EndSample();
@@ -993,11 +1039,10 @@ namespace MuMech
         }
     }
 
-    // Its id is the method's name, which saved custom windows hold. MechJeb's own methods are empty: MechJeb2.UI builds those
-    // items by id, and the method only draws, in IMGUI, an item from another mod.
+    // Its id is the method's name, which saved custom windows hold. The methods are empty: MechJeb2.UI builds MechJeb's items
+    // by id, and shows another mod's item as its name only.
     public class GeneralInfoItem : InfoItem
     {
-        private readonly Action draw;
         private readonly object obj;
 
         public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
@@ -1007,7 +1052,6 @@ namespace MuMech
 
             id = GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
-            draw = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
             this.obj = obj;
 
             Profiler.EndSample();
@@ -1015,8 +1059,6 @@ namespace MuMech
 
         /// <summary>The module the item's method belongs to (for another UI's native version of the item).</summary>
         public object Target => obj;
-
-        public override void DrawItem() => draw();
 
         public override void UpdateItem()
         {
@@ -1091,6 +1133,12 @@ namespace MuMech
     [AttributeUsage(AttributeTargets.Method)]
     public class ActionInfoItemAttribute : InfoItemAttribute
     {
+        /// <summary>
+        /// For an action that turns its module on and off: the label while the module is enabled ("Disengage …"). The button
+        /// is then the window's main action while the module is off, and a destructive one while it is on.
+        /// </summary>
+        public string engagedName;
+
         public ActionInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
 

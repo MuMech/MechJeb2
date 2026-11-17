@@ -12,9 +12,36 @@ namespace MuMech
 
         public static bool EngineHasFuel(this ModuleEngines me) => !me.getFlameoutState && !me.engineShutdown;
 
+        /// <summary>
+        ///     The part's engine in use: a multi-mode engine's current mode, else an ignited engine module, else the first. The first
+        ///     module alone is a multi-mode engine's primary mode, which keeps its flameout after the switch to the secondary.
+        /// </summary>
+        public static ModuleEngines CurrentEngine(this Part p)
+        {
+            MultiModeEngine multiMode = p.FindModuleImplementing<MultiModeEngine>();
+            if (multiMode != null)
+            {
+                ModuleEngines mode = multiMode.runningPrimary ? multiMode.PrimaryEngine : multiMode.SecondaryEngine;
+                if (mode != null)
+                    return mode;
+            }
+
+            ModuleEngines first = null;
+            for (int i = 0; i < p.Modules.Count; i++)
+            {
+                if (!(p.Modules[i] is ModuleEngines engine))
+                    continue;
+                if (engine.EngineIgnited)
+                    return engine;
+                first ??= engine;
+            }
+
+            return first;
+        }
+
         public static bool EngineHasFuel(this Part p)
         {
-            ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
+            ModuleEngines eng = p.CurrentEngine();
             return eng != null && eng.EngineHasFuel();
         }
 
@@ -23,7 +50,7 @@ namespace MuMech
             if (!VesselState.IsRealFuelsCorrectlyInitialized) // stock doesn't have this concept
                 return false;
 
-            ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
+            ModuleEngines eng = p.CurrentEngine();
 
             if (eng is null) // this case probably doesn't make any sense
                 return false;
@@ -153,7 +180,7 @@ namespace MuMech
 
         public static bool IsThrottleLockedEngine(this Part p)
         {
-            ModuleEngines me = p.FindModuleImplementing<ModuleEngines>();
+            ModuleEngines me = p.CurrentEngine();
             return me != null && me.throttleLocked;
         }
 
@@ -193,32 +220,28 @@ namespace MuMech
             }
         }
 
+        // The part's box in the vessel's axes, from the corners of each active mesh's bounds: P1 is the maximum, P2 the minimum.
+        // A part without a mesh gives P1 = -infinity and P2 = +infinity, which leaves a union unchanged.
+        // sharedMesh, as MeshFilter.mesh would give the filter its own copy of the mesh, and Mesh.vertices copies the vertex array.
         public static Vector3Pair GetBoundingBox(this Part part)
         {
-            var minBounds = new Vector3();
-            var maxBounds = new Vector3();
+            var minBounds = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+            var maxBounds = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
+            Matrix4x4 toVessel = part.vessel.transform.worldToLocalMatrix;
 
-            foreach (Transform t in part.FindModelComponents<Transform>())
+            foreach (MeshFilter filter in part.FindModelComponents<MeshFilter>())
             {
-                MeshFilter mf = t.GetComponent<MeshFilter>();
-                if (mf == null)
-                    continue;
-                Mesh m = mf.mesh;
-
-                if (m == null)
+                if (filter.sharedMesh == null || !filter.gameObject.activeInHierarchy)
                     continue;
 
-                Matrix4x4 matrix = part.vessel.transform.worldToLocalMatrix * t.localToWorldMatrix;
-
-                foreach (Vector3 vertex in m.vertices)
+                Matrix4x4 matrix = toVessel * filter.transform.localToWorldMatrix;
+                Bounds bounds = filter.sharedMesh.bounds;
+                for (int corner = 0; corner < 8; corner++)
                 {
-                    Vector3 v = matrix.MultiplyPoint3x4(vertex);
-                    maxBounds.x = Mathf.Max(maxBounds.x, v.x);
-                    minBounds.x = Mathf.Min(minBounds.x, v.x);
-                    maxBounds.y = Mathf.Max(maxBounds.y, v.y);
-                    minBounds.y = Mathf.Min(minBounds.y, v.y);
-                    maxBounds.z = Mathf.Max(maxBounds.z, v.z);
-                    minBounds.z = Mathf.Min(minBounds.z, v.z);
+                    var sign = new Vector3((corner & 1) * 2 - 1, (corner & 2) - 1, (corner & 4) / 2 - 1);
+                    Vector3 v = matrix.MultiplyPoint3x4(bounds.center + Vector3.Scale(bounds.extents, sign));
+                    minBounds = Vector3.Min(minBounds, v);
+                    maxBounds = Vector3.Max(maxBounds, v);
                 }
             }
 

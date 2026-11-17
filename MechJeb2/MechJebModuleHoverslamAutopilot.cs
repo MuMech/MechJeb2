@@ -12,8 +12,8 @@ namespace MuMech
         {
         }
 
-        // TODO: have the button say "disengage" when it is engaged
-        [ActionInfoItem("#MechJeb_HoverslamEngage", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamEngage_tooltip")] //Engage hoverslam
+        [ActionInfoItem("#MechJeb_HoverslamEngage", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamEngage_tooltip",
+            engagedName = "#MechJeb_HoverslamDisengage")] //Engage hoverslam, Disengage hoverslam
         public void ToggleEnabled() => Enabled = !Enabled;
 
         [EditableInfoItem("#MechJeb_HoverslamIgnitionLead", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamIgnitionLead_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Ignition lead
@@ -70,7 +70,11 @@ namespace MuMech
             Core.Staging.Users.Remove(this);
         }
 
-        private void Reset() => _lastAdjV = new Vector3d(double.NaN, double.NaN, double.NaN);
+        private void Reset()
+        {
+            _lastAdjV = new Vector3d(double.NaN, double.NaN, double.NaN);
+            _descended = false;
+        }
 
         public override void OnFixedUpdate()
         {
@@ -85,6 +89,7 @@ namespace MuMech
         private State _state;
         private Vector3d _lastAdjV;
         private Vector3d _adjV;
+        private bool _descended;
 
         private void UpdateAdjV() => _adjV = VesselState.SurfaceVelocity + Core.Hoverslam.FinalDescentSpeed * VesselState.Up;
 
@@ -109,7 +114,10 @@ namespace MuMech
                 desired = State.Vertical;
             if (desired == State.Burn || desired == State.Vertical)
             {
-                if (Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Up) >= 0.0)
+                // a burn that starts on the way up, before the apoapsis, has not stopped a descent until there was one
+                if (Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Up) < 0.0)
+                    _descended = true;
+                else if (_descended)
                     desired = State.Finished;
                 if (!Vessel.VesselOffGround())
                     desired = State.Finished;

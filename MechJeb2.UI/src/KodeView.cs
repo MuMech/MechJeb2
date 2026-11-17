@@ -35,7 +35,7 @@ namespace MuMech.UI
         /// <summary>Add the window's contents (called once).</summary>
         protected abstract void BuildContents(KodeWindow w);
 
-        /// <summary>Per-frame model work the IMGUI WindowGUI did before drawing (runs before the bindings).</summary>
+        /// <summary>Per-frame model work of the module (runs before the bindings).</summary>
         protected virtual void BeforeSync() { }
 
         /// <summary>The last Build's cost in ms: creating the window's contents, and the canvas update that lays it out (for tests).</summary>
@@ -67,6 +67,18 @@ namespace MuMech.UI
         public void ApplyScale()
         {
             if (Window != null) Window.Behaviour.Scale = GuiUtils.Scale;
+        }
+
+        /// <summary>
+        /// A UI scale change, after KodeHost converted the stored positions to the new scale's units: the window grows or
+        /// shrinks about its top-left corner and keeps its place on screen. A shown window stores the place it has, which the
+        /// screen clamp may have moved; a hidden one is placed from the stored position when it is shown.
+        /// </summary>
+        public void Rescale()
+        {
+            if (Window == null) return;
+            ApplyScale();
+            if (Window.Root.gameObject.activeSelf) StorePosition();
         }
 
         // DisplayModule.WindowPos keeps one position per scene

@@ -135,25 +135,32 @@ namespace MuMech
         }
 
         /// <summary>
-        /// True while another module drives the attitude controller (SmartASS then shows only "AUTO").
-        /// Switches SmartASS off when autoDisableSmartASS is set. Called every frame by both the IMGUI and the KodeKit window.
+        /// True while another module drives the attitude controller: SmartASS then shows only "AUTO". Set every tick, with the
+        /// window open or closed.
         /// </summary>
-        internal bool OtherUsersControlAttitude()
+        internal bool OtherUsersControlAttitude { get; private set; }
+
+        /// <summary>
+        /// True while another module (not SmartASS) uses the attitude controller, as of now rather than the last tick, and without
+        /// CheckOtherUsers' auto-disable.
+        /// </summary>
+        internal bool AttitudeHeldByOthers()
         {
             if (!Core.Attitude.Enabled)
                 return false;
 
-            bool other = false;
-            foreach (var u in Core.Attitude.Users)
-            {
+            foreach (object u in Core.Attitude.Users)
                 if (!Equals(u))
-                {
-                    other = true;
-                    break;
-                }
-            }
+                    return true;
 
-            if (!other)
+            return false;
+        }
+
+        // with autoDisableSmartASS, SmartASS steps aside as soon as another module takes the attitude controller, so it doesn't
+        // suddenly turn on when that autopilot finishes
+        private bool CheckOtherUsers()
+        {
+            if (!AttitudeHeldByOthers())
                 return false;
 
             if (autoDisableSmartASS)
@@ -170,13 +177,13 @@ namespace MuMech
         internal bool ShowsSurfaceAngles =>
             mode == Mode.SURFACE && (target == Target.SURFACE || target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE);
 
-        /// <summary>The per-frame side effects WindowGUI has outside the "other users" case, for the KodeKit window.</summary>
-        internal void ApplyPerFrameState()
+        // Smooth control exists only for the surface angle targets, and the Force pitch/yaw/roll toggles apply to them: AttitudeTo
+        // sets all three axes, so they are applied again after it, window open or closed.
+        private void ApplySurfaceState()
         {
-            // Disable smooth control for modes that don't have it
             if (!ShowsSurfaceAngles)
                 smoothControl = false;
-            else
+            else if (Core.Attitude.Users.Contains(this))
                 Core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
         }
 
@@ -334,12 +341,30 @@ namespace MuMech
                     Core.Attitude.AttitudeTo(attitude, reference, this);
             }
 
+            ApplySurfaceState();
+
             if (resetPID) { Core.Attitude.Controller.Reset(); }
         }
 
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
+
+            // A lost target or node, or the end of another autopilot, clears every attitude user: SmartASS no longer steers, so it
+            // shows OFF instead of a target nothing holds
+            if (target != Target.OFF && !Core.Attitude.Users.Contains(this))
+                target = Target.OFF;
+
+            bool otherUsersBefore = OtherUsersControlAttitude;
+            OtherUsersControlAttitude = CheckOtherUsers();
+
+            // the other autopilot left the attitude controller to SmartASS (auto-disable off): steer to SmartASS's own target again,
+            // not to the one that autopilot left
+            if (otherUsersBefore && !OtherUsersControlAttitude && target != Target.OFF)
+                Engage(false);
+
+            if (!OtherUsersControlAttitude)
+                ApplySurfaceState();
 
             if (!smoothControl || target == Target.OFF || !Core.Attitude.Users.Contains(this))
             {

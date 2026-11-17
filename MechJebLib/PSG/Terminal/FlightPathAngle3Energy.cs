@@ -32,6 +32,7 @@ namespace MechJebLib.PSG.Terminal
         public ITerminal Rescale(Scale scale)  => new FlightPathAngle3Energy(_gammaT, _rT / scale.LengthScale, _incT);
         public double    TargetOrbitalEnergy() => double.PositiveInfinity;
         public double    IncT()                => _incT;
+        public double    GuessRadius()         => _rT;
 
         public int NumConstraints { get; }
 

@@ -47,6 +47,7 @@ namespace MuMech
 
         private readonly SimVesselManager _vesselManagerAtmo = new SimVesselManager();
         private readonly SimVesselManager _vesselManagerVac = new SimVesselManager();
+        private readonly SegmentReconciler _reconciler = new SegmentReconciler();
 
         public override void OnFixedUpdate() => GetResults();
 
@@ -61,16 +62,21 @@ namespace MuMech
         // the last failure logged: a failing simulation is retried every 100 ms (500 ms in the editor), so it is logged once
         private string _lastFailure;
 
-        private void GetResults()
+        // the editor's craft is empty: its empty stats are published once, and no run is started until it has parts
+        private bool _emptyShip;
+
+        // noShip: there is no ship to simulate (a new, empty craft in the editor), so no stats are published, the same way as
+        // after a failed run, rather than the stats of the craft before it. Both runs are ready then (TryStartSimulation)
+        private void GetResults(bool noShip = false)
         {
             var atmo = _vesselManagerAtmo.FuelFlowSimulation;
             var vac = _vesselManagerVac.FuelFlowSimulation;
 
             // the two runs start together and are published together: the stage table reads both lists with one index
-            if (!atmo.IsStopped || !vac.IsStopped)
+            if (!noShip && (!atmo.IsStopped || !vac.IsStopped))
                 return;
 
-            if (atmo.IsCompleted && vac.IsCompleted)
+            if (!noShip && atmo.IsCompleted && vac.IsCompleted)
             {
                 AtmoStats.Clear();
                 foreach (FuelStats item in atmo.Segments)
@@ -90,6 +96,10 @@ namespace MuMech
                 VacV = _vesselManagerVac.V;
                 VacU = _vesselManagerVac.U;
 
+                // the runs can split a stage differently (jets don't run in vacuum): bookkeeping segments line them up, so
+                // that one index is the same segment in both lists
+                _reconciler.Reconcile(AtmoStats, VacStats);
+
                 _lastFailure = null;
             }
             else
@@ -101,7 +111,7 @@ namespace MuMech
 
                 string failure = (atmo.IsCompleted ? "" : "atmo: " + (atmo.Exception?.ToString() ?? "no exception") + "\n") +
                                  (vac.IsCompleted ? "" : "vac: " + (vac.Exception?.ToString() ?? "no exception"));
-                if (failure != _lastFailure)
+                if (!noShip && failure != _lastFailure)
                 {
                     _lastFailure = failure;
                     Debug.Log("[MechJebModuleStageStats] stats failed (logged once until it changes or works):\n" + failure);
@@ -207,6 +217,18 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 if (EditorBody is null) return;
+
+                // a new, empty craft has nothing to simulate: it has no stages, rather than those of the craft before it.
+                // They are cleared once, through the same publication as a result, so all the stats go together
+                if (EditorLogic.fetch == null || EditorLogic.fetch.ship == null || EditorLogic.fetch.ship.parts.Count == 0)
+                {
+                    if (!_emptyShip)
+                        GetResults(true);
+                    _emptyShip = true;
+                    return;
+                }
+
+                _emptyShip = false;
             }
             else
             {
@@ -227,11 +249,10 @@ namespace MuMech
         {
             GameEvents.onVesselStandardModification.Add(onVesselStandardModification);
             GameEvents.StageManager.OnGUIStageSequenceModified.Add(OnGUIStageSequenceModified);
+            GameEvents.onPartCrossfeedStateChange.Add(OnPartFlowChanged);
+            GameEvents.onPartPriorityChanged.Add(OnPartFlowChanged);
             if (HighLogic.LoadedSceneIsEditor)
-            {
                 GameEvents.onEditorShipModified.Add(OnEditorShipModified);
-                GameEvents.onPartCrossfeedStateChange.Add(OnPartCrossfeedStateChange);
-            }
         }
 
         public override void OnDestroy()
@@ -239,13 +260,21 @@ namespace MuMech
             GameEvents.onVesselStandardModification.Remove(onVesselStandardModification);
             GameEvents.StageManager.OnGUIStageSequenceModified.Remove(OnGUIStageSequenceModified);
             GameEvents.onEditorShipModified.Remove(OnEditorShipModified);
-            GameEvents.onPartCrossfeedStateChange.Remove(OnPartCrossfeedStateChange);
+            GameEvents.onPartCrossfeedStateChange.Remove(OnPartFlowChanged);
+            GameEvents.onPartPriorityChanged.Remove(OnPartFlowChanged);
         }
 
-        private void OnPartCrossfeedStateChange(Part data)
+        // KSP turns neither a crossfeed toggle (a docking port, a decoupler) nor a tank priority change into a vessel
+        // modification, and the simulation reads both only when it is built
+        private void OnPartFlowChanged(Part data)
         {
-            _vesselModified = true;
-            _vabRebuildTimer = 2;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                _vesselModified  = true;
+                _vabRebuildTimer = 2;
+            }
+            else if (data != null && data.vessel == Vessel)
+                _vesselModified = true;
         }
 
         private void OnEditorShipModified(ShipConstruct data)

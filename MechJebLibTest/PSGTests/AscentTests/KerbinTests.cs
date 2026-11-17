@@ -21,7 +21,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact]
         private void MainSailTinCanVacuum()
         {
-            double t0 = 82132.7494998545;
+            double t0 = 0;
 
 
             Ascent ascent = Ascent.Builder()
@@ -35,7 +35,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (psg.Objective == Optimizer.ObjectiveType.MIN_THRUST_ACCEL).ShouldBeTrue();
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
@@ -63,7 +63,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact(Skip = "PSG is still unstable on this case (#2326)")]
         private void MainSailTinCanAtmo()
         {
-            double t0 = 82132.7494998545;
+            double t0 = 0;
 
 
             Ascent ascent = Ascent.Builder()
@@ -80,7 +80,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             (psg.Objective == Optimizer.ObjectiveType.MIN_THRUST_ACCEL).ShouldBeTrue();
             psg.PrimalFeasibility.ShouldBeZero(1e-5);

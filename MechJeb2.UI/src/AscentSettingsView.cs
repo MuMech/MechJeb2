@@ -6,13 +6,15 @@ using Tone = KodeKit.KodeWindow.Tone;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleAscentSettingsMenu ("Ascent Settings") in KodeKit, row for row with its WindowGUI.
-    /// The thrust limiter rows are the ones of the Utilities window; the autostage settings still use their IMGUI method through ImguiBlock.
+    /// MechJebModuleAscentSettingsMenu ("Ascent Settings") in KodeKit.
+    /// The thrust limiter rows and the autostage settings are the ones of the Utilities window, bound to the ascent's own
+    /// values (AscentSettings.ThrustLimits, StagingRules, Autowarp), which apply while an ascent autopilot is engaged.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleAscentSettingsMenu))]
     public class AscentSettingsView : KodeView
     {
         readonly MechJebModuleAscentSettingsMenu menu;
+        MechJebModuleAscentClassicAutopilot classic;
 
         public AscentSettingsView(MechJebModuleAscentSettingsMenu menu) : base(menu) => this.menu = menu;
 
@@ -20,14 +22,41 @@ namespace MuMech.UI
 
         MechJebCore Core => menu.Core;
         MechJebModuleAscentSettings Settings => Core.AscentSettings;
+        MechJebModuleAscentClassicAutopilot Classic => classic ??= Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         MechJebModuleThrustController Thrust => Core.Thrust;
+        MechJebModulePSGSimulation Psgs => Core.PSGSimulation;
+
+        const string ArefNote = "Aref is 0: PSG plans the ascent with no drag. Set the rocket's cross-section area.";
 
         bool psg;
+
+        // the ascent's own limits are the ones that apply while an ascent autopilot is engaged
+        bool OwnValuesApply() => Thrust.LimitsOverrideUser != null && ReferenceEquals(Thrust.LimitsOverrideUser, Core.Ascent);
 
         protected override void BeforeSync()
         {
             psg = Settings.AscentType == AscentType.PSG;
-            menu.ForcePsgThrustLimits();
+            if (psg) UpdateAero();
+        }
+
+        // what AutoAero filled Cd and Aref with. Rebuilt only when they change.
+        string aeroCd = "", aeroAref = "";
+        double aeroKey = double.NaN;
+
+        void UpdateAero()
+        {
+            if (!Psgs.AutoAero)
+                return;
+
+            if (HighLogic.LoadedSceneIsFlight)
+                Psgs.UpdateAutoAero();
+
+            double key = Psgs.Cd * 7919 + Psgs.Aref;
+            if (key == aeroKey) return;
+            aeroKey = key;
+
+            aeroCd = Psgs.Cd.Val.ToString("0.###");
+            aeroAref = Psgs.Aref.Val.ToString("0.###");
         }
 
         // "° (x.x°)" after the AoA field, formatted when the tenth changes
@@ -47,119 +76,87 @@ namespace MuMech.UI
             return aoaText;
         }
 
+        // About 25 options in five folding groups, each a property grid with the switches on the left
         protected override void BuildContents(KodeWindow w)
-        {
-            if (KodeWindow.ModernLayout)
-            {
-                BuildModern(w);
-                return;
-            }
-
-            LayoutPanel box = KodeWindow.Box(w.Root);
-
-            // the thrust limiter items, the Utilities window's builders (the throttle and electric limits hide in PSG ascents)
-            GeneralItemBuilders.Build(w, box, "General:ThrustController.LimitToPreventOverheatsInfoItem", Thrust);
-            GeneralItemBuilders.Build(w, box, "General:ThrustController.LimitToMaxDynamicPressureInfoItem", Thrust);
-            GeneralItemBuilders.Build(w, box, "General:ThrustController.LimitAccelerationInfoItem", Thrust);
-            Layout throttle = KodeWindow.Panel(box);
-            w.Visible(throttle.gameObject, () => !psg);
-            GeneralItemBuilders.Build(w, throttle, "General:ThrustController.LimitThrottleInfoItem", Thrust);
-            GeneralItemBuilders.Build(w, box, "General:ThrustController.LimiterMinThrottleInfoItem", Thrust);
-            Layout electric = KodeWindow.Panel(box);
-            w.Visible(electric.gameObject, () => !psg);
-            GeneralItemBuilders.Build(w, electric, "General:ThrustController.LimitElectricInfoItem", Thrust);
-
-            // force roll
-            w.Toggle(box, "#MechJeb_Ascent_checkbox2", () => Settings.ForceRoll, v => Settings.ForceRoll = v); //Force Roll
-            Layout roll = KodeWindow.Row(box);
-            KodeWindow.Space(roll, 15);
-            AscentUi.SimpleBox(w, roll, menu._climbString, Settings.VerticalRoll, "°", 30, false); //climb
-            AscentUi.SimpleBox(w, roll, menu._turnString, Settings.TurnRoll, "°", 30, false); //turn
-            AscentUi.SimpleBox(w, roll, "Alt: ", Settings.RollAltitude, "m", 30, false);
-            w.Visible(roll.gameObject, () => Settings.ForceRoll);
-
-            // AoA limit (not PSG)
-            Layout aoa = KodeWindow.Panel(box);
-            w.Visible(aoa.gameObject, () => !psg);
-            Layout limit = KodeWindow.Row(aoa);
-            w.Toggle(limit, "#MechJeb_Ascent_checkbox3", () => Settings.LimitAoA, v => Settings.LimitAoA = v,
-                () => Settings.LimitingAoA ? Tone.Good : Tone.Normal); //Limit AoA to
-            EditUi.Field(w, limit, Settings.MaxAoA, 30);
-            w.BoundLabel(limit, "° (99.9°)", CurrentMaxAoA);
-
-            Layout fadeout = KodeWindow.Row(aoa);
-            KodeWindow.Space(fadeout, 25);
-            AscentUi.SimpleBox(w, fadeout, "#MechJeb_Ascent_label24", Settings.AOALimitFadeoutPressure, "Pa", 50, false, //Dynamic Pressure Fadeout
-                () => Settings.LimitingAoA && Core.VesselState != null && Core.VesselState.DynamicPressure < Settings.AOALimitFadeoutPressure
-                    ? Tone.Good
-                    : Tone.Normal);
-            w.Visible(fadeout.gameObject, () => Settings.LimitAoA);
-
-            // corrective steering (Classic only)
-            Layout steering = KodeWindow.Row(box);
-            w.Visible(steering.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
-            w.Toggle(steering, "#MechJeb_Ascent_checkbox4", () => Settings.CorrectiveSteering, v => Settings.CorrectiveSteering = v); //Corrective steering
-            Layout gain = KodeWindow.Row(steering);
-            AscentUi.SimpleBox(w, gain, "#MechJeb_Ascent_label25", Settings.CorrectiveSteeringGain, null, 40, false); // Gain
-            w.Visible(gain.gameObject, () => Settings.CorrectiveSteering);
-
-            // autostage
-            w.Toggle(box, "#MechJeb_Ascent_checkbox5", () => Settings.Autostage, v => Settings.Autostage = v); //Autostage
-            Layout autostage = KodeWindow.Panel(box);
-            GeneralItemBuilders.Build(w, autostage, "General:StagingController.AutostageSettingsInfoItem", Core.Staging);
-            w.Visible(autostage.gameObject, () => Settings.Autostage);
-
-            w.Toggle(box, "#MechJeb_Ascent_checkbox6", () => Settings.AutoDeploySolarPanels, v => Settings.AutoDeploySolarPanels = v); //Auto-deploy solar panels
-            w.Toggle(box, "#MechJeb_Ascent_checkbox7", () => Settings.AutoDeployAntennas, v => Settings.AutoDeployAntennas = v); //Auto-deploy antennas
-
-            Layout warp = KodeWindow.Row(box);
-            NodeUi.AutowarpToggle(w, warp, Core, "#MechJeb_Ascent_checkbox8"); //Auto-warp
-            UnityEngine.UI.Toggle skip = w.Toggle(warp, "#MechJeb_Ascent_checkbox9", () => Settings.SkipCircularization,
-                v => Settings.SkipCircularization = v); //Skip Circularization
-            w.Visible(KodeWindow.RowOf(skip), () => !psg);
-
-            UnityEngine.UI.Toggle rss = w.Toggle(box, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
-            w.Visible(KodeWindow.RowOf(rss), () => psg);
-        }
-
-        // modern layout: about 25 options in five folding groups, each a property grid with the switches on the left
-        void BuildModern(KodeWindow w)
         {
             UIObject r = w.Root;
 
             UIObject g = w.Group(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
-            ModernRows.ThrustLimits(w, g, Thrust, () => psg, false);
+            OptionRows.ThrustLimits(w, g, Thrust, Settings.ThrustLimits, OwnValuesApply, () => psg, false);
 
             g = w.Group(r, "#MechJeb_NewUI_Steering"); //Steering
             KodeWindow.PropertyGrid steer = w.Properties(g);
-            ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox2", () => Settings.ForceRoll, v => Settings.ForceRoll = v); //Force Roll
-            Layout climb = ModernRows.Field(steer, menu._climbString, Settings.VerticalRoll, "°", 50); //climb
-            Layout turn = ModernRows.Field(steer, menu._turnString, Settings.TurnRoll, "°", 50); //turn
-            Layout alt = ModernRows.Field(steer, "Alt: ", Settings.RollAltitude, "m", 50);
+            OptionRows.Switch(steer, "#MechJeb_Ascent_checkbox2", () => Settings.ForceRoll, v => Settings.ForceRoll = v); //Force Roll
+            Layout climb = OptionRows.Field(steer, menu._climbString, Settings.VerticalRoll, "°", 50); //climb
+            Layout turn = OptionRows.Field(steer, menu._turnString, Settings.TurnRoll, "°", 50); //turn
+            Layout alt = OptionRows.Field(steer, "Alt: ", Settings.RollAltitude, "m", 50);
             foreach (Layout row in new[] { climb, turn, alt })
                 w.Visible(row.gameObject, () => Settings.ForceRoll);
 
             // [switch] Limit AoA to [max] ° (x.x°): the unit cell shows the current limit
-            Layout aoa = ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox3", () => Settings.LimitAoA, v => Settings.LimitAoA = v,
+            Layout aoa = OptionRows.Switch(steer, "#MechJeb_Ascent_checkbox3", () => Classic.LimitAoA, v => Classic.LimitAoA = v,
                 tone: () => Settings.LimitingAoA ? Tone.Good : Tone.Normal); //Limit AoA to
-            TMPro.TMP_InputField maxAoA = EditFields.Field(w, aoa, () => Settings.MaxAoA.Text, s => Settings.MaxAoA.Text = s, 50,
-                () => Settings.MaxAoA.IsParsed);
+            TMPro.TMP_InputField maxAoA = EditFields.Field(w, aoa, () => Classic.MaxAoA.Text, s => Classic.MaxAoA.Text = s, 50,
+                () => Classic.MaxAoA.IsParsed);
             UIText current = w.BoundLabel(aoa, "° (99.9°)", CurrentMaxAoA);
-            steer.Dim(maxAoA.gameObject, KodeWindow.CellOf(current), () => !Settings.LimitAoA);
-            Layout fadeout = ModernRows.Field(steer, "#MechJeb_Ascent_label24", Settings.AOALimitFadeoutPressure, "Pa", 60); //Dynamic Pressure Fadeout
+            steer.Dim(maxAoA.gameObject, KodeWindow.CellOf(current), () => !Classic.LimitAoA);
+            Layout fadeout = OptionRows.Field(steer, "#MechJeb_Ascent_label24", Classic.AOALimitFadeoutPressure, "Pa", 60); //Dynamic Pressure Fadeout
             w.Visible(aoa.gameObject, () => !psg);
-            w.Visible(fadeout.gameObject, () => !psg && Settings.LimitAoA);
+            w.Visible(fadeout.gameObject, () => !psg && Classic.LimitAoA);
 
-            Layout corrective = ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox4", () => Settings.CorrectiveSteering,
-                v => Settings.CorrectiveSteering = v); //Corrective steering
-            Layout gain = ModernRows.Field(steer, "#MechJeb_Ascent_label25", Settings.CorrectiveSteeringGain, "", 50); // Gain
+            Layout corrective = OptionRows.Switch(steer, "#MechJeb_Ascent_checkbox4", () => Classic.CorrectiveSteering,
+                v => Classic.CorrectiveSteering = v); //Corrective steering
+            Layout gain = OptionRows.Field(steer, "#MechJeb_Ascent_label25", Classic.CorrectiveSteeringGain, "", 50); // Gain
             w.Visible(corrective.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
-            w.Visible(gain.gameObject, () => Settings.AscentType == AscentType.CLASSIC && Settings.CorrectiveSteering);
+            w.Visible(gain.gameObject, () => Settings.AscentType == AscentType.CLASSIC && Classic.CorrectiveSteering);
+
+            // PSG: the Qα limit (PSG's angle-of-attack limit, beside Classic's) and the pitch-over before guidance takes over
+            Layout qaRow = OptionRows.Field(steer, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60); //Qα limit
+            Tooltips.Add(qaRow.gameObject, "#MechJeb_NewUI_PsgQaLimit_tooltip");
+            w.Attention(qaRow, () => PsgAttention.QaClamped(Core));
+            Layout pitchStart = OptionRows.Field(steer, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
+            Layout pitchRate = OptionRows.Field(steer, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
+            Tooltips.Add(pitchStart.gameObject, "#MechJeb_NewUI_PsgPitchStart_tooltip");
+            Tooltips.Add(pitchRate.gameObject, "#MechJeb_NewUI_PsgPitchRate_tooltip");
+            foreach (Layout row in new[] { qaRow, pitchStart, pitchRate })
+                w.Visible(row.gameObject, () => psg);
+            bool Clamped() => Psgs.LimitQa < 0 || Psgs.LimitQa > 10000;
+            Layout qa = w.StatusBar(g, () => Clamped() ? Tone.Bad : Tone.Warn);
+            UIText clamped = GuidanceUi.Wrapped(qa, "#MechJeb_NewUI_PsgQaClamped"); //Qα limit has been clamped to between 0 and 10000 Pa-rad
+            w.Visible(clamped.gameObject, Clamped);
+            UIText recommended = GuidanceUi.Wrapped(qa, "#MechJeb_Ascent_label20"); //Qα limit is recommended to be 1000 to 4000 Pa-rad
+            w.Visible(recommended.gameObject, () => !Clamped());
+            w.Visible(qa.gameObject, () => psg && (Psgs.LimitQa < 1000 || Psgs.LimitQa > 4000));
+
+            // PSG: the drag model it plans with, header and all in a panel that only PSG shows
+            Layout dragModel = KodeWindow.Panel(r);
+            w.Visible(dragModel.gameObject, () => psg);
+            g = w.Group(dragModel, "#MechJeb_NewUI_DragModel"); //Drag model
+            KodeWindow.PropertyGrid aero = w.Properties(g);
+            OptionRows.Switch(aero, "#MechJeb_NewUI_PsgAutoAero", () => Psgs.AutoAero, v => Psgs.AutoAero = v); //Cd and Aref from the vessel
+            Layout cdField = OptionRows.Field(aero, "Cd", Psgs.Cd, "", 50);
+            Layout arefField = OptionRows.Field(aero, "Aref", Psgs.Aref, "m²", 50);
+            w.Attention(arefField, () => PsgAttention.ArefUnset(Core));
+            w.Visible(cdField.gameObject, () => !Psgs.AutoAero);
+            w.Visible(arefField.gameObject, () => !Psgs.AutoAero);
+            // sized from templates: the values are still empty when the window is made under Classic or with the switch off
+            Layout cdValue = aero.Value("Cd", () => aeroCd, null, "0.000");
+            Layout arefValue = aero.Value("Aref", () => aeroAref, "m²", "000.000");
+            w.Visible(cdValue.gameObject, () => Psgs.AutoAero);
+            w.Visible(arefValue.gameObject, () => Psgs.AutoAero);
+            Tooltips.Add(cdField.gameObject, "#MechJeb_NewUI_PsgCd_tooltip");
+            Tooltips.Add(cdValue.gameObject, "#MechJeb_NewUI_PsgCd_tooltip");
+            Tooltips.Add(arefField.gameObject, "#MechJeb_NewUI_PsgAref_tooltip");
+            Tooltips.Add(arefValue.gameObject, "#MechJeb_NewUI_PsgAref_tooltip");
+            UIText arefNote = aero.Note(ArefNote);
+            KodeWindow.ToneText(arefNote, Tone.Caution);
+            KodeWindow.WrapToWidth(arefNote);
+            w.Visible(arefNote.transform.parent.gameObject, () => PsgAttention.ArefUnset(Core));
 
             g = w.Group(r, "#MechJeb_NewUI_Autostage"); //Autostage
             w.SwitchRow(g, "#MechJeb_Ascent_checkbox5", () => Settings.Autostage, v => Settings.Autostage = v); //Autostage
             Layout autostage = KodeWindow.Panel(g);
-            ModernRows.AutostageSettings(w, autostage, Core.Staging);
+            OptionRows.AutostageSettings(w, autostage, Core.Staging, Settings.StagingRules);
             w.Visible(autostage.gameObject, () => Settings.Autostage);
 
             g = w.Group(r, "#MechJeb_NewUI_Deployment"); //Deployment
@@ -167,12 +164,16 @@ namespace MuMech.UI
             w.SwitchRow(g, "#MechJeb_Ascent_checkbox7", () => Settings.AutoDeployAntennas, v => Settings.AutoDeployAntennas = v); //Auto-deploy antennas
 
             g = w.Group(r, "#MechJeb_NewUI_Other"); //Other
-            NodeUi.AutowarpToggle(w, g, Core, "#MechJeb_Ascent_checkbox8"); //Auto-warp
-            UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Settings.SkipCircularization,
-                v => Settings.SkipCircularization = v); //Skip Circularization
+            w.SwitchRow(g, "#MechJeb_Ascent_checkbox8", () => Settings.Autowarp, v => Settings.Autowarp = v); //Auto-warp
+            UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Classic.SkipCircularization,
+                v => Classic.SkipCircularization = v); //Skip Circularization
             w.Visible(skip, () => !psg);
-            UnityEngine.UI.Toggle rss = w.SwitchRow(g, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
-            w.Visible(rss, () => psg);
+            UnityEngine.UI.Toggle trajectory = w.SwitchRow(g, "#MechJeb_NewUI_PsgDrawTrajectory", () => Core.Guidance.ShouldDrawTrajectory, //Draw trajectory on map
+                v => Core.Guidance.ShouldDrawTrajectory = v);
+            w.Visible(trajectory, () => psg);
+            // the global setting (also in Settings), read by both ascent types: shown for both, its label says it is global
+            UnityEngine.UI.Toggle rss = w.SwitchRow(g, "#MechJeb_NewUI_RssModeGlobal", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v); //Module disabling does not kill throttle (global: the tooltip says so)
+            Tooltips.Add(rss.transform.parent.gameObject, "#MechJeb_NewUI_RssModeGlobal_tooltip");
         }
     }
 }

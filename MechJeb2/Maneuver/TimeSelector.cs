@@ -28,6 +28,18 @@ namespace MuMech
 
         public TimeReference TimeReference => _allowedTimeRef[_currentTimeRef];
 
+        /// <summary>The references this selector offers, in the order of TimeRefNames.</summary>
+        internal TimeReference[] AllowedTimeReferences => _allowedTimeRef;
+
+        /// <summary>Select <paramref name="timeReference"/>; false, leaving the selection alone, when this selector doesn't offer it.</summary>
+        internal bool TrySetTimeReference(TimeReference timeReference)
+        {
+            int index = Array.IndexOf(_allowedTimeRef, timeReference);
+            if (index < 0) return false;
+            _currentTimeRef = index;
+            return true;
+        }
+
         // Input parameters
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableTime LeadTime = 0;
@@ -94,24 +106,6 @@ namespace MuMech
                     _                              => _timeRefNames[i]
                 };
             }
-        }
-
-        public void DoChooseTimeGUI()
-        {
-            GUILayout.Label(Localizer.Format("#MechJeb_Maneu_STB")); //Schedule the burn
-            GUILayout.BeginHorizontal();
-            _currentTimeRef = GuiUtils.ComboBox.Box(_currentTimeRef, _timeRefNames, this);
-            switch (TimeReference)
-            {
-                case TimeReference.X_FROM_NOW:
-                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_of"), LeadTime); //"of"
-                    break;
-                case TimeReference.ALTITUDE:
-                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_of"), CircularizeAltitude, "km"); //"of"
-                    break;
-            }
-
-            GUILayout.EndHorizontal();
         }
 
         public double ComputeManeuverTime(Orbit o, double ut, MechJebModuleTargetController target)

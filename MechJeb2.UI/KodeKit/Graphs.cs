@@ -67,30 +67,58 @@ namespace KodeKit
 
     /// <summary>
     /// MechJebModuleFlightRecorderGraph's drawing, retained: background gradient, one mesh per series,
-    /// stage markers, Y scale labels, horizontal scrollbar + follow toggle. Call Refresh() when data changed (10 Hz).
+    /// stage markers, Y scale labels at round values, horizontal scrollbar + follow toggle. Call Refresh() when data changed (10 Hz).
     /// </summary>
     public class LineGraph
     {
         public readonly RectTransform Plot;
         public readonly List<LineSeriesGraphic> Series = new List<LineSeriesGraphic>();
         public readonly LineSeriesGraphic Stages;
-        readonly List<UIText> yLabels = new List<UIText>();
-        readonly CharText[] yChars;
+        readonly LabelColumn yLabels;
+        readonly Layout area;
+        readonly float builtHeight;
+        const float LabelHeight = 18;
+
+        /// <summary>The Y labels on the right of the plot, for a second graph: null until AddRightLabels.</summary>
+        public RectTransform RightLabels => rightLabels?.Column;
+        LabelColumn rightLabels;
         public readonly Scrollbar Scroll;
         public bool Follow = true;
         public double VisibleWidth = 100;   // data units across the plot
         public double DataMaxX;             // rightmost data x
         public double ViewMin;              // left edge of the view
 
+        /// <summary>
+        /// Writes a Y label: the text to fill, the value and the step between labels (0 when the range has no ticks). Null: the
+        /// value in SI with the significant figures that tell neighbours apart, 3 at least.
+        /// </summary>
+        public Action<CharText, double, double> LabelFormat;
+
+        /// <summary>
+        /// A LabelFormat at the precision of the step between labels: whole numbers for a step of 1 or more, as many decimals as
+        /// a smaller step needs, and k or M for large values (90, 80 … rather than 90.0, 80.0; 100 k, 90 k rather than 100 k, 90.0 k).
+        /// </summary>
+        public static void StepLabel(CharText t, double v, double step)
+        {
+            double unit = Math.Abs(step) >= 1e6 ? 1e6 : Math.Abs(step) >= 1e3 ? 1e3 : 1;
+            double scaled = step > 0 ? step / unit : 0.1;
+            int decimals = Math.Max(0, (int)Math.Ceiling(-Math.Log10(scaled) - 1e-9));
+            t.Append(v / unit, decimals);
+            if (unit == 1e6) t.Append(" M");
+            else if (unit == 1e3) t.Append(" k");
+        }
+
         readonly RectTransform frame;
 
         /// <param name="scrollbarParent">Where the scrollbar row goes (null: under the plot, indented past the Y labels).
         /// The Flight Recorder passes its window, so the scrollbar spans it as in IMGUI.</param>
+        /// <param name="labelCount">The most Y labels shown: how many the height has room for.</param>
         public LineGraph(KodeWindow w, UIObject parent, float width, float height, int labelCount = 5, UIObject scrollbarParent = null)
         {
-            Layout area = KodeWindow.Row(parent);
+            area = KodeWindow.Row(parent);
             // Y labels column, fixed width, absolute positions
             RectTransform labels = Graphs.Surface(area, 70, height, "YLabels");
+            builtHeight = height;
             Plot = Graphs.Surface(area, width, height, "Plot");
             Plot.gameObject.AddComponent<RectMask2D>();
             Graphs.Background(Plot, new Color(0.15f, 0.25f, 0.45f), new Color(0.02f, 0.02f, 0.08f));
@@ -108,21 +136,7 @@ namespace KodeKit
             Stages.color = new Color(0.5f, 0.5f, 0.5f);
             Stages.raycastTarget = false;
 
-            yChars = new CharText[labelCount];
-            for (int i = 0; i < labelCount; i++)
-            {
-                // the labels column is a KodeUI UIEmpty without layout group: cells are placed by anchors
-                UIText t = KodeWindow.LiveLabel(labels.GetComponent<UIObject>(), "-000.0 k", false);
-                RectTransform cell = (RectTransform)t.transform.parent;
-                cell.anchorMin = cell.anchorMax = new Vector2(1, i / (labelCount - 1f));
-                // centred on its tick, an end label would stick out over the rows around the plot
-                cell.pivot = new Vector2(1, i == 0 ? 0 : i == labelCount - 1 ? 1 : 0.5f);
-                cell.anchoredPosition = new Vector2(-4, 0);
-                cell.sizeDelta = new Vector2(66, 18);
-                t.tmpText.alignment = TextAlignmentOptions.Right;
-                yLabels.Add(t);
-                yChars[i] = new CharText(t.tmpText);
-            }
+            yLabels = new LabelColumn(labels, labelCount, height, false);
 
             Layout bottom = KodeWindow.Row(scrollbarParent ?? parent);
             if (scrollbarParent == null) KodeWindow.Space(bottom, 74);
@@ -138,6 +152,22 @@ namespace KodeKit
             var followCell = follow.transform.parent.GetComponent<LayoutElement>() ?? follow.transform.parent.gameObject.AddComponent<LayoutElement>();
             followCell.flexibleWidth = 0;
             w.AddSync(Tick);
+        }
+
+        /// <summary>A second column of Y labels on the right of the plot, for another graph's range: see RefreshRight.</summary>
+        public RectTransform AddRightLabels(int labelCount)
+        {
+            RectTransform column = Graphs.Surface(area, 70, builtHeight, "YLabelsRight");
+            rightLabels = new LabelColumn(column, labelCount, builtHeight, true);
+            return column;
+        }
+
+        /// <summary>The right labels for this Y range, in this colour (no allocation in steady state).</summary>
+        public void RefreshRight(double yMin, double yMax, Color color)
+        {
+            if (rightLabels == null) return;
+            rightLabels.Show(yMin, yMax, LabelFormat);
+            rightLabels.Tint(color);
         }
 
         public LineSeriesGraphic AddSeries(IGraphSource source, Color color)
@@ -163,11 +193,121 @@ namespace KodeKit
             Apply(Stages, 0, 1);
             pending = Series.Count + 1;
 
-            for (int i = 0; i < yChars.Length; i++)
+            yLabels.Show(yMin, yMax, LabelFormat);
+        }
+
+        static readonly int[] stepMultiples = { 1, 2, 5 };
+
+        // a column of Y labels beside the plot: right-aligned against its left edge, or left-aligned against its right edge
+        sealed class LabelColumn
+        {
+            public readonly RectTransform Column;
+            readonly CharText[] chars;
+            readonly TMP_Text[] texts;
+            readonly RectTransform[] cells;
+            readonly float builtHeight;
+            readonly bool right;
+            double labelledMin = double.NaN, labelledMax = double.NaN;
+            float labelledHeight = -1;
+
+            public LabelColumn(RectTransform column, int count, float builtHeight, bool right)
             {
-                double v = yMin + (yMax - yMin) * i / (yChars.Length - 1);
-                yChars[i].Clear().AppendSI(v, 3).Commit();
+                Column = column;
+                this.builtHeight = builtHeight;
+                this.right = right;
+                chars = new CharText[count];
+                texts = new TMP_Text[count];
+                cells = new RectTransform[count];
+                for (int i = 0; i < count; i++)
+                {
+                    // the column is a KodeUI UIEmpty without layout group: Show() places the cells, from the bottom
+                    UIText t = KodeWindow.LiveLabel(column.GetComponent<UIObject>(), "-000.0 k", false);
+                    RectTransform cell = (RectTransform)t.transform.parent;
+                    cell.anchorMin = cell.anchorMax = new Vector2(right ? 0 : 1, 0);
+                    cell.pivot = new Vector2(right ? 0 : 1, 0.5f);
+                    cell.sizeDelta = new Vector2(66, LabelHeight);
+                    t.tmpText.alignment = right ? TextAlignmentOptions.Left : TextAlignmentOptions.Right;
+                    chars[i] = new CharText(t.tmpText);
+                    texts[i] = t.tmpText;
+                    cells[i] = cell;
+                }
             }
+
+            // A label at each whole multiple of the step in the range. The cells left over are hidden. A range with no
+            // extent, or one that is not a number, has one label: its lower limit.
+            public void Show(double yMin, double yMax, Action<CharText, double, double> format)
+            {
+                float height = Column.rect.height > 0 ? Column.rect.height : builtHeight;
+                if (yMin.Equals(labelledMin) && yMax.Equals(labelledMax) && height == labelledHeight) return;
+                labelledMin = yMin;
+                labelledMax = yMax;
+                labelledHeight = height;
+
+                double range = yMax - yMin;
+                bool ticked = Ticks(yMin, yMax, chars.Length, out double step, out double first, out int count, out int sigFigs);
+                if (!ticked) count = Math.Min(1, chars.Length);
+
+                for (int i = 0; i < chars.Length; i++)
+                {
+                    GameObject cell = cells[i].gameObject;
+                    if (cell.activeSelf != i < count) cell.SetActive(i < count);
+                    if (i >= count) continue;
+
+                    double v = ticked ? (first + i) * step : yMin;
+                    // centred on its tick, an end label would stick out over the rows around the plot
+                    float y = ticked ? (float)((v - yMin) / range) * height : 0;
+                    cells[i].anchoredPosition = new Vector2(right ? 4 : -4, Mathf.Clamp(y, LabelHeight / 2, height - LabelHeight / 2));
+                    if (format != null) format(chars[i].Clear(), v, ticked ? step : 0);
+                    else chars[i].Clear().AppendSI(v, sigFigs);
+                    chars[i].Commit();
+                }
+            }
+
+            public void Tint(Color color)
+            {
+                foreach (TMP_Text t in texts)
+                    if (t.color != color) t.color = color;
+            }
+        }
+
+        /// <summary>
+        /// The round values of a range: count of them, from first × step up, one step apart. The step is the smallest
+        /// 1, 2 or 5 × 10^n that gives no more than cells values. sigFigs is how many significant figures tell two
+        /// neighbours apart, 3 at least. False, with no value, when the range has no extent or
+        /// is not a number.
+        /// </summary>
+        internal static bool Ticks(double yMin, double yMax, int cells, out double step, out double first, out int count, out int sigFigs)
+        {
+            step = first = 0;
+            count = 0;
+            sigFigs = 3;
+            double range = yMax - yMin;
+            if (cells < 1 || !(range > 0) || double.IsInfinity(range)) return false;
+
+            double ticks = 0;
+            int exponent = (int)Math.Floor(Math.Log10(range / cells));
+            for (bool found = false;; exponent++)
+            {
+                double magnitude = Math.Pow(10, exponent);
+                foreach (int multiple in stepMultiples)
+                {
+                    step = magnitude * multiple;
+                    // the tolerance keeps a limit that is a multiple of the step, short of it by a rounding error:
+                    // that error grows with how far the range is from zero, in steps
+                    double tolerance = Math.Max(1e-6, 1e-12 * Math.Max(Math.Abs(yMin), Math.Abs(yMax)) / step);
+                    first = Math.Ceiling(yMin / step - tolerance);
+                    ticks = Math.Floor(yMax / step + tolerance) - first + 1;
+                    found = ticks <= cells;
+                    if (found) break;
+                }
+                if (found) break;
+            }
+
+            count = (int)Math.Max(ticks, 0);
+            // the figures that reach from the largest value's first one down to the step's
+            double largest = Math.Max(Math.Abs(first), Math.Abs(first + count - 1)) * step;
+            if (largest > 0) sigFigs = Mathf.Clamp((int)Math.Floor(Math.Log10(largest) + 1e-9) - exponent + 1, 3, 15);
+            return true;
         }
 
         void Apply(LineSeriesGraphic s, double yMin, double yMax)
@@ -187,6 +327,82 @@ namespace KodeKit
             if (pending <= 0) return;
             pending--;
             (pending < Series.Count ? Series[pending] : Stages).SetVerticesDirty();
+        }
+    }
+
+    /// <summary>
+    /// A polyline drawn dashed, as one uGUI mesh: Dash pixels drawn, Gap pixels left, the pattern running on across the points.
+    /// Like LineSeriesGraphic it draws Source between XMin and XMax, the points scaled into its rect and Y clamped to it, and is
+    /// rebuilt only on SetVerticesDirty. For short series (no decimation): a few hundred points.
+    /// </summary>
+    public class DashedLineGraphic : MaskableGraphic
+    {
+        public IGraphSource Source;
+        public double XMin, XMax, YMin, YMax;
+        public float Thickness = 1.5f;
+        public float Dash = 6, Gap = 4;
+
+        protected override void OnPopulateMesh(VertexHelper vh)
+        {
+            vh.Clear();
+            if (Source == null || XMax <= XMin || YMax <= YMin || Dash <= 0) return;
+            Rect r = rectTransform.rect;
+            double sx = r.width / (XMax - XMin), sy = r.height / (YMax - YMin);
+
+            bool havePrev = false, on = true;
+            float phase = 0; // how far into the current dash or gap
+            Vector2 prev = default;
+            for (int i = 0; i < Source.Count; i++)
+            {
+                double xd = Source.X(i);
+                if (xd < XMin) continue;
+                var p = new Vector2(r.xMin + (float)((xd - XMin) * sx),
+                    Mathf.Clamp(r.yMin + (float)((Source.Y(i) - YMin) * sy), r.yMin, r.yMax));
+                if (!havePrev)
+                {
+                    prev = p;
+                    havePrev = true;
+                    continue;
+                }
+
+                Vector2 d = p - prev;
+                float len = d.magnitude;
+                if (len > 0)
+                {
+                    Vector2 dir = d / len;
+                    for (float t = 0; t < len;)
+                    {
+                        float step = Mathf.Min((on ? Dash : Gap) - phase, len - t);
+                        if (on) Quad(vh, prev + dir * t, prev + dir * (t + step));
+                        t += step;
+                        phase += step;
+                        if (phase >= (on ? Dash : Gap))
+                        {
+                            on = !on;
+                            phase = 0;
+                        }
+                    }
+                }
+
+                prev = p;
+                if (p.x > r.xMax) break; // the segment towards the first point outside, for a parent RectMask2D to clip
+            }
+        }
+
+        void Quad(VertexHelper vh, Vector2 a, Vector2 b)
+        {
+            if (vh.currentVertCount > 64000) return; // 16-bit index limit of UI meshes
+            Vector2 d = b - a;
+            float len = d.magnitude;
+            if (len < 1e-4f) return;
+            Vector2 n = new Vector2(-d.y, d.x) / len * (Thickness * 0.5f);
+            int i = vh.currentVertCount;
+            vh.AddVert(a - n, color, Vector2.zero);
+            vh.AddVert(a + n, color, Vector2.zero);
+            vh.AddVert(b + n, color, Vector2.zero);
+            vh.AddVert(b - n, color, Vector2.zero);
+            vh.AddTriangle(i, i + 1, i + 2);
+            vh.AddTriangle(i, i + 2, i + 3);
         }
     }
 
@@ -319,7 +535,7 @@ namespace KodeKit
                 {
                     Color col = get();
                     col[ch] = n.x;
-                    Color.RGBToHSV(col, out h, out s, out v);
+                    // Sync takes the new saturation and value, and the hue unless the colour is grey or black
                     Push(col);
                 };
                 rgbaMarkers[c] = Marker(bar);

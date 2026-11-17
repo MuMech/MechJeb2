@@ -2,6 +2,7 @@ extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
@@ -63,6 +64,9 @@ namespace MuMech.AttitudeControllers
 
         public MJAttitudeController(MechJebModuleAttitudeController controller) : base(controller)
         {
+            // also made here, not only in OnStart, so the settings can be changed (from kOS) while this is not the active controller
+            _pid = new PIDControllerV3(Vector3d.zero, Vector3d.zero, Vector3d.zero, 1, -1);
+            CopyToUi();
         }
 
         public override void OnStart()
@@ -91,6 +95,7 @@ namespace MuMech.AttitudeControllers
         {
             base.OnLoad(local, type, global);
             _tfV = TfVec;
+            CopyToUi();
         }
 
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -130,7 +135,7 @@ namespace MuMech.AttitudeControllers
 
         private void SetPIDParameters()
         {
-            Vector3d invTf = (TfAutoTune ? _tfV : _defaultTfV).InvertNoNaN();
+            Vector3d invTf = _tfV.InvertNoNaN();
 
             _pid.Kd = KdFactor * invTf;
 
@@ -229,6 +234,17 @@ namespace MuMech.AttitudeControllers
             //omega.z = vessel.angularVelocity.y; // z <=> y
             omega.Scale(normFactor);
 
+            // on an axis with a rate requested by SetOmegaTarget (the spin-up) the damping term drives the angular velocity to that rate
+            // instead of to zero, and the attitude error is left out
+            for (int i = 0; i < 3; i++)
+            {
+                if (!IsFinite(Ac.OmegaTarget[i]))
+                    continue;
+
+                err[i] = 0;
+                omega[i] -= Ac.OmegaTarget[i] * normFactor[i];
+            }
+
             if (TfAutoTune)
                 TuneTf(Ac.Torque);
             SetPIDParameters();
@@ -290,6 +306,63 @@ namespace MuMech.AttitudeControllers
         internal void SetLowPassFilter(bool newLowPassFilter)
         {
             LowPassFilter = newLowPassFilter;
+        }
+
+        // ---- kOS ----
+        // Each sets the live value and the window's copy of it, with the window's clamps: ApplyUiValues would otherwise put the old copy
+        // back while the window is open.
+
+        internal void SetTfAutoTune(bool autoTune)
+        {
+            TfAutoTune = autoTune;
+            ApplyUiValues(); // turning auto-tuning off brings back the manual Tf, as in the window
+        }
+
+        // the manual Tf, used while auto-tuning is off
+        internal void SetManualTf(Vector3d tf)
+        {
+            _uiTfX = tf.x;
+            _uiTfY = tf.y;
+            _uiTfZ = tf.z;
+            ClampTf();
+            if (TfAutoTune) return;
+
+            _tfV = new Vector3d(_uiTfX, _uiTfY, _uiTfZ);
+            SetPIDParameters();
+        }
+
+        internal void SetTfMin(double tfMin)
+        {
+            _uiTfMin = tfMin;
+            ClampTfRange();
+            TfMin = _uiTfMin;
+            SetPIDParameters();
+        }
+
+        internal void SetTfMax(double tfMax)
+        {
+            _uiTfMax = tfMax;
+            ClampTfRange();
+            TfMax = _uiTfMax;
+            SetPIDParameters();
+        }
+
+        internal void SetFactors(double kpFactor, double kiFactor, double kdFactor)
+        {
+            _uiKpFactor = kpFactor;
+            _uiKiFactor = kiFactor;
+            _uiKdFactor = kdFactor;
+            ClampFactors();
+            KpFactor = _uiKpFactor;
+            KiFactor = _uiKiFactor;
+            KdFactor = _uiKdFactor;
+            SetPIDParameters();
+        }
+
+        internal void SetDeadband(double deadband)
+        {
+            _uiDeadband = deadband;
+            ClampDeadband();
         }
 
         // This is tightly coupled to the MJAttitudeController, and should not be used by other consumers.

@@ -12,38 +12,23 @@ using static MuMech.MechJebModuleThrustController;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleLandingGuidance ("Landing Guidance") in KodeKit, row for row with its WindowGUI, including the
+    /// MechJebModuleLandingGuidance ("Landing Guidance") in KodeKit, including the
     /// landing prediction block of DrawGUITogglePredictions (LandingPredictionsBlock, shared with the custom windows).
-    /// The pieces of WindowGUI that pushed settings into the predictor every frame run in BeforeSync.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleLandingGuidance))]
     public class LandingGuidanceView : KodeView
     {
         readonly MechJebModuleLandingGuidance guidance;
-        MechJebModuleLandingPredictions predictor;
 
         public LandingGuidanceView(MechJebModuleLandingGuidance guidance) : base(guidance) => this.guidance = guidance;
 
         protected override float MinWidth => 200;
 
         MechJebCore Core => guidance.Core;
-        MechJebModuleLandingPredictions Predictor => predictor ??= Core.GetComputerModule<MechJebModuleLandingPredictions>();
         CelestialBody Body => Core.vessel != null ? Core.vessel.mainBody : null;
         bool LandedOrSplashed => Core.vessel != null && Core.vessel.LandedOrSplashed;
-        bool HasPositionTarget => Core.Target != null && Core.Target.PositionTargetExists;
-        // WindowGUI pushed these into the predictor each frame while the window was drawn
-        protected override void BeforeSync()
-        {
-            MechJebModuleLandingPredictions p = Predictor;
-            MechJebModuleLandingAutopilot landing = Core.Landing;
-            if (landing == null || p == null) return;
-
-            p.maxOrbits = landing.Enabled ? 0.5 : 4;
-            p.noSkipToFreefall = !landing.Enabled;
-            p.deployChutes = landing.DeployChutes;
-            p.limitChutesStage = landing.LimitChutesStage;
-        }
-
+        // a point on this body to land at: a vessel in flight or a target on another body has none
+        bool HasPositionTarget => Core.Target != null && Core.Target.SurfaceTargetExists(Body);
         // names of the landing sites of the current body, cached until the body or the list changes, and where they are in
         // the list: the KSC sites move once the game knows its buildings, so the position is read when a site is set
         string[] siteNames = new string[0];
@@ -89,100 +74,28 @@ namespace MuMech.UI
             return biome;
         }
 
-        protected override void BuildContents(KodeWindow w)
+        // the terrain height runs the body's PQS: asked again only when the target or the body changes
+        CelestialBody aslBody;
+        double aslLat = double.NaN, aslLon = double.NaN, asl;
+
+        double TargetAsl()
         {
-            if (KodeWindow.ModernLayout)
-            {
-                BuildModern(w);
-                return;
-            }
-
-            UIObject r = w.Root;
-
-            // ---- target ----
-            Layout target = KodeWindow.Panel(r);
-            w.Visible(target.gameObject, () => HasPositionTarget);
-            KodeWindow.Label(target, "#MechJeb_LandingGuidance_label1"); //Target coordinates:
-            AngleRow(w, target, () => Core.Target.targetLatitude, EditableAngle.Direction.NS, Sprites.Direction.Up, 10, Sprites.Direction.Down, -10, true); // ▲ ▼ as sprites: KSP's fonts lack them
-            AngleRow(w, target, () => Core.Target.targetLongitude, EditableAngle.Direction.EW, Sprites.Direction.Left, -10, Sprites.Direction.Right, 10, false);
-
-            TargetReadouts(w, target);
-            TargetButtons(w, r, false);
-
-            // ---- landing sites ----
-            SiteRow(w, r);
-
-            // ---- predictions ----
-            new LandingPredictionsBlock(w, r, guidance);
-
-            // ---- autopilot ----
-            Layout autopilot = KodeWindow.Panel(r);
-            w.Visible(autopilot.gameObject, () => Core.Landing != null);
-            Autopilot(w, autopilot);
-        }
-
-        double TargetAsl() => Body.TerrainAltitude(Core.Target.targetLatitude, Core.Target.targetLongitude);
-
-        /// <summary>EditableAngle.DrawEditGUI (d ° m ' s " N/S) followed by the 10 m step buttons, on one row.</summary>
-        void AngleRow(KodeWindow w, UIObject parent, Func<EditableAngle> angle, EditableAngle.Direction direction, Sprites.Direction first, double firstDelta, Sprites.Direction second, double secondDelta,
-            bool latitude)
-        {
-            Layout row = KodeWindow.Row(parent);
-            OpUi.AngleRow(w, row, angle, direction, false);
-            KodeWindow.IconButton(row, Sprites.Arrow(first), () => Move(latitude, firstDelta));
-            KodeWindow.Label(row, "10m");
-            KodeWindow.IconButton(row, Sprites.Arrow(second), () => Move(latitude, secondDelta));
+            CelestialBody body = Body;
+            double lat = Core.Target.targetLatitude, lon = Core.Target.targetLongitude;
+            if (body == aslBody && lat.Equals(aslLat) && lon.Equals(aslLon)) return asl;
+            aslBody = body;
+            aslLat = lat;
+            aslLon = lon;
+            asl = body.TerrainAltitude(lat, lon);
+            return asl;
         }
 
         void Move(bool latitude, double meters)
         {
             double alt = TargetAsl();
-            if (latitude) guidance.MoveByMeter(ref Core.Target.targetLatitude, meters, alt);
-            else guidance.MoveByMeter(ref Core.Target.targetLongitude, meters, alt);
+            if (latitude) guidance.MoveByMeter(ref Core.Target.targetLatitude, meters, alt, false);
+            else guidance.MoveByMeter(ref Core.Target.targetLongitude, meters, alt, true);
         }
-
-        // ---- the autopilot block ----
-        void Autopilot(KodeWindow w, UIObject p)
-        {
-            KodeWindow.Label(p, "#MechJeb_LandingGuidance_label2"); //Autopilot:
-
-            LandButtons(w, p, false);
-
-            Layout touchdown = KodeWindow.Row(p);
-            KodeWindow.Label(touchdown, "#MechJeb_LandingGuidance_label3"); //Touchdown speed:
-            EditUi.Field(w, touchdown, () => Core.Landing?.TouchdownSpeed, 35);
-            KodeWindow.Label(touchdown, "m/s");
-
-            NodeUi.AutowarpToggle(w, p, Core, "#MechJeb_LandingGuidance_checkbox1"); //Auto-warp
-
-            w.Toggle(p, "#MechJeb_LandingGuidance_checkbox2", () => Core.Landing != null && Core.Landing.DeployGears, v => //Deploy Landing Gear
-            {
-                if (Core.Landing != null) Core.Landing.DeployGears = v;
-            });
-            StageRow(w, p, "#MechJeb_LandingGuidance_label4", () => Core.Landing?.LimitGearsStage); //Stage Limit:
-            w.Toggle(p, "#MechJeb_LandingGuidance_checkbox3", () => Core.Landing != null && Core.Landing.DeployChutes, v => //Deploy Parachutes
-            {
-                if (Core.Landing != null) Core.Landing.DeployChutes = v;
-            });
-            StageRow(w, p, "#MechJeb_LandingGuidance_label5", () => Core.Landing?.LimitChutesStage); //Stage Limit:
-            w.Toggle(p, "#MechJeb_LandingGuidance_jettison", () => Core.Landing != null && Core.Landing.JettisonBeforeEntry, v => //Jettison stage before entry
-            {
-                if (Core.Landing != null) Core.Landing.JettisonBeforeEntry = v;
-            });
-            w.Toggle(p, "#MechJeb_LandingGuidance_checkbox4", () => Core.Landing != null && Core.Landing.RCSAdjustment, v => //Use RCS for small adjustment
-            {
-                if (Core.Landing != null) Core.Landing.RCSAdjustment = v;
-            });
-
-            LowerThrottleLimit(w, p);
-
-            // while landing
-            Layout running = KodeWindow.Panel(p);
-            w.Visible(running.gameObject, () => Core.Landing != null && Core.Landing.Enabled);
-            RunningLabels(w, running);
-        }
-
-        // ---- the parts both layouts share ----
 
         /// <summary>ASL and biome of the target, filled every frame without allocating; returns both labels.</summary>
         UIText[] TargetReadouts(KodeWindow w, UIObject target)
@@ -195,12 +108,18 @@ namespace MuMech.UI
             };
         }
 
-        void TargetButtons(KodeWindow w, UIObject r, bool flexible)
+        /// <summary>Pick on map, then Enter coordinates (no target yet) or Clear target, on one row.</summary>
+        void TargetButtons(KodeWindow w, UIObject parent, bool flexible)
         {
-            UIButton enter = KodeWindow.Button(r, "#MechJeb_LandingGuidance_button1", () => //Enter target coordinates
+            Layout r = KodeWindow.Row(parent);
+            KodeWindow.Button(r, "#MechJeb_NewUI_PickOnMap", () => Core.Target.PickPositionTargetOnMap(), flexible); //Pick on map
+            UIButton enter = KodeWindow.Button(r, "#MechJeb_NewUI_EnterCoordinates", () => //Enter coordinates
                 Core.Target.SetPositionTarget(Body, Core.Target.targetLatitude, Core.Target.targetLongitude), flexible);
             w.Visible(enter.gameObject, () => !HasPositionTarget);
-            KodeWindow.Button(r, "#MechJeb_LandingGuidance_button2", () => Core.Target.PickPositionTargetOnMap(), flexible); //Pick target on map
+            // Clear target, except while the landing autopilot flies to it
+            UIButton clear = KodeWindow.Button(r, "#MechJeb_LandingGuidance_buttonClear", () => Core.Target.Unset(), flexible); //Clear target
+            w.Visible(clear.gameObject, () => HasPositionTarget);
+            GuidanceUi.Enable(w, clear, () => Core.Landing == null || !Core.Landing.Enabled);
         }
 
         /// <summary>The landing sites list and its "Set" button (shown when there are sites).</summary>
@@ -208,7 +127,7 @@ namespace MuMech.UI
         {
             Layout siteRow = KodeWindow.Row(r);
             new ComboBox(w, siteRow, () => guidance._landingSiteIdx, i => guidance._landingSiteIdx = i, SiteNames);
-            KodeWindow.Button(siteRow, "Set", () =>
+            UIButton set = KodeWindow.Button(siteRow, "#MechJeb_NewUI_SetSite", () => //Set
             {
                 SiteNames();
                 if (siteIndexes.Count == 0) return;
@@ -217,6 +136,7 @@ namespace MuMech.UI
                     MechJebModuleLandingGuidance.LandingSites[siteIndexes[Mathf.Clamp(guidance._landingSiteIdx, 0, siteIndexes.Count - 1)]];
                 Core.Target.SetPositionTarget(Body, site.Latitude, site.Longitude);
             });
+            Tooltips.Add(set.gameObject, "#MechJeb_NewUI_SetSite_tooltip"); //Make the chosen landing site the target.
             w.Visible(siteRow.gameObject, () => SiteNames().Length > 0);
         }
 
@@ -228,11 +148,21 @@ namespace MuMech.UI
             Layout land = KodeWindow.Row(p);
             w.Visible(land.gameObject, () => Core.Landing != null && !Core.Landing.Enabled);
             UIButton atTarget = KodeWindow.Button(land, "#MechJeb_LandingGuidance_button4", () => Core.Landing.LandAtPositionTarget(guidance),
-                ButtonRole.Primary, true); //Land at target
-            GuidanceUi.Enable(w, atTarget, () => HasPositionTarget && !LandedOrSplashed);
+                true); //Land at target
+            // the main action's colour only while it can be pressed: a disabled button is grey whatever its role
+            w.BindRole(atTarget, () => CanLandAtTarget ? ButtonRole.Primary : ButtonRole.Normal);
+            GuidanceUi.Enable(w, atTarget, () => CanLandAtTarget);
             UIButton somewhere = KodeWindow.Button(land, "#MechJeb_LandingGuidance_button5", () => Core.Landing.LandUntargeted(guidance), true); //Land somewhere
             GuidanceUi.Enable(w, somewhere, () => !LandedOrSplashed);
+
+            // why a land button is off
+            string landed = Localizer.Format("#MechJeb_NewUI_LandedNothingToLand"), noTarget = Localizer.Format("#MechJeb_NewUI_LandNeedsTarget");
+            UIText reason = KodeWindow.WrapToWidth(w.BoundLabel(p, () => LandedOrSplashed ? landed : noTarget, true));
+            KodeWindow.ToneText(reason, KodeWindow.Tone.Dim);
+            w.Visible(reason.gameObject, () => Core.Landing != null && !Core.Landing.Enabled && (LandedOrSplashed || !HasPositionTarget));
         }
+
+        bool CanLandAtTarget => HasPositionTarget && !LandedOrSplashed;
 
         /// <summary>Status, step and descent mode while landing; each text is made when what it shows changes.</summary>
         void RunningLabels(KodeWindow w, UIObject running)
@@ -249,21 +179,21 @@ namespace MuMech.UI
                 k => mode + (k.Item1 != null ? k.Item1.Name : "N/A") + " (" + k.Item2 + ")"), true); //Mode
         }
 
-        static void StageRow(KodeWindow w, UIObject parent, string key, Func<EditableInt> ed) => EditUi.Row(w, parent, key, ed, null, 35);
-
-        // ---- modern layout: D-M-S fields with the hemisphere as a choice, one nudge pad, the options in a property grid ----
-
-        void BuildModern(KodeWindow w)
+        // D-M-S fields with the hemisphere as a choice, one nudge pad, the options in a property grid
+        protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
 
+            KodeWindow.Header(r, "#MechJeb_NewUI_LandingTarget"); //Target
+            SiteRow(w, r);
+            TargetButtons(w, r, true);
+
             Layout target = KodeWindow.Panel(r);
             w.Visible(target.gameObject, () => HasPositionTarget);
-            KodeWindow.Header(target, "#MechJeb_LandingGuidance_label1"); //Target coordinates:
             Layout coords = KodeWindow.Row(target);
             Layout fields = KodeWindow.Panel(coords);
-            ModernAngle(w, fields, "Lat", () => Core.Target.targetLatitude, EditableAngle.Direction.NS);
-            ModernAngle(w, fields, "Lon", () => Core.Target.targetLongitude, EditableAngle.Direction.EW);
+            AngleFields(w, fields, "Lat", () => Core.Target.targetLatitude, EditableAngle.Direction.NS);
+            AngleFields(w, fields, "Lon", () => Core.Target.targetLongitude, EditableAngle.Direction.EW);
 
             // the four 10 m nudges as one pad, the step in its centre
             KodeWindow.CompassGrid pad = KodeWindow.Compass(coords, 20);
@@ -276,25 +206,24 @@ namespace MuMech.UI
             KodeWindow.IconButton(pad[Dir.S], Sprites.Arrow(Sprites.Direction.Down), () => Move(true, -10));
 
             foreach (UIText t in TargetReadouts(w, target)) KodeWindow.ToneText(t, KodeWindow.Tone.Dim);
-            TargetButtons(w, r, true);
-            SiteRow(w, r);
 
+            KodeWindow.Header(r, "#MechJeb_NewUI_Prediction"); //Prediction
             new LandingPredictionsBlock(w, r, guidance);
 
             Layout autopilot = KodeWindow.Panel(r);
             w.Visible(autopilot.gameObject, () => Core.Landing != null);
-            ModernAutopilot(w, autopilot);
+            Autopilot(w, autopilot);
         }
 
         /// <summary>Lat [d] ° [m] ' [s] " [N|S]: the hemisphere is a two-way choice, not a button that flips.</summary>
-        static void ModernAngle(KodeWindow w, UIObject parent, string label, Func<EditableAngle> angle, EditableAngle.Direction direction)
+        static void AngleFields(KodeWindow w, UIObject parent, string label, Func<EditableAngle> angle, EditableAngle.Direction direction)
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, label);
             OpUi.AngleRow(w, row, angle, direction, false);
         }
 
-        void ModernAutopilot(KodeWindow w, UIObject p)
+        void Autopilot(KodeWindow w, UIObject p)
         {
             KodeWindow.Header(p, "#MechJeb_LandingGuidance_label2"); //Autopilot:
 
@@ -302,18 +231,21 @@ namespace MuMech.UI
 
             KodeWindow.PropertyGrid g = w.Properties(p);
             EditUi.Grid(g, "#MechJeb_LandingGuidance_label3", () => Core.Landing?.TouchdownSpeed, "m/s", 50); //Touchdown speed:
-            g.Switch("#MechJeb_LandingGuidance_checkbox1", () => NodeUi.Autowarp(Core), v => NodeUi.Autowarp(Core, v)); //Auto-warp
+            g.Switch("#MechJeb_LandingGuidance_checkbox1", () => Core.Landing != null && Core.Landing.Autowarp, v => //Auto-warp
+            {
+                if (Core.Landing != null) Core.Landing.Autowarp = v;
+            });
             g.Switch("#MechJeb_LandingGuidance_checkbox2", () => Core.Landing != null && Core.Landing.DeployGears, v => //Deploy Landing Gear
             {
                 if (Core.Landing != null) Core.Landing.DeployGears = v;
             });
-            Layout gears = ModernStage(g, "#MechJeb_LandingGuidance_label4", () => Core.Landing?.LimitGearsStage); //Stage Limit:
+            Layout gears = StageField(g, "#MechJeb_NewUI_GearStageLimit", () => Core.Landing?.LimitGearsStage); //Lowest gear stage: gear of lower stages stays stowed
             g.Dim(gears.gameObject, null, () => Core.Landing == null || !Core.Landing.DeployGears);
             g.Switch("#MechJeb_LandingGuidance_checkbox3", () => Core.Landing != null && Core.Landing.DeployChutes, v => //Deploy Parachutes
             {
                 if (Core.Landing != null) Core.Landing.DeployChutes = v;
             });
-            Layout chutes = ModernStage(g, "#MechJeb_LandingGuidance_label5", () => Core.Landing?.LimitChutesStage); //Stage Limit:
+            Layout chutes = StageField(g, "#MechJeb_NewUI_ChuteStageLimit", () => Core.Landing?.LimitChutesStage); //Lowest parachute stage: chutes of lower stages stay packed
             g.Dim(chutes.gameObject, null, () => Core.Landing == null || !Core.Landing.DeployChutes);
             g.Switch("#MechJeb_LandingGuidance_jettison", () => Core.Landing != null && Core.Landing.JettisonBeforeEntry, v => //Jettison stage before entry
             {
@@ -324,7 +256,9 @@ namespace MuMech.UI
                 if (Core.Landing != null) Core.Landing.RCSAdjustment = v;
             });
             MechJebModuleThrustController t = Core.Thrust;
-            ModernRows.MinThrottle(g, t, 50); //"Keep limited throttle over"
+            // the landing's own minimum throttle, live while the landing is engaged
+            if (Core.Landing != null)
+                OptionRows.MinThrottle(g, t, Core.Landing.ThrustLimits, () => ReferenceEquals(t.LimitsOverrideUser, Core.Landing), 50); //"Keep limited throttle over"
 
             // while landing: the autopilot's state in a status bar
             Layout running = w.StatusBar(p, () => KodeWindow.Tone.Normal);
@@ -332,12 +266,7 @@ namespace MuMech.UI
             RunningLabels(w, running);
         }
 
-        static Layout ModernStage(KodeWindow.PropertyGrid g, string key, Func<EditableInt> ed) => EditUi.Grid(g, key, ed, null, 50);
+        static Layout StageField(KodeWindow.PropertyGrid g, string key, Func<EditableInt> ed) => EditUi.Grid(g, key, ed, null, 50);
 
-        // MechJebModuleThrustController.LimiterMinThrottleInfoItem: [x] "Keep limited throttle over" [min] %
-        void LowerThrottleLimit(KodeWindow w, UIObject parent)
-        {
-            GeneralItemBuilders.Build(w, parent, "General:ThrustController.LimiterMinThrottleInfoItem", Core.Thrust);
-        }
     }
 }

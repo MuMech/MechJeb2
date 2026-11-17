@@ -6,7 +6,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using KSP.UI;
-using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.FuelFlowSimulation.PartModules;
 using UnityEngine;
@@ -28,6 +27,11 @@ namespace MechJebLibBindings.FuelFlowSimulation
             private static readonly FieldContext _rfSpoolUpTime = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("effectiveSpoolUpTime");
             private static readonly FieldContext _rfAutoCutoff = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("autoCutoff");
             private static readonly FieldContext _rfUllage = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("ullage");
+            private static readonly FieldContext _rfPressureFed = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("pressureFed");
+            private static readonly FieldContext _rfThrottlePressureFedStartupMult = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("throttlePressureFedStartupMult");
+            private static readonly FieldContext _rfThrottleDownMult = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("throttleDownMult");
+            private static readonly FieldContext _rfThrottleClamp = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("throttleClamp");
+            private static readonly FieldContext _rfThrottleCurve = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("throttleCurve");
             private static readonly FieldContext _rp0ControllableMass = Assembly("RP-0").Class("RP0.ProceduralAvionics.ModuleProceduralAvionics").Field("controllableMass");
             private static readonly FieldContext _rp0MassLimit = Assembly("RP-0").Class("RP0.ModuleAvionics").Field("massLimit");
 
@@ -57,7 +61,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 _crewMassDelegate = Versioning.version_major == 1 && Versioning.version_minor < 11 ? (CrewMass)CrewMassOld : CrewMassNew;
 
                 _isRealFuelsLoadedCorrectly = IsLoadedRealFuels && _rfModuleEnginesRf.IsValid && _rfSpoolUpTime.IsValid &&
-                    _rfAutoCutoff.IsValid && _rfUllage.IsValid;
+                    _rfAutoCutoff.IsValid && _rfUllage.IsValid && _rfPressureFed.IsValid && _rfThrottlePressureFedStartupMult.IsValid &&
+                    _rfThrottleDownMult.IsValid && _rfThrottleClamp.IsValid && _rfThrottleCurve.IsValid;
                 _isRP0LoadedCorrectly = IsLoadedRP0 && _rp0ControllableMass.IsValid && _rp0MassLimit.IsValid;
             }
 
@@ -75,11 +80,15 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 foreach (Part kspPart in _kspVessel.Parts)
                 {
                     SimPart p = _partMapping[kspPart];
-                    if (!(kspPart.parent is null))
-                        p.Links.Add(_partMapping[kspPart.parent]);
+
+                    // a part that isn't one of the ship's parts (in the editor, one being dragged) is left out, rather than
+                    // throwing a KeyNotFoundException out of Build()
+                    if (!(kspPart.parent is null) && _partMapping.TryGetValue(kspPart.parent, out SimPart parent))
+                        p.Links.Add(parent);
 
                     foreach (Part child in kspPart.children)
-                        p.Links.Add(_partMapping[child]);
+                        if (_partMapping.TryGetValue(child, out SimPart simChild))
+                            p.Links.Add(simChild);
                 }
             }
 
@@ -91,7 +100,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                     foreach (Part pSet in kspPart.crossfeedPartSet.GetParts())
                     {
-                        p.CrossFeedPartSet.Add(_partMapping[pSet]);
+                        if (_partMapping.TryGetValue(pSet, out SimPart simSet))
+                            p.CrossFeedPartSet.Add(simSet);
                     }
                 }
             }
@@ -104,7 +114,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                     foreach (Part pSym in kspPart.symmetryCounterparts)
                     {
-                        p.SymmetryCounterParts.Add(_partMapping[pSym]);
+                        if (_partMapping.TryGetValue(pSym, out SimPart simSym))
+                            p.SymmetryCounterParts.Add(simSym);
                     }
                 }
             }
@@ -118,7 +129,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             internal void BuildParts()
             {
-                _vessel.SetCurrentStage(StageManager.CurrentStage);
+                _vessel.SetCurrentStage(_manager.KspCurrentStage);
 
                 foreach (Part kspPart in _kspVessel.Parts)
                 {
@@ -155,6 +166,52 @@ namespace MechJebLibBindings.FuelFlowSimulation
             }
 
             private void BuildModules(SimPart part, Part kspPart)
+            {
+                // the engines read their thrust directions from the nozzles, which the gimbals of the part move while steering:
+                // read them at rest, as VesselState does, so the thrust does not change with the control input
+                ResetGimbals(kspPart);
+                try
+                {
+                    BuildModulesAtRest(part, kspPart);
+                }
+                finally
+                {
+                    RestoreGimbals();
+                }
+            }
+
+            private readonly List<KeyValuePair<Transform, Quaternion>> _gimbalRotations = new List<KeyValuePair<Transform, Quaternion>>();
+
+            private void ResetGimbals(Part kspPart)
+            {
+                _gimbalRotations.Clear();
+
+                for (int i = 0; i < kspPart.Modules.Count; i++)
+                {
+                    // a locked gimbal is held at rest by KSP, and one that has not started yet has no rest rotations
+                    if (!(kspPart.Modules[i] is ModuleGimbal gimbal) || gimbal.gimbalLock || gimbal.gimbalTransforms == null ||
+                        gimbal.initRots == null)
+                        continue;
+
+                    int count = Mathf.Min(gimbal.gimbalTransforms.Count, gimbal.initRots.Count);
+                    for (int j = 0; j < count; j++)
+                    {
+                        Transform gimbalTransform = gimbal.gimbalTransforms[j];
+                        _gimbalRotations.Add(new KeyValuePair<Transform, Quaternion>(gimbalTransform, gimbalTransform.localRotation));
+                        gimbalTransform.localRotation = gimbal.initRots[j];
+                    }
+                }
+            }
+
+            private void RestoreGimbals()
+            {
+                // in reverse, in case two gimbals share a transform
+                for (int i = _gimbalRotations.Count - 1; i >= 0; i--)
+                    _gimbalRotations[i].Key.localRotation = _gimbalRotations[i].Value;
+                _gimbalRotations.Clear();
+            }
+
+            private void BuildModulesAtRest(SimPart part, Part kspPart)
             {
                 for (int i = 0; i < kspPart.Modules.Count; i++)
                 {
@@ -252,6 +309,13 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.ATMCurve.LoadFromFloatCurve(kspEngine.atmCurve);
                 engine.ATMCurveIsp.LoadFromFloatCurve(kspEngine.atmCurveIsp);
                 engine.AtmosphereCurve.LoadFromFloatCurve(kspEngine.atmosphereCurve);
+                engine.ThrottleResponseRate = kspEngine.throttleResponseRate;
+                engine.ThrottleIgniteLevelMult = kspEngine.throttleIgniteLevelMult;
+                engine.ThrottleStartupMult = kspEngine.throttleStartupMult;
+                engine.ThrottleStartedMult = kspEngine.throttleStartedMult;
+                engine.ThrottleShutdownMult = kspEngine.throttleShutdownMult;
+                engine.ThrottleInstant = kspEngine.throttleInstant;
+                engine.ThrottleUseAlternate = kspEngine.throttleUseAlternate;
 
                 engine.ThrustTransformMultipliers.Clear();
                 foreach (double multiplier in kspEngine.thrustTransformMultipliers)
@@ -265,13 +329,22 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.Propellants.Clear();
                 foreach (Propellant p in kspEngine.propellants)
                     engine.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
-                        PartResourceLibrary.Instance.GetDefinition(p.id).density));
+                        PropellantDensity(p.id)));
 
                 part.IsThrottleLocked = kspEngine.throttleLocked;
                 part.IsEngine = true;
 
                 engine.ModuleSpoolupTime = 0;
                 engine.IsModuleEnginesRf = false;
+
+                // RealFuels' declared defaults, which also match the stock throttle response (its clamp is hardcoded at 0.005
+                // and its throttleShutdownMult defaults to 100).  the placeholder curve keeps Evaluate from throwing.
+                engine.PressureFed = false;
+                engine.ThrottlePressureFedStartupMult = 5f;
+                engine.ThrottleDownMult = 100f;
+                engine.ThrottleClamp = 0.005f;
+                engine.UseThrottleCurve = false;
+                engine.ThrottleCurve.LoadFromFloatCurve(null);
 
                 if (_isRealFuelsLoadedCorrectly)
                 {
@@ -282,6 +355,16 @@ namespace MechJebLibBindings.FuelFlowSimulation
                         engine.ModuleSpoolupTime = _rfSpoolUpTime.GetValue<float>(kspEngine);
                         engine.AutoCutoff = _rfAutoCutoff.GetValue<bool>(kspEngine);
                         engine.Ullage = _rfUllage.GetValue<bool>(kspEngine);
+                        engine.PressureFed = _rfPressureFed.GetValue<bool>(kspEngine);
+                        engine.ThrottlePressureFedStartupMult = _rfThrottlePressureFedStartupMult.GetValue<float>(kspEngine);
+                        engine.ThrottleDownMult = _rfThrottleDownMult.GetValue<float>(kspEngine);
+                        engine.ThrottleClamp = _rfThrottleClamp.GetValue<float>(kspEngine);
+
+                        // RealFuels creates an empty throttleCurve in OnAwake when the config has none, and only uses it if it
+                        // has a key at or after zero.  GetValue throws on a null, so read the field directly.
+                        var throttleCurve = _rfThrottleCurve.FieldInfo()?.GetValue(kspEngine) as FloatCurve;
+                        engine.UseThrottleCurve = throttleCurve != null && throttleCurve.maxTime >= 0f;
+                        engine.ThrottleCurve.LoadFromFloatCurve(throttleCurve);
                     }
                 }
 
@@ -303,10 +386,14 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                 foreach (Propellant p in kspModuleRCS.propellants)
                     rcs.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
-                        PartResourceLibrary.Instance.GetDefinition(p.id).density));
+                        PropellantDensity(p.id)));
 
                 return rcs;
             }
+
+            // a propellant that isn't in the resource library (a mod's config error) counts for nothing, as in KSP's
+            // ModuleEngines.SetupPropellant, which logs it and leaves it out of the mixture
+            private static double PropellantDensity(int id) => PartResourceLibrary.Instance.GetDefinition(id)?.density ?? 0;
 
             private SimProceduralFairingDecoupler BuildProceduralFairingDecoupler(SimPart part) => SimProceduralFairingDecoupler.Borrow(part);
 

@@ -217,18 +217,26 @@ namespace MuMech
             return cn;
         }
 
+        // the length along the surface of the route's own body: the waypoints' positions are placed on the active vessel's body,
+        // which is another one for a saved route of another body
         private void UpdateStats()
         {
-            float distance = 0;
-            if (Count > 1)
-            {
-                for (int i = 1; i < Count; i++)
-                {
-                    distance += Vector3.Distance(this[i - 1].Position, this[i].Position);
-                }
-            }
+            double distance = 0;
+            double radius = Body != null ? Body.Radius : 0;
+            for (int i = 1; i < Count; i++)
+                distance += radius * CentralAngle(this[i - 1].Latitude, this[i - 1].Longitude, this[i].Latitude, this[i].Longitude);
 
             _stats = $"{Count} waypoints over {distance.ToSI()}m";
+        }
+
+        // the angle in radians between two points given in degrees, by the haversine formula
+        private static double CentralAngle(double lat1, double lon1, double lat2, double lon2)
+        {
+            double phi1 = Deg2Rad(lat1), phi2 = Deg2Rad(lat2);
+            double sinDPhi = Math.Sin((phi2 - phi1) / 2);
+            double sinDLambda = Math.Sin(Deg2Rad(lon2 - lon1) / 2);
+            double h = sinDPhi * sinDPhi + Math.Cos(phi1) * Math.Cos(phi2) * sinDLambda * sinDLambda;
+            return 2 * SafeAsin(Math.Sqrt(Clamp(h, 0, 1)));
         }
 
         public MechJebWaypointRoute(string name = "", CelestialBody body = null, string mode = "Rover")
@@ -271,70 +279,6 @@ namespace MuMech
         // routes of a body that is not installed any more, kept as read so that saving does not drop them
         private static readonly List<ConfigNode> _unresolvedRoutes = new List<ConfigNode>();
 
-        [EditableInfoItem("#MechJeb_MohoMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Moho Mapdist
-        public readonly EditableDouble MohoMapdist = 5000;
-
-        [EditableInfoItem("#MechJeb_EveMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Eve Mapdist
-        public readonly EditableDouble EveMapdist = 5000;
-
-        [EditableInfoItem("#MechJeb_GillyMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Gilly Mapdist
-        public readonly EditableDouble GillyMapdist = -500;
-
-        [EditableInfoItem("#MechJeb_KerbinMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Kerbin Mapdist
-        public readonly EditableDouble KerbinMapdist = 500;
-
-        [EditableInfoItem("#MechJeb_MunMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Mun Mapdist
-        public readonly EditableDouble MunMapdist = 4000;
-
-        [EditableInfoItem("#MechJeb_MinmusMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Minmus Mapdist
-        public readonly EditableDouble MinmusMapdist = 3500;
-
-        [EditableInfoItem("#MechJeb_DunaMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Duna Mapdist
-        public readonly EditableDouble DunaMapdist = 5000;
-
-        [EditableInfoItem("#MechJeb_IkeMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Ike Mapdist
-        public readonly EditableDouble IkeMapdist = 4000;
-
-        [EditableInfoItem("#MechJeb_DresMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Dres Mapdist
-        public readonly EditableDouble DresMapdist = 1500;
-
-        [EditableInfoItem("#MechJeb_EelooMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Eeloo Mapdist
-        public readonly EditableDouble EelooMapdist = 2000;
-
-        [EditableInfoItem("#MechJeb_JoolMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Jool Mapdist
-        public readonly EditableDouble JoolMapdist = 30000;
-
-        [EditableInfoItem("#MechJeb_TyloMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Tylo Mapdist
-        public readonly EditableDouble TyloMapdist = 5000;
-
-        [EditableInfoItem("#MechJeb_LaytheMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Laythe Mapdist
-        public readonly EditableDouble LaytheMapdist = 1000;
-
-        [EditableInfoItem("#MechJeb_PolMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Pol Mapdist
-        public readonly EditableDouble PolMapdist = 500;
-
-        [EditableInfoItem("#MechJeb_BopMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Bop Mapdist
-        public readonly EditableDouble BopMapdist = 1000;
-
-        [EditableInfoItem("#MechJeb_VallMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
-        // Vall Mapdist
-        public readonly EditableDouble VallMapdist = 5000;
-
         internal int SelIndex = -1;
         internal int _saveIndex = -1;
         internal string _tmpRadius = "";
@@ -355,9 +299,16 @@ namespace MuMech
 
         private static MechJebRouteRenderer _renderer;
         internal int _lastIndex = -1;
-        internal int _settingPageIndex;
 
-        internal readonly string[] _settingPages = { "Rover", "Waypoints" };
+        // the map view's route, rebuilt each frame by DrawMapRoute
+        private readonly List<Vector3d> _pastRoute = new List<Vector3d>();
+        private readonly List<Vector3d> _currRoute = new List<Vector3d>();
+        private readonly List<Vector3d> _nextRoute = new List<Vector3d>();
+
+        // the map view route's width, a fraction of the screen height: about the old LineRenderer's, whose 0.005 of the camera
+        // distance is 0.0043 of the screen at a 60° field of view (ScaledCamera.fovDefault)
+        private const float MAP_ROUTE_WIDTH = 0.0043f;
+
         //		private static LineRenderer redLine;
         //		private static LineRenderer greenLine;
 
@@ -368,6 +319,8 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             _ap = Core.GetComputerModule<MechJebModuleRoverController>();
+            Core.AddToPostDrawQueue(DrawSelectedMarker);
+            Core.AddToPostDrawQueue(DrawMapRoute);
             if (HighLogic.LoadedSceneIsFlight && Vessel.isActiveVessel)
             {
                 _renderer = MechJebRouteRenderer.AttachToMapView(Core);
@@ -597,7 +550,22 @@ namespace MuMech
             return string.Format(CultureInfo.InvariantCulture, "{0} {1}° {2}' {3:F3}\"", ew, h, m, s);
         }
 
-        /// <summary>Parse a latitude or longitude as the edit fields show it; false (and 0) when the text is not a coordinate.</summary>
+        // the edit panel's five fields, from the waypoint it edits
+        private void RefreshEditFields(MechJebWaypoint wp)
+        {
+            _tmpRadius   = wp.Radius.ToString();
+            _tmpMinSpeed = wp.MinSpeed.ToString();
+            _tmpMaxSpeed = wp.MaxSpeed.ToString();
+            _tmpLat      = LatToString(wp.Latitude);
+            _tmpLon      = LonToString(wp.Longitude);
+        }
+
+        /// <summary>Parse a radius or a speed as the edit fields show it: a finite number, 0 or more.</summary>
+        internal static bool TryParseNonNegative(string text, out float value) =>
+            float.TryParse(text, out value) && !float.IsNaN(value) && !float.IsInfinity(value) && value >= 0;
+
+        /// <summary>Parse a latitude or longitude as the edit fields show it; false (and 0) when the text is not a coordinate. A longitude
+        /// is wrapped into ±180°; a latitude beyond ±90° is no coordinate.</summary>
         internal static bool TryParseCoord(string latLon, bool isLongitute, out double value)
         {
             value = 0;
@@ -635,6 +603,8 @@ namespace MuMech
 
             h = (h + m / 60 + s / 3600) * nsew;
             if (float.IsNaN(h) || float.IsInfinity(h)) return false;
+
+            if (!isLongitute && Math.Abs(h) > range) return false;
 
             // the loops below never end on a huge value
             h %= range * 2;
@@ -687,13 +657,82 @@ namespace MuMech
             }
         }
 
-        /// <summary>The red marker on the selected waypoint in the map view (a GL draw: needs an OnGUI repaint).</summary>
-        internal void DrawSelectedMarker()
+        /// <summary>
+        /// The red marker on the selected waypoint in the map view, while the window shows its waypoints page. A GL draw:
+        /// MechJebCore's post-draw queue runs it after the planetarium camera renders.
+        /// </summary>
+        private void DrawSelectedMarker()
         {
-            if (!MapView.MapIsEnabled || SelIndex < 0 || SelIndex >= _ap.Waypoints.Count) return;
+            if (!Enabled || _showPage != Pages.WAYPOINTS || !MapView.MapIsEnabled || SelIndex < 0 || SelIndex >= _ap.Waypoints.Count) return;
             MechJebWaypoint wp = _ap.Waypoints[SelIndex];
             GLUtils.DrawGroundMarker(MainBody, wp.Latitude, wp.Longitude, Color.red, true,
                 (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, MainBody.Radius / 100);
+        }
+
+        /// <summary>
+        /// The route in the map view, while the window is open: a GL draw on top of the planet, like the selected marker. The
+        /// planet there is its scaled-space mesh, a coarse fit of the terrain the waypoints sit on, which hides parts of a line
+        /// drawn into its depth buffer at terrain height; a GL draw needs no height above it, and the horizon test hides the far
+        /// side. The flight view's route is MechJebRouteRenderer's.
+        /// </summary>
+        private void DrawMapRoute()
+        {
+            if (!Enabled || !MapView.MapIsEnabled || _ap.Waypoints.Count == 0) return;
+            int index = _ap.WaypointIndex;
+            float width = MAP_ROUTE_WIDTH * PlanetariumCamera.Camera.pixelHeight;
+
+            if (index > 0)
+            {
+                _pastRoute.Clear();
+                for (int i = 0; i < index; i++)
+                    AddRoutePoint(_pastRoute, _ap.Waypoints[i].Position);
+                AddRoutePoint(_pastRoute, Vessel.CoM);
+                GLUtils.DrawPath(MainBody, _pastRoute, MechJebRouteRenderer.PastPathColor, true, width: width);
+            }
+
+            if (index > -1)
+            {
+                _currRoute.Clear();
+                AddRoutePoint(_currRoute, Vessel.CoM);
+                AddRoutePoint(_currRoute, _ap.Waypoints[index].Position);
+                GLUtils.DrawPath(MainBody, _currRoute, MechJebRouteRenderer.CurrPathColor, true, width: width);
+            }
+
+            if (index < _ap.Waypoints.Count - 1)
+            {
+                _nextRoute.Clear();
+                AddRoutePoint(_nextRoute, index == -1 ? (Vector3d)Vessel.CoM : _ap.Waypoints[index].Position);
+                for (int i = index + 1; i < _ap.Waypoints.Count; i++)
+                    AddRoutePoint(_nextRoute, _ap.Waypoints[i].Position);
+                GLUtils.DrawPath(MainBody, _nextRoute, MechJebRouteRenderer.NextPathColor, true, width: width);
+            }
+        }
+
+        /// <summary>
+        /// Adds point to the route, after the great circle from the route's last point in steps of at most 1°, so a long leg
+        /// follows the surface and the horizon test cuts it at the limb. Points are kept at or above the body's radius, as
+        /// GLUtils.DrawGroundMarker keeps its markers.
+        /// </summary>
+        private void AddRoutePoint(List<Vector3d> route, Vector3d point)
+        {
+            Vector3d center = MainBody.position;
+            Vector3d to = (point - center).normalized;
+            double toRadius = Math.Max((point - center).magnitude, MainBody.Radius);
+
+            if (route.Count > 0)
+            {
+                Vector3d from = route[route.Count - 1] - center;
+                double fromRadius = from.magnitude;
+                from /= fromRadius;
+                int steps = (int)Math.Ceiling(Vector3d.Angle(from, to));
+                for (int k = 1; k < steps; k++)
+                {
+                    double t = (double)k / steps;
+                    route.Add(center + (fromRadius + t * (toRadius - fromRadius)) * Vector3d.Lerp(from, to, t).normalized);
+                }
+            }
+
+            route.Add(center + toRadius * to);
         }
 
         /// <summary>A click on waypoint i in the list: Alt sets the current waypoint, otherwise it (un)selects it.</summary>
@@ -715,11 +754,7 @@ namespace MuMech
                 else
                 {
                     SelIndex = i;
-                    _tmpRadius = wp.Radius.ToString();
-                    _tmpMinSpeed = wp.MinSpeed.ToString();
-                    _tmpMaxSpeed = wp.MaxSpeed.ToString();
-                    _tmpLat = LatToString(wp.Latitude);
-                    _tmpLon = LonToString(wp.Longitude);
+                    RefreshEditFields(wp);
                 }
             }
         }
@@ -771,14 +806,14 @@ namespace MuMech
                 {
                     _waitingForPick = true;
                     if (MapView.MapIsEnabled)
-                    {
-                        Core.Target.Unset();
-                        Core.Target.PickPositionTargetOnMap();
-                    }
+                        StartMapPick();
                 }
                 else
                 {
                     _waitingForPick = false;
+                    if (Core.Target.pickingPositionTarget)
+                        Core.Target.StopPickPositionTargetOnMap();
+                    EndMapPick();
                 }
             }
         }
@@ -927,6 +962,8 @@ namespace MuMech
 
                 _routes.Sort(SortRoutes);
                 SaveRoutes();
+                // the sort moves the rows: select the saved route, wherever it is now
+                _saveIndex = BodyRoutes().IndexOf(wps);
             }
         }
 
@@ -948,6 +985,43 @@ namespace MuMech
             }
         }
 
+        // A map pick carries its result in the vessel's target: the player's target is kept here while it runs and given back after
+        private bool _mapPickStarted;
+        private ITargetable _targetBeforePick;
+        private CelestialBody _targetBodyBeforePick;
+        private double _targetLatitudeBeforePick, _targetLongitudeBeforePick;
+
+        private void StartMapPick()
+        {
+            if (!_mapPickStarted)
+            {
+                _mapPickStarted              = true;
+                _targetBeforePick            = Core.Target.Target;
+                _targetBodyBeforePick        = Core.Target.targetBody;
+                _targetLatitudeBeforePick    = Core.Target.targetLatitude;
+                _targetLongitudeBeforePick   = Core.Target.targetLongitude;
+            }
+
+            Core.Target.Unset();
+            Core.Target.PickPositionTargetOnMap();
+        }
+
+        private void EndMapPick()
+        {
+            if (!_mapPickStarted) return;
+            _mapPickStarted = false;
+
+            ITargetable target = _targetBeforePick;
+            _targetBeforePick = null;
+
+            if (target is PositionTarget && _targetBodyBeforePick != null)
+                Core.Target.SetPositionTarget(_targetBodyBeforePick, _targetLatitudeBeforePick, _targetLongitudeBeforePick);
+            else if (target == null || (target is UnityEngine.Object obj && obj == null))
+                Core.Target.Unset();
+            else
+                Core.Target.Set(target);
+        }
+
         /// <summary>The click on the terrain or the map while "Add Waypoint" waits for a position (the IMGUI window ran this on Repaint).</summary>
         internal void ProcessWaypointPick(bool alt)
         {
@@ -957,32 +1031,34 @@ namespace MuMech
             {
                 if (!Core.Target.pickingPositionTarget)
                 {
-                    if (Core.Target.PositionTargetExists)
+                    // only a position this window's pick set: a vessel target, or one set before the pick, is no pick result
+                    if (_mapPickStarted && Core.Target.Target is PositionTarget)
                     {
                         if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                         {
-                            InsertWaypoint(SelIndex, new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
-                            _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
-                            _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
-                            _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
+                            InsertWaypoint(SelIndex, new MechJebWaypoint(Core.Target.targetLatitude, Core.Target.targetLongitude));
+                            RefreshEditFields(_ap.Waypoints[SelIndex]);
                         }
                         else
                         {
-                            _ap.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
+                            _ap.Waypoints.Add(new MechJebWaypoint(Core.Target.targetLatitude, Core.Target.targetLongitude));
                         }
 
-                        Core.Target.Unset();
+                        EndMapPick();
                         _waitingForPick = alt;
                     }
                     else
                     {
-                        Core.Target.PickPositionTargetOnMap();
+                        StartMapPick();
                     }
                 }
             }
             else
             {
-                if (!GuiUtils.MouseIsOverWindow(Core) && !MechJebUiHost.MouseOverHostWindow())
+                // leaving the map view cancels its pick
+                EndMapPick();
+
+                if (!GuiUtils.MouseIsOverWindow(Core))
                 {
                     Coordinates mouseCoords = GetMouseFlightCoordinates();
                     if (mouseCoords != null)
@@ -992,9 +1068,7 @@ namespace MuMech
                             if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                             {
                                 InsertWaypoint(SelIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
-                                _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
-                                _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
-                                _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
+                                RefreshEditFields(_ap.Waypoints[SelIndex]);
                             }
                             else
                             {
@@ -1010,7 +1084,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (Vessel.isActiveVessel && (_renderer == null || _renderer.AP != _ap)) { MechJebRouteRenderer.AttachToMapView(Core); }
+            if (Vessel.isActiveVessel && (_renderer == null || _renderer.AP != _ap)) { _renderer = MechJebRouteRenderer.AttachToMapView(Core); }
 
             _ap.Waypoints.ForEach(wp => wp.Update());
             //			float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
@@ -1121,13 +1195,15 @@ namespace MuMech
                         "\nThis means the default setting of 75 will make it brake only if atleast 3 wheels have ground contact." +
                         "\n'Traction Brake Limit' is saved per vessel type." +
                         "\n\nIf you have 'Stability Control' off then it won't take care of your brake and you can flip as much as you want.");
-                    add("Changing the route height in Mapview",
-                        "These values define offsets for the route height in Mapview. Given how weird it's set up it can be that they are too high or too low so I added these for easier adjusting. Saved globally, I think.");
                     break;
             }
         }
     }
 
+    /// <summary>
+    /// The route in the flight view: LineRenderers just above the terrain, which hides them behind hills. The map view's route
+    /// is a GL draw (MechJebModuleWaypointWindow.DrawMapRoute).
+    /// </summary>
     public class MechJebRouteRenderer : MonoBehaviour
     {
         private static readonly Material _material = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
@@ -1136,11 +1212,10 @@ namespace MuMech
         private LineRenderer _currPath;
         private LineRenderer _nextPath;
         private LineRenderer _selWp;
-        private readonly Color _pastPathColor = new Color(0f, 0f, 1f, 0.5f);
-        private readonly Color _currPathColor = new Color(0f, 1f, 0f, 0.5f);
-        private readonly Color _nextPathColor = new Color(1f, 1f, 0f, 0.5f);
-        private readonly Color _selWpColor = new Color(1f, 0f, 0f, 0.5f);
-        private double _addHeight;
+        internal static readonly Color PastPathColor = new Color(0f, 0f, 1f, 0.5f);
+        internal static readonly Color CurrPathColor = new Color(0f, 1f, 0f, 0.5f);
+        internal static readonly Color NextPathColor = new Color(1f, 1f, 0f, 0.5f);
+        private static readonly Color _selWpColor = new Color(1f, 0f, 0f, 0.5f);
 
         public static MechJebRouteRenderer AttachToMapView(MechJebCore core)
         {
@@ -1171,14 +1246,8 @@ namespace MuMech
         private static Vector3 RaisePositionOverTerrain(Vector3 position, float heightOffset)
         {
             CelestialBody body = FlightGlobals.ActiveVessel.mainBody;
-            if (!MapView.MapIsEnabled)
-                return body.GetWorldSurfacePosition(body.GetLatitude(position), body.GetLongitude(position),
-                    body.GetAltitude(position) + heightOffset);
-            double lat = body.GetLatitude(position);
-            double lon = body.GetLongitude(position);
-            return ScaledSpace.LocalToScaledSpace(body.position +
-                (body.Radius + heightOffset + body.TerrainAltitude(lat, lon)) *
-                body.GetSurfaceNVector(lat, lon));
+            return body.GetWorldSurfacePosition(body.GetLatitude(position), body.GetLongitude(position),
+                body.GetAltitude(position) + heightOffset);
         }
 
         public new bool enabled
@@ -1192,6 +1261,8 @@ namespace MuMech
                 if (_currPath != null) { _currPath.enabled = value; }
 
                 if (_nextPath != null) { _nextPath.enabled = value; }
+
+                if (_selWp != null) { _selWp.enabled = value; }
             }
         }
 
@@ -1199,20 +1270,20 @@ namespace MuMech
         {
             if (NewLineRenderer(ref _pastPath))
             {
-                _pastPath.startColor = _pastPathColor;
-                _pastPath.endColor = _pastPathColor;
+                _pastPath.startColor = PastPathColor;
+                _pastPath.endColor = PastPathColor;
             }
 
             if (NewLineRenderer(ref _currPath))
             {
-                _currPath.startColor = _currPathColor;
-                _currPath.endColor = _currPathColor;
+                _currPath.startColor = CurrPathColor;
+                _currPath.endColor = CurrPathColor;
             }
 
             if (NewLineRenderer(ref _nextPath))
             {
-                _nextPath.startColor = _nextPathColor;
-                _nextPath.endColor = _nextPathColor;
+                _nextPath.startColor = NextPathColor;
+                _nextPath.endColor = NextPathColor;
             }
 
             if (NewLineRenderer(ref _selWp))
@@ -1221,35 +1292,10 @@ namespace MuMech
                 _selWp.endColor = _selWpColor;
             }
 
-            //Debug.Log(ap.vessel.vesselName);
-            MechJebModuleWaypointWindow window = AP.Core.GetComputerModule<MechJebModuleWaypointWindow>();
-            _addHeight = AP.Vessel.mainBody.bodyName switch
+            if (AP != null && AP.Waypoints.Count > 0 && AP.Vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight && !MapView.MapIsEnabled)
             {
-                "Moho"   => window.MohoMapdist,
-                "Eve"    => window.EveMapdist,
-                "Gilly"  => window.GillyMapdist,
-                "Kerbin" => window.KerbinMapdist,
-                "Mun"    => window.MunMapdist,
-                "Minmus" => window.MinmusMapdist,
-                "Duna"   => window.DunaMapdist,
-                "Ike"    => window.IkeMapdist,
-                "Dres"   => window.DresMapdist,
-                "Jool"   => window.JoolMapdist,
-                "Laythe" => window.LaytheMapdist,
-                "Vall"   => window.VallMapdist,
-                "Tylo"   => window.TyloMapdist,
-                "Bop"    => window.BopMapdist,
-                "Pol"    => window.PolMapdist,
-                "Eeloo"  => window.EelooMapdist,
-                _        => window.KerbinMapdist
-            };
-
-            if (AP != null && AP.Waypoints.Count > 0 && AP.Vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight)
-            {
-                float targetHeight = MapView.MapIsEnabled ? (float)_addHeight : 3f;
-                float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, AP.Vessel.CoM) / 700f;
-                float width = MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : scale + 0.1f;
-                //float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
+                const float targetHeight = 3f;
+                float width = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, AP.Vessel.CoM) / 700f + 0.1f;
 
                 _pastPath.startWidth = width;
                 _pastPath.endWidth = width;
@@ -1257,11 +1303,9 @@ namespace MuMech
                 _currPath.endWidth = width;
                 _nextPath.startWidth = width;
                 _nextPath.endWidth = width;
-                _selWp.gameObject.layer = _pastPath.gameObject.layer =
-                    _currPath.gameObject.layer = _nextPath.gameObject.layer = MapView.MapIsEnabled ? 9 : 0;
 
                 int sel = AP.Core.GetComputerModule<MechJebModuleWaypointWindow>().SelIndex;
-                _selWp.enabled = sel > -1 && sel < AP.Waypoints.Count && !MapView.MapIsEnabled;
+                _selWp.enabled = sel > -1 && sel < AP.Waypoints.Count;
                 if (_selWp.enabled)
                 {
                     float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, AP.Waypoints[sel].Position) / 600f + 0.1f;

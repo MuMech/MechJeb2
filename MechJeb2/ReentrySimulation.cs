@@ -220,6 +220,14 @@ namespace MuMech
                 _result.InputMultiplierHasError = _inputMultiplierHasError;
                 _result.InputDT = _inputDT;
 
+                // What identifies the run goes in before the early return: a pooled result keeps the values of its last use.
+                _result.ID = _resultId++;
+                _result.Body = _mainBody;
+                _result.ReferenceFrame = _referenceFrame;
+                _result.EndUT = _t;
+                _result.ParachuteMultiplier = _parachuteSemiDeployMultiplier;
+                _result.MultiplierHasError = _multiplierHasError;
+
                 //MechJebCore.print("Sim Start");
 
                 if (!_orbitReenters)
@@ -266,9 +274,6 @@ namespace MuMech
                 }
 
                 //MechJebCore.print("Sim ready " + result.outcome + " " + (t - startUT).ToString("F2"));
-                _result.ID = _resultId++;
-                _result.Body = _mainBody;
-                _result.ReferenceFrame = _referenceFrame;
                 _result.EndUT = _t;
                 _result.TimeToComplete = _t - _inputUT;
                 _result.MaxDragGees = _maxDragGees;
@@ -276,8 +281,6 @@ namespace MuMech
                 _result.EndPosition = _referenceFrame.ToAbsolute(_x, _t);
                 _result.EndVelocity = _referenceFrame.ToAbsolute(_v, _t);
                 _result.Trajectory = _trajectory;
-                _result.ParachuteMultiplier = _parachuteSemiDeployMultiplier;
-                _result.MultiplierHasError = _multiplierHasError;
                 _result.Maxdt = _maxDT;
                 _result.Steps = _steps;
             }
@@ -817,7 +820,45 @@ namespace MuMech
                 _pool.Release(this);
             }
 
-            private static void Reset(Result obj) => obj.AeroBrake = false;
+            // The pool hands an object back as it was released: clear everything, so no field of an earlier run leaks into a run
+            // that returns before writing it.
+            private static void Reset(Result obj)
+            {
+                obj.Maxdt = 0;
+                obj.Steps = 0;
+                obj.TimeToComplete = 0;
+                obj.ID = 0;
+                obj.Outcome = default;
+                obj.Exception = null;
+                obj.Body = null;
+                obj.ReferenceFrame = null;
+                obj.EndUT = 0;
+                obj.StartPosition = default;
+                obj.EndPosition = default;
+                obj.EndVelocity = default;
+                obj.AeroBrake = false;
+                obj.AeroBrakeUT = 0;
+                obj.AeroBrakePosition = default;
+                obj.AeroBrakeVelocity = default;
+                obj.EndASL = 0;
+                obj.Trajectory = null;
+                obj.MaxDragGees = 0;
+                obj.DeltaVExpended = 0;
+                obj.MultiplierHasError = false;
+                obj.ParachuteMultiplier = 0;
+                obj.InputInitialOrbit = null;
+                obj.InputUT = 0;
+                obj.InputParachuteList = null;
+                obj.InputDescentSpeedPolicy = null;
+                obj.InputDecelEndAltitudeASL = 0;
+                obj.InputMaxThrustAccel = 0;
+                obj.InputParachuteSemiDeployMultiplier = 0;
+                obj.InputProbableLandingSiteASL = 0;
+                obj.InputMultiplierHasError = false;
+                obj.InputDT = 0;
+                obj.DebugLog = null;
+                obj.Prediction = default;
+            }
 
             public static Result Borrow()
             {

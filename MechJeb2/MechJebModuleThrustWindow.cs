@@ -22,13 +22,32 @@ namespace MuMech
             }
         }
 
+        // The saved state is the Autostage toggle: the window as a staging user, but not as the user of a pending "autostage once"
+        public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            if (HighLogic.LoadedSceneIsFlight)
+                autostageSavedState = Core.Staging.Users.Contains(this) && !Core.Staging.IsAutostageOnceUser(this);
+
+            base.OnSave(local, type, global);
+        }
+
         [GeneralInfoItem("#MechJeb_AutostageOnce", InfoItem.Category.Misc)] //Autostage Once
         public void AutostageOnceItem() { }
 
         [GeneralInfoItem("#MechJeb_Autostage", InfoItem.Category.Misc)] //Autostage
         public void Autostage() { }
 
-        public override bool IsActive() => Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.NONE;
+        /// <summary>
+        ///     Active while one of its own settings acts: a limiter of the general throttle limits (not an autopilot's own, which
+        ///     apply instead while it flies), the jet flameout limiter, or its Autostage switch.
+        /// </summary>
+        public override bool IsActive()
+        {
+            MechJebModuleThrustController.LimitMode limiter = Core.Thrust.Limiter;
+            if (limiter == MechJebModuleThrustController.LimitMode.FLAMEOUT) return true;
+            if (limiter != MechJebModuleThrustController.LimitMode.NONE && Core.Thrust.LimitsOverrideUser == null) return true;
+            return Core.Staging.Enabled && Core.Staging.Users.Contains(this);
+        }
 
         public override string GetName() => Localizer.Format("#MechJeb_Utilities_title"); //"Utilities"
 

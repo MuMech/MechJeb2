@@ -24,14 +24,13 @@ namespace MuMech
             HighLogic.LoadedSceneIsEditor ? VesselExtensions.EditorParts :
             Vessel == null ? new List<Part>() : Vessel.Parts;
 
+        // the node executor's burn time: the mass lost, the stages and their spool-up, and an RCS burn
         [ValueInfoItem("#MechJeb_NodeBurnTime", InfoItem.Category.Misc)] //Node burn time
         public string NextManeuverNodeBurnTime()
         {
             if (!Vessel.patchedConicsUnlocked() || Vessel.patchedConicSolver.maneuverNodes.Count == 0) return "N/A";
 
-            ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
-            double burnTime = node.GetBurnVector(node.patch).magnitude / VesselState.LimitedMaxThrustAcceleration;
-            return GuiUtils.TimeToDHMS(burnTime);
+            return Core.Node.NextNodeBurnTime();
         }
 
         [ValueInfoItem("#MechJeb_TimeToNode", InfoItem.Category.Misc)] //Time to node
@@ -51,10 +50,16 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_SurfaceTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = true)] //Surface TWR
-        public double SurfaceTWR() =>
-            HighLogic.LoadedSceneIsEditor
-                ? MaxAcceleration() / 9.81
-                : VesselState.ThrustAvailable / (VesselState.Mass * MainBody.GeeASL * 9.81);
+        public double SurfaceTWR()
+        {
+            if (!HighLogic.LoadedSceneIsEditor)
+                return VesselState.ThrustAvailable / (VesselState.Mass * MainBody.GeeASL * 9.81);
+
+            // at sea level on the body the stage stats' TWR is for
+            CelestialBody body = FlightGlobals.Bodies[TWRBody >= 0 && TWRBody < FlightGlobals.Bodies.Count ? TWRBody : FlightGlobals.GetHomeBodyIndex()];
+            double atmospheres = body.atmosphere ? body.GetPressure(0) * PhysicsGlobals.KpaToAtmospheres : 0;
+            return EditorLastStageThrust(false, atmospheres) / (VesselMass() * body.GeeASL * 9.81);
+        }
 
         [ValueInfoItem("#MechJeb_LocalTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)] //Local TWR
         public double LocalTWR() => VesselState.ThrustAvailable / (VesselState.Mass * VesselState.GravityForce.magnitude);
@@ -121,7 +126,7 @@ namespace MuMech
             return rcsThrustAvg.Value * 1000; // kN to N
         }
 
-        // Returns a value in kN.
+        // Returns a value in kN: ModuleRCS.thrustForces holds each nozzle's thrust in kN.
         private double RCSThrustNow()
         {
             double rcsThrust = 0;
@@ -139,7 +144,7 @@ namespace MuMech
 
                     for (int j = 0; j < pm.thrustForces.Length; j++)
                     {
-                        rcsThrust += pm.thrustForces[j] * pm.thrusterPower;
+                        rcsThrust += pm.thrustForces[j];
                     }
                 }
             }
@@ -181,10 +186,11 @@ namespace MuMech
                         float force = pm.thrustForces[i];
                         Transform t = pm.thrusterTransforms[i];
 
-                        Vector3 thrusterDir = Quaternion.Inverse(Vessel.GetTransform().rotation) * -t.up;
+                        // the direction of the nozzle's force on the vessel, as ModuleRCS applies it
+                        Vector3 thrusterDir = Quaternion.Inverse(Vessel.GetTransform().rotation) * (pm.useZaxis ? -t.forward : -t.up);
                         double thrusterEfficiency = Vector3.Dot(direction, thrusterDir.normalized);
 
-                        effectiveThrust += thrusterEfficiency * pm.thrusterPower * force;
+                        effectiveThrust += thrusterEfficiency * force;
                     }
                 }
             }
@@ -306,8 +312,9 @@ namespace MuMech
         }
 
         // Thrust of the engines in the editor's last stage, in kN: at full throttle, or at minimum (throttle-locked engines
-        // can't throttle down). A loop: these items are drawn every frame.
-        private static double EditorLastStageThrust(bool minimum)
+        // can't throttle down). Only the active mode of a multi-mode engine counts. In vacuum, or at `atmospheres` of pressure
+        // for a rocket, whose thrust scales with its Isp; a jet keeps its rated thrust. A loop: these items are drawn every frame.
+        private static double EditorLastStageThrust(bool minimum, double atmospheres = 0)
         {
             double thrust = 0;
             foreach (Part part in VesselExtensions.EditorParts)
@@ -315,9 +322,16 @@ namespace MuMech
                 if (part.inverseStage != StageManager.LastStage) continue;
                 for (int i = 0; i < part.Modules.Count; i++)
                 {
-                    if (!(part.Modules[i] is ModuleEngines e)) continue;
+                    if (!(part.Modules[i] is ModuleEngines e) || !e.isEnabled) continue;
                     float full = e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust);
-                    thrust += minimum && !e.throttleLocked ? e.minThrust : full;
+                    double engineThrust = minimum && !e.throttleLocked ? e.minThrust : full;
+                    if (atmospheres > 0 && !e.atmChangeFlow)
+                    {
+                        float vacuumIsp = e.atmosphereCurve.Evaluate(0);
+                        engineThrust *= vacuumIsp > 0 ? e.atmosphereCurve.Evaluate((float)atmospheres) / vacuumIsp : 0;
+                    }
+
+                    thrust += engineThrust;
                 }
             }
 

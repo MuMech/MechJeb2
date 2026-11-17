@@ -1,58 +1,23 @@
 extern alias JetBrainsAnnotations;
-using System;
 using KSP.Localization;
-using UnityEngine;
 
 namespace MuMech
 {
+    // The RCS Balancer window: its open state and position. MechJebModuleRCSBalancer runs on its smart translation setting, with
+    // the window open or closed.
     public class MechJebModuleRCSBalancerWindow : DisplayModule
     {
-        public MechJebModuleRCSBalancer balancer;
+        private MechJebModuleRCSBalancer _balancer;
 
-        public override void OnStart(PartModule.StartState state)
-        {
-            balancer = Core.GetComputerModule<MechJebModuleRCSBalancer>();
+        public MechJebModuleRCSBalancerWindow(MechJebCore core) : base(core) { }
 
-            if (balancer.smartTranslation)
-            {
-                balancer.Users.Add(this);
-            }
+        public MechJebModuleRCSBalancer Balancer => _balancer ??= Core.GetComputerModule<MechJebModuleRCSBalancer>();
 
-            base.OnStart(state);
-        }
-
-        // shared by the IMGUI window and the new UI: the smart translation checkbox changed
-        internal void OnSmartTranslationToggled()
-        {
-            balancer.ResetThrusterForces();
-
-            if (balancer.smartTranslation)
-            {
-                balancer.Users.Add(this);
-            }
-            else
-            {
-                balancer.Users.Remove(this);
-            }
-        }
-
-        // shared by the IMGUI window and the new UI: runs every frame the window is drawn
-        internal void MaintainBalancerUser()
-        {
-            if (balancer.smartTranslation)
-            {
-                balancer.Users.Add(this);
-            }
-            else
-            {
-                balancer.Users.Remove(this);
-            }
-        }
+        // the balancer is its own user, so the menu entry shows active while it balances
+        protected override ComputerModule ActiveUser => Balancer;
 
         public override string GetName() => Localizer.Format("#MechJeb_RCSBalancer_title"); //"RCS Balancer"
 
         public override string IconName() => "RCS Balancer";
-
-        public MechJebModuleRCSBalancerWindow(MechJebCore core) : base(core) { }
     }
 }

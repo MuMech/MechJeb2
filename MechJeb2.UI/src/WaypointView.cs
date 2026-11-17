@@ -12,7 +12,7 @@ namespace MuMech.UI
     /// <summary>
     /// MechJebModuleWaypointWindow ("Waypoints") in KodeKit: three pages (waypoints, settings, routes) built once, shown by the
     /// module's page. The module keeps the state and the actions (both UIs call them); the lists are pooled rows in a ScrollView.
-    /// The red map marker of the selected waypoint is a GL draw, so it still goes through an ImguiBlock (it needs an OnGUI repaint).
+    /// The module draws the red map marker of the selected waypoint itself, through MechJebCore's post-draw queue.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleWaypointWindow))]
     public class WaypointView : KodeView
@@ -106,6 +106,9 @@ namespace MuMech.UI
 
         void BuildWaypointsPage(KodeWindow w, UIObject page)
         {
+            UIText empty = KodeWindow.Paragraph(page, "#MechJeb_NewUI_NoWaypoints"); //No waypoints: Add Waypoint, then click the map.
+            KodeWindow.ToneText(empty, KodeWindow.Tone.Dim);
+            w.Visible(empty.gameObject, () => Ap == null || Ap.Waypoints.Count == 0);
             wpScroll = KodeWindow.ScrollList(page, ListHeight, out wpContent, 2);
 
             // the selected waypoint's edit panel; it is moved under the selected row
@@ -117,21 +120,21 @@ namespace MuMech.UI
             EditFields.Field(w, limits, () => m._tmpRadius, s =>
             {
                 m._tmpRadius = s;
-                Selected(wp => { if (float.TryParse(s, out float v)) wp.Radius = v; });
+                Selected(wp => { if (MechJebModuleWaypointWindow.TryParseNonNegative(s, out float v)) wp.Radius = v; });
             }, 50);
             KodeWindow.Button(limits, "A", () => m.RadiusToRest(m.SelIndex));
             KodeWindow.Label(limits, "- Speed: ");
             EditFields.Field(w, limits, () => m._tmpMinSpeed, s =>
             {
                 m._tmpMinSpeed = s;
-                Selected(wp => { if (float.TryParse(s, out float v)) wp.MinSpeed = v; });
+                Selected(wp => { if (MechJebModuleWaypointWindow.TryParseNonNegative(s, out float v)) wp.MinSpeed = v; });
             }, 40);
             KodeWindow.Button(limits, "A", () => m.MinSpeedToRest(m.SelIndex));
             KodeWindow.Label(limits, " - ");
             EditFields.Field(w, limits, () => m._tmpMaxSpeed, s =>
             {
                 m._tmpMaxSpeed = s;
-                Selected(wp => { if (float.TryParse(s, out float v)) wp.MaxSpeed = v; });
+                Selected(wp => { if (MechJebModuleWaypointWindow.TryParseNonNegative(s, out float v)) wp.MaxSpeed = v; });
             }, 40);
             KodeWindow.Button(limits, "A", () => m.MaxSpeedToRest(m.SelIndex));
             KodeWindow.FlexibleSpace(limits);
@@ -161,12 +164,6 @@ namespace MuMech.UI
             RoverUi.DynButton(w, buttons, () => Alt ? "Bottom" : "Down", () => m.MoveDown(Alt), 57);
             KodeWindow.Button(buttons, "Routes", m.ShowRoutesPage, true);
             KodeWindow.Button(buttons, "Settings", m.ShowSettingsPage, true);
-
-            // the map marker of the selected waypoint is drawn by GL in OnGUI: no GUILayout, no room
-            ImguiBlock.DrawOnly(page, () =>
-            {
-                if (Event.current.type == EventType.Repaint) m.DrawSelectedMarker();
-            });
         }
 
         /// <summary>Runs an action on the selected waypoint, if there is one.</summary>
@@ -258,7 +255,7 @@ namespace MuMech.UI
 
                 row.Text.Clear().Append('[').AppendInt(i + 1).Append("] - ").Append(NameWithCoords(row, wp)).Append(" - R: ").Append(wp.Radius, 1)
                     .Append(" m\n       S: ").Append(minSpeed, 0).Append(" ~ ").Append(maxSpeed, 0).Append(" - D: ").AppendSI(dist, -1)
-                    .Append("m - ETA: ").AppendDHMS(eta, 0, GuiUtils.HoursPerDay, GuiUtils.DaysPerYear);
+                    .Append("m - ETA: ").AppendDHMS(eta, 0);
                 row.Text.Commit();
 
                 int tone = i == m.SelIndex ? 1 : wp.Quicksave ? 2 : 0;
@@ -312,36 +309,20 @@ namespace MuMech.UI
             settingsScroll = KodeWindow.ScrollList(page, ListHeight, out Layout content, 2);
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 
-            // the settings pages: navigation, so tabs in the modern layout
-            if (KodeWindow.ModernLayout) w.Segmented(content, m._settingPages, () => m._settingPageIndex, i => m._settingPageIndex = i, ChoiceStyle.Tabs);
-            else w.SelectionGrid(content, m._settingPages, () => m._settingPageIndex, i => m._settingPageIndex = i);
-
             // rover: PID and traction
             Layout rover = KodeWindow.Row(content);
-            w.Visible(rover.gameObject, () => m._settingPageIndex == 0);
             Layout left = KodeWindow.Panel(rover);
             RoverUi.EditableRow(w, left, ed, "Editable:RoverController.hPIDp");
             RoverUi.EditableRow(w, left, ed, "Editable:RoverController.hPIDi");
             RoverUi.EditableRow(w, left, ed, "Editable:RoverController.hPIDd");
             RoverUi.EditableRow(w, left, ed, "Editable:RoverController.terrainLookAhead");
             RoverUi.EditableRow(w, left, ed, "Editable:RoverController.tractionLimit");
-            RoverUi.ToggleRow(w, left, ed, "Toggle:RoverController.LimitAcceleration", () => Ap != null && Ap.LimitAcceleration);
             Layout right = KodeWindow.Panel(rover);
             RoverUi.EditableRow(w, right, ed, "Editable:RoverController.sPIDp");
             RoverUi.EditableRow(w, right, ed, "Editable:RoverController.sPIDi");
             RoverUi.EditableRow(w, right, ed, "Editable:RoverController.sPIDd");
             RoverUi.EditableRow(w, right, ed, "Editable:RoverController.turnSpeed");
             RoverUi.ValueRow(w, right, ed, "Value:RoverController.traction", () => Ap?.traction ?? 0, "100 %");
-
-            // waypoints: map route heights per body
-            Layout maps = KodeWindow.Row(content);
-            w.Visible(maps.gameObject, () => m._settingPageIndex == 1);
-            Layout mapsLeft = KodeWindow.Panel(maps);
-            foreach (string body in new[] { "Moho", "Eve", "Gilly", "Kerbin", "Mun", "Minmus", "Duna", "Ike" })
-                RoverUi.EditableRow(w, mapsLeft, ed, "Editable:WaypointWindow." + body + "Mapdist");
-            Layout mapsRight = KodeWindow.Panel(maps);
-            foreach (string body in new[] { "Dres", "Jool", "Laythe", "Vall", "Tylo", "Bop", "Pol", "Eeloo" })
-                RoverUi.EditableRow(w, mapsRight, ed, "Editable:WaypointWindow." + body + "Mapdist");
 
             Layout buttons = KodeWindow.Row(page);
             KodeWindow.Button(buttons, "Waypoints", m.ShowWaypointsPage, true);
@@ -459,12 +440,12 @@ namespace MuMech.UI
             titledPage = page;
             nextTitle = Time.unscaledTime + 0.25f;
 
-            title.Clear().Append(m.Mode == MechJebModuleWaypointWindow.WaypointMode.ROVER ? "ROVER" : "PLANE").Append(" Waypoints");
+            title.Clear().Append(m.Mode == MechJebModuleWaypointWindow.WaypointMode.ROVER ? "Rover" : "Plane").Append(" waypoints");
             switch (page)
             {
                 case Pages.WAYPOINTS:
                     if (Ap.Waypoints.Count > 0)
-                        title.Append(" - Distance: ").AppendSI(statDist, -1).Append("m - ETA: ").AppendDHMS(statEta, 0, GuiUtils.HoursPerDay, GuiUtils.DaysPerYear);
+                        title.Append(" - Distance: ").AppendSI(statDist, -1).Append("m - ETA: ").AppendDHMS(statEta, 0);
                     break;
                 case Pages.SETTINGS:
                     title.Append(" - Settings");

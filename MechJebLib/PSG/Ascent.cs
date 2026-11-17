@@ -15,22 +15,24 @@ namespace MechJebLib.PSG
         private readonly Problem _problem;
         private Optimizer? _optimizer;
         private readonly PhaseCollection _phases;
+        private readonly FlightPlan? _flightPlan;
         private readonly bool _fixedBurnTime;
         private readonly int _optimizerTimeout;
         private readonly AscentGuesser _guesser;
 
-        private Ascent(Problem problem, PhaseCollection phases, Solution? oldSolution, bool fixedBurnTime, int optimizerTimeout)
+        private Ascent(Problem problem, PhaseCollection phases, FlightPlan? flightPlan, Solution? oldSolution, bool fixedBurnTime, int optimizerTimeout)
         {
             _problem = problem;
             _phases = phases;
+            _flightPlan = flightPlan;
             _solution = oldSolution;
             _fixedBurnTime = fixedBurnTime;
             _optimizerTimeout = optimizerTimeout;
-            _guesser = new AscentGuesser(_problem);
+            _guesser = new AscentGuesser(_problem, _flightPlan);
         }
 
         private Optimizer NewOptimizer(Problem problem, PhaseCollection phases, ITerminal terminal, Optimizer.ObjectiveType objective) =>
-            new Optimizer(problem, phases, terminal, objective) { OptimizerTimeout = _optimizerTimeout, CancellationToken = CancelToken };
+            new Optimizer(problem, phases, _flightPlan, terminal, objective) { OptimizerTimeout = _optimizerTimeout, CancellationToken = CancelToken };
 
         private readonly Solution? _solution;
 
@@ -38,6 +40,7 @@ namespace MechJebLib.PSG
         {
             if (_solution == null)
             {
+                _passCount = CountPasses();
                 _optimizer = _fixedBurnTime
                     ? InitialBootstrappingFixed()
                     : InitialBootstrappingOptimized();
@@ -50,6 +53,12 @@ namespace MechJebLib.PSG
 
         public Optimizer? GetOptimizer() => _optimizer;
 
+        // a failed run, saying so when it was the per-run time limit that stopped it rather than the problem
+        private Exception Failed(Optimizer psg, string what) => new Exception(FailureText(what, psg.TimedOut, _optimizerTimeout));
+
+        internal static string FailureText(string what, bool timedOut, int timeoutMilliseconds) =>
+            timedOut ? $"{what}: the optimizer timed out after {timeoutMilliseconds / 1000.0:F0} s" : what;
+
         private Optimizer ConvergedOptimization(Solution oldSolution)
         {
             Optimizer.ObjectiveType cost = _fixedBurnTime ? Optimizer.ObjectiveType.MAX_ENERGY : Optimizer.ObjectiveType.MIN_TIME;
@@ -58,7 +67,7 @@ namespace MechJebLib.PSG
             Solution? solution = psg.Run();
 
             if (!psg.Success() || solution == null)
-                throw new Exception("converged optimizer failed");
+                throw Failed(psg, "the re-solve did not converge, guidance keeps the last plan");
 
             return psg;
         }
@@ -71,22 +80,24 @@ namespace MechJebLib.PSG
             foreach (Phase p in bootPhases)
                 p.Unguided = false;
 
+            StartPass("every stage guided");
             var psg = NewOptimizer(_problem, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MAX_ENERGY);
-            Solution solution = _guesser.InitialGuess(bootPhases, _problem.Terminal.IncT(), _problem.Terminal.TargetOrbitalEnergy(), CancelToken);
+            Solution solution = _guesser.InitialGuess(bootPhases, CancelToken);
             psg.TranscribePreviousBootSolution(solution);
-            Solution? solution2 = psg.Run();
+            Solution? solution2 = RunPass(psg);
 
             if (!psg.Success() || solution2 == null)
-                throw new Exception("Target unreachable (fixed bootstrapping)");
+                throw Failed(psg, "Target unreachable (fixed bootstrapping)");
 
             PhaseCollection bootphases2 = _phases.DeepCopy();
 
+            StartPass("adding the unguided stages");
             var psg2 = NewOptimizer(_problem, bootphases2, _problem.Terminal, Optimizer.ObjectiveType.MAX_ENERGY);
             psg2.TranscribePreviousBootSolution(solution2);
-            Solution? solution3 = psg2.Run();
+            Solution? solution3 = RunPass(psg2);
 
             if (!psg2.Success() || solution3 == null)
-                throw new Exception("Target unreachable");
+                throw Failed(psg2, "Target unreachable");
 
             return psg2;
         }
@@ -100,9 +111,10 @@ namespace MechJebLib.PSG
             if (psg.Objective == Optimizer.ObjectiveType.MIN_THRUST_ACCEL || solution == null)
                 return psg;
 
+            StartPass("adding throttling");
             var psg2 = NewOptimizer(_problem, psg.Phases, _problem.Terminal, Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
             psg2.TranscribePreviousBootSolution(solution);
-            Solution? solution2 = psg2.Run();
+            Solution? solution2 = RunPass(psg2);
 
             if (!psg2.Success() || solution2 == null)
                 return psg;
@@ -119,12 +131,13 @@ namespace MechJebLib.PSG
                 return psg;
 
             PrintDebug("*** PHASE 6: Imposing QAlpha Constraints ***");
+            StartPass(_problem.Rho0InvQAlphaMax > 0 ? "adding the Qα limit" : "adding the max Q limit");
             var psg2 = NewOptimizer(_problem, psg.Phases, _problem.Terminal, Optimizer.ObjectiveType.MIN_TIME);
             psg2.TranscribePreviousBootSolution(solution);
-            Solution? solution2 = psg2.Run();
+            Solution? solution2 = RunPass(psg2);
 
             if (!psg2.Success() || solution2 == null)
-                throw new Exception("MaxQ/QAlpha failed");
+                throw Failed(psg2, "Target unreachable within the Qα or max Q limit");
 
             return psg2;
         }
@@ -150,13 +163,14 @@ namespace MechJebLib.PSG
             Problem problemNoQa = _problem.WithoutDynamicPressure();
 
             PrintDebug("*** PHASE 1: DOING INITIAL ALL-GUIDED ROCKET ***");
+            StartPass("every stage guided");
             var psg = NewOptimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_TIME);
-            Solution? solution = _guesser.InitialGuess(bootPhases, _problem.Terminal.IncT(), _problem.Terminal.TargetOrbitalEnergy(), CancelToken);
+            Solution? solution = _guesser.InitialGuess(bootPhases, CancelToken);
             psg.TranscribePreviousBootSolution(solution);
-            solution = psg.Run();
+            solution = RunPass(psg);
 
             if (!psg.Success() || solution == null)
-                throw new Exception("Target unreachable (bootstrapping)");
+                throw Failed(psg, "Target unreachable (bootstrapping)");
 
             bool reConverge = false;
 
@@ -172,12 +186,13 @@ namespace MechJebLib.PSG
             if (reConverge)
             {
                 PrintDebug("*** PHASE 4: ADDING BACK UNGUIDED STAGES ***");
+                StartPass("adding the unguided stages");
                 psg = NewOptimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_TIME);
                 psg.TranscribePreviousBootSolution(solution);
-                solution = psg.Run();
+                solution = RunPass(psg);
 
                 if (!psg.Success() || solution == null)
-                    throw new Exception("Target unreachable (re-adding unguided stages)");
+                    throw Failed(psg, "Target unreachable (re-adding unguided stages)");
             }
 
             if (_problem.Terminal.IsFPA())
@@ -188,9 +203,10 @@ namespace MechJebLib.PSG
              */
 
             PrintDebug("*** PHASE 5: RELAXING TO FREE ATTACHMENT ***");
+            StartPass("freeing the orbit insertion point");
             var psg2 = NewOptimizer(problemNoQa, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MIN_TIME);
             psg2.TranscribePreviousBootSolution(solution);
-            Solution? solution2 = psg2.Run();
+            Solution? solution2 = RunPass(psg2);
 
             if (!psg2.Success() || solution2 == null)
             {
@@ -198,10 +214,11 @@ namespace MechJebLib.PSG
                 return psg;
             }
 
-            // this should catch if free attachment picked the apoapsis accidentally
+            // this should catch if free attachment picked the apoapsis accidentally (both solutions are normalized with the same Scale)
             if (solution.Vgo(solution2.T0) < solution2.Vgo(solution2.T0))
             {
-                PrintDebug($"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution.Vgo(solution2.T0)} < {solution2.Vgo(solution2.T0)}) THAN FREE ATTACHMENT SOLUTION ***");
+                double vs = _problem.Scale.VelocityScale;
+                PrintDebug($"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution.Vgo(solution2.T0) * vs} < {solution2.Vgo(solution2.T0) * vs}) THAN FREE ATTACHMENT SOLUTION ***");
                 return psg;
             }
 

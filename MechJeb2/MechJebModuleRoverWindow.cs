@@ -36,7 +36,7 @@ namespace MuMech
             autopilot.WaypointIndex = 0;
             autopilot.Waypoints.Clear();
             if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
-            else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition())); }
+            else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.targetLatitude, Core.Target.targetLongitude)); }
 
             autopilot.ControlHeading = autopilot.ControlSpeed = true;
             Vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
@@ -49,7 +49,7 @@ namespace MuMech
             if (Core.Target == null || Core.Target.Target == null) return;
             Vessel vssl = Core.Target.Target.GetVessel();
             if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
-            else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition())); }
+            else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.targetLatitude, Core.Target.targetLongitude)); }
         }
 
         /// <summary>"Drive"; Alt starts from the first waypoint.</summary>
@@ -73,22 +73,6 @@ namespace MuMech
             if (waypoints.Enabled)
             {
                 waypoints.Mode = MechJebModuleWaypointWindow.WaypointMode.ROVER;
-            }
-        }
-
-        public override void OnUpdate()
-        {
-            if (autopilot != null)
-            {
-                if (autopilot.ControlHeading || autopilot.ControlSpeed || autopilot.StabilityControl || autopilot.BrakeOnEnergyDepletion ||
-                    autopilot.BrakeOnEject)
-                {
-                    autopilot.Users.Add(this);
-                }
-                else
-                {
-                    autopilot.Users.Remove(this);
-                }
             }
         }
 

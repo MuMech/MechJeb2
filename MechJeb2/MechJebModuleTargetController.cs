@@ -22,10 +22,11 @@ namespace MuMech
 
         public CelestialBody targetBody;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        // per vessel: a focus change must not hand one vessel's landing site to another
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableAngle targetLatitude = new EditableAngle(0);
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableAngle targetLongitude = new EditableAngle(0);
 
         private Vector3d targetDirection;
@@ -44,6 +45,12 @@ namespace MuMech
             if (Vessel != null)
             {
                 Vessel.targetObject = Target;
+
+                // KSP keeps the active vessel's target in FlightGlobals too, and the navball, the orbit targeter and kOS's TARGET read
+                // it there: targetObject alone leaves KSP's old target in place, and KSP dropping that one later clears ours with it.
+                // The override, as kOS's own SET TARGET: a focused kOS terminal holds a TARGETING input lock.
+                if (Vessel.isActiveVessel && FlightGlobals.fetch != null)
+                    FlightGlobals.fetch.SetVesselTarget(t, true);
             }
         }
 
@@ -53,7 +60,10 @@ namespace MuMech
             targetLatitude = latitude;
             targetLongitude = longitude;
 
-            Set(new PositionTarget(Coordinates.ToStringDMS(latitude, longitude, true)));
+            // placed now, not at the next FixedUpdate: until then it would sit at the world origin
+            var target = new PositionTarget(Coordinates.ToStringDMS(latitude, longitude, true));
+            target.Update(body, latitude, longitude);
+            Set(target);
         }
 
         [ValueInfoItem("#MechJeb_Targetcoordinates", InfoItem.Category.Target)] //Target coordinates
@@ -96,9 +106,23 @@ namespace MuMech
         public void UpdateDirectionTarget(Vector3d direction) => targetDirection = direction;
 
         // A destroyed Unity object isn't null to the interface.
-        public bool NormalTargetExists => Target != null && !(Target is UnityEngine.Object target && target == null) && (Target is Vessel || Target is CelestialBody || CanAlign);
+        public bool NormalTargetExists => Target != null && !(Target is UnityEngine.Object target && target == null) && !TargetPartGone &&
+                                          (Target is Vessel || Target is CelestialBody || CanAlign);
+
+        // A targeted part (a docking port) that left its vessel: EVA construction detaches it with Part.OnDetachFlight, which sets its vessel
+        // to null while the part lives on in a kerbal's inventory. Its orbit and position then throw (#1488).
+        private bool TargetPartGone => Target is PartModule module && module != null && module.vessel == null;
 
         public bool PositionTargetExists => Target != null && (Target is PositionTarget || Target is Vessel) && !(Target is DirectionTarget);
+
+        /// <summary>
+        /// True when targetLatitude and targetLongitude are a point on `body` to land at: a position target on that body, or the
+        /// coordinates taken from a vessel that was landed on it when targeted. A vessel targeted in flight, a direction (a
+        /// PositionTarget to KSP), or a target on another body has no such point there.
+        /// </summary>
+        public bool SurfaceTargetExists(CelestialBody body) =>
+            body != null && targetBody == body && (Target is PositionTarget && !(Target is DirectionTarget) ||
+                                                   Target is Vessel v && v != null && ReferenceEquals(v, _coordinatesTakenFrom));
 
         public bool CanAlign => Target.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation;
 
@@ -108,7 +132,7 @@ namespace MuMech
         {
             get
             {
-                if (Target == null)
+                if (Target == null || TargetPartGone)
                     return null;
                 return Target.GetOrbit();
             }
@@ -175,7 +199,9 @@ namespace MuMech
             }
         }
 
-        public string Name => Target.GetName();
+        // ModuleDockingNode.GetName reads its vessel's name: a port that left its vessel throws there, which is the NRE of #1488, until
+        // the next physics tick drops it
+        public string Name => TargetPartGone ? "" : Target.GetName();
 
         ////////////////////////
         // Internal functions //
@@ -190,25 +216,40 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            //Restore the saved target when we are made active vessel
-            if (!wasActiveVessel && Vessel.isActiveVessel)
-            {
-                if (Target != null && Target.GetVessel() != null)
-                {
-                    Vessel.targetObject = Target;
-                }
-            }
+            SyncWithVesselTarget();
+
+            //Update targets that need updating:
+            if (Target is DirectionTarget) ((DirectionTarget)Target).Update(targetDirection);
+            else if (Target is PositionTarget) ((PositionTarget)Target).Update(targetBody, targetLatitude, targetLongitude);
+
+            wasActiveVessel = Vessel.isActiveVessel;
+        }
+
+        /// <summary>
+        /// Take up the stock target (Vessel.targetObject): every physics tick, and also from kOS before it plans, since a script's
+        /// SET TARGET changes the stock target at once and this module's FixedUpdate may come after the script in the same tick.
+        /// Running it twice in a tick is harmless; wasActiveVessel is left to OnFixedUpdate so the restore below still happens there.
+        /// </summary>
+        internal void SyncWithVesselTarget()
+        {
+            // drop a part target that left its vessel, and the stock target with it: KSP's own FlightGlobals.UpdateInformation throws on it too
+            if (TargetPartGone)
+                Unset();
+
+            // Restore the saved target when we are made active vessel: the switch cleared KSP's target, and KSP brings back only what it
+            // saved and can find again, never a position or a direction
+            if (!wasActiveVessel && Vessel.isActiveVessel && Target != null && !(Target is UnityEngine.Object restored && restored == null))
+                Set(Target);
 
             //notice when the user switches targets
             if (Target != Vessel.targetObject)
             {
                 Target = Vessel.targetObject;
-                if (Target is Vessel && ((Vessel)Target).LandedOrSplashed && ((Vessel)Target).mainBody == Vessel.mainBody)
-                {
-                    targetBody = Vessel.mainBody;
-                    targetLatitude = Vessel.mainBody.GetLatitude(Target.GetTransform().position);
-                    targetLongitude = Vessel.mainBody.GetLongitude(Target.GetTransform().position);
-                }
+                _coordinatesTakenFrom = null;
+
+                // a landed vessel target gives its coordinates, once: the player can then edit them in Landing Guidance to land beside it
+                if (Target is Vessel landed && landed != null && landed.LandedOrSplashed)
+                    TakeLandedVesselCoordinates(landed);
 
                 if (Target is CelestialBody)
                 {
@@ -219,62 +260,63 @@ namespace MuMech
             // .23 temp fix until I understand better what's going on
             if (targetBody == null)
                 targetBody = Vessel.mainBody;
-
-            //Update targets that need updating:
-            if (Target is DirectionTarget) ((DirectionTarget)Target).Update(targetDirection);
-            else if (Target is PositionTarget) ((PositionTarget)Target).Update(targetBody, targetLatitude, targetLongitude);
-
-            wasActiveVessel = Vessel.isActiveVessel;
         }
+
+        // the vessel target that targetLatitude and targetLongitude were taken from
+        private Vessel _coordinatesTakenFrom;
+
+        // KSP keeps a landed vessel's latitude and longitude: from its transform while it is loaded, its saved ones while it is packed
+        private void TakeLandedVesselCoordinates(Vessel landed)
+        {
+            _coordinatesTakenFrom = landed;
+            targetBody            = landed.mainBody;
+            targetLatitude        = landed.latitude;
+            targetLongitude       = landed.longitude;
+        }
+
+        // While picking a position on the map: the surface point under the pointer, and its coordinates and biome, which
+        // MechJeb2.UI shows next to the pointer. Null when the pointer isn't over the body or is over a window.
+        private Coordinates _pickCoordinates;
+        internal string PickLabel { get; private set; }
 
         public override void OnUpdate()
         {
-            if (MapView.MapIsEnabled && pickingPositionTarget)
+            _pickCoordinates = null;
+            PickLabel        = null;
+
+            // a pick ends when the map closes, or when another vessel becomes the active one
+            if (pickingPositionTarget && (!MapView.MapIsEnabled || (Vessel != null && !Vessel.isActiveVessel)))
+                StopPickPositionTargetOnMap();
+
+            if (!pickingPositionTarget || Vessel == null || Vessel.GetMasterMechJeb() != Core)
+                return;
+
+            if (!GuiUtils.MouseIsOverWindow(Core))
+                _pickCoordinates = GuiUtils.GetMouseCoordinates(MainBody);
+            Cursor.visible = _pickCoordinates == null;
+            if (_pickCoordinates == null)
+                return;
+
+            if (Input.GetMouseButtonDown(0))
             {
-                if (!GuiUtils.MouseIsOverWindow(Core) && GuiUtils.GetMouseCoordinates(MainBody) != null)
-                    Cursor.visible = false;
-                else
-                    Cursor.visible = true;
+                SetPositionTarget(MainBody, _pickCoordinates.Latitude, _pickCoordinates.Longitude);
+                StopPickPositionTargetOnMap();
+                _pickCoordinates = null;
+                return;
             }
+
+            string biome = MainBody.GetExperimentBiomeSafe(_pickCoordinates.Latitude, _pickCoordinates.Longitude);
+            PickLabel = _pickCoordinates.ToStringDecimal() + "\n" + biome;
         }
 
         private void DoMapView()
         {
-            DoCoordinatePicking();
+            // the point under the pointer while picking
+            if (_pickCoordinates != null && MapView.MapIsEnabled)
+                GLUtils.DrawGroundMarker(MainBody, _pickCoordinates.Latitude, _pickCoordinates.Longitude, new Color(1.0f, 0.56f, 0.0f), true,
+                    60);
 
             DrawMapViewTarget();
-        }
-
-        private void DoCoordinatePicking()
-        {
-            if (pickingPositionTarget && !MapView.MapIsEnabled)
-                StopPickPositionTargetOnMap(); //stop picking on leaving map view
-
-            if (!pickingPositionTarget)
-                return;
-
-            if (MapView.MapIsEnabled && Vessel.isActiveVessel)
-            {
-                if (!GuiUtils.MouseIsOverWindow(Core))
-                {
-                    Coordinates mouseCoords = GuiUtils.GetMouseCoordinates(MainBody);
-
-                    if (mouseCoords != null)
-                    {
-                        GLUtils.DrawGroundMarker(MainBody, mouseCoords.Latitude, mouseCoords.Longitude, new Color(1.0f, 0.56f, 0.0f), true, 60);
-
-                        string biome = MainBody.GetExperimentBiomeSafe(mouseCoords.Latitude, mouseCoords.Longitude);
-                        GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50),
-                            mouseCoords.ToStringDecimal() + "\n" + biome);
-
-                        if (Input.GetMouseButtonDown(0))
-                        {
-                            SetPositionTarget(MainBody, mouseCoords.Latitude, mouseCoords.Longitude);
-                            StopPickPositionTargetOnMap();
-                        }
-                    }
-                }
-            }
         }
 
         private void DrawMapViewTarget()

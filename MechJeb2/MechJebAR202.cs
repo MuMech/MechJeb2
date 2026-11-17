@@ -14,6 +14,9 @@ namespace MuMech
         private Transform redLightTransform;
         private int emissionId;
 
+        // the model is searched once: one without both light transforms has no lights, and is not searched again every tick
+        private bool lightsSearched;
+
         public override void OnStart(StartState state)
         {
             core = part.Modules.GetModule<MechJebCore>();
@@ -31,6 +34,7 @@ namespace MuMech
 
         private void InitializeLights()
         {
+            lightsSearched = true;
             greenLightTransform = null;
             redLightTransform = null;
 
@@ -44,9 +48,9 @@ namespace MuMech
 
             if (greenLightTransform != null)
             {
+                greenLightRenderer = greenLightTransform.GetComponent<Renderer>();
                 if (greenLightTransform.GetComponent<Light>() == null)
                 {
-                    greenLightRenderer = greenLightTransform.GetComponent<Renderer>();
                     greenLight = greenLightTransform.gameObject.AddComponent<Light>();
                     greenLight.transform.parent = greenLightTransform;
                     greenLight.type = LightType.Point;
@@ -64,9 +68,9 @@ namespace MuMech
 
             if (redLightTransform != null)
             {
+                redLightRenderer = redLightTransform.GetComponent<Renderer>();
                 if (redLightTransform.GetComponent<Light>() == null)
                 {
-                    redLightRenderer = redLightTransform.GetComponent<Renderer>();
                     redLight = redLightTransform.gameObject.AddComponent<Light>();
                     redLight.transform.parent = redLightTransform;
                     redLight.type = LightType.Point;
@@ -85,7 +89,7 @@ namespace MuMech
 
         private void HandleLights()
         {
-            if (greenLight == null || redLight == null) InitializeLights();
+            if (!lightsSearched) InitializeLights();
             if (greenLight == null || redLight == null) return;
 
             if (core == null || MapView.MapIsEnabled)

@@ -37,11 +37,6 @@ namespace MuMech
         // Description that will be displayed on the GUI
         public abstract string GetName();
 
-        // Draw the parameter part of the Operation (ask for time, altitudes etc)
-        // Input parameters are orbit and time parameters after the last maneuver and current target
-        // MechJeb2.UI has a native panel for each of MechJeb's operations: this draws, in IMGUI, one from another mod
-        public virtual void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target) { }
-
         // Function called when create node is pressed; input parameters are orbit and time parameters after the last maneuver and current target
         // ManeuverParameters contain a single time and dV describing the node that should be executed
         // In case of error you can throw an OperationException, the message will be displayed and no node will be created.
@@ -66,11 +61,26 @@ namespace MuMech
                 // PlaceManeuverNode would move such a node to now, or the orbit after the last node would be the wrong one for it,
                 // and either way the dV was computed for another point of the orbit. A second of round-off is let through.
                 ManeuverParameters? past = nodes?.Find(n => n.UT < universalTime - 1);
-                if (past == null)
+                if (past != null)
+                {
+                    Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {past.UT}, before the start at {universalTime}");
+                    ErrorMessage = Localizer.Format("#MechJeb_Maneu_pastNodeError"); //The burn would be before the start of the orbit it is planned on.
+                    return null;
+                }
+
+                // An orbit that ends in an encounter or an escape is not the one the vessel is on later: PlaceManeuverNode would put
+                // the burn on the next patch, around another body. Only the first burn is on this orbit; the others follow it.
+                ManeuverParameters? first = null;
+                if (nodes != null)
+                    foreach (ManeuverParameters n in nodes)
+                        if (first == null || n.UT < first.UT)
+                            first = n;
+                bool ends = o.patchEndTransition == Orbit.PatchTransitionType.ENCOUNTER || o.patchEndTransition == Orbit.PatchTransitionType.ESCAPE;
+                if (first == null || !ends || first.UT < o.EndUT)
                     return nodes;
 
-                Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {past.UT}, before the start at {universalTime}");
-                ErrorMessage = Localizer.Format("#MechJeb_Maneu_pastNodeError"); //The burn would be before the start of the orbit it is planned on.
+                Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {first.UT}, after the end of its orbit at {o.EndUT} ({o.patchEndTransition})");
+                ErrorMessage = Localizer.Format("#MechJeb_Maneu_endedPatchError"); //The burn would be after this orbit ends at a change of sphere of influence; pick an earlier time, or plan from a node placed after the change.
                 return null;
             }
             catch (OperationException e)
@@ -139,9 +149,11 @@ namespace MuMech
         public virtual bool Draggable => true;
 
         /// <summary>
-        /// Per-frame model work that DoParametersGUI does as a side effect of drawing (keeping a target in sync, starting a computation);
-        /// the new UI calls this for the selected operation instead of DoParametersGUI.
+        /// Per-frame model work (keeping a target in sync, starting a computation); the UI calls this for the selected operation.
         /// </summary>
         internal virtual void ViewUpdate(Orbit o, double universalTime, MechJebModuleTargetController target) { }
+
+        /// <summary>When the burn is scheduled, for an operation that lets the user choose; null for one that computes it itself.</summary>
+        internal virtual TimeSelector? Timing => null;
     }
 }

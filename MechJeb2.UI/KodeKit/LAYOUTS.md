@@ -1,9 +1,8 @@
-# KodeKit layouts and widgets of the modern layout
+# KodeKit layouts and widgets
 
-KodeKit's first widgets copy IMGUI: rows, panels, sections, scroll lists, toggles, arrow selectors. The classic layout uses
-them, so its windows look and work like MechJeb's IMGUI windows. The **modern layout**, the default, adds the widgets and layouts
-below. Views use them only when the setting is on. Everything is built in code (no asset bundle), follows the theme, and makes no
-garbage per frame once built.
+KodeKit's basic widgets come from IMGUI: rows, panels, scroll lists, labels, buttons, fields. The views build their windows
+with them and with the widgets and layouts below. Everything is built in code (no asset bundle), follows the theme, and makes
+no garbage per frame once built.
 
 Screenshots come from the gallery test (`MechJeb2_UI/Spike15-Gallery`, run 2026-10-29: KSP 1.12.5, 1920×1080, at MechJeb's
 COMPACT spacing, over the main menu). Each widget is shown in its own window. The widget sections show the Flat skin; the
@@ -11,17 +10,15 @@ Skins and Segmented sections show all four.
 
 ## Settings
 
-The new UI's Settings window has four settings for this. All are saved globally (`MechJebModuleSettings`).
+The new UI's Settings window has three settings for this. All are saved globally (`MechJebModuleSettings`).
 
 | Setting | Field | Values | Effect |
 |---|---|---|---|
-| New UI skin | `UiSkin` | Classic, Flat (default), Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
+| Skin | `UiSkin` | Classic, Flat (default), Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
 | Compact | `UiCompact` | on (default) / off | Tighter margins and rows, in every skin (`Theme.Compact`). MechJeb's IMGUI skin no longer decides this. A custom window's own Compact switch can follow it, or override it on or off. |
-| Modern layout | `UiModernLayout` | on (default) / off | Views build with the widgets below instead of IMGUI's. Changing it rebuilds the open windows. |
-| Section headers | `UiSectionHeaders` | on (default) / off | The headers the modern layout adds to long windows (`KodeWindow.Header`). |
+| Section headers | `UiSectionHeaders` | on (default) / off | The headers the views add to long windows (`KodeWindow.Header`). Changing it rebuilds the open windows. |
 
-`KodeHost` passes them to KodeKit's statics before it builds the windows: `KodeWindow.ModernLayout` and
-`KodeWindow.ShowHeaders`. `KodeHost.ThemeFor(skin, compact, opacity)` builds a skin's theme. Tests use the same call.
+`KodeHost` passes the headers setting to `KodeWindow.ShowHeaders` before it builds the windows. `KodeHost.ThemeFor(skin, compact, opacity)` builds a skin's theme. Tests use the same call.
 
 The choice style is not a setting. Each choice picks its own, by the rule under Segmented. A **Choices** setting was
 used to compare the three styles window by window, then dropped (2026-10-30).
@@ -128,7 +125,7 @@ g.Dim(fieldGo, unitGo, () => !enabled);            // fade cells while a conditi
 g.FlexibleColumn = 0;                              // for label | control | unit rows, without a switch
 ```
 
-`MuMech.UI.ModernRows` builds the thrust limiter and autostage blocks that several windows share. On MechJeb's editables,
+`MuMech.UI.OptionRows` builds the thrust limiter and autostage blocks that several windows share. On MechJeb's editables,
 `EditUi.Grid(g, label, () => editable, unit, width)` is the field row (red while the text does not parse).
 
 ### MasterDetail
@@ -268,8 +265,7 @@ w.Visible(GuidanceUi.Wrapped(bar, "#MechJeb_Docking_label2").gameObject, () => n
 its own style in Flat, Glass and ZTheme. Classic tints the stock button for each role. Use `w.BindRole(button, () => role)`
 for a role that follows a state, such as a state button that turns Selected while its mode is on.
 
-A fixed role (`Button(..., role)` or `KodeWindow.Role(button, role)`) only shows in the modern layout: the classic layout
-keeps IMGUI's plain buttons, so a view builds the same buttons in both. `BindRole` applies in both layouts.
+A fixed role is `Button(..., role)` or `KodeWindow.Role(button, role)`.
 
 ```csharp
 KodeWindow.Button(parent, "#MechJeb_NodeEd_button6", () => core.Node.Abort(), ButtonRole.Danger, true);
@@ -307,7 +303,7 @@ dropped ("Mode:" becomes "MODE"). Headers are hidden when the **Section headers*
 
 ![](doc/Flat_Title_bar_icons.png)
 
-In the modern layout, the title sits on the left and the close button is an X icon. `w.TitleIcon(sprite, tooltip, onClick)`
+The title sits on the left and the close button is an X icon. `w.TitleIcon(sprite, tooltip, onClick)`
 adds a flat icon before it. The custom info windows use `Sprites.Edit` and `Sprites.Copy` instead of their "E" and "C"
 letters (proposal 9A).
 
@@ -319,9 +315,9 @@ letters (proposal 9A).
 operations are sorted into Orbit shape, Target, and Planets and moons. The Node Editor's node and snap selectors, the
 Custom Window Editor's window and preset selectors are dropdowns too (proposal 6A, instead of arrow selectors).
 
-## Windows in the modern layout
+## Windows
 
-| Window | Changes |
+| Window | What differs from IMGUI |
 |---|---|
 | Smart A.S.S. | Target tiles with navball markers, the navball cross for orbital targets, a joined mode bar, an AUTO status bar |
 | SmartRcs, Translatron | Target tiles or a mode choice, switches, a speed stepper, PANIC as a destructive button, an AUTO status bar |
@@ -339,6 +335,17 @@ Custom Window Editor's window and preset selectors are dropdowns too (proposal 6
 | Ascent Guidance | Buttons by role, buttons that open the settings windows (selected while open), status bars |
 | Rover, Waypoint Help, Rendezvous, Warp Helper | Steppers, switches, the topic choice, buttons by role |
 
+## Conventions
+
+- **Switch or checkbox.** A switch for a setting on a row of its own (`Switch`, `SwitchRow`, a `PropertyGrid` switch row); a
+  checkbox (`Toggle`) for a choice in a list or a table (the menu, the PSG Stages table, the debug arrows).
+- **Labels.** No colon after a label: the grid lines up label and field. Sentence case ("Lead time", "Speed"); capitals only
+  for mode names, which are capitals everywhere they appear (Smart A.S.S.'s and Translatron's modes, AUTO).
+- **Empty states.** "No X: do Y." in the dim tone ("No target: select a vessel or docking port.").
+- **Headers.** A header over two controls or more; one control needs none.
+- **Buttons.** One Primary per window, the main action. A disabled button is grey whatever its role: give it the Primary role
+  only while it can be pressed, and say why it is off on a dim line under it.
+
 ## Rules learned
 
 - A `LayoutElement` with `flexibleWidth = -1` does not stop a layout group's own flexible width: -1 means "no opinion".
@@ -348,4 +355,4 @@ Custom Window Editor's window and preset selectors are dropdowns too (proposal 6
   would leave the previous tint on the renderer.
 - `TableLayout` places its rows' cells itself. The rows are `TableRow`s, no-op layout groups, so uGUI's layout passes still
   walk down into the cells, and a change in a cell still walks up to the table.
-- Views read the layout settings when they build. A change rebuilds the windows; skins only restyle them.
+- Views read the Section headers setting when they build. A change rebuilds the windows; skins only restyle them.

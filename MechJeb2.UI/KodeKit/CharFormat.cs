@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using UnityEngine;
 
 namespace KodeKit
 {
@@ -16,6 +17,8 @@ namespace KodeKit
         char[] shown = new char[32];
         int len, shownLen = -1;
         float pushWidth = -1; // the box's width at the last push
+        float pushTime;       // realtime of the last push
+        const float RepushInterval = 1f; // seconds between two pushes of an unchanged text that shows cut
 
         public CharText(TMP_Text target) => this.target = target;
 
@@ -106,12 +109,18 @@ namespace KodeKit
             return this;
         }
 
-        /// <summary>MechJeb's GuiUtils.TimeToDHMS(seconds, decimalPlaces) without allocations.</summary>
-        public CharText AppendDHMS(double seconds, int decimalPlaces, int hoursPerDay, int daysPerYear)
+        /// <summary>
+        /// MechJeb's GuiUtils.TimeToDHMS(seconds, decimalPlaces) without allocations. The day and year lengths are in seconds, as
+        /// KSP's date formatter gives them: a year need not be a whole number of days, nor a day of hours.
+        /// </summary>
+        public CharText AppendDHMS(double seconds, int decimalPlaces, long daySeconds, long yearSeconds)
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return Append("Inf");
+            // a calendar without days or years (a length of 0): hours are the largest unit
+            if (daySeconds <= 0) daySeconds = long.MaxValue;
+            if (yearSeconds <= 0) yearSeconds = long.MaxValue;
             // GuiUtils.TimeToDHMS: from a thousand years, years with an SI prefix ("398.6 Ma")
-            double years = seconds / ((double)hoursPerDay * 3600 * daysPerYear);
+            double years = seconds / yearSeconds;
             if (Math.Abs(years) >= 1000) return AppendSI(years).Append('a');
             int start = len;
             bool negative = seconds < 0;
@@ -121,7 +130,7 @@ namespace KodeKit
                 seconds = (double)Math.Round((decimal)seconds, Math.Min(decimalPlaces, 9), MidpointRounding.AwayFromZero);
             // no "-00.0s" for a value that rounds to zero
             if (negative && (decimalPlaces > 0 ? seconds > 0 : seconds >= 1)) Append('-');
-            long year = (long)hoursPerDay * 3600 * daysPerYear, day = (long)hoursPerDay * 3600;
+            long year = yearSeconds, day = daySeconds;
             long y = (long)(seconds / year);
             long d = (long)(seconds % year / day);
             long h = (long)(seconds % day / 3600);
@@ -201,12 +210,16 @@ namespace KodeKit
             // at every later width, and the cut text ends in the ellipsis even where it fits. TMP can cut it again at each
             // layout between two commits, and its isTextTruncated only tells about the last one, so look at what it shows:
             // cut, in a box of another width than at the push, push it again (TMP then cuts it afresh, or shows all of it).
-            // A box that keeps its width costs nothing more, cut or not.
-            if (len == shownLen && SameAsShown() && (!ShowsEllipsis() || target.rectTransform.rect.width == pushWidth)) return false;
+            // A box that keeps its width costs nothing more, cut or not, but for one push a second while it shows cut: the box can
+            // narrow and come back to the same width between two commits, which leaves the text cut where it fits.
+            if (len == shownLen && SameAsShown() &&
+                (!ShowsEllipsis() || target.rectTransform.rect.width == pushWidth && Time.realtimeSinceStartup - pushTime < RepushInterval))
+                return false;
             if (shown.Length < len) shown = new char[buf.Length];
             Array.Copy(buf, shown, len);
             shownLen = len;
             pushWidth = target.rectTransform.rect.width;
+            pushTime = Time.realtimeSinceStartup;
             target.SetCharArray(buf, 0, len);
             return true;
         }

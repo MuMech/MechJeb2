@@ -23,16 +23,6 @@ namespace MuMech
             vessel.situation == Vessel.Situations.FLYING || vessel.situation == Vessel.Situations.ESCAPING ||
             vessel.situation == Vessel.Situations.ORBITING || vessel.situation == Vessel.Situations.SUB_ORBITAL;
 
-        public static List<ITargetable> GetTargetables(this Vessel vessel)
-        {
-            List<Part> parts;
-            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.fetch.ship.parts;
-            else if (vessel == null) return new List<ITargetable>();
-            else parts = vessel.Parts;
-
-            return parts.SelectMany(part => part.Modules.OfType<ITargetable>()).ToList();
-        }
-
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule
         {
             List<Part> parts;
@@ -101,12 +91,11 @@ namespace MuMech
 
             Guid vesselKey = vessel == null ? Guid.Empty : vessel.id;
 
+            // a vessel without MechJeb is remembered too, for the fixed step: the UI asks every frame for the active vessel
             if (!masterMechJeb.TryGetValue(vesselKey, out MechJebCore mj))
             {
                 mj = vessel.GetModule<MechJebCore>(p => p.running);
-                if (mj != null)
-                    masterMechJeb.Add(vesselKey, mj);
-                return mj;
+                masterMechJeb.Add(vesselKey, mj);
             }
 
             return mj;
@@ -156,7 +145,7 @@ namespace MuMech
         public static double MaxResourceAmount(this Vessel vessel, PartResourceDefinition definition)
         {
             if (definition == null) return 0;
-            List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts;
+            List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorParts : vessel.parts;
 
             double amount = 0;
             for (int i = 0; i < parts.Count; i++)
@@ -211,37 +200,6 @@ namespace MuMech
             return referencePort;
         }
 
-        public static bool HasElectricCharge(this Vessel vessel)
-        {
-            if (vessel == null)
-                return false;
-
-            List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts;
-            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(PartResourceLibrary.ElectricityHashcode);
-            if (definition == null) return false;
-
-            PartResource r;
-            if (vessel.GetReferenceTransformPart() != null)
-            {
-                r = vessel.GetReferenceTransformPart().Resources.Get(definition.id);
-                // check the command pod first since most have their batteries
-                if (r != null && r.amount > 0)
-                    return true;
-            }
-
-            for (int i = 0; i < parts.Count; i++)
-            {
-                Part p = parts[i];
-                r = p.Resources.Get(definition.id);
-                if (r != null && r.amount > 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         public static bool LiftedOff(this Vessel vessel) => vessel.situation != Vessel.Situations.PRELAUNCH;
 
         public static Orbit GetPatchAtUT(this Vessel vessel, double UT)
@@ -275,11 +233,10 @@ namespace MuMech
             bool finalPatch = patch.patchEndTransition == Orbit.PatchTransitionType.FINAL;
 
 
+            // KSP gives a solver only to the active vessel, and only once patched conics are unlocked: a vessel without one
+            // has no maneuver nodes. Adding one would give it conics that stock withholds, and one KSP never removes.
             if (vessel.patchedConicSolver == null)
-            {
-                vessel.patchedConicSolver = vessel.gameObject.AddComponent<PatchedConicSolver>();
-                vessel.patchedConicSolver.Load(vessel.flightPlanNode);
-            }
+                return finalPatch ? null : patch.nextPatch;
 
             //See if any maneuver nodes occur during this patch. If there is one
             //return the patch that follows it
@@ -342,8 +299,8 @@ namespace MuMech
         // From FAR with ferram4 authorisation
         public static MechJebModuleDockingAutopilot.Box3d GetBoundingBox(this Vessel vessel, bool debug = false)
         {
-            var minBounds = new Vector3();
-            var maxBounds = new Vector3();
+            var minBounds = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+            var maxBounds = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
 
             if (debug)
             {
@@ -354,36 +311,28 @@ namespace MuMech
             {
                 Part p = vessel.parts[i];
                 PartExtensions.Vector3Pair partBox = p.GetBoundingBox();
+                bool hasMesh = partBox.P2.x <= partBox.P1.x;
 
                 if (debug)
                 {
-                    MonoBehaviour.print("[GetBoundingBox] " + p.name + " " + (partBox.P1 - partBox.P2).magnitude.ToString("F3"));
+                    MonoBehaviour.print("[GetBoundingBox] " + p.name + " " + (hasMesh ? (partBox.P1 - partBox.P2).magnitude.ToString("F3") : "no mesh"));
                 }
 
-                maxBounds.x = Mathf.Max(maxBounds.x, partBox.P1.x);
-                minBounds.x = Mathf.Min(minBounds.x, partBox.P2.x);
-                maxBounds.y = Mathf.Max(maxBounds.y, partBox.P1.y);
-                minBounds.y = Mathf.Min(minBounds.y, partBox.P2.y);
-                maxBounds.z = Mathf.Max(maxBounds.z, partBox.P1.z);
-                minBounds.z = Mathf.Min(minBounds.z, partBox.P2.z);
+                if (!hasMesh)
+                    continue;
 
-                //foreach (var sympart in p.symmetryCounterparts)
-                //{
-                //    partBox = sympart.GetBoundingBox();
-
-                //    maxBounds.x = Mathf.Max(maxBounds.x, partBox.p1.x);
-                //    minBounds.x = Mathf.Min(minBounds.x, partBox.p2.x);
-                //    maxBounds.y = Mathf.Max(maxBounds.y, partBox.p1.y);
-                //    minBounds.y = Mathf.Min(minBounds.y, partBox.p2.y);
-                //    maxBounds.z = Mathf.Max(maxBounds.z, partBox.p1.z);
-                //    minBounds.z = Mathf.Min(minBounds.z, partBox.p2.z);
-                //}
+                maxBounds = Vector3.Max(maxBounds, partBox.P1);
+                minBounds = Vector3.Min(minBounds, partBox.P2);
             }
 
             if (debug)
             {
                 MonoBehaviour.print("[GetBoundingBox] End " + vessel.vesselName);
             }
+
+            // No part has a mesh: a zero box at the vessel's origin.
+            if (minBounds.x > maxBounds.x)
+                minBounds = maxBounds = Vector3.zero;
 
             var box = new MechJebModuleDockingAutopilot.Box3d();
 
@@ -447,19 +396,18 @@ namespace MuMech
 
         // The part loop in VesselState could expose this, but it gets disabled when the RCS action group is disabled.
         // This method is also useful when the RCS AG is off.
+        // Walks the parts itself: FindPartModulesImplementing builds a new list on each call, and the ullage check asks every tick.
         public static bool hasEnabledRCSModules(this Vessel vessel)
         {
-            List<ModuleRCS> rcsModules = vessel.FindPartModulesImplementing<ModuleRCS>();
-
-            for (int m = 0; m < rcsModules.Count; m++)
+            List<Part> parts = vessel.parts;
+            for (int p = 0; p < parts.Count; p++)
             {
-                ModuleRCS rcs = rcsModules[m];
-
-                if (rcs == null)
-                    continue;
-
-                if (rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
-                    return true;
+                PartModuleList modules = parts[p].Modules;
+                for (int m = 0; m < modules.Count; m++)
+                {
+                    if (modules[m] is ModuleRCS rcs && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
+                        return true;
+                }
             }
 
             return false;

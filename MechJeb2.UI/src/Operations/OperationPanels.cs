@@ -7,26 +7,27 @@ using KSP.Localization;
 namespace MuMech.UI
 {
     /// <summary>
-    /// The parameter rows of each maneuver Operation (its DoParametersGUI), built once into a panel of ManeuverPlannerView.
-    /// An operation without a builder here (e.g. one from another mod) is drawn by its own DoParametersGUI through ImguiBlock.
+    /// The parameter rows of each maneuver Operation, built once into a panel of ManeuverPlannerView.
+    /// Every MechJeb operation has a builder here; another mod's operation has none, and its panel only says that its
+    /// settings can't be shown.
     /// </summary>
     internal static class OperationPanels
     {
         static readonly Dictionary<Type, Action<OpContext>> builders = new Dictionary<Type, Action<OpContext>>
         {
             { typeof(OperationApoapsis), Apoapsis },
-            { typeof(OperationCircularize), c => OpUi.TimeSelectorRows(c.W, c.Panel, OperationCircularize._timeSelector) },
+            { typeof(OperationCircularize), c => OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing) },
             { typeof(OperationCourseCorrection), CourseCorrection },
             { typeof(OperationEccentricity), Eccentricity },
             { typeof(OperationEllipticize), Ellipticize },
             { typeof(OperationInclination), Inclination },
-            { typeof(OperationKillRelVel), c => OpUi.TimeSelectorRows(c.W, c.Panel, OperationKillRelVel._timeSelector) },
+            { typeof(OperationKillRelVel), c => OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing) },
             { typeof(OperationLambert), Lambert },
             { typeof(OperationLan), Lan },
             { typeof(OperationLongitude), Longitude },
             { typeof(OperationMoonReturn), MoonReturn },
             { typeof(OperationPeriapsis), Periapsis },
-            { typeof(OperationPlane), c => OpUi.TimeSelectorRows(c.W, c.Panel, OperationPlane._timeSelector) },
+            { typeof(OperationPlane), c => OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing) },
             { typeof(OperationResonantOrbit), ResonantOrbit },
             { typeof(OperationSemiMajor), SemiMajor },
             { typeof(OperationStationaryOrbit), Stationary },
@@ -46,28 +47,28 @@ namespace MuMech.UI
         {
             var op = (OperationApoapsis)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Ap_label1", () => op.NewApA, "km"); //New apoapsis:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationApoapsis._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Periapsis(OpContext c)
         {
             var op = (OperationPeriapsis)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Pe_label", () => op.NewPeA, "km"); //New periapsis:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationPeriapsis._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void SemiMajor(OpContext c)
         {
             var op = (OperationSemiMajor)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Sa_label", () => op.NewSma, "km"); //New Semi-Major Axis:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationSemiMajor._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Eccentricity(OpContext c)
         {
             var op = (OperationEccentricity)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "New eccentricity:", () => op.NewEcc);
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationEccentricity._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Ellipticize(OpContext c)
@@ -75,21 +76,21 @@ namespace MuMech.UI
             var op = (OperationEllipticize)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_both_label1", () => op.NewPeA, "km"); //New periapsis:
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_both_label2", () => op.NewApA, "km"); //New apoapsis:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationEllipticize._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Inclination(OpContext c)
         {
             var op = (OperationInclination)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_inclination_label", () => op.NewInc, "°"); //New inclination:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationInclination._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Lambert(OpContext c)
         {
             var op = (OperationLambert)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_intercept_label", () => op.InterceptInterval, stacked: true); //Time after burn to intercept target:
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationLambert._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         // the angle being edited is the target controller's, shared with the other windows
@@ -99,14 +100,14 @@ namespace MuMech.UI
 
         static void Lan(OpContext c)
         {
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationLan._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
             KodeWindow.Label(c.Panel, "#MechJeb_AN_label"); //New Longitude of Ascending Node:
             OpUi.AngleRow(c.W, c.Panel, () => TargetLongitude(c), EditableAngle.Direction.EW);
         }
 
         static void Longitude(OpContext c)
         {
-            OpUi.TimeSelectorRows(c.W, c.Panel, OperationLongitude._timeSelector);
+            OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
             KodeWindow.Label(c.Panel, "#MechJeb_la_label"); //New Surface Longitude after one orbit:
             OpUi.AngleRow(c.W, c.Panel, () => TargetLongitude(c), EditableAngle.Direction.EW);
         }
@@ -115,7 +116,7 @@ namespace MuMech.UI
         {
             var op = (OperationMoonReturn)c.Op;
             OpUi.LabeledField(c.W, c.Panel, "#MechJeb_return_label1", () => op.Periapsis, "km", true); //Approximate final periapsis:
-            OpUi.ToggledField(c.W, c.Panel, "Inclination", () => op.InclinationFlag, v => op.InclinationFlag = v, () => op.Inclination, "°");
+            OpUi.ToggledField(c.W, c.Panel, "#MechJeb_Inclination", () => op.InclinationFlag, v => op.InclinationFlag = v, () => op.Inclination, "°");
             KodeWindow.Paragraph(c.Panel, "#MechJeb_return_label2"); //Schedule the burn at the next return window.
         }
 
@@ -125,8 +126,8 @@ namespace MuMech.UI
 
             Layout celestial = KodeWindow.Panel(c.Panel);
             OpUi.LabeledField(c.W, celestial, "#MechJeb_approach_label1", () => op.Periapsis, "km", true); //Approximate final periapsis
-            OpUi.ToggledField(c.W, celestial, "Inclination", () => op.InclinationFlag, v => op.InclinationFlag = v, () => op.Inclination, "°");
-            OpUi.TimeSelectorRows(c.W, celestial, OperationCourseCorrection._timeSelector);
+            OpUi.ToggledField(c.W, celestial, "#MechJeb_Inclination", () => op.InclinationFlag, v => op.InclinationFlag = v, () => op.Inclination, "°");
+            OpUi.TimeSelectorRows(c.W, celestial, c.Op.Timing);
             c.W.Visible(celestial.gameObject, () => c.TargetIsCelestial);
 
             Layout other = KodeWindow.Panel(c.Panel);
@@ -215,19 +216,7 @@ namespace MuMech.UI
             // two-burn capture vs single-burn intercept/flyby: radio buttons whose texts depend on the kind of target
             void CaptureRadios(Layout row, string captureKey, string interceptKey)
             {
-                if (KodeWindow.ModernLayout)
-                {
-                    w.Segmented(row, new[] { captureKey, interceptKey }, () => op.Capture ? 0 : 1, i => op.Capture = i == 0);
-                    return;
-                }
-                w.Toggle(row, captureKey, () => op.Capture, v =>
-                {
-                    if (v) op.Capture = true;
-                });
-                w.Toggle(row, interceptKey, () => !op.Capture, v =>
-                {
-                    if (v) op.Capture = false;
-                });
+                w.Segmented(row, new[] { captureKey, interceptKey }, () => op.Capture ? 0 : 1, i => op.Capture = i == 0);
             }
 
             Layout celestial = KodeWindow.Row(c.Panel);
@@ -244,7 +233,7 @@ namespace MuMech.UI
 
             // arrival delay offsets the intercept point
             Layout delay = KodeWindow.Panel(c.Panel);
-            OpUi.LabeledField(w, delay, "#MechJeb_Hohm_arrivalDelay", () => op.LagTime, "sec"); //Arrival delay
+            OpUi.LabeledField(w, delay, "#MechJeb_Hohm_arrivalDelay", () => op.LagTime, "s"); //Arrival delay
             w.Visible(delay.gameObject, () => op.Capture && !op.MatchOrbit);
 
             // optionally create a maneuver node for the arrival burn (OperationGeneric.ViewUpdate clears it while it is not offered)
@@ -253,7 +242,7 @@ namespace MuMech.UI
             w.Visible(plan.gameObject, () => op.PlanCaptureAvailable(c.TargetIsCelestial));
 
             w.Toggle(c.Panel, "#MechJeb_Hohm_simpleTransfer", () => op.Coplanar, v => op.Coplanar = v); //Coplanar only
-            OpUi.TimeSelectorRows(w, c.Panel, OperationGeneric._timeSelector);
+            OpUi.TimeSelectorRows(w, c.Panel, c.Op.Timing);
         }
     }
 }

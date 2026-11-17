@@ -14,7 +14,15 @@ namespace MuMech
 
         private static readonly TimeReference[] _timeReferences = { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW };
 
-        internal static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+        internal readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+
+        internal override TimeSelector Timing => _timeSelector;
+
+        /// <summary>
+        /// The new LAN in degrees, in place of the target controller's targetLongitude (which the window edits, and which also
+        /// places a position target). Set by kOS only.
+        /// </summary>
+        internal double? LongitudeOverride;
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -24,7 +32,7 @@ namespace MuMech
 
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
 
-            Vector3d dV = OrbitalManeuverCalculator.DeltaVToShiftLAN(o, ut, target.targetLongitude);
+            Vector3d dV = OrbitalManeuverCalculator.DeltaVToShiftLAN(o, ut, LongitudeOverride ?? (double)target.targetLongitude);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }

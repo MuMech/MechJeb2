@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System.Collections.Generic;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 
@@ -69,6 +70,14 @@ namespace MechJebLib.Interpolants
             return yout;
         }
 
+        // its two ends, t and t + h, one for a zero-width node
+        public override void Knots(List<double> into)
+        {
+            into.Add(_t);
+            if (_invH > 0)
+                into.Add(_t + 1 / _invH);
+        }
+
         public override InterpolantNode<Vec> DeepCopy()
         {
             CubicHermiteVecNode node = _pool.Borrow();
@@ -79,6 +88,17 @@ namespace MechJebLib.Interpolants
             node._c2 = _c2.Dup();
             node._c3 = _c3.Dup();
             return CopyBoundsTo(node);
+        }
+
+        // the power basis is in s = (x - t) / h, which doesn't change, so only t and h stretch and every coefficient takes yScale
+        internal override void Rescale(double timeScale, Vec yScale)
+        {
+            _t    *= timeScale;
+            _invH /= timeScale;
+            _c0.Mul(yScale);
+            _c1.Mul(yScale);
+            _c2.Mul(yScale);
+            _c3.Mul(yScale);
         }
 
         public override void Dispose()

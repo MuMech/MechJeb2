@@ -132,7 +132,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcsetalgoaul2(state, MAXITS);
             alglib.minnlcsetcond(state, 0, MAXITS);
             alglib.minnlcsetnlc(state, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
-#if DEBUG
+#if DEBUG && !NO_OPTGUARD
             const double DIFFSTEP = 1e-7;
             alglib.minnlcoptguardsmoothness(state);
             alglib.minnlcoptguardgradient(state, DIFFSTEP);
@@ -144,7 +144,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcsetalgosqp(state2);
             alglib.minnlcsetcond(state2, 0, MAXITS);
             alglib.minnlcsetnlc(state2, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
-#if DEBUG
+#if DEBUG && !NO_OPTGUARD
             alglib.minnlcoptguardsmoothness(state2);
             alglib.minnlcoptguardgradient(state2, DIFFSTEP);
 #endif

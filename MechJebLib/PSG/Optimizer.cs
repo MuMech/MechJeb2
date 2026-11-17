@@ -19,6 +19,8 @@ namespace MechJebLib.PSG
 
         public readonly Problem Problem;
         public readonly PhaseCollection Phases;
+        // the snapshot the AscentBuilder took, which nothing changes, so it is safe to read on the worker thread
+        public readonly FlightPlan? FlightPlan;
         public readonly ITerminal Terminal;
         public readonly ObjectiveType Objective;
         private readonly VariableProxy _vars;
@@ -46,6 +48,9 @@ namespace MechJebLib.PSG
         public double Cost;
         public Solution? Solution;
 
+        // the last Run() stopped at OptimizerTimeout rather than converging or failing
+        public bool TimedOut;
+
         public const int DEFAULT_TIMEOUT = 120_000; // milliseconds
 
         public int    K                   => 3 * N + 1;
@@ -61,10 +66,11 @@ namespace MechJebLib.PSG
         public double ZeroCoastTime       { get; set; } = 1; // seconds, minimum coast of a burn-coast-burn with a nonzero first burn
         public double ZeroCoastMu         { get; set; } = 1e-6;
 
-        public Optimizer(Problem problem, PhaseCollection phases, ITerminal terminal, ObjectiveType objective)
+        public Optimizer(Problem problem, PhaseCollection phases, FlightPlan? flightPlan, ITerminal terminal, ObjectiveType objective)
         {
             Phases = phases.DeepCopy();
             Phases.SetControlContinuity();
+            FlightPlan = flightPlan;
             Terminal = terminal;
             Objective = objective;
             _vars = new VariableProxy(problem, Phases, Terminal, N);
@@ -76,7 +82,10 @@ namespace MechJebLib.PSG
             _nl = Array.Empty<double>();
         }
 
-        private void CalculatePrimalFeasibility(double[] f, bool debug = false)
+        // the root sum square of the violations of the nonlinear constraints f (the cost is f[0]) and of the box constraints
+        // bndl and bndu on the variables x (ALGLIB starts from a guess outside the box constraints, such as a warm start
+        // from a trajectory that does not begin at the initial position)
+        private void CalculatePrimalFeasibility(double[] f, double[] x, double[] bndl, double[] bndu, bool debug = false)
         {
             Cost = f[0];
             PrimalFeasibility = 0;
@@ -95,6 +104,25 @@ namespace MechJebLib.PSG
                 {
                     if (lower > 1e-5 && debug)
                         PrintDebug($"constraint violation {i}: {f[i]} lower limit: {_nl[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
+                    PrimalFeasibility += lower * lower;
+                }
+            }
+
+            for (int i = 0; i < x.Length; i++)
+            {
+                double upper = x[i] - bndu[i];
+                double lower = bndl[i] - x[i];
+
+                if (upper > 0)
+                {
+                    if (upper > 1e-5 && debug)
+                        PrintDebug($"box constraint violation on variable {i}: {x[i]} upper limit: {bndu[i]}");
+                    PrimalFeasibility += upper * upper;
+                }
+                else if (lower > 0)
+                {
+                    if (lower > 1e-5 && debug)
+                        PrintDebug($"box constraint violation on variable {i}: {x[i]} lower limit: {bndl[i]}");
                     PrimalFeasibility += lower * lower;
                 }
             }
@@ -122,7 +150,7 @@ namespace MechJebLib.PSG
                 Phase phase = Phases[p];
                 PhaseProxy thisPhase = _vars[p];
 
-                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0 * oldToNewScale.TimeScale) / oldToNewScale.MassScale : phase.M0;
+                double m0 = phase.MassContinuity ? oldSolution.M(oldt0 * oldToNewScale.TimeScale) / oldToNewScale.MassScale : phase.M0;
 
                 oldtbt = oldtf - oldt0;
                 double bt = Phases[p].Coast ? oldtbt : Clamp(phase.Bt, 0, oldtbt / frac);
@@ -158,15 +186,19 @@ namespace MechJebLib.PSG
 
         // this makes no assumptions about the phases in the old solution, just that
         // we must be doing burn / coast-burn or / burn-coast-burn, where the burns
-        // may be multi-stage.  times on the old solution's timeline keep its origin but are in this problem's time units.
+        // may be multi-stage.  times on the old solution's timeline are MET in this problem's time units.
+        // the old solution must be normalized, though it may have been normalized with a different Scale.
         public void TranscribePreviousSolution(Solution oldSolution)
         {
+            Check.True(oldSolution.Normalized, "warm start needs the normalized Solution");
+
             _xGuess = new double[_vars.TotalVariables];
             _vars.WrapVars(_xGuess);
 
-            Scale oldToNewScale = oldSolution.Problem.Scale.ConvertTo(Problem.Scale);
-            double oldtBar = oldSolution.Tbar(Problem.T0);
-            (double oldburn1, double oldcoast, double oldburn2) = oldSolution.TgoBarSplit(oldtBar);
+            Scale oldToNewScale = oldSolution.Scale.ConvertTo(Problem.Scale);
+            // both clocks are MET, so this problem's start is the same instant on the old solution's normalized clock
+            double oldtBar = Clamp(Problem.T0 * oldToNewScale.TimeScale, oldSolution.T0, oldSolution.Tf);
+            (double oldburn1, double oldcoast, double oldburn2) = oldSolution.TgoSplit(oldtBar);
 
             double oldt0 = oldtBar / oldToNewScale.TimeScale;
             oldburn1 /= oldToNewScale.TimeScale;
@@ -179,7 +211,7 @@ namespace MechJebLib.PSG
                 if (Phases[p].Coast)
                     coastPhaseIndex = p;
 
-            double t0 = 0;
+            double t0 = Problem.T0;
 
             if (coastPhaseIndex > 0)
             {
@@ -216,9 +248,9 @@ namespace MechJebLib.PSG
         private void TranscribePoint(Solution oldSolution, Scale oldToNewScale, int k, PhaseProxy thisPhase, Phase phase, double m0, double oldt, double dt)
         {
             double oldtBar = oldt * oldToNewScale.TimeScale;
-            V3 r = oldSolution.RBar(oldtBar) / oldToNewScale.LengthScale;
-            V3 v = oldSolution.VBar(oldtBar) / oldToNewScale.VelocityScale;
-            V3 u = oldSolution.UBar(oldtBar);
+            V3 r = oldSolution.R(oldtBar) / oldToNewScale.LengthScale;
+            V3 v = oldSolution.V(oldtBar) / oldToNewScale.VelocityScale;
+            V3 u = oldSolution.U(oldtBar);
 
             thisPhase.R[k] = r;
             thisPhase.V[k] = v;
@@ -234,14 +266,14 @@ namespace MechJebLib.PSG
             {
                 // pick roughly the midpoint
                 if (k < K / 2)
-                    thisPhase.U.First = Q3.FromToRotation(V3.forward, u.normalized);
+                    thisPhase.U.First = u.normalized;
                 thisPhase.T.First = phase.Coast ? 0.0 : 1.0;
             }
             else
             {
                 if (k % 3 != 0)
                 {
-                    thisPhase.U[k] = Q3.FromToRotation(V3.forward, u.normalized);
+                    thisPhase.U[k] = u.normalized;
                     thisPhase.T[k] = 1.0;
                 }
             }
@@ -253,20 +285,23 @@ namespace MechJebLib.PSG
         // variables on the phases may change, but the number and order of phases must not.
         public void TranscribePreviousBootSolution(Solution oldSolution)
         {
+            Check.True(oldSolution.Normalized, "warm start needs the normalized Solution");
+
             _xGuess = new double[_vars.TotalVariables];
             _vars.WrapVars(_xGuess);
 
-            Scale oldToNewScale = oldSolution.Problem.Scale.ConvertTo(Problem.Scale);
+            Scale oldToNewScale = oldSolution.Scale.ConvertTo(Problem.Scale);
 
-            double t0 = 0;
-            double oldt0 = 0;
+            double t0 = Problem.T0;
+            double oldt0 = oldSolution.T0 / oldToNewScale.TimeScale;
             for (int p = 0; p < Phases.Count; p++)
             {
                 Phase phase = Phases[p];
                 PhaseProxy thisPhase = _vars[p];
 
-                double oldbt = oldSolution.BtBar(p, 0) / oldToNewScale.TimeScale;
-                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0 * oldToNewScale.TimeScale) / oldToNewScale.MassScale : phase.M0;
+                // the whole of the old phase
+                double oldbt = (oldSolution.EndTime(p) - oldSolution.StartTime(p)) / oldToNewScale.TimeScale;
+                double m0 = phase.MassContinuity ? oldSolution.M(oldt0 * oldToNewScale.TimeScale) / oldToNewScale.MassScale : phase.M0;
 
                 double bt = oldbt;
                 if (!phase.Coast)
@@ -362,9 +397,9 @@ namespace MechJebLib.PSG
 
                 if (phase.Unguided)
                 {
-                    (int idxX, int idxY, int idxZ, int idxW) = thisPhase.U.Idx(0);
-                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = bndl[idxW] = -1.2;
-                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = bndu[idxW] = 1.2;
+                    (int idxX, int idxY, int idxZ) = thisPhase.U.Idx(0);
+                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = -1.2;
+                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = 1.2;
                     continue;
                 }
 
@@ -373,10 +408,10 @@ namespace MechJebLib.PSG
                     // skip non-collocated points
                     if (k % 3 == 0)
                         continue;
-                    (int idxX, int idxY, int idxZ, int idxW) = thisPhase.U.Idx(k);
+                    (int idxX, int idxY, int idxZ) = thisPhase.U.Idx(k);
 
-                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = bndl[idxW] = -1.2;
-                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = bndu[idxW] = 1.2;
+                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = -1.2;
+                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = 1.2;
                 }
             }
 
@@ -481,7 +516,7 @@ namespace MechJebLib.PSG
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j2);
             _ascentProblem.ConstraintFunction(f, j2, _xGuess, new AscentProblem.ConstraintArgs(true));
 
-            CalculatePrimalFeasibility(f, true);
+            CalculatePrimalFeasibility(f, _xGuess, bndl, bndu, true);
 
             PrintDebug($"Initial Cost: {Cost}");
             PrintDebug($"Initial PrimalFeasibility: {PrimalFeasibility}");
@@ -495,7 +530,7 @@ namespace MechJebLib.PSG
             //alglib.minnlcsetalgogipm2(_state);
             alglib.minnlcsetcond3(_state, Epsf, SQPTrustRegionLimit, Maxits);
 
-#if DEBUG
+#if DEBUG && !NO_OPTGUARD
             alglib.minnlcoptguardgradient(_state, Diffstep);
             alglib.minnlcoptguardsmoothness(_state, 1);
 #endif
@@ -530,13 +565,13 @@ namespace MechJebLib.PSG
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix jac);
 
             _ascentProblem.ConstraintFunction(f, jac, x, null);
-            CalculatePrimalFeasibility(f, true);
+            CalculatePrimalFeasibility(f, x, bndl, bndu, true);
 
             PrintDebug($"Cost: {Cost}");
             PrintDebug($"PrimalFeasibility: {PrimalFeasibility}");
 
             _vars.WrapVars(x);
-            Solution solution = new SolutionBuilder(N, _vars, Problem, Phases, _ascentProblem).Build();
+            Solution solution = new SolutionBuilder(N, _vars, Problem, Phases, FlightPlan, _ascentProblem).Build();
 
             return solution;
         }
@@ -549,6 +584,7 @@ namespace MechJebLib.PSG
             using var runCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
             runCts.CancelAfter(OptimizerTimeout);
             RunToken = runCts.Token;
+            TimedOut = false;
 
             try
             {
@@ -558,12 +594,14 @@ namespace MechJebLib.PSG
             catch (OperationCanceledException) when (!CancellationToken.IsCancellationRequested)
             {
                 // timed out, return null so bootstrapping can fall back to the previous stage
+                TimedOut = true;
             }
             catch (alglib.alglibexception) when (RunToken.IsCancellationRequested)
             {
                 // ALGLIB rewraps the OperationCanceledException thrown from our callback as a "non-ALGLIB exception".  A
                 // timeout returns null, an external cancel aborts.
                 CancellationToken.ThrowIfCancellationRequested();
+                TimedOut = true;
             }
             catch (alglib.alglibexception e)
             {
@@ -575,5 +613,11 @@ namespace MechJebLib.PSG
         }
 
         public bool Success() => PrimalFeasibility <= 1e-4;
+
+        /// <summary>Iterations of the run in progress, read from another thread while it runs.</summary>
+        public int LiveIterations => _kktStop.Iterations;
+
+        /// <summary>Largest constraint violation of the run in progress, in the solver's scaled units, NaN before the first iterate.</summary>
+        public double LiveInfeasibility => _kktStop.PrimalInfeasibility;
     }
 }

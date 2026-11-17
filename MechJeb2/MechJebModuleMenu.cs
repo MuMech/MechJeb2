@@ -50,6 +50,7 @@ namespace MuMech
             public IButton button;
             public string texturePath;
             public string texturePathActive;
+            public string iconName;     // module buttons only: the icon name the textures and the tooltip were made from
             public Func<bool> isActive; // feature buttons only
 
             private bool? _visible;
@@ -175,6 +176,19 @@ namespace MuMech
                     windowSide = WindowSide.RIGHT;
                     break;
             }
+
+            Dirty = true;
+        }
+
+        // the column count is saved: the new UI's - and + buttons set it here
+        internal void SetColumns(int count)
+        {
+            count = Math.Max(1, count);
+            if (count == columns)
+                return;
+
+            columns = count;
+            Dirty = true;
         }
 
         // the new UI reports the size of its button too: KSP's UI scale grows it, and IMGUI units don't include that scale
@@ -243,6 +257,14 @@ namespace MuMech
                 mod.ShowHideWindow();
         }
 
+        // the button keys of this pass, and the keys of buttons whose module is gone (a deleted custom window)
+        private readonly HashSet<string> _buttonKeys = new HashSet<string>();
+        private readonly List<string> _staleButtonKeys = new List<string>();
+
+        // A module's button id. Custom windows can share a title and change it, so theirs is the window's saved id.
+        internal static string ButtonKey(DisplayModule module) =>
+            module is MechJebModuleCustomInfoWindow window ? window.id : GetCleanName(module.IconName());
+
         public void SetupToolBarButtons()
         {
             if (!ToolbarManager.ToolbarAvailable)
@@ -250,43 +272,25 @@ namespace MuMech
 
             SetupMainToolbarButton();
 
-            foreach (DisplayModule module in Core.GetDisplayModules(DisplayOrder.instance).Where(m => m.ShowInMenu && !m.TechLocked))
+            _buttonKeys.Clear();
+            List<DisplayModule> modules = Core.GetDisplayModules(DisplayOrder.instance);
+            for (int i = 0; i < modules.Count; i++)
             {
-                string name = GetCleanName(module.IconName());
+                DisplayModule module = modules[i];
+                if (!module.ShowInMenu || module.TechLocked) continue;
 
-                if (!toolbarButtons.TryGetValue(name, out Button button))
+                string key = ButtonKey(module);
+                _buttonKeys.Add(key);
+
+                bool created = !toolbarButtons.TryGetValue(key, out Button button);
+                if (created)
                 {
                     Debug.Log("Create button for module " + module.GetName());
 
-                    string TexturePath = "MechJeb2/Icons/" + name;
-                    string TexturePathActive = TexturePath + "_active";
-
                     button = new Button();
-                    button.button = ToolbarManager.Instance.add("MechJeb2", name);
+                    button.button = ToolbarManager.Instance.add("MechJeb2", key);
+                    toolbarButtons[key] = button;
 
-                    if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
-                    {
-                        button.texturePath = Qmark;
-                        Print("No icon for " + name);
-                    }
-                    else
-                    {
-                        button.texturePath = TexturePath;
-                    }
-
-                    if (GameDatabase.Instance.GetTexture(TexturePathActive, false) == null)
-                    {
-                        button.texturePathActive = TexturePath;
-                        //print("No icon for " + name + "_active");
-                    }
-                    else
-                    {
-                        button.texturePathActive = TexturePathActive;
-                    }
-
-                    toolbarButtons[name] = button;
-
-                    button.button.ToolTip = "MechJeb " + module.GetName();
                     button.button.OnClick += b =>
                     {
                         MechJebCore mj = ActiveMasterMechJeb();
@@ -294,18 +298,55 @@ namespace MuMech
                             return;
 
                         // the module that made the button belongs to the vessel that was active then
-                        DisplayModule mod = mj.GetDisplayModules(DisplayOrder.instance)
-                           .FirstOrDefault(m => m.ShowInMenu && GetCleanName(m.IconName()) == name);
-                        if (mod != null)
+                        foreach (DisplayModule mod in mj.GetDisplayModules(DisplayOrder.instance))
                         {
+                            if (!mod.ShowInMenu || mod.TechLocked || ButtonKey(mod) != key) continue;
                             mod.Enabled = !mod.Enabled;
+                            break;
                         }
                     };
+                }
+
+                // the icon and the tooltip come from the icon name, which for a custom window is its title and can change
+                string iconName = module.IconName();
+                if (button.iconName != iconName)
+                {
+                    button.iconName = iconName;
+
+                    string name = GetCleanName(iconName);
+                    string texturePath = "MechJeb2/Icons/" + name;
+                    string texturePathActive = texturePath + "_active";
+
+                    if (GameDatabase.Instance.GetTexture(texturePath, false) == null)
+                    {
+                        button.texturePath = Qmark;
+                        if (created) Print("No icon for " + name);
+                    }
+                    else
+                    {
+                        button.texturePath = texturePath;
+                    }
+
+                    button.texturePathActive = GameDatabase.Instance.GetTexture(texturePathActive, false) == null ? texturePath : texturePathActive;
+
+                    button.button.ToolTip = "MechJeb " + module.GetName();
                 }
 
                 button.SetVisible(module.ShowInCurrentScene);
                 button.SetTexture(module.IsActive() ? button.texturePathActive : button.texturePath);
             }
+
+            foreach (KeyValuePair<string, Button> pair in toolbarButtons)
+                if (!_buttonKeys.Contains(pair.Key))
+                    _staleButtonKeys.Add(pair.Key);
+            for (int i = 0; i < _staleButtonKeys.Count; i++)
+            {
+                string key = _staleButtonKeys[i];
+                toolbarButtons[key].button?.Destroy();
+                toolbarButtons.Remove(key);
+            }
+
+            _staleButtonKeys.Clear();
 
             // create toolbar buttons for features
             if (featureButtons.Count == 0)
@@ -358,11 +399,7 @@ namespace MuMech
 
                         if (mj.Staging.Enabled && mj.Staging.AutostagingOnce)
                         {
-                            if (mj.Staging.Users.Contains(w))
-                            {
-                                mj.Staging.Users.Remove(w);
-                                w.autostageSavedState = false;
-                            }
+                            mj.Staging.CancelAutostageOnce();
                         }
                         else
                         {
@@ -443,16 +480,16 @@ namespace MuMech
                 menuButton.ToolTip = "MechJeb2";
                 menuButton.TexturePath = "MechJeb2/Icons/MJ2";
                 menuButton.OnClick += b => ShowHideMasterWindow();
+                // nothing hides it, and the wrapper writes the property through reflection: once is enough
+                menuButton.Visible = true;
             }
-
-            menuButton.Visible = true;
         }
 
         private static readonly Dictionary<string, string> _cleanNames = new Dictionary<string, string>();
         private static Regex _invalidChars;
 
         // Cached: it runs for every module on every update
-        private static string GetCleanName(string name)
+        internal static string GetCleanName(string name)
         {
             if (_cleanNames.TryGetValue(name, out string clean))
                 return clean;
@@ -521,7 +558,7 @@ namespace MuMech
             }
         }
 
-        // the slide animation; shared by the IMGUI DrawGUI and the new UI
+        // the slide animation, for MechJeb2.UI's menu
         internal void AdvanceAnimation()
         {
             float time = Core.Settings.MenuAnimationTime;
@@ -534,6 +571,7 @@ namespace MuMech
                     {
                         windowProgr = 1;
                         windowStat = WindowStat.NORMAL;
+                        Dirty = true;
                     }
 
                     break;
@@ -543,6 +581,7 @@ namespace MuMech
                     {
                         windowProgr = 0;
                         windowStat = WindowStat.HIDDEN;
+                        Dirty = true;
                     }
 
                     break;
@@ -571,7 +610,7 @@ namespace MuMech
                 {
                     if (windowSide == WindowSide.RIGHT || windowSide == WindowSide.LEFT)
                     {
-                        windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.width, 0) / GuiUtils.Scale;
+                        windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.height, 0) / GuiUtils.Scale;
                     }
                     else
                     {
@@ -581,6 +620,7 @@ namespace MuMech
                 else if (Input.GetMouseButtonUp(1))
                 {
                     movingButton = false;
+                    Dirty = true;
                 }
             }
 

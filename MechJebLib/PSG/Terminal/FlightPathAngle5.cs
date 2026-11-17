@@ -46,6 +46,7 @@ namespace MechJebLib.PSG.Terminal
 
         public double TargetOrbitalEnergy() => 0.5 * _vT * _vT - 1.0 / _rT;
         public double IncT()                => _incT;
+        public double GuessRadius()         => _rT;
 
         public int NumConstraints { get; }
 

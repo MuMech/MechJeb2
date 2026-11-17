@@ -24,6 +24,10 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public const float ELECTRIC_CHARGE_DENSITY = 0;
         public const float INTAKE_AIR_DENSITY = 0.005f;
 
+        // made up as well: no capture has xenon
+        public const int XENON_GAS = 2;
+        public const float XENON_GAS_DENSITY = 0.0001f;
+
         // RP-1 (RealismOverhaul and RealFuels) resources
         public const int COOLED_RP1 = 1704334082;
         public const int COOLED_LQD_OXYGEN = 321082453;
@@ -38,6 +42,35 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public const double NITROGEN_DENSITY = 1.2509999578469433E-06;
         public const double LEAD_BALLAST_DENSITY = 0.011339999735355377;
         public const double TEATEB_DENSITY = 0.00070030998904258013;
+
+        // the Titan II's hypergolic propellants, from the MyTitanII capture
+        public const int AEROZINE50 = -258938826;
+        public const int NTO = -1844636135;
+
+        public const double AEROZINE50_DENSITY = 0.00089999998454004526;
+        public const double NTO_DENSITY = 0.0014329999685287476;
+
+        // made up, since no capture has the RD-108's or the RS-68's propellants.  the densities are the RealismOverhaul and
+        // Community Resource Pack values, which KSP holds in single precision.
+        public const int KEROSENE = 3;
+        public const int LQD_OXYGEN = 4;
+        public const int HTP = 5;
+        public const int LQD_HYDROGEN = 6;
+        public const int ABLATOR = 7;
+
+        public const float KEROSENE_DENSITY = 0.000777f;
+        public const float LQD_OXYGEN_DENSITY = 0.001141f;
+        public const float HTP_DENSITY = 0.001431f;
+        public const float LQD_HYDROGEN_DENSITY = 0.00007085f;
+        public const float ABLATOR_DENSITY = 0.001f;
+
+        // made up as well, since no capture has monopropellant or solid fuel.  the densities are the stock values.
+        // MonoPropellant's flowMode is STAGE_PRIORITY_FLOW and SolidFuel's NO_FLOW.
+        public const int MONOPROPELLANT = 8;
+        public const int SOLID_FUEL = 9;
+
+        public const float MONOPROPELLANT_DENSITY = 0.004f;
+        public const float SOLID_FUEL_DENSITY = 0.0075f;
 
         // this mirrors SimVesselUpdater.UpdateResources for a resource with its flowState enabled
         public static void AddResource(SimPart part, int id, double amount, double maxAmount, double density) =>
@@ -73,5 +106,14 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
         public static void AddElectricCharge(SimPart part, double amount, double maxAmount) =>
             AddResource(part, ELECTRIC_CHARGE, amount, maxAmount, ELECTRIC_CHARGE_DENSITY);
+
+        public static void AddXenonGas(SimPart part, double amount, double maxAmount) =>
+            AddResource(part, XENON_GAS, amount, maxAmount, XENON_GAS_DENSITY);
+
+        public static void AddMonoPropellant(SimPart part, double amount, double maxAmount) =>
+            AddResource(part, MONOPROPELLANT, amount, maxAmount, MONOPROPELLANT_DENSITY);
+
+        public static void AddSolidFuel(SimPart part, double amount, double maxAmount) =>
+            AddResource(part, SOLID_FUEL, amount, maxAmount, SOLID_FUEL_DENSITY);
     }
 }

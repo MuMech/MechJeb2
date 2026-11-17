@@ -64,6 +64,17 @@ namespace MechJebLib.Interpolants
 
         public override InterpolantNode<double> DeepCopy() => CopyBoundsTo(RentPolynomial(_t, _invH, _c0, _c1, _c2, _c3));
 
+        // the power basis is in s = (x - t) / h, which doesn't change, so only t and h stretch and every coefficient takes yScale
+        internal override void Rescale(double timeScale, double yScale)
+        {
+            _t    *= timeScale;
+            _invH /= timeScale;
+            _c0   *= yScale;
+            _c1   *= yScale;
+            _c2   *= yScale;
+            _c3   *= yScale;
+        }
+
         public override void Dispose() => _pool.Release(this);
 
         public override string ToString() =>

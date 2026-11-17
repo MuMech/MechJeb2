@@ -40,6 +40,45 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public bool JettisonBeforeEntry = false;
 
+        /// <summary>The landing's own Auto-warp: its steps and the burns the node executor flies for it use it while it is engaged.</summary>
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public bool Autowarp = true;
+
+        /// <summary>
+        ///     The landing's own "Keep limited throttle over": the thrust controller uses it while the landing is engaged, with the
+        ///     general values of the other limits.
+        /// </summary>
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public bool LimiterMinThrottle;
+
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDoubleMult MinThrottle = new EditableDoubleMult(0.05, 0.01);
+
+        // false until the landing's own values were first copied from the general ones (InitOwnValuesIfNeeded)
+        [JetBrainsAnnotations::JetBrains.Annotations.UsedImplicitly]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool OwnValuesInitialized;
+
+        /// <summary>The limits the landing flies with: the general ones, with its own minimum throttle.</summary>
+        public IThrustLimits ThrustLimits =>
+            _thrustLimits ??= new ThrustLimitsWithOwnMinThrottle(Core.Thrust, () => LimiterMinThrottle, v => LimiterMinThrottle = v, MinThrottle);
+
+        private IThrustLimits _thrustLimits;
+
+        /// <summary>
+        ///     The landing's own Auto-warp and minimum throttle start as a copy of the general ones, once. The core calls this after
+        ///     its settings reload and saves at once when it returns true.
+        /// </summary>
+        public bool InitOwnValuesIfNeeded()
+        {
+            if (OwnValuesInitialized) return false;
+            Autowarp             = Core.Node.Autowarp;
+            LimiterMinThrottle   = Core.Thrust.LimiterMinThrottle;
+            MinThrottle.Val      = Core.Thrust.MinThrottle.Val;
+            OwnValuesInitialized = true;
+            return true;
+        }
+
         private bool _stageToDrop;
 
         // the jettison has to happen at normal speed
@@ -141,6 +180,14 @@ namespace MuMech
         //public interface:
         public void LandAtPositionTarget(object controller)
         {
+            // every step lands at the target coordinates on this body
+            if (!Core.Target.SurfaceTargetExists(MainBody))
+            {
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_LandingGuidance_noSurfaceTarget", MainBody.displayName.LocalizeRemoveGender()), 5,
+                    ScreenMessageStyle.UPPER_CENTER); //Land at target: the target is not a point on <<1>>'s surface.
+                return;
+            }
+
             // engaged anew, it may warp again even after the player stopped another autopilot's warp
             Core.Warp.ClearStop();
             LandAtTarget = true;
@@ -169,6 +216,9 @@ namespace MuMech
             Core.Warp.ClearStop();
             LandAtTarget = false;
             Users.Add(controller);
+
+            // the predicted landing site gives the ground altitude the chutes are armed above
+            _predictor.Users.Add(this);
 
             _deployedGears = false;
             _stageToDrop = JettisonBeforeEntry && MainBody.atmosphere && NextStageDropsParts();
@@ -228,6 +278,8 @@ namespace MuMech
 
         protected override void OnModuleEnabled()
         {
+            Core.Thrust.SetLimitsOverride(this, ThrustLimits);
+            Core.Node.SetAutowarpOverride(this, _autowarp ??= () => Autowarp);
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
         }
@@ -237,8 +289,12 @@ namespace MuMech
             Core.Attitude.AttitudeDeactivate();
             _predictor.Users.Remove(this);
             _predictor.descentSpeedPolicy = null;
+            _predictor.maxOrbits = MechJebModuleLandingPredictions.MAX_ORBITS_FREE;
+            _predictor.noSkipToFreefall = true;
             Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
+            Core.Thrust.ClearLimitsOverride(this);
+            Core.Node.ClearAutowarpOverride(this);
             if (Core.Landing.RCSAdjustment)
                 Core.RCS.Enabled = false;
             // a warp the landing started does not run on without it
@@ -246,6 +302,8 @@ namespace MuMech
                 Core.Warp.MinimumWarp();
             SetStep(null);
         }
+
+        private Func<bool> _autowarp;
 
         // Estimate the delta-V of the correction burn that would be required to put us on
         // course for the target
@@ -257,8 +315,9 @@ namespace MuMech
             // orbitLandingPosition is the point where our current orbit intersects the planet
             double endRadius = MainBody.Radius + DecelerationEndAltitude() - 100;
 
-            // Seems we are already landed ?
-            if (endRadius > Orbit.ApR || Vessel.LandedOrSplashed)
+            // Seems we are already landed ? (an ellipse that never rises above the end radius; ApR is negative on a hyperbola, which
+            // always rises again)
+            if ((Orbit.eccentricity < 1 && endRadius > Orbit.ApR) || Vessel.LandedOrSplashed)
             {
                 StopLanding();
                 return Vector3d.zero;
@@ -494,6 +553,8 @@ namespace MuMech
             return new SafeDescentSpeedPolicy(MainBody.Radius + DecelerationEndAltitude(), MainBody.GeeASL * 9.81, VesselState.LimitedMaxThrustAcceleration);
         }
 
+        private const double MIN_ATMOSPHERE_DECELERATION_END = 50;
+
         public double DecelerationEndAltitude()
         {
             //if the atmosphere is thin, the deceleration burn should end
@@ -504,10 +565,11 @@ namespace MuMech
             // if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
             // should end a safe height above the landing site in order to allow braking from terminal velocity
             // FIXME: Drag Length is quite large now without parachutes, check this better
-            double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragCoef(), VesselState.Mass);
+            double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragArea(), VesselState.Mass);
 
             //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
-            return 1.1 * landingSiteDragLength + _landingAltitude;
+            // under open chutes the drag length is a few metres: keep a margin for terrain above the prediction and for the engines' spool-up
+            return Math.Max(1.1 * landingSiteDragLength, MIN_ATMOSPHERE_DECELERATION_END) + _landingAltitude;
         }
 
         //On planets with thick enough atmospheres, we shouldn't do a deceleration burn. Rather,
@@ -518,7 +580,7 @@ namespace MuMech
         //expect to get slowed to near terminal velocity before impacting the ground.
         public bool UseAtmosphereToBrake()
         {
-            double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragCoef(), VesselState.Mass);
+            double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragArea(), VesselState.Mass);
 
             //if (mainBody.RealMaxAtmosphereAltitude() > 0 && (ParachutesDeployable() || ParachutesDeployed()))
             return MainBody.RealMaxAtmosphereAltitude() > 0 &&
@@ -551,37 +613,43 @@ namespace MuMech
             return dragCoef * PhysicsGlobals.DragCubeMultiplier;
         }
 
-        // This is not the exact number, but it's good enough for our use
-        private double ParachuteAddedDragCoef()
+        // The drag area the chutes add once fully open, averaged over the six faces as VesselAverageDrag averages a part: the DEPLOYED
+        // cube's area times its drag coefficient, less what the chute counts for there now. This is not the exact number, but it's good
+        // enough for our use
+        private double ParachuteAddedDragArea()
         {
-            double addedDragCoef = 0;
-            if (!MainBody.atmosphere || !DeployChutes) return addedDragCoef * PhysicsGlobals.DragCubeMultiplier;
+            if (!MainBody.atmosphere || !DeployChutes) return 0;
 
+            double addedDragArea = 0;
             for (int i = 0; i < VesselState.Parachutes.Count; i++)
             {
                 ModuleParachute p = VesselState.Parachutes[i];
-                if (p.part.inverseStage < LimitChutesStage) continue;
+                if (p.part.inverseStage < LimitChutesStage || p.deploymentState == ModuleParachute.deploymentStates.CUT) continue;
 
-                //addedDragMass += p.part.DragCubes.Cubes.Where(c => c.Name == "DEPLOYED").m
+                DragCubeList cubes = p.part.DragCubes;
 
-                float maxCoef = 0;
-                for (int c = 0; c < p.part.DragCubes.Cubes.Count; c++)
+                float deployedArea = 0;
+                for (int c = 0; c < cubes.Cubes.Count; c++)
                 {
-                    DragCube dragCube = p.part.DragCubes.Cubes[c];
+                    DragCube dragCube = cubes.Cubes[c];
                     if (dragCube.Name != "DEPLOYED")
                         continue;
 
                     for (int f = 0; f < 6; f++)
-                    {
-                        // we only want the additional coef from going fully deployed
-                        maxCoef = Mathf.Max(maxCoef, p.part.DragCubes.WeightedDrag[f] - dragCube.Weight * dragCube.Drag[f]);
-                    }
+                        deployedArea += dragCube.Area[f] * dragCube.Drag[f];
                 }
 
-                addedDragCoef += maxCoef;
+                float currentArea = 0;
+                if (!cubes.None && !p.part.ShieldedFromAirstream)
+                {
+                    for (int f = 0; f < 6; f++)
+                        currentArea += cubes.WeightedDrag[f] * cubes.AreaOccluded[f];
+                }
+
+                addedDragArea += Math.Max(0, deployedArea - currentArea) / 6;
             }
 
-            return addedDragCoef * PhysicsGlobals.DragCubeMultiplier;
+            return addedDragArea * PhysicsGlobals.DragCubeMultiplier;
         }
 
         private bool UseLowDeorbitStrategy()
@@ -741,6 +809,9 @@ namespace MuMech
 
         private const int DATA_SET_SIZE = 40;
 
+        // kPa in one atm, the conversion ModuleParachute uses
+        private const double KPA_PER_ATM = 101.325;
+
         public double Multiplier { get; private set; }
 
         public int MultiplierDataAmount => _regression.DataSetSize;
@@ -881,16 +952,18 @@ namespace MuMech
             {
                 // TODO is there benefit in running an initial simulation to calculate the height at which the ratio between vertical and horizontal velocity would be the best for being able to deply the chutes to control the landing site?
 
-                // At what ASL height does the reference body have this pressure?
-                _maxSemiDeployHeight = _body.AltitudeForPressure(minSemiDeployPressure);
+                // At what ASL height does the reference body have this pressure? minAirPressureToOpen is in atm, as ModuleParachute compares it.
+                _maxSemiDeployHeight = _body.AltitudeForPressure(minSemiDeployPressure * KPA_PER_ATM);
 
                 // We have to have semi deployed by the time we fully deploy.
                 _minSemiDeployHeight = maxFullDeployHeight;
 
-                _maxMultiplier = _maxSemiDeployHeight / _minSemiDeployHeight;
+                // A thin atmosphere reaches the opening pressure below the deploy altitude, where the chutes open on altitude anyway:
+                // the multiplier stays at least 1, as AddResult keeps it.
+                _maxMultiplier = Math.Max(1, _maxSemiDeployHeight / _minSemiDeployHeight);
 
                 // Set the inital multiplier to be the mid point.
-                Multiplier = _maxMultiplier / 2;
+                Multiplier = Math.Max(1, _maxMultiplier / 2);
             }
         }
     }

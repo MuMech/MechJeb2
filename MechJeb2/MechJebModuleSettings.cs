@@ -61,23 +61,20 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool UiCompact = true;
 
-        /// <summary>New UI: the modern layout (steppers, switches, segmented choices...) instead of IMGUI's layout.</summary>
-        // a new key: configs from before it was the default say False, which nobody chose
-        [Persistent(pass = (int)Pass.GLOBAL, name = "UiModernLayoutChoice")]
-        public bool UiModernLayout = true;
-
-        /// <summary>New UI, modern layout: the section headers it adds to long windows.</summary>
+        /// <summary>New UI: the section headers it adds to long windows.</summary>
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool UiSectionHeaders = true;
 
         /// <summary>Raised after skin, scale or menu settings change, so another UI can follow them.</summary>
         public static event Action<MechJebModuleSettings> Changed;
 
-        /// <summary>Push the settings to GuiUtils and notify listeners (used by kOS and by this window).</summary>
+        /// <summary>
+        /// Push the settings to GuiUtils and notify listeners (used by kOS and by this window). <paramref name="loadSkin"/> is
+        /// ignored: nothing draws with the IMGUI skins, and loading one needs IMGUI's OnGUI.
+        /// </summary>
         public void ApplySettings(bool loadSkin = false)
         {
             GuiUtils.SetGUIScale(UIScale.Val);
-            if (loadSkin) GuiUtils.LoadSkin((GuiUtils.SkinType)SkinId);
             GuiUtils.DontUseDropDownMenu = DontUseDropDownMenu;
             GuiUtils.ShowAdvancedWindowSettings = ShowAdvancedWindowSettings;
             Changed?.Invoke(this);

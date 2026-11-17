@@ -39,40 +39,96 @@ namespace MuMech
         internal bool _launchingWithAnyPlaneControl => _launchingToPlane || _launchingToMatchLan || _launchingToLan;
 
         internal IAscentAutopilot                   _autopilot       => Core.Ascent;
+
+        protected override bool AutopilotEngaged => Core.Ascent != null && Core.Ascent.Enabled;
         internal MechJebModuleAscentSettings        _ascentSettings  => Core.AscentSettings;
         internal MechJebModuleAscentClassicPathMenu _classicPathMenu => Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
-        internal MechJebModuleAscentPSGSettingsMenu _psgSettingsMenu => Core.GetComputerModule<MechJebModuleAscentPSGSettingsMenu>();
         internal MechJebModuleAscentSettingsMenu    _settingsMenu    => Core.GetComputerModule<MechJebModuleAscentSettingsMenu>();
 
         internal EditableDouble InclinationSetting => Core.LaunchCountdown.InclinationSetting;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool _lastSettingsMenuEnabled;
+
+        // the kOS bindings still set it with the ascent type; there is no PSG Settings window to open any more
+        [UsedImplicitly]
         public bool _lastPSGSettingsEnabled;
 
+        /// <summary>The launches Engage can start from the ground (LaunchChoice).</summary>
+        internal enum LaunchKind { NOW, PLANE_OF_TARGET, TARGET_LAN, LAN }
+
+        // the launch Ascent Guidance's Engage starts while landed (a LaunchKind)
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool _lastSettingsMenuEnabled;
+        public int LaunchChoice;
+
+        // whether Ascent Guidance's GUIDANCE DETAILS fold is open
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool GuidanceDetailsOpen;
+
+        /// <summary>The launch choices the current ascent type has: a launch to the target's LAN or to a LAN is PSG's.</summary>
+        internal bool LaunchChoiceAvailable(LaunchKind kind) =>
+            kind == LaunchKind.NOW || kind == LaunchKind.PLANE_OF_TARGET || _ascentSettings.AscentType == AscentType.PSG;
+
+        /// <summary>The choice Engage starts: Now off the ground, or when the saved one is not one of this ascent type's.</summary>
+        internal LaunchKind EffectiveLaunchChoice =>
+            Vessel != null && Vessel.LandedOrSplashed && LaunchChoiceAvailable((LaunchKind)LaunchChoice) ? (LaunchKind)LaunchChoice : LaunchKind.NOW;
+
+        /// <summary>Whether Engage can start the chosen launch: the two target choices need a target around this body.</summary>
+        internal bool LaunchChoiceReady => EffectiveLaunchChoice switch
+        {
+            LaunchKind.PLANE_OF_TARGET => AutoWarpTargetExists,
+            LaunchKind.TARGET_LAN      => AutoWarpTargetExists,
+            _                          => true
+        };
+
+        /// <summary>Starts the chosen launch's countdown, if it is a timed one, and engages the ascent autopilot.</summary>
+        internal void Engage()
+        {
+            if (!LaunchChoiceReady) return;
+            switch (EffectiveLaunchChoice)
+            {
+                case LaunchKind.PLANE_OF_TARGET:
+                    LaunchToPlaneOfTarget();
+                    break;
+                case LaunchKind.TARGET_LAN:
+                    LaunchToTargetLan();
+                    break;
+                case LaunchKind.LAN:
+                    LaunchToLan();
+                    break;
+            }
+
+            _autopilot.Users.Add(this);
+        }
+
+        // whether PSG Stages was open when this window closed: it opens again with it, as Ascent Settings does
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool _lastStagesMenuEnabled;
+
+        internal MechJebModuleAscentPSGStagesMenu _stagesMenu => Core.GetComputerModule<MechJebModuleAscentPSGStagesMenu>();
 
         protected override void OnModuleEnabled()
         {
-            _psgSettingsMenu.Enabled = _lastPSGSettingsEnabled;
             _settingsMenu.Enabled = _lastSettingsMenuEnabled;
+            // the saved state is global, the ascent type per vessel type: the PSG window only reopens for a PSG ascent
+            _stagesMenu.Enabled = _lastStagesMenuEnabled && Core.AscentSettings.AscentType == AscentType.PSG;
         }
 
+        // a closed window leaves the launch mode alone: the countdown and the guidance still fly it
         protected override void OnModuleDisabled()
         {
-            _launchingToPlane = false;
-            _launchingToMatchLan = false;
-            _launchingToLan = false;
-            _lastPSGSettingsEnabled = _psgSettingsMenu.Enabled;
             _lastSettingsMenuEnabled = _settingsMenu.Enabled;
-            _psgSettingsMenu.Enabled = false;
             _settingsMenu.Enabled = false;
+            _lastStagesMenuEnabled = _stagesMenu.Enabled;
+            _stagesMenu.Enabled = false;
         }
 
         // Keeps the PSG LogicalPlan, and the FlightPlan built from it, current while this window is open with PSG selected,
-        // whichever UI draws it. Engaging the autopilot enables the PSGSimulation, which freezes both for the flight.
+        // whichever UI draws it. Both are locked once the autopilot is engaged or the vessel leaves the ground (PSGSimulation.PlanLocked).
         // Without this window, the PSG ascent autopilot builds them itself when it is engaged (kOS launches).
         public override void OnFixedUpdate()
         {
@@ -80,7 +136,7 @@ namespace MuMech
                 return;
 
             Core.StageStats.RequestUpdate();
-            Core.PSGSimulation.UpdateLogicalPlan(_ascentSettings);
+            Core.PSGSimulation.UpdateLogicalPlan();
         }
 
         internal const string InclinationCurrentTooltip =
@@ -89,20 +145,13 @@ namespace MuMech
         // shared with the new UI
         internal void SetInclinationToLatitude(EditableDouble inclinationSetting) => inclinationSetting.Val = Math.Round(VesselState.Latitude, 3);
 
-        internal double InclinationBelowLatitude(EditableDouble inclinationSetting)
-        {
-            double inclination = Math.Abs(inclinationSetting);
-            return Math.Abs(VesselState.Latitude) - (inclination < 90.0 ? inclination : 180.0 - inclination);
-        }
+        internal double InclinationBelowLatitude(EditableDouble inclinationSetting) =>
+            PSGFeedback.InclinationBelowLatitude(VesselState.Latitude, inclinationSetting);
+
+        private string UnreachableCause() =>
+            PSGFeedback.UnreachableCause(Core.PSGSimulation.LastFailureMessage, InclinationBelowLatitude(Core.PSGSimulation.Inc));
 
         internal bool AutoWarpTargetExists => Core.Target.NormalTargetExists && Core.Target.TargetOrbit?.referenceBody == MainBody;
-
-        // what ShowAutoWarpGUIElements does before drawing when nothing is being launched and there is no usable target
-        internal void ResetLaunchWithoutTarget()
-        {
-            if (!_launchingWithAnyPlaneControl && !AutoWarpTargetExists)
-                _launchingToPlane = _launchingToMatchLan = false;
-        }
 
         internal void LaunchToPlaneOfTarget() => Core.LaunchCountdown.StartToPlaneOfTarget();
 
@@ -110,43 +159,68 @@ namespace MuMech
 
         internal void LaunchToLan() => Core.LaunchCountdown.StartToLan();
 
+        // Abort cancels the launch, not only its timer: an autopilot left engaged would launch at once from a landed vessel, or
+        // after T-0 without the plane. Disengaging ends the countdown too.
         internal void AbortTimedLaunch()
         {
-            _launchingToPlane = _launchingToMatchLan = _launchingToLan = false;
+            if (Core.Ascent is { Enabled: true } autopilot)
+                autopilot.Users.Clear();
             Core.LaunchCountdown.Abort();
         }
 
-        private DateTime _lastRefresh = DateTime.MinValue;
+        // Time.unscaledTime: the local clock can step back (a daylight saving change) and stop the refresh
+        private float _lastRefresh = float.NegativeInfinity;
         internal string vgo, heading, tgo, pitch, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
 
-        // the severity that goes with autopilotStatus; WindowGUI turns it into a style (GUI.skin only exists inside OnGUI,
-        // and MechJeb2.UI calls UpdateStrings outside it)
+        // the severity that goes with autopilotStatus, which MechJeb2.UI turns into a colour
         internal AscentStatusLevel autopilotStatusLevel;
-        private TimeSpan _refreshInterval = TimeSpan.FromSeconds(0.1);
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt _refreshRate = 10;
 
+        // the persisted rate is the one source: a loaded value counts as much as an edited one
+        private TimeSpan RefreshInterval => TimeSpan.FromSeconds(1d / Math.Max(_refreshRate, 1));
+
         internal void UpdateStrings()
         {
-            DateTime now = DateTime.Now;
-            if (now <= _lastRefresh + _refreshInterval) return;
+            float now = Time.unscaledTime;
+            if (now <= _lastRefresh + RefreshInterval.TotalSeconds) return;
 
             _lastRefresh = now;
             Profiler.BeginSample("MJ.GUIWindow.UpdateStrings.StringOps");
-            vgo = $"vgo: {Core.Guidance.Vgo:F1}";
-            heading = $"heading: {Core.Guidance.Heading:F1}";
-            tgo = $"tgo: {Core.Guidance.Tgo:F3}";
-            pitch = $"pitch: {Core.Guidance.Pitch:F1}";
-            label26 = $"{CachedLocalizer.Instance.MechJebAscentLabel26}{Core.Guidance.Status}";
-            label27 = $"{CachedLocalizer.Instance.MechJebAscentLabel27}{Core.PSGSimulation.SuccessfulConverges}";
-            label28 = $"{CachedLocalizer.Instance.MechJebAscentLabel28}{Core.PSGSimulation.LastLmStatus}";
-            n = $"n: {Core.PSGSimulation.LastLmIterations}({Core.PSGSimulation.MaxLmIterations})";
-            label29 = $"{CachedLocalizer.Instance.MechJebAscentLabel29} {GuiUtils.TimeToDHMS(Core.PSGSimulation.Staleness)}";
-            znorm = $"infeasibility: {Core.PSGSimulation.LastInfeasibility:G5}";
-            if (Core.PSGSimulation.LastFailureMessage != null)
-                label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}";
+            // the guidance rows are only shown for a PSG ascent, so the classic one builds no strings for them
+            if (_ascentSettings.AscentType == AscentType.PSG)
+            {
+                vgo = $"vgo: {Core.Guidance.Vgo:F1}";
+                heading = $"heading: {Core.Guidance.Heading:F1}";
+                tgo = $"tgo: {Core.Guidance.Tgo:F3}";
+                pitch = $"pitch: {Core.Guidance.Pitch:F1}";
+                label26 = $"{CachedLocalizer.Instance.MechJebAscentLabel26}{Core.Guidance.Status}";
+                label27 = $"{CachedLocalizer.Instance.MechJebAscentLabel27}{Core.PSGSimulation.SuccessfulConverges}";
+                label28 = $"{CachedLocalizer.Instance.MechJebAscentLabel28}{Core.PSGSimulation.LastLmStatus}";
+                n = $"n: {Core.PSGSimulation.LastLmIterations}({Core.PSGSimulation.MaxLmIterations})";
+                label29 = $"{CachedLocalizer.Instance.MechJebAscentLabel29} {GuiUtils.TimeToDHMS(Core.PSGSimulation.Staleness)}";
+                znorm = $"infeasibility: {Core.PSGSimulation.LastInfeasibility:G5}";
+                if (Core.PSGSimulation.LastFailureMessage != null)
+                    label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}{UnreachableCause()}";
+                // the optimizer only runs while the autopilot (or kOS) uses it: no line before the autopilot is engaged
+                optimizerState = Core.PSGSimulation.Enabled
+                    ? Core.Guidance.Solution == null && Core.PSGSimulation.ProgressDetail != null
+                        ? "Optimizer: " + Core.PSGSimulation.ProgressDetail
+                        : PSGFeedback.OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting(),
+                            Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0)
+                    : null;
+                // the figures belong to the last solve: kept in flight after the ascent ended (they say why), but not on the pad with the
+                // autopilot off, where the player may have changed the rocket or the target since
+                ReachWarning = Core.PSGSimulation.Enabled || (Vessel != null && !Vessel.LandedOrSplashed)
+                    ? PSGFeedback.ReachWarning(Core.PSGSimulation.DeltaVShortfall, Core.PSGSimulation.SuborbitalPeriapsis, MainBody.atmosphere)
+                    : null;
+            }
+            else
+            {
+                ReachWarning = null;
+            }
 
             if (_launchingToPlane) launchTimer = CachedLocalizer.Instance.MechJebAscentMsg2; //Launching to target plane
             else if (_launchingToMatchLan) launchTimer = CachedLocalizer.Instance.MechJebAscentLaunchingToTargetLAN; //Launching to target LAN
@@ -161,8 +235,14 @@ namespace MuMech
             Profiler.EndSample();
         }
 
-        // The PSG status lines (one per burn/coast phase, then the terminal conditions), for the new UI whose rows are fixed
-        internal const int MAX_PHASE_LINES = 12;
+        /// <summary>"Optimizer: …": what the PSG optimizer is doing, or why it is not solving, so that a climbing staleness reads as a pause.</summary>
+        internal string optimizerState;
+
+        /// <summary>Why the PSG plan can't reach orbit with this rocket, in words, or null.</summary>
+        internal string ReachWarning;
+
+        // The PSG status lines (one per burn/coast phase, then the terminal conditions, one per line), for the new UI whose rows are fixed
+        internal const int MAX_PHASE_LINES = 15;
         internal readonly string[] PhaseLines = new string[MAX_PHASE_LINES];
         internal int PhaseLineCount;
 
@@ -172,18 +252,17 @@ namespace MuMech
             if (_ascentSettings.AscentType != AscentType.PSG || Core.Guidance.Solution == null) return;
 
             Solution solution = Core.Guidance.Solution;
-            for (int psgPhase = solution.Segments - 1; psgPhase >= 0 && PhaseLineCount < MAX_PHASE_LINES - 1; psgPhase--)
-                PhaseLines[PhaseLineCount++] = PhaseString(solution, VesselState.Time, psgPhase);
-            PhaseLines[PhaseLineCount++] = solution.TerminalString();
+            string[] terminal = solution.TerminalLines();
+            for (int psgPhase = solution.Segments - 1; psgPhase >= 0 && PhaseLineCount < MAX_PHASE_LINES - terminal.Length; psgPhase--)
+                PhaseLines[PhaseLineCount++] = PhaseString(solution, VesselState.MET, psgPhase);
+            foreach (string line in terminal)
+                PhaseLines[PhaseLineCount++] = line;
         }
 
         internal void RefreshRateChanged(int oldRate)
         {
             if (oldRate != _refreshRate)
-            {
                 _refreshRate = Math.Max(_refreshRate, 1);
-                _refreshInterval = TimeSpan.FromSeconds(1d / _refreshRate);
-            }
         }
 
         private string PhaseString(Solution solution, double t, int psgPhase)
@@ -199,7 +278,14 @@ namespace MuMech
             if (mjPhase < Core.StageStats.VacStats.Count)
                 stageDeltaV = Core.StageStats.VacStats[mjPhase].DeltaV;
 
-            double excessDV = stageDeltaV - solution.DV(t, psgPhase);
+            // a coast during a stage splits it into two burns of the same MJ phase, so subtract every burn of this stage up to and
+            // including this one to show what is left after it
+            double usedDV = 0;
+            for (int i = 0; i <= psgPhase; i++)
+                if (!solution.CoastPhase(i) && solution.MJPhase(i) == mjPhase)
+                    usedDV += solution.DV(t, i);
+
+            double excessDV = stageDeltaV - usedDV;
 
             // eliminate some of the noise
             if (Math.Abs(excessDV) < 2.5) excessDV = 0;

@@ -37,6 +37,12 @@
     <KspData Condition="'$(OS)' != 'Windows_NT' And !Exists('$(KspDir)/KSP.app')">$(KspDir)/KSP_Data</KspData>
   </PropertyGroup>
 
+  <!-- MechJebNoOptGuard=true (an environment variable or -p:) leaves ALGLIB's OptGuard out of a Debug build: its gradient
+       check makes a Debug PSG solve several times slower. Without it, Debug builds keep OptGuard. -->
+  <PropertyGroup Condition="'$(MechJebNoOptGuard)' == 'true'">
+    <DefineConstants>$(DefineConstants);NO_OPTGUARD</DefineConstants>
+  </PropertyGroup>
+
   <!-- Derive KosDll / KosSafeDll from KspDir. -->
   <PropertyGroup Condition="'$(KosDll)' == ''">
     <KosDll>$(KspDir)/GameData/kOS/Plugins/kOS.dll</KosDll>

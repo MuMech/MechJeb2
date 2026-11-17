@@ -75,6 +75,9 @@ namespace MechJebLib.PSG
         // the MJ phase of the rocket (index into stage stats)
         public int MJPhase;
 
+        // index into the FlightPlan's Stages of the stage this phase was built from (-1 without a FlightPlan)
+        public int FlightPlanIndex = -1;
+
         public double VacThrust   => Mdot * VexVacuum;
         public double Tau         => Coast ? double.PositiveInfinity : VexVacuum / VacThrust * M0;
         public bool   Coast       => Mdot == 0;
@@ -111,6 +114,7 @@ namespace MechJebLib.PSG
 
             phase.KSPStage = 0;
             phase.MJPhase = 0;
+            phase.FlightPlanIndex = -1;
         }
 
         public static Phase Rent() => _pool.Borrow();
@@ -151,6 +155,27 @@ namespace MechJebLib.PSG
             phase.Mf = Mf / scale.MassScale;
             phase.MinM = MinM / scale.MassScale;
             phase.Normalized = true;
+
+            return phase;
+        }
+
+        // the inverse of Rescale, back to SI units
+        public Phase DeNormalize(Scale scale)
+        {
+            CheckDebug.True(Normalized);
+
+            var phase = (Phase)MemberwiseClone();
+
+            phase.VexVacuum = VexVacuum * scale.VelocityScale;
+            phase.VexCurrent = VexCurrent * scale.VelocityScale;
+            phase.Mdot = Mdot * scale.MdotScale;
+            phase.Bt = Bt * scale.TimeScale;
+            phase.MinT = MinT * scale.TimeScale;
+            phase.MaxT = MaxT * scale.TimeScale;
+            phase.M0 = M0 * scale.MassScale;
+            phase.Mf = Mf * scale.MassScale;
+            phase.MinM = MinM * scale.MassScale;
+            phase.Normalized = false;
 
             return phase;
         }

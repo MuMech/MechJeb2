@@ -48,6 +48,8 @@ namespace MuMech
         public static ReflectionUtils.DelegateContext<DoubleVesselDelegate> FARVesselDynPres;
         public static ReflectionUtils.DelegateContext<CalculateVesselAeroForcesDelegate> FARCalculateVesselAeroForces;
 
+        // FAR is loaded and every FARAPI method MechJeb calls was found: the FAR values are read only then, so a FAR whose API
+        // changed leaves MechJeb on the stock values instead of throwing every tick
         public static bool IsFARCorrectlyInitialized;
 
         // A convenient debug message to display in the UI
@@ -302,9 +304,15 @@ namespace MuMech
 
         public Vector3d SurfaceVelocity;
 
-        // Forward direction of thrust (CoT-CoM).normalized
-        // FIXME: this is Vector3d.zero if throttle is zero!
+        // The neutral trim axis of the engines at max thrust, gimbals at rest (see AnalyzeParts); Vector3d.zero when no engine
+        // has thrust available.
         public Vector3d ThrustForward;
+
+        // The length (m) of CoM - CoT under which ThrustForward moves from CoM - CoT to the direction of the thrust.
+        private const double ThrustAxisLength = 1.0;
+
+        // The fraction of the engines' total thrust their vector sum must keep for its direction to count (see AnalyzeParts).
+        private const double ThrustCancelRatio = 0.01;
 
         // Thrust is a vector.  These are in the same frame of reference as forward and other vectors.
         public Vector3d ThrustVectorLastFrame;
@@ -423,19 +431,28 @@ namespace MuMech
         // for the new UI's torque comparison item
         internal Vector6 DifferentialThrottleTorque => _einfo.TorqueDifferentialThrottle;
 
-        // Thrust in the forward direction (for historical reasons).
-        public double ThrustAvailable => Vector3d.Dot(ThrustVectorMaxThrottle, Forward);
-        public double ThrustMinimum   => Vector3d.Dot(ThrustVectorMinThrottle, Forward);
-        public double ThrustCurrent   => Vector3d.Dot(ThrustVectorLastFrame, Forward);
+        // The axis the autopilots point at their target through the CoT references (INERTIAL_COT, SURFACE_NORTH_COT): the
+        // thrust axis, or the control forward when no engine thrusts (RCS from the main throttle pushes along it).
+        public Vector3d ThrustAxis => ThrustForward.sqrMagnitude > 0.5 ? ThrustForward : Forward;
+
+        // Thrust along ThrustAxis.
+        public double ThrustAvailable => Vector3d.Dot(ThrustVectorMaxThrottle, ThrustAxis);
+        public double ThrustMinimum   => Vector3d.Dot(ThrustVectorMinThrottle, ThrustAxis);
+        public double ThrustCurrent   => Vector3d.Dot(ThrustVectorLastFrame, ThrustAxis);
 
         // Fraction of ThrustAvailable the engines produce at zero throttle, so thrust at throttle t is
         // ThrustMinimum + (ThrustAvailable - ThrustMinimum) * t.  Zero when no thrust is available.
         public double MinThrottle => ThrustAvailable > 0 ? Clamp(ThrustMinimum / ThrustAvailable, 0, 1) : 0;
 
-        // Acceleration in the forward direction, for when dividing by mass is too complicated.
+        // Acceleration along ThrustAxis, for when dividing by mass is too complicated.
         public double MaxThrustAcceleration     => ThrustAvailable / Mass;
         public double MinThrustAcceleration     => ThrustMinimum / Mass;
         public double CurrentThrustAcceleration => ThrustCurrent / Mass;
+
+        // The same, along axis (a unit vector): for a burn that aims the engines' thrust rather than the control forward
+        public double MaxThrustAccelerationAlong(Vector3d axis)     => Vector3d.Dot(ThrustVectorMaxThrottle, axis) / Mass;
+        public double MinThrustAccelerationAlong(Vector3d axis)     => Vector3d.Dot(ThrustVectorMinThrottle, axis) / Mass;
+        public double CurrentThrustAccelerationAlong(Vector3d axis) => Vector3d.Dot(ThrustVectorLastFrame, axis) / Mass;
 
         public double LimitedMaxThrustAcceleration
         {
@@ -533,6 +550,7 @@ namespace MuMech
             _einfo.Update(CoM, Vessel);
             _iinfo.Update();
             AnalyzeParts(_einfo, _iinfo);
+            _einfo.TrimWrappers(EngineWrappers.Count);
 
             UpdateResourceRequirements(_einfo, _iinfo);
 
@@ -687,7 +705,7 @@ namespace MuMech
 
         private double GetDynamicPressure()
         {
-            if (ReflectionUtils.IsLoadedFAR)
+            if (IsFARCorrectlyInitialized)
             {
                 return FARVesselDynPres.Call(Vessel) * 1000;
             }
@@ -702,8 +720,10 @@ namespace MuMech
 
             //torqueRcs.Reset();
 
-            if (!Vessel.ActionGroups[KSPActionGroup.RCS])
-                return;
+            // The thrust counts whether or not the RCS group is on, so a burn can be timed before RCS turns on: the node executor's
+            // "RCS only" turns it on at ignition. The torque counts only while the group is on, as before: it goes into TorqueAvailable,
+            // which the attitude controller tunes on, and RCS gives no attitude control with the group off.
+            bool rcsGroup = Vessel.ActionGroups[KSPActionGroup.RCS];
 
             MechJebModuleRCSBalancer rcsbal = Vessel.GetMasterMechJeb().Rcsbal;
             if (rcsbal.Enabled)
@@ -753,8 +773,17 @@ namespace MuMech
                     //if (rcsbal.enabled)
                     //    continue;
 
-                    if (p.ShieldedFromAirstream || !rcs.rcsEnabled || !rcs.isEnabled || rcs.isJustForShow || rcs.flameout || !rcs.rcs_active)
+                    if ((p.ShieldedFromAirstream && !rcs.shieldedCanThrust) || !rcs.rcsEnabled || !rcs.isEnabled || rcs.isJustForShow || rcs.flameout)
                         continue;
+
+                    // ModuleRCS keeps the vacuum fuel flow and lets the thrust follow the Isp: thrusterPower is the vacuum thrust
+                    float vacuumIsp = rcs.atmosphereCurve.Evaluate(0);
+                    float ispFactor = vacuumIsp > 0
+                        ? rcs.atmosphereCurve.Evaluate((float)p.staticPressureAtm) / vacuumIsp * (float)rcs.ispMult
+                        : 0;
+
+                    // ModuleRCS copies the RCS group into rcs_active in its own FixedUpdate: the torque needs both, the thrust neither
+                    bool countTorque = rcsGroup && rcs.rcs_active;
 
                     var attitudeControl = new Vector3(rcs.enablePitch ? 1 : 0, rcs.enableRoll ? 1 : 0, rcs.enableYaw ? 1 : 0);
 
@@ -772,7 +801,7 @@ namespace MuMech
 
                         Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
 
-                        float power = rcs.thrusterPower * rcs.thrustPercentage * 0.01f * (float)rcs.flowMult;
+                        float power = rcs.thrusterPower * rcs.thrustPercentage * 0.01f * (float)rcs.flowMult * ispFactor;
 
                         if (FlightInputHandler.fetch.precisionMode)
                         {
@@ -798,6 +827,9 @@ namespace MuMech
                             RCSThrustAvailable.Add(Vector3.Scale(Vessel.GetTransform().InverseTransformDirection(thrusterThrust),
                                 translationControl));
                         }
+
+                        if (!countTorque)
+                            continue;
 
                         Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, thrusterThrust);
 
@@ -860,7 +892,7 @@ namespace MuMech
             PureDragVector = Vector3d.zero;
             PureLiftVector = Vector3d.zero;
 
-            if (ReflectionUtils.IsLoadedFAR)
+            if (IsFARCorrectlyInitialized)
             {
                 DragCoefficient = FARVesselDragCoeff.Call(Vessel);
                 AreaDrag = FARVesselRefArea.Call(Vessel) * DragCoefficient * PhysicsGlobals.DragMultiplier;
@@ -896,7 +928,7 @@ namespace MuMech
                 //if (p.dynamicPressurekPa > 0 && PhysicsGlobals.DragMultiplier > 0)
                 //    dragCoef += p.simDragScalar / (p.dynamicPressurekPa * PhysicsGlobals.DragMultiplier);
 
-                if (!ReflectionUtils.IsLoadedFAR)
+                if (!IsFARCorrectlyInitialized)
                 {
                     DragCoefficient += p.DragCubes.DragCoeff;
                     AreaDrag += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
@@ -1033,8 +1065,10 @@ namespace MuMech
                                     {
                                         provider.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
-                                        TorqueOthers.Add(pos);
-                                        TorqueOthers.Add(neg);
+                                        // Stock has two conventions: reaction wheels and gimbals give two magnitudes, control
+                                        // surfaces two signed torques. As magnitudes per side, both count once.
+                                        TorqueOthers.Add(pos.Abs());
+                                        TorqueOthers.Add(-neg.Abs());
                                     }
                                     catch (Exception e)
                                     {
@@ -1125,12 +1159,31 @@ namespace MuMech
             if (CoTWeightSum > 0)
             {
                 CoT /= CoTWeightSum;
-                ThrustForward = (CoM - CoT).normalized;
-                // In certain circumstances, like hotstaging, the CoM of the Vessel can be behind the CoT before
-                // decoupling and while dragging the previous stage.  In that case thrustForward can wind up pointing
-                // backwards, which is not what we want.  If that happens, we just set it to the forward vector.
-                if (Vector3d.Dot(ThrustForward, Forward) < 0)
-                    ThrustForward = Forward;
+
+                // Gimbals that turn the thrust through the CoM push the vessel along CoM - CoT, but that vector only has a
+                // meaningful direction while the CoT is well behind the CoM: as the CoT nears the CoM (radial engines at CoM
+                // height, or a CoM that moves down as the tanks drain) a small sideways offset turns it far off.  Adding the
+                // direction of the summed thrust, scaled by ThrustAxisLength, keeps CoM - CoT when it is long and moves smoothly
+                // to the thrust direction when it is short.
+                // CoTWeightSum is the sum of the nozzles' max thrusts: when their vector sum keeps less than ThrustCancelRatio
+                // of it, the thrusts nearly cancel out and the direction of the sum is noise.
+                double thrustLength = einfo.ThrustMax.magnitude;
+                if (thrustLength > ThrustCancelRatio * CoTWeightSum)
+                {
+                    Vector3d thrustDirection = einfo.ThrustMax / thrustLength;
+                    ThrustForward = (CoM - CoT + ThrustAxisLength * thrustDirection).normalized;
+                    // With the CoT ahead of the CoM (engines pulling from the front, or hot staging while the previous stage
+                    // is still attached) CoM - CoT points backwards: the thrust direction is then the axis.
+                    if (Vector3d.Dot(ThrustForward, thrustDirection) <= 0)
+                        ThrustForward = thrustDirection;
+                }
+                else
+                {
+                    // engines whose thrusts (nearly) cancel out: no thrust direction, so keep the geometric axis
+                    ThrustForward = (CoM - CoT).normalized;
+                    if (Vector3d.Dot(ThrustForward, Forward) < 0)
+                        ThrustForward = Forward;
+                }
             }
 
             DoT = DoT.normalized;
@@ -1138,9 +1191,13 @@ namespace MuMech
             if (CoLWeightSum > 0)
                 CoL /= CoLWeightSum;
 
-            Vector3d liftDir = -Vector3d.Cross(Vessel.transform.right, -SurfaceVelocity.normalized);
+            // The lift axis: perpendicular to the velocity and to the right axis of the control point, the frame of the angle of
+            // attack and sideslip above. The cross product is cos(sideslip) long, so it is normalized; zero at 90 degrees of sideslip.
+            Vector3d liftDir = -Vector3d.Cross(Vessel.ReferenceTransform.right, -SurfaceVelocity.normalized);
+            double liftDirLength = liftDir.magnitude;
+            liftDir = liftDirLength > 1e-9 ? liftDir / liftDirLength : Vector3d.zero;
 
-            if (ReflectionUtils.IsLoadedFAR && !Vessel.packed && SurfaceVelocity != Vector3d.zero)
+            if (IsFARCorrectlyInitialized && !Vessel.packed && SurfaceVelocity != Vector3d.zero)
             {
                 CalculateVesselAeroForcesWithCache(Vessel, out Vector3 farForce, SurfaceVelocity, AltitudeASL);
 
@@ -1217,7 +1274,9 @@ namespace MuMech
             if (ThrustVectorMaxThrottle.magnitude == 0 && Vessel.ActionGroups[KSPActionGroup.RCS])
             {
                 RCSThrust = true;
-                ThrustVectorMaxThrottle += Forward * RCSThrustAvailable.Down;
+                // RCSThrustAvailable is indexed by the direction of the force on the vessel: the main throttle pushes it forward (Up),
+                // with the nozzles that point back
+                ThrustVectorMaxThrottle += Forward * RCSThrustAvailable.Up;
             }
             else
             {
@@ -1234,7 +1293,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TerminalVelocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")] //Terminal velocity
         public double TerminalVelocity()
         {
-            if (ReflectionUtils.IsLoadedFAR)
+            if (IsFARCorrectlyInitialized)
                 return FARVesselTermVelEst.Call(Vessel);
 
             if (AltitudeASL > MainBody.RealMaxAtmosphereAltitude())
@@ -1277,11 +1336,16 @@ namespace MuMech
         {
             private readonly List<KeyValuePair<Transform, Quaternion>> _rotSave = new List<KeyValuePair<Transform, Quaternion>>();
 
+            // the engine wrappers, reused every tick instead of one new wrapper per ignited engine
+            private readonly List<EngineWrapper> _wrapperPool = new List<EngineWrapper>();
+
             public readonly Dictionary<int, FuelRequirement> ResourceRequired = new Dictionary<int, FuelRequirement>();
 
             public readonly Vector6 TorqueDifferentialThrottle = new Vector6();
             private float _atmP0; // pressure now
             private float _atmP1; // pressure after one timestep
+            private float _atmDensityIsp; // the density as the engines' atmCurveIsp reads it
+            private float _mach;
 
             private Vector3d _com;
 
@@ -1311,6 +1375,16 @@ namespace MuMech
                 _atmP0 = (float)(vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres);
                 float alt1 = (float)(vessel.altitude + TimeWarp.fixedDeltaTime * vessel.verticalSpeed);
                 _atmP1 = (float)(FlightGlobals.getStaticPressure(alt1, vessel.mainBody) * PhysicsGlobals.KpaToAtmospheres);
+                // as ModuleEngines.RequiredPropellantMass: the density over 1.225 kg/m³
+                _atmDensityIsp = (float)(vessel.atmDensity * 40.0 / 49.0);
+                _mach = (float)vessel.mach;
+            }
+
+            // the wrappers this tick did not use go: they must not keep a staged engine's module alive
+            public void TrimWrappers(int used)
+            {
+                if (_wrapperPool.Count > used)
+                    _wrapperPool.RemoveRange(used, _wrapperPool.Count - used);
             }
 
             public void CheckUllageStatus(ModuleEngines e)
@@ -1367,7 +1441,7 @@ namespace MuMech
                 foreach (Propellant propellant in e.propellants)
                 {
                     // maxFuelFlow is in tonnes per second: units per second need the mixture density (as the comment above says)
-                    double maxreq = e.maxFuelFlow * e.mixtureDensityRecip * propellant.ratio;
+                    double maxreq = e.maxFuelFlow * e.multFlow * e.mixtureDensityRecip * propellant.ratio;
                     AddResource(propellant.id, propellant.currentRequirement, maxreq);
                 }
 
@@ -1375,8 +1449,31 @@ namespace MuMech
 
                 float thrustLimiter = e.thrustPercentage / 100f;
 
-                double maxThrust = e.maxFuelFlow * e.flowMultiplier * isp * e.g;
-                double minThrust = e.minFuelFlow * e.flowMultiplier * isp * e.g;
+                // multFlow and multIsp are 1 in stock; mods (TestFlight's failures) lower them, and stock applies them
+                double ispMult = e.multIsp;
+                if (e.useAtmCurveIsp)
+                    ispMult *= e.atmCurveIsp.Evaluate(_atmDensityIsp);
+                if (e.useVelCurveIsp)
+                    ispMult *= e.velCurveIsp.Evaluate(_mach);
+
+                // The thrust at a fuel flow, with the Isp multipliers of ModuleEngines.RequiredPropellantMass (and RealFuels'
+                // solver): the density and Mach curves above, and the throttle curve, read at the flow's fraction of the max
+                // flow.  The throttle curve is 1 at full flow in the configs that use it, and lowers the Isp at low flow.
+                double ThrustAtFlow(double flow)
+                {
+                    double thrust = flow * e.flowMultiplier * e.multFlow * isp * ispMult * e.g;
+                    if (e.useThrottleIspCurve && e.maxFuelFlow > 0)
+                    {
+                        float fraction = (float)(flow / e.maxFuelFlow);
+                        // the worse of now and after one timestep, as for the Isp
+                        thrust *= Math.Min(e.GetThrottlingMult(_atmP0, fraction), e.GetThrottlingMult(_atmP1, fraction));
+                    }
+
+                    return thrust;
+                }
+
+                double maxThrust = ThrustAtFlow(e.maxFuelFlow);
+                double minThrust = ThrustAtFlow(e.minFuelFlow);
 
                 // RealFuels engines reports as operational even when they are shutdown
                 // REMOVED: this definitively screws up the 1kN thruster in RO/RF and sets minThrust/maxThrust
@@ -1386,7 +1483,7 @@ namespace MuMech
 
                 //MechJebCore.print(maxThrust.ToString("F2") + " " + minThrust.ToString("F2") + " " + e.minFuelFlow.ToString("F2") + " " + e.maxFuelFlow.ToString("F2") + " " + e.flowMultiplier.ToString("F2") + " " + Isp.ToString("F2") + " " + thrustLimiter.ToString("F3"));
 
-                double eMaxThrust = minThrust + (maxThrust - minThrust) * thrustLimiter;
+                double eMaxThrust = ThrustAtFlow(e.minFuelFlow + (e.maxFuelFlow - e.minFuelFlow) * thrustLimiter);
                 double eMinThrust = e.throttleLocked ? eMaxThrust : minThrust;
                 double eCurrentThrust = e.finalThrust;
 
@@ -1442,7 +1539,8 @@ namespace MuMech
                         // would wind up pushing its own setpoint around.  Do not design rockets which have a neutral
                         // trim axis that is significantly different at minthrottle than maxthrottle.
                         cot += tMaxThrust * (Vector3d)transform.position;
-                        // DoT is the actual current direction of thrust.
+                        // DoT is the direction of the exhaust of the current thrust (opposite the force) with the gimbals at
+                        // rest, not as they are deflected now.
                         dot -= tCurrentThrust * thrustDirectionVector;
                         coTWeightSum += tMaxThrust;
 
@@ -1461,7 +1559,13 @@ namespace MuMech
                         }
                     }
 
-                    enginesWrappers.Add(new EngineWrapper(e, maxVariableForce, constantTorque, maxVariableTorque));
+                    // enginesWrappers is emptied each tick and filled only here: its count indexes the pool
+                    int index = enginesWrappers.Count;
+                    if (index == _wrapperPool.Count)
+                        _wrapperPool.Add(new EngineWrapper(e, maxVariableForce, constantTorque, maxVariableTorque));
+                    else
+                        _wrapperPool[index].Set(e, maxVariableForce, constantTorque, maxVariableTorque);
+                    enginesWrappers.Add(_wrapperPool[index]);
                 }
                 finally
                 {
@@ -1684,9 +1788,12 @@ namespace MuMech
                     double mass = Math.Min(mass0, mass1);
 
                     // Also, we can't have more airflow than what fits in the resource tank of the intake part.
+                    // indexed: foreach over a PartResourceList boxes its enumerator
                     double capacity = 0;
-                    foreach (PartResource tank in intake.part.Resources)
+                    PartResourceList tanks = intake.part.Resources;
+                    for (int t = 0; t < tanks.Count; t++)
                     {
+                        PartResource tank = tanks[t];
                         if (tank.info.id == r.id)
                             capacity += tank.maxAmount; // units per timestep
                     }
@@ -1741,12 +1848,21 @@ namespace MuMech
             }
         }
 
+        // VesselState reuses its wrappers from tick to tick: one in EngineWrappers holds this tick's values only
         public class EngineWrapper
         {
-            public readonly ModuleEngines Engine;
+            public ModuleEngines Engine { get; private set; }
 
             public EngineWrapper(ModuleEngines module, Vector3d maxVariableForce, Vector3d constantTorque,
                 Vector3d maxVariableTorque)
+            {
+                Engine = module;
+                MaxVariableForce = maxVariableForce;
+                ConstantTorque = constantTorque;
+                MaxVariableTorque = maxVariableTorque;
+            }
+
+            internal void Set(ModuleEngines module, Vector3d maxVariableForce, Vector3d constantTorque, Vector3d maxVariableTorque)
             {
                 Engine = module;
                 MaxVariableForce = maxVariableForce;
@@ -1760,11 +1876,11 @@ namespace MuMech
                 set => Engine.thrustPercentage = value * 100;
             }
 
-            public Vector3d MaxVariableForce { get; }
+            public Vector3d MaxVariableForce { get; private set; }
 
-            public Vector3d ConstantTorque { get; }
+            public Vector3d ConstantTorque { get; private set; }
 
-            public Vector3d MaxVariableTorque { get; }
+            public Vector3d MaxVariableTorque { get; private set; }
         }
     }
 }

@@ -80,7 +80,7 @@ namespace MechJebLib.HoverslamSimulation
         {
             _phase = phase;
 
-            if (!phase.Coast && VelocityError(x.R, x.V).magnitude <= BURN_END_DV)
+            if (!phase.Coast && VelocityError(x.R, x.V).magnitude <= BurnEndDv(phase, x.M))
             {
                 // stop because we're already past where the event would fire
                 tf = t0;
@@ -107,8 +107,15 @@ namespace MechJebLib.HoverslamSimulation
             return true;
         }
 
-        // For "terminal guidance" within the RK integrator we need to stop before the burn direction becomes indeterminate.
+        // The burn steers against the velocity error, so the steering flips from one step to the next as the error reaches zero and
+        // the integrator can only creep up on that point.  The burn's event ends the integration a little earlier, once the error
+        // is down to what the thrust removes in BURN_END_TIME: the steps that near the flip are short enough to end inside that
+        // window, which they rarely do inside a fixed millimetre per second.  FinishBurn does the rest analytically.  BURN_END_DV
+        // is the window's floor.
+        private const double BURN_END_TIME = 0.02;
         private const double BURN_END_DV = 1e-3;
+
+        private static double BurnEndDv(Phase phase, double m) => Math.Max(BURN_END_DV, BURN_END_TIME * phase.VacThrust / m);
 
         private readonly List<Event> _events;
 
@@ -116,26 +123,47 @@ namespace MechJebLib.HoverslamSimulation
         {
             var y = HoverslamLayout.CreateFrom(yin);
 
-            return VelocityError(y.R, y.V).magnitude - BURN_END_DV;
+            return VelocityError(y.R, y.V).magnitude - BurnEndDv(_phase, y.M);
         }
 
-        // Terminal phase analytical landing.
+        // Terminal phase analytical landing: the time dt that the thrust, burning mass as it goes, takes to null the velocity error
+        // while the error drifts along itself at driftAlong, from ve ln(m / (m - mdot dt)) - driftAlong dt = |dv|.  Newton's
+        // method from the constant-acceleration time, where the left side is already at least |dv|, steps down to the root.
         private void FinishBurn(ref HoverslamLayout x, ref double t, Phase phase)
         {
             V3 dv = VelocityError(x.R, x.V);
-            double at = phase.VacThrust / x.M;
-            double rate = at + _mu / x.R.sqrMagnitude * V3.Dot(dv.normalized, x.R.normalized); // -d|dv|/dt
+            double dvMag = dv.magnitude;
+            double r = x.R.magnitude;
+            V3 rhat = x.R / r;
+
+            // how the error changes without thrust: gravity, less how the target velocity changes as the vessel moves (the
+            // ground's rotation, and the final descent's direction turning with the position)
+            V3 drift = -_mu / (r * r) * rhat - V3.Cross(_w, x.V) - _vfm / r * (x.V - V3.Dot(x.V, rhat) * rhat);
+            double driftAlong = V3.Dot(dv.normalized, drift);
+            double rate = phase.VacThrust / x.M - driftAlong; // -d|dv|/dt
 
             // TWR < 1 while already inside the threshold, leave the residual alone
             if (rate <= 0)
                 return;
 
-            double dt = dv.magnitude / rate;
+            // a start that leaves the stage some mass, where the left side is still far above any |dv| inside the window
+            double dt = Math.Min(dvMag / rate, 0.999 * x.M / phase.Mdot);
+
+            for (int i = 0; i < 20; i++)
+            {
+                double m = x.M - phase.Mdot * dt;
+                double step = (phase.VexVacuum * Math.Log(x.M / m) - driftAlong * dt - dvMag) / (phase.VacThrust / m - driftAlong);
+                dt -= step;
+                if (Math.Abs(step) <= 1e-12 * dt)
+                    break;
+            }
+
+            double mf = x.M - phase.Mdot * dt;
 
             x.R += (x.V - 0.5 * dv) * dt;
             x.V = V3.Cross(_w, x.R) + x.R.normalized * _vfm;
-            x.M -= phase.Mdot * dt;
-            x.DV += at * dt;
+            x.DV += phase.VexVacuum * Math.Log(x.M / mf);
+            x.M = mf;
             t += dt;
         }
 
@@ -173,48 +201,46 @@ namespace MechJebLib.HoverslamSimulation
             return new TrajectoryResult { X = x, Tf = tf, UBurn = uBurn, Af = af };
         }
 
-        private double AltitudeResidual(double t, object? o) => PropagateTrajectory(t).X.R.magnitude - _height;
+        // how far above the target radius the burn after ignition at t ends: positive when the ignition is early enough
+        private double Residual(in TrajectoryResult result) => result.X.R.magnitude - _height;
+
+        private double AltitudeResidual(double t, object? o) => Residual(PropagateTrajectory(t));
 
         private readonly Func<double, object?, double> _eventFunc;
 
-        private (double maxT, double minT) GenerateBracketGuess()
+        // The ignition times to search between, and whether the vessel is still rising to its apoapsis.
+        private (double minT, double maxT, bool rising) GenerateBracketGuess()
         {
-            double maxT;
-            double minT;
-
             if (Astro.EccFromStateVectors(_mu, _r0, _v0) < 1.0)
             {
                 double tanom = Astro.TrueAnomalyFromStateVectors(_mu, _r0, _v0);
                 if (ClampPi(tanom) > 0)
                 {
                     // still rising, advance to the apoapsis
-                    minT = Astro.TimeToNextApoapsis(_mu, _r0, _v0);
-                    (V3 rApr, V3 vApr) = Shepperd.Solve(_mu, minT, _r0, _v0);
-                    maxT = minT + Astro.TimeToNextRadius(_mu, rApr, vApr, _height);
+                    double tApoapsis = Astro.TimeToNextApoapsis(_mu, _r0, _v0);
+                    (V3 rApr, V3 vApr) = Shepperd.Solve(_mu, tApoapsis, _r0, _v0);
+                    return (tApoapsis, tApoapsis + Astro.TimeToNextRadius(_mu, rApr, vApr, _height), true);
                 }
-                else
-                {
-                    // falling
-                    minT = Astro.TimeToNextApoapsis(_mu, _r0, _v0) - Astro.PeriodFromStateVectors(_mu, _r0, _v0);
-                    maxT = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
-                }
-            }
-            else
-            {
-                // heuristically, try to capture a range that includes the ignition point.  I'd rather not
-                // use the mainBody SOI radius here, but that would certainly do it.
-                minT = Astro.TimeToLastRadius(_mu, _r0, _v0, _r0.magnitude * 2.0);
-                maxT = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
+
+                // falling, back to the apoapsis just passed.  Below the target height, every ignition from now on starts
+                // below it, and the next time of the target radius is the ascending crossing on the far side of the planet.
+                double tLastApoapsis = Astro.TimeToNextApoapsis(_mu, _r0, _v0) - Astro.PeriodFromStateVectors(_mu, _r0, _v0);
+                double tImpact = _r0.magnitude <= _height ? 0 : Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
+                return (tLastApoapsis, tImpact, false);
             }
 
-            return (maxT, minT);
+            // heuristically, try to capture a range that includes the ignition point.  I'd rather not
+            // use the mainBody SOI radius here, but that would certainly do it.
+            return (Astro.TimeToLastRadius(_mu, _r0, _v0, _r0.magnitude * 2.0), Astro.TimeToNextRadius(_mu, _r0, _v0, _height), false);
         }
 
-        private double SafeRootSolve(double minT, double maxT)
+        public override void Run(object? o = null)
         {
+            _solver.CancellationToken = CancelToken;
+
             try
             {
-                return BrentRoot.Solve(_eventFunc, minT, maxT, null, rtol: 1e-6);
+                Solve();
             }
             catch (Exception)
             {
@@ -223,17 +249,60 @@ namespace MechJebLib.HoverslamSimulation
             }
         }
 
-        public override void Run(object? o = null)
+        // The ignition is the latest one whose burn still ends on the target radius.  The search starts from the earlier of now
+        // and the apoapsis: when rising, the apoapsis first, then now; when falling, the apoapsis just passed, so the ignition
+        // can be in the past (a negative countdown).  When the burn from there already ends below the target, no ignition
+        // lands, and the answer is to ignite now.  A rising vessel that is too late gets now too, not a time in the past: going
+        // back along the conic of a vessel under thrust goes nowhere it was, and the residual crosses zero again back there.
+        // A residual that isn't finite throws.
+        private void Solve()
         {
-            _solver.CancellationToken = CancelToken;
+            (double minT, double maxT, bool rising) = GenerateBracketGuess();
 
-            (double maxT, double minT) = GenerateBracketGuess();
+            double fMin = Residual(PropagateTrajectory(minT));
+            Check.Finite(fMin, "the altitude residual at the start of the search");
+            double fMax;
 
-            double t1 = SafeRootSolve(minT, maxT);
+            if (rising && fMin < 0)
+            {
+                // the burn from the apoapsis ends below the target: a TWR < 1 stage has to ignite on the way up
+                TrajectoryResult now = PropagateTrajectory(0);
+                double fNow = Residual(now);
 
-            TrajectoryResult result = PropagateTrajectory(t1);
+                if (fNow < 0)
+                {
+                    Report(0, now);
+                    return;
+                }
 
-            IgnitionUT = _t0 + t1;
+                (minT, maxT, fMin, fMax) = (0, minT, fNow, fMin);
+            }
+            else if (fMin < 0)
+            {
+                Report(0, PropagateTrajectory(0));
+                return;
+            }
+            else
+            {
+                TrajectoryResult late = PropagateTrajectory(maxT);
+                fMax = Residual(late);
+
+                // the coast reaches the target radius already at the target velocity, any later ignition starts below it
+                if (fMax >= 0)
+                {
+                    Report(maxT, late);
+                    return;
+                }
+            }
+
+            double t1 = BrentRoot.Solve(_eventFunc, minT, maxT, fMin, fMax, null, rtol: 1e-6);
+
+            Report(t1, PropagateTrajectory(t1));
+        }
+
+        private void Report(double t, in TrajectoryResult result)
+        {
+            IgnitionUT = _t0 + t;
             IgnitionAttitude = result.UBurn;
             Rf = result.X.R;
             Vf = result.X.V;

@@ -28,7 +28,7 @@ namespace MuMech
                 {
                     Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle), allowZero: true);
                 }
-                else if (_deorbitBurnTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
+                else if (_deorbitBurnTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.Limits.LimiterMinThrottle)
                 {
                     Core.Thrust.RequestActiveThrottle(0.0f);
                 }
@@ -66,7 +66,7 @@ namespace MuMech
                     "#MechJeb_LandingGuidance_Status12"); //"Moving to low deorbit burn point"
 
                 //Warp toward deorbit burn if it hasn't been triggerd yet:
-                if (!_deorbitBurnTriggered && Core.Node.Autowarp && rangeToTarget > 2 * triggerDistance && Core.vessel.angularVelocity.magnitude < 0.001)
+                if (!_deorbitBurnTriggered && Core.Landing.Autowarp && rangeToTarget > 2 * triggerDistance && TurningWithOrbit())
                     Core.Warp.WarpRegularAtRate((float)(Orbit.period / 6));
                 if (rangeToTarget < triggerDistance && !MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
 
@@ -139,6 +139,20 @@ namespace MuMech
                 Core.Attitude.AttitudeTo(thrustDirection, AttitudeReference.INERTIAL, Core.Landing);
 
                 return this;
+            }
+
+            // The vessel holds surface retrograde, which turns with the orbit: on a low orbit of a small body that is faster
+            // than the settle threshold, so the vessel counts as settled when it turns at the orbit's rate. On rails the
+            // vessel does not turn at all, and the warp it is in carries on.
+            private bool TurningWithOrbit()
+            {
+                if (Vessel.packed)
+                    return true;
+
+                Vector3d radius = VesselState.CoM - MainBody.position;
+                Vector3d orbitRate = Vector3d.Cross(radius, VesselState.OrbitalVelocity) / radius.sqrMagnitude;
+                Vector3d vesselRate = Vessel.ReferenceTransform.rotation * Vessel.angularVelocity;
+                return (vesselRate - orbitRate).magnitude < 0.001;
             }
         }
     }

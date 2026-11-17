@@ -21,6 +21,8 @@ namespace MuMech
         internal readonly TimeSelector _timeSelector =
             new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
 
+        internal override TimeSelector Timing => _timeSelector;
+
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (ResonanceNumerator.Val <= 0 || ResonanceDenominator.Val <= 0)

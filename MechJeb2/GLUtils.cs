@@ -21,8 +21,11 @@ namespace MuMech
             double radius = 0)
         {
             Vector3d up = body.GetSurfaceNVector(latitude, longitude);
-            double height = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) *
-                QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
+            // a body without terrain (Jool, the Sun) has none: the marker sits on its radius
+            double height = body.pqsController == null
+                ? body.Radius
+                : body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) *
+                    QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
             if (height < body.Radius) { height = body.Radius; }
 
             Vector3d center = body.position + height * up;
@@ -86,25 +89,54 @@ namespace MuMech
             GL.Vertex3(screenPoint.x, screenPoint.y, 0);
         }
 
+        // An edge in the flight camera's viewport, for GL.LINES in LoadOrtho. Drawn only when both ends are in front of the camera: a
+        // point behind it comes out mirrored, and its edge would cross the screen.
+        private static void GLViewportLine(Vector3d worldPosition1, Vector3d worldPosition2)
+        {
+            Camera camera = FlightCamera.fetch.mainCamera;
+            Vector3 viewportPoint1 = camera.WorldToViewportPoint(worldPosition1);
+            Vector3 viewportPoint2 = camera.WorldToViewportPoint(worldPosition2);
+            if (viewportPoint1.z <= 0 || viewportPoint2.z <= 0)
+                return;
+
+            GL.Vertex3(viewportPoint1.x, viewportPoint1.y, 0);
+            GL.Vertex3(viewportPoint2.x, viewportPoint2.y, 0);
+        }
+
+        private static Vector3 ScreenPoint(Vector3d worldPosition, bool map) =>
+            map
+                ? PlanetariumCamera.Camera.WorldToScreenPoint(ScaledSpace.LocalToScaledSpace(worldPosition))
+                : FlightCamera.fetch.mainCamera.WorldToScreenPoint(worldPosition);
+
         private static void GLPixelLine(Vector3d worldPosition1, Vector3d worldPosition2, bool map)
         {
-            Vector3 screenPoint1, screenPoint2;
-            if (map)
-            {
-                screenPoint1 = PlanetariumCamera.Camera.WorldToScreenPoint(ScaledSpace.LocalToScaledSpace(worldPosition1));
-                screenPoint2 = PlanetariumCamera.Camera.WorldToScreenPoint(ScaledSpace.LocalToScaledSpace(worldPosition2));
-            }
-            else
-            {
-                screenPoint1 = FlightCamera.fetch.mainCamera.WorldToScreenPoint(worldPosition1);
-                screenPoint2 = FlightCamera.fetch.mainCamera.WorldToScreenPoint(worldPosition2);
-            }
+            Vector3 screenPoint1 = ScreenPoint(worldPosition1, map);
+            Vector3 screenPoint2 = ScreenPoint(worldPosition2, map);
 
             if (screenPoint1.z > 0 && screenPoint2.z > 0)
             {
                 GL.Vertex3(screenPoint1.x, screenPoint1.y, 0);
                 GL.Vertex3(screenPoint2.x, screenPoint2.y, 0);
             }
+        }
+
+        // An edge as a quad width pixels wide, for GL.QUADS in LoadPixelMatrix: GL.LINES are always 1 px
+        private static void GLPixelQuad(Vector3d worldPosition1, Vector3d worldPosition2, float width, bool map)
+        {
+            Vector3 screenPoint1 = ScreenPoint(worldPosition1, map);
+            Vector3 screenPoint2 = ScreenPoint(worldPosition2, map);
+            if (screenPoint1.z <= 0 || screenPoint2.z <= 0)
+                return;
+
+            var along = new Vector2(screenPoint2.x - screenPoint1.x, screenPoint2.y - screenPoint1.y);
+            if (along.sqrMagnitude < 1e-6f)
+                return;
+
+            Vector2 side = 0.5f * width * new Vector2(-along.y, along.x).normalized;
+            GL.Vertex3(screenPoint1.x + side.x, screenPoint1.y + side.y, 0);
+            GL.Vertex3(screenPoint2.x + side.x, screenPoint2.y + side.y, 0);
+            GL.Vertex3(screenPoint2.x - side.x, screenPoint2.y - side.y, 0);
+            GL.Vertex3(screenPoint1.x - side.x, screenPoint1.y - side.y, 0);
         }
 
         //Tests if byBody occludes worldPosition, from the perspective of the planetarium camera
@@ -124,12 +156,13 @@ namespace MuMech
 
         //If dashed = false, draws 0-1-2-3-4-5...
         //If dashed = true, draws 0-1 2-3 4-5...
-        public static void DrawPath(CelestialBody mainBody, List<Vector3d> points, Color c, bool map, bool dashed = false)
+        //A width (in pixels) draws each edge as a quad that wide; 0 draws 1 px lines.
+        public static void DrawPath(CelestialBody mainBody, List<Vector3d> points, Color c, bool map, bool dashed = false, float width = 0)
         {
             GL.PushMatrix();
             _material.SetPass(0);
             GL.LoadPixelMatrix();
-            GL.Begin(GL.LINES);
+            GL.Begin(width > 0 ? GL.QUADS : GL.LINES);
             GL.Color(c);
 
             Vector3d camPos = map
@@ -141,7 +174,10 @@ namespace MuMech
             {
                 if (!IsOccluded(points[i], mainBody, camPos) && !IsOccluded(points[i + 1], mainBody, camPos))
                 {
-                    GLPixelLine(points[i], points[i + 1], map);
+                    if (width > 0)
+                        GLPixelQuad(points[i], points[i + 1], width, map);
+                    else
+                        GLPixelLine(points[i], points[i + 1], map);
                 }
             }
 
@@ -169,8 +205,7 @@ namespace MuMech
                         if ((corner & axis) != 0)
                             continue;
 
-                        GLVertex(origin + rotation * Corner(min, max, corner));
-                        GLVertex(origin + rotation * Corner(min, max, corner | axis));
+                        GLViewportLine(origin + rotation * Corner(min, max, corner), origin + rotation * Corner(min, max, corner | axis));
                     }
             }
 
@@ -206,41 +241,18 @@ namespace MuMech
             GL.Begin(GL.LINES);
             GL.Color(c);
 
-            GLVertex(a1);
-            GLVertex(a2);
-
-            GLVertex(a2);
-            GLVertex(a3);
-
-            GLVertex(a3);
-            GLVertex(a4);
-
-            GLVertex(a4);
-            GLVertex(a1);
-
-            GLVertex(b1);
-            GLVertex(b2);
-
-            GLVertex(b2);
-            GLVertex(b3);
-
-            GLVertex(b3);
-            GLVertex(b4);
-
-            GLVertex(b4);
-            GLVertex(b1);
-
-            GLVertex(a1);
-            GLVertex(b1);
-
-            GLVertex(a2);
-            GLVertex(b2);
-
-            GLVertex(a3);
-            GLVertex(b3);
-
-            GLVertex(a4);
-            GLVertex(b4);
+            GLViewportLine(a1, a2);
+            GLViewportLine(a2, a3);
+            GLViewportLine(a3, a4);
+            GLViewportLine(a4, a1);
+            GLViewportLine(b1, b2);
+            GLViewportLine(b2, b3);
+            GLViewportLine(b3, b4);
+            GLViewportLine(b4, b1);
+            GLViewportLine(a1, b1);
+            GLViewportLine(a2, b2);
+            GLViewportLine(a3, b3);
+            GLViewportLine(a4, b4);
 
             GL.End();
             GL.PopMatrix();

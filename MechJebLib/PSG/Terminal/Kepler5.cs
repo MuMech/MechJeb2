@@ -43,6 +43,7 @@ namespace MechJebLib.PSG.Terminal
         public ITerminal Rescale(Scale scale)  => new Kepler5(_smaT / scale.LengthScale, _eccT, _incT, _lanT, _argpT);
         public double    TargetOrbitalEnergy() => -1.0 / (2.0 * _smaT);
         public double    IncT()                => _incT;
+        public double    GuessRadius()         => Astro.PeriapsisFromKeplerian(_smaT, _eccT);
 
         public int NumConstraints { get; }
 

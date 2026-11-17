@@ -51,9 +51,9 @@ namespace MuMech
 
         public void Save(ConfigNode node)
         {
-            node.SetValue("Kp", Kp.ToString());
-            node.SetValue("Ki", Ki.ToString());
-            node.SetValue("Kd", Kd.ToString());
+            node.SetValue("Kp", Kp.ToString(), true);
+            node.SetValue("Ki", Ki.ToString(), true);
+            node.SetValue("Kd", Kd.ToString(), true);
         }
     }
 

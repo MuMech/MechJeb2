@@ -15,7 +15,7 @@ namespace MuMech
 
         // A window split from the module that does its work (SmartASS, Translatron, Warp Helper): that module's type name.
         // MechJebCore loads the window's settings from that module's node until the window has its own (they were saved there
-        // before the split), gates it with that module's part cfg entry, and removes it when that module is blacklisted.
+        // before the split) and gates it with that module's part cfg entry.
         public virtual string LogicModuleName => null;
 
         // the module whose controller users make the window's menu entry show as active
@@ -129,88 +129,11 @@ namespace MuMech
         internal bool EnabledEditor;
         internal bool EnabledFlight;
 
-        private GUILayoutOption[] _windowOptions;
-
         public bool ShowInCurrentScene => HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight;
-
-        private readonly int _id;
-        private static int _nextID = 72190852;
 
         protected DisplayModule(MechJebCore core)
             : base(core)
         {
-            _id = _nextID;
-            _nextID++;
-        }
-
-        protected virtual GUILayoutOption[] WindowOptions() => Array.Empty<GUILayoutOption>();
-
-        protected void WindowGUI(int windowID, bool draggable)
-        {
-            if (!isOverlay && GUI.Button(new Rect(WindowPos.width - 18, 2, 16, 16), ""))
-            {
-                Enabled = false;
-            }
-
-            //            if (GUI.Button(new Rect(windowPos.width - 40, 2, 20, 16), (locked ? "X" : "O"))) // lock button needs an icon, letters look crap
-            //            {
-            //                locked = !locked;
-            //            }
-
-            bool allowDrag = !windowLocked;
-            if (!windowLocked && !isOverlay && Core.Settings.UseTitlebarDragging)
-            {
-                float x = Mouse.screenPos.x / GuiUtils.Scale;
-                float y = Mouse.screenPos.y / GuiUtils.Scale;
-                allowDrag = x >= WindowPos.xMin + 3 && x <= WindowPos.xMin + WindowPos.width - 3 &&
-                    y >= WindowPos.yMin + 3 && y <= WindowPos.yMin + 17;
-            }
-
-            if (draggable && allowDrag)
-                GUI.DragWindow();
-        }
-
-        private void ProfiledWindowGUI(int windowID)
-        {
-            Profiler.BeginSample(GetType().Name);
-            WindowGUI(windowID);
-            GuiUtils.RecordTooltip(windowID);
-            Profiler.EndSample();
-        }
-
-        protected virtual void WindowGUI(int windowID) => WindowGUI(windowID, true);
-
-        public virtual void DrawGUI(bool inEditor)
-        {
-            if (!ShowInCurrentScene) return;
-
-            // Cache the array to not create one each frame
-            _windowOptions ??= WindowOptions();
-
-            WindowPos = GUILayout.Window(_id, WindowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), _windowOptions);
-            GuiUtils.ShowTooltip(_id);
-
-            //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
-            //
-            //                foreach (var w in windows)
-            //                {
-            //                	if (w == this) { continue; }
-            //
-            //                	var diffL = (w.windowPos.x + w.windowPos.width - 2) - windowPos.x;
-            //                	var diffR = w.windowPos.x - (windowPos.x + windowPos.width + 2);
-            //                	var diffT = (w.windowPos.y + w.windowPos.height - 2) - windowPos.y;
-            //                	var diffB = w.windowPos.y - (windowPos.y + windowPos.height + 2);
-            //
-            //                	if (Math.Abs(diffL) <= 8)
-            //                	{
-            //                		SetPos(w.windowPos.x + w.windowPos.width - 2, windowPos.y);
-            //                	}
-            //
-            //                	if (Math.Abs(diffR) <= 8)
-            //                	{
-            //                		SetPos(w.windowPos.x - windowPos.width + 2, windowPos.y);
-            //                	}
-            //                }
         }
 
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -281,8 +204,16 @@ namespace MuMech
 
         private ComputerModule[] _makesActive;
 
+        /// <summary>
+        ///     Whether the autopilot this window drives is engaged, whoever engaged it (this window, another module, kOS): the menu
+        ///     shows the window active then.
+        /// </summary>
+        protected virtual bool AutopilotEngaged => false;
+
         public virtual bool IsActive()
         {
+            if (AutopilotEngaged) return true;
+
             _makesActive ??= new ComputerModule[] { Core.Attitude, Core.Thrust, Core.Rover, Core.Node, Core.RCS, Core.Rcsbal };
 
             bool active = false;

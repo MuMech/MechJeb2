@@ -11,7 +11,7 @@ namespace MuMech.UI
     /// </summary>
     public static partial class GeneralItemBuilders
     {
-        // GuiUtils.ToggledTextBox with a toggle label coloured by the limiter state
+        // [x] label [field] unit, with a toggle label coloured by the limiter state
         static void ToggledField(KodeWindow w, UIObject parent, string key, Func<bool> get, Action<bool> set, EditableDoubleMult ed, string unit, float width,
             Func<KodeWindow.Tone> tone, string tooltipKey = null)
         {
@@ -27,7 +27,7 @@ namespace MuMech.UI
 
         static void LimitToPreventOverheats(KodeWindow w, UIObject p, MechJebModuleThrustController t) =>
             w.Toggle(p, "#MechJeb_Ascent_checkbox12", () => t.LimitToPreventOverheats, v => t.LimitToPreventOverheats = v,
-                LimiterTones.For(t, LimitMode.TEMPERATURE)); //"Prevent engine overheats"
+                LimiterTones.For(t, LimitMode.TEMPERATURE, OptionRows.GeneralLimitsApply(t))); //"Prevent engine overheats"
 
         static void LimitToPreventFlameout(KodeWindow w, UIObject p, MechJebModuleThrustController t) =>
             w.Toggle(p, "#MechJeb_Ascent_checkbox13", () => t.LimitToPreventFlameout, v => t.LimitToPreventFlameout = v,
@@ -35,23 +35,31 @@ namespace MuMech.UI
 
         static void LimitToPreventUnstableIgnition(KodeWindow w, UIObject p, MechJebModuleThrustController t) =>
             w.Toggle(p, "#MechJeb_Ascent_checkbox14", () => t.LimitToPreventUnstableIgnition, v => t.LimitToPreventUnstableIgnition = v,
-                LimiterTones.For(t, LimitMode.UNSTABLE_IGNITION)); //"Prevent unstable ignition"
+                LimiterTones.For(t, LimitMode.UNSTABLE_IGNITION, OptionRows.GeneralLimitsApply(t))); //"Prevent unstable ignition"
 
         static void AutoRcsUllage(KodeWindow w, UIObject p, MechJebModuleThrustController t) =>
             w.Toggle(p, "#MechJeb_Ascent_checkbox15", () => t.AutoRCSUllaging, v => t.AutoRCSUllaging = v,
-                LimiterTones.For(t, LimitMode.AUTO_RCS_ULLAGE)); //"Use RCS to ullage"
+                LimiterTones.For(t, LimitMode.AUTO_RCS_ULLAGE, OptionRows.GeneralLimitsApply(t))); //"Use RCS to ullage"
 
         static void LimitAcceleration(KodeWindow w, UIObject p, MechJebModuleThrustController t) =>
             ToggledField(w, p, "#MechJeb_Ascent_checkbox16", () => t.LimitAcceleration, v => t.LimitAcceleration = v,
-                t.MaxAcceleration, "m/s²", 30, LimiterTones.For(t, LimitMode.ACCELERATION)); //"Limit acceleration to"
+                t.MaxAcceleration, "m/s²", 30, LimiterTones.For(t, LimitMode.ACCELERATION, OptionRows.GeneralLimitsApply(t))); //"Limit acceleration to"
 
         static void LimitThrottle(KodeWindow w, UIObject p, MechJebModuleThrustController t) =>
             ToggledField(w, p, "#MechJeb_Ascent_checkbox17", () => t.LimitThrottle, v => t.LimitThrottle = v,
-                t.MaxThrottle, "%", 30, () => LimiterTones.Throttle(t)); //"Limit throttle to"
+                t.MaxThrottle, "%", 30, GeneralTone(t, LimiterTones.Throttle)); //"Limit throttle to"
 
         static void LimiterMinThrottle(KodeWindow w, UIObject p, MechJebModuleThrustController t) =>
             ToggledField(w, p, "#MechJeb_Ascent_checkbox18", () => t.LimiterMinThrottle, v => t.LimiterMinThrottle = v,
-                t.MinThrottle, "%", 30, () => LimiterTones.MinThrottle(t), "#MechJeb_Ascent_checkbox18_tooltip"); //"Keep limited throttle over"
+                t.MinThrottle, "%", 30, GeneralTone(t, LimiterTones.MinThrottle), "#MechJeb_Ascent_checkbox18_tooltip"); //"Keep limited throttle over"
+
+        // a tone of the general limits, live while they apply
+        static Func<KodeWindow.Tone> GeneralTone(MechJebModuleThrustController t,
+            Func<MechJebModuleThrustController, IThrustLimits, Func<bool>, KodeWindow.Tone> tone)
+        {
+            Func<bool> general = OptionRows.GeneralLimitsApply(t);
+            return () => tone(t, t, general);
+        }
 
         static void DifferentialThrottle(KodeWindow w, UIObject p, MechJebModuleThrustController t) =>
             w.Toggle(p, "#MechJeb_Ascent_checkbox19", () => t.DifferentialThrottle, LimiterTones.SetDifferential(t),
@@ -61,7 +69,7 @@ namespace MuMech.UI
         static void LimitElectric(KodeWindow w, UIObject p, MechJebModuleThrustController t)
         {
             Layout electric = KodeWindow.Row(p);
-            w.Toggle(electric, "#MechJeb_Ascent_checkbox20", () => t.ElectricThrottle, v => t.ElectricThrottle = v, LimiterTones.Electric(t));
+            w.Toggle(electric, "#MechJeb_Ascent_checkbox20", () => t.ElectricThrottle, v => t.ElectricThrottle = v, LimiterTones.Electric(t, OptionRows.GeneralLimitsApply(t)));
             EditUi.Field(w, electric, () => t.ElectricThrottleLo, 30);
             KodeWindow.Label(electric, "% Hi");
             EditUi.Field(w, electric, () => t.ElectricThrottleHi, 30);

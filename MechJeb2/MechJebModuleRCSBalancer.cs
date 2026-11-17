@@ -12,9 +12,27 @@ namespace MuMech
 {
     public class MechJebModuleRCSBalancer : ComputerModule
     {
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL)), ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)]
-        //Smart RCS translation
-        public bool smartTranslation;
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL), name = "smartTranslation")]
+        private bool _smartTranslation;
+
+        // Smart RCS translation. The balancer is its own user while it is on, so the setting works the same from the RCS
+        // Balancer window and from a custom window's item, with the Balancer window open or closed. The lower-case name is the
+        // item id that saved custom windows hold. A loaded value bypasses the setter: OnStart and OnLoad set the user from it.
+        [ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)] //Smart RCS translation
+        public bool smartTranslation
+        {
+            get => _smartTranslation;
+            set
+            {
+                if (value == _smartTranslation) return;
+
+                _smartTranslation = value;
+                ResetThrusterForces();
+
+                if (value) Users.Add(this);
+                else Users.Remove(this);
+            }
+        }
 
         // Overdrive
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL)), EditableInfoItem("#MechJeb_RCSBalancerOverdrive", InfoItem.Category.Thrust, rightLabel = "%")]
@@ -147,6 +165,43 @@ namespace MuMech
             base.OnModuleDisabled();
         }
 
+        public override void OnStart(PartModule.StartState state)
+        {
+            base.OnStart(state);
+
+            if (_smartTranslation)
+                Users.Add(this);
+        }
+
+        // a reload (a vessel switch, or a type file shared by vessels of one name) writes the field: the user follows it
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+
+            if (_smartTranslation)
+            {
+                Users.Add(this);
+            }
+            else if (Users.Contains(this))
+            {
+                Users.Remove(this);
+                ResetThrusterForces();
+            }
+        }
+
+        // the tuning values the solver was last given: an edit, from the RCS Balancer window or a custom window's item, reaches
+        // it on the next tick
+        private double _solverOverdrive, _solverOverdriveScale, _solverFactorTorque, _solverFactorTranslate, _solverFactorWaste;
+
+        public override void OnFixedUpdate()
+        {
+            base.OnFixedUpdate();
+
+            if (overdrive != _solverOverdrive || overdriveScale != _solverOverdriveScale || tuningParamFactorTorque != _solverFactorTorque ||
+                tuningParamFactorTranslate != _solverFactorTranslate || tuningParamFactorWaste != _solverFactorWaste)
+                UpdateTuningParameters();
+        }
+
         public override void OnDestroy()
         {
             solverThread.Stop();
@@ -161,9 +216,11 @@ namespace MuMech
                 m.Restore();
         }
 
-        // What ModuleRCS.FixedUpdate asks of a module before it fires, fuel aside.
+        // What ModuleRCS.FixedUpdate asks of a module before it fires, and whether it got propellant the last time it fired. A module
+        // throttled to 0 asks for no propellant, which stock reads as a flameout, so only a module with some throttle counts as dry.
         private static bool CanFire(ModuleRCS pm) =>
-            pm.isEnabled && pm.moduleIsEnabled && pm.rcsEnabled && !pm.isJustForShow && (!pm.part.ShieldedFromAirstream || pm.shieldedCanThrust);
+            pm.isEnabled && pm.moduleIsEnabled && pm.rcsEnabled && !pm.isJustForShow && (!pm.part.ShieldedFromAirstream || pm.shieldedCanThrust) &&
+            !(pm.flameout && pm.flowMult > 0);
 
         private bool ThrustersChanged()
         {
@@ -346,7 +403,8 @@ namespace MuMech
         //      foreach part in vessel.parts:
         //          foreach rcsModule in part.Modules.OfType<ModuleRCS>:
         //              ...
-        // The throttles will be empty if they haven't been calculated yet.
+        // The throttles will be empty if they haven't been calculated yet. They are the solver's cached array: read them, don't
+        // change them.
         public void GetThrottles(Vector3 direction, out double[] throttles, out IReadOnlyList<RCSSolver.Thruster> thrusters)
         {
             // Update vessel info if needed.
@@ -389,6 +447,9 @@ namespace MuMech
             // RCS balancing on rotation isn't supported.
             //Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
 
+            // the field shows the precision that is used
+            if (calcPrecision < RCSSolverKey.MIN_PRECISION || calcPrecision > RCSSolverKey.MAX_PRECISION)
+                calcPrecision.Val = Math.Max(RCSSolverKey.MIN_PRECISION, Math.Min(RCSSolverKey.MAX_PRECISION, calcPrecision));
             RCSSolverKey.SetPrecision(calcPrecision);
             double[] throttles = solverThread.GetThrottles(direction);
 
@@ -413,7 +474,15 @@ namespace MuMech
 
         public void UpdateTuningParameters()
         {
-            double wasteThreshold = overdrive * overdriveScale;
+            _solverOverdrive       = overdrive;
+            _solverOverdriveScale  = overdriveScale;
+            _solverFactorTorque    = tuningParamFactorTorque;
+            _solverFactorTranslate = tuningParamFactorTranslate;
+            _solverFactorWaste     = tuningParamFactorWaste;
+
+            // overdrive runs 0..1 on the slider, but its text field takes any value: above 1 the threshold lets unhelpful
+            // thrusters fire
+            double wasteThreshold = Clamp01(overdrive) * overdriveScale;
             var tuningParams = new RCSSolverTuningParams(wasteThreshold, tuningParamFactorTorque, tuningParamFactorTranslate,
                 tuningParamFactorWaste);
             solverThread.UpdateTuningParameters(tuningParams);
@@ -421,18 +490,10 @@ namespace MuMech
 
         public double GetCalculationTime() => solverThread.CalculationTime;
 
+        // the balancer only runs while smart translation is on: that setting is its one user
         public override void Drive(FlightCtrlState s)
         {
-            if (smartTranslation)
-            {
-                AdjustRCSThrottles(s);
-            }
-            else
-            {
-                // The info item can turn smart translation off without disabling us.
-                ResetThrusterForces();
-            }
-
+            AdjustRCSThrottles(s);
             base.Drive(s);
         }
     }

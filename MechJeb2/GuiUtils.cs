@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.Utils;
@@ -39,6 +40,7 @@ namespace MuMech
             {
                 ValConfig = value;
                 TextConfig = (ValConfig / _multiplier).ToString();
+                Parsed = true; // the text is now the value's
             }
         }
 
@@ -123,6 +125,7 @@ namespace MuMech
             {
                 ValConfig = value;
                 TextConfig = GuiUtils.TimeToDHMS(ValConfig);
+                Parsed = true; // the text is now the value's
             }
         }
 
@@ -146,7 +149,7 @@ namespace MuMech
         public override string ToString() => GuiUtils.TimeToDHMS(Val);
     }
 
-    public class EditableAngle
+    public class EditableAngle : IPersistenceLoad
     {
         [UsedImplicitly, Persistent]
         public readonly EditableDouble Degrees;
@@ -160,38 +163,59 @@ namespace MuMech
         [UsedImplicitly, Persistent]
         public bool Negative;
 
+        // The fields show the angle to the nearest arc second, which is 9 m on a 3.2x Kerbin and 31 m on Earth. The angle keeps
+        // its exact value while the fields still show what it was rounded to; once the player edits them, the fields are the angle.
+        [UsedImplicitly, Persistent]
+        public double Exact;
+
+        private double _rounded;
+
         public EditableAngle(double angle)
         {
-            angle = Clamp180(angle);
-
-            Negative = angle < 0;
-            angle = Math.Abs(angle);
-            Degrees = new EditableDouble((int)angle);
-            angle -= Degrees.Val;
-            Minutes = new EditableDouble((int)(60 * angle));
-            angle -= Minutes.Val / 60;
-            Seconds = new EditableDouble(Math.Round(3600 * angle));
+            Exact = Clamp180(angle);
+            Split(Exact, out Negative, out double degrees, out double minutes, out double seconds);
+            Degrees = new EditableDouble(degrees);
+            Minutes = new EditableDouble(minutes);
+            Seconds = new EditableDouble(seconds);
+            _rounded = FieldValue;
         }
 
-        public static implicit operator double(EditableAngle x) => (x.Negative ? -1 : 1) * (x.Degrees + x.Minutes / 60.0 + x.Seconds / 3600.0);
+        private static void Split(double angle, out bool negative, out double degrees, out double minutes, out double seconds)
+        {
+            negative = angle < 0;
+            // rounded to the arc second before it is split, so the seconds never read 60
+            double totalSeconds = Math.Round(3600 * Math.Abs(angle));
+            degrees = Math.Floor(totalSeconds / 3600);
+            minutes = Math.Floor(totalSeconds % 3600 / 60);
+            seconds = totalSeconds % 60;
+        }
+
+        // A minus typed in a field flips the hemisphere, as it does in a decimal angle: -5° 30' N is 5° 30' S.
+        private static double Join(bool negative, double degrees, double minutes, double seconds)
+        {
+            negative ^= degrees < 0 || minutes < 0 || seconds < 0;
+            return (negative ? -1 : 1) * (Math.Abs(degrees) + Math.Abs(minutes) / 60.0 + Math.Abs(seconds) / 3600.0);
+        }
+
+        private double FieldValue => Join(Negative, Degrees, Minutes, Seconds);
+
+        // the loaded fields keep the saved exact angle only if they are its rounding; a config saved without it gets the fields
+        public void PersistenceLoad()
+        {
+            Split(Exact, out bool negative, out double degrees, out double minutes, out double seconds);
+            _rounded = Join(negative, degrees, minutes, seconds);
+        }
+
+        public static implicit operator double(EditableAngle x)
+        {
+            double fields = x.FieldValue;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            return fields == x._rounded ? x.Exact : fields;
+        }
 
         public static implicit operator EditableAngle(double x) => new EditableAngle(x);
 
         public enum Direction { NS, EW }
-
-        public void DrawEditGUI(Direction direction)
-        {
-            GUILayout.BeginHorizontal();
-            Degrees.Text = GUILayout.TextField(Degrees.Text, GUILayout.Width(30));
-            GUILayout.Label("°", GUILayout.ExpandWidth(false));
-            Minutes.Text = GUILayout.TextField(Minutes.Text, GUILayout.Width(30));
-            GUILayout.Label("'", GUILayout.ExpandWidth(false));
-            Seconds.Text = GUILayout.TextField(Seconds.Text, GUILayout.Width(30));
-            GUILayout.Label("\"", GUILayout.ExpandWidth(false));
-            string dirString = direction == Direction.NS ? Negative ? "S" : "N" : Negative ? "W" : "E";
-            if (GUILayout.Button(dirString, GUILayout.Width(25))) Negative = !Negative;
-            GUILayout.EndHorizontal();
-        }
     }
 
     public class EditableInt : IEditable
@@ -258,182 +282,16 @@ namespace MuMech
         }
     }
 
-    public class ZombieGUILoader : MonoBehaviour
-    {
-        private void OnGUI()
-        {
-            GuiUtils.CopyDefaultSkin();
-            if (GuiUtils.Skin == null) GuiUtils.Skin = GuiUtils.DefaultSkin;
-            Destroy(gameObject);
-        }
-    }
-
     public static class GuiUtils
     {
-        private static GUIStyle _yellowOnHover;
-
-        public static GUIStyle YellowOnHover
-        {
-            get
-            {
-                if (_yellowOnHover != null) return _yellowOnHover;
-
-                _yellowOnHover = new GUIStyle(GUI.skin.label) { hover = { textColor = Color.yellow } };
-                var t = new Texture2D(1, 1);
-                t.SetPixel(0, 0, new Color(0, 0, 0, 0));
-                t.Apply();
-                _yellowOnHover.hover.background = t;
-
-                return _yellowOnHover;
-            }
-        }
-
-        private static GUIStyle _yellowLabel;
-
-        public static GUIStyle YellowLabel
-        {
-            get
-            {
-                if (_yellowLabel != null) return _yellowLabel;
-
-                _yellowLabel = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow }, hover = { textColor = Color.yellow } };
-
-                return _yellowLabel;
-            }
-        }
-
-        private static GUIStyle _redLabel;
-
-        public static GUIStyle RedLabel
-        {
-            get
-            {
-                if (_redLabel != null) return _redLabel;
-
-                _redLabel = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.red }, hover = { textColor = Color.red } };
-
-                return _redLabel;
-            }
-        }
-
-        private static GUIStyle _greenLabel;
-
-        public static GUIStyle GreenLabel
-        {
-            get
-            {
-                if (_greenLabel != null) return _greenLabel;
-
-                _greenLabel = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.green }, hover = { textColor = Color.green } };
-
-                return _greenLabel;
-            }
-        }
-
-        private static GUIStyle _orangeLabel;
-
-        public static GUIStyle OrangeLabel
-        {
-            get
-            {
-                if (_orangeLabel != null) return _orangeLabel;
-
-                _orangeLabel = new GUIStyle(GUI.skin.label) { normal = { textColor = XKCDColors.Orange }, hover = { textColor = XKCDColors.Orange } };
-
-                return _orangeLabel;
-            }
-        }
-
-        private static GUIStyle _middleCenterLabel;
-
-        public static GUIStyle MiddleCenterLabel
-        {
-            get
-            {
-                if (_middleCenterLabel != null) return _middleCenterLabel;
-
-                _middleCenterLabel = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
-
-                return _middleCenterLabel;
-            }
-        }
-
-        private static GUIStyle _middleRightLabel;
-
-        public static GUIStyle MiddleRightLabel
-        {
-            get
-            {
-                if (_middleRightLabel != null) return _middleRightLabel;
-
-                _middleRightLabel = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight };
-
-                return _middleRightLabel;
-            }
-        }
-
-        private static GUIStyle _upperCenterLabel;
-
-        public static GUIStyle UpperCenterLabel
-        {
-            get
-            {
-                if (_upperCenterLabel != null) return _upperCenterLabel;
-
-                _upperCenterLabel = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperCenter };
-
-                return _upperCenterLabel;
-            }
-        }
-
-        private static GUIStyle _labelNoWrap;
-
-        public static GUIStyle LabelNoWrap => _labelNoWrap ??= new GUIStyle(GUI.skin.label) { wordWrap = false };
-
-        private static GUIStyle _greenToggle;
-
-        public static GUIStyle GreenToggle
-        {
-            get
-            {
-                if (_greenToggle != null) return _greenToggle;
-
-                _greenToggle = new GUIStyle(GUI.skin.toggle) { onHover = { textColor = Color.green }, onNormal = { textColor = Color.green } };
-
-                return _greenToggle;
-            }
-        }
-
-        private static GUIStyle _redToggle;
-
-        public static GUIStyle RedToggle
-        {
-            get
-            {
-                if (_redToggle != null) return _redToggle;
-
-                _redToggle = new GUIStyle(GUI.skin.toggle) { onHover = { textColor = Color.red }, onNormal = { textColor = Color.red } };
-
-                return _redToggle;
-            }
-        }
-
-        private static GUIStyle _yellowToggle;
-
-        public static GUIStyle YellowToggle => _yellowToggle ??=
-            new GUIStyle(GUI.skin.toggle) { onHover = { textColor = Color.yellow }, onNormal = { textColor = Color.yellow } };
-
-        public enum SkinType { DEFAULT, MECH_JEB1, COMPACT }
-
-        public static GUISkin Skin;
         public static float Scale = 1;
         public static int ScaledScreenWidth = 1;
         public static int ScaledScreenHeight = 1;
         public static bool DontUseDropDownMenu = false;
         public static bool ShowAdvancedWindowSettings = false;
-        public static GUISkin DefaultSkin;
-        public static GUISkin CompactSkin;
-        public static GUISkin TransparentSkin;
+
+        // the scaled size follows the screen: a resolution change in flight (Alt+Enter, a resized window) recomputes it
+        static GuiUtils() => GameEvents.onScreenResolutionModified.Add((width, height) => SetGUIScale(Scale));
 
         public static void SetGUIScale(double s)
         {
@@ -442,276 +300,57 @@ namespace MuMech
             ScaledScreenWidth = Mathf.RoundToInt(Screen.width / Scale);
         }
 
-        public static void CopyDefaultSkin()
-        {
-            GUI.skin = null;
-            DefaultSkin = Object.Instantiate(GUI.skin);
-        }
-
-        [UsedImplicitly]
-        public static void CopyCompactSkin()
-        {
-            GUI.skin = null;
-            CompactSkin = Object.Instantiate(GUI.skin);
-
-            Skin.name = "KSP Compact";
-
-            CompactSkin.label.margin = new RectOffset(1, 1, 1, 1);
-            CompactSkin.label.padding = new RectOffset(0, 0, 2, 2);
-
-            CompactSkin.button.margin = new RectOffset(1, 1, 1, 1);
-            CompactSkin.button.padding = new RectOffset(4, 4, 2, 2);
-
-            CompactSkin.toggle.margin = new RectOffset(1, 1, 1, 1);
-            CompactSkin.toggle.padding = new RectOffset(15, 0, 2, 0);
-
-            CompactSkin.textField.margin = new RectOffset(1, 1, 1, 1);
-            CompactSkin.textField.padding = new RectOffset(2, 2, 2, 2);
-
-            CompactSkin.textArea.margin = new RectOffset(1, 1, 1, 1);
-            CompactSkin.textArea.padding = new RectOffset(2, 2, 2, 2);
-
-            CompactSkin.window.margin = new RectOffset(0, 0, 0, 0);
-            CompactSkin.window.padding = new RectOffset(5, 5, 20, 5);
-        }
-
-        private static void CopyTransparentSkin()
-        {
-            GUI.skin = null;
-            TransparentSkin = Object.Instantiate(GUI.skin);
-
-            var t = new Texture2D(1, 1);
-            t.SetPixel(0, 0, new Color(0, 0, 0, 0));
-            t.Apply();
-
-            TransparentSkin.window.normal.background = t;
-            TransparentSkin.window.onNormal.background = t;
-            TransparentSkin.window.padding = new RectOffset(5, 5, 5, 5);
-        }
-
-        public static void LoadSkin(SkinType skinType)
-        {
-            if (DefaultSkin == null) CopyDefaultSkin();
-            if (CompactSkin == null) CopyCompactSkin();
-            if (TransparentSkin == null) CopyTransparentSkin();
-
-            switch (skinType)
-            {
-                case SkinType.DEFAULT:
-                    Skin = DefaultSkin;
-                    break;
-
-                case SkinType.MECH_JEB1:
-                    Skin = AssetBase.GetGUISkin("KSP window 2");
-                    break;
-
-                case SkinType.COMPACT:
-                    Skin = CompactSkin;
-                    break;
-            }
-        }
-
-        private static GUILayoutOption _layoutExpandWidth, _layoutNoExpandWidth;
-
-        [UsedImplicitly]
-        public static GUILayoutOption LayoutExpandWidth => _layoutExpandWidth ??= GUILayout.ExpandWidth(true);
-
-        [UsedImplicitly]
-        public static GUILayoutOption LayoutNoExpandWidth => _layoutNoExpandWidth ??= GUILayout.ExpandWidth(false);
-
-        public static GUILayoutOption ExpandWidth(bool b) => b ? LayoutExpandWidth : LayoutNoExpandWidth;
-
-        private static readonly Dictionary<float, GUILayoutOption> _layoutWidthDict = new Dictionary<float, GUILayoutOption>(16);
-
-        public static GUILayoutOption LayoutWidth(float width)
-        {
-            if (_layoutWidthDict.TryGetValue(width, out GUILayoutOption option)) return option;
-            option = GUILayout.Width(width);
-            _layoutWidthDict.Add(width, option);
-            return option;
-        }
-
-        public static void SimpleTextField(IEditable ed, float width = 100, bool expandWidth = false)
-        {
-            Profiler.BeginSample("SimpleTextField");
-            string res = !expandWidth
-                ? GUILayout.TextField(ed.Text, LayoutWidth(width), ExpandWidth(false))
-                : GUILayout.TextField(ed.Text, LayoutWidth(width));
-            if (res != null && !res.Equals(ed.Text))
-                ed.Text = res;
-            Profiler.EndSample();
-        }
-
-#nullable enable
-        public static void SimpleTextBox(string? leftLabel, IEditable ed, string? rightLabel = null, float width = 100,
-            GUIStyle? leftLabelStyle = null, bool horizontalFraming = true, bool expandWidth = false,
-            string? leftLabelTooltip = null)
-        {
-            GUIContent? content = string.IsNullOrEmpty(leftLabel)
-                ? null
-                : string.IsNullOrEmpty(leftLabelTooltip)
-                    ? new GUIContent(leftLabel)
-                    : new GUIContent(leftLabel, leftLabelTooltip);
-            SimpleTextBox(content, ed, rightLabel, width, leftLabelStyle, horizontalFraming, expandWidth);
-        }
-
-        // GUIContent overload for callers that already cache a content object (avoids per-frame allocations).
-        public static void SimpleTextBox(GUIContent? leftLabelContent, IEditable ed, string? rightLabel = null, float width = 100,
-            GUIStyle? leftLabelStyle = null, bool horizontalFraming = true, bool expandWidth = false)
-        {
-            Profiler.BeginSample("SimpleTextBox");
-            if (horizontalFraming) GUILayout.BeginHorizontal();
-            if (leftLabelContent != null && !string.IsNullOrEmpty(leftLabelContent.text))
-            {
-                leftLabelStyle ??= GUI.skin.label;
-                if (expandWidth)
-                    GUILayout.Label(leftLabelContent, leftLabelStyle, ExpandWidth(true));
-                else
-                    GUILayout.Label(leftLabelContent, leftLabelStyle);
-            }
-
-            SimpleTextField(ed, width, !expandWidth);
-            if (!string.IsNullOrEmpty(rightLabel))
-            {
-                if (expandWidth)
-                    GUILayout.Label(rightLabel, ExpandWidth(false));
-                else
-                    GUILayout.Label(rightLabel);
-            }
-
-            if (horizontalFraming) GUILayout.EndHorizontal();
-            Profiler.EndSample();
-        }
-
-        public static void ToggledTextBox(ref bool toggle, string toggleText, IEditable ed, string? rightLabel = null, GUIStyle? toggleStyle = null,
-            float width = 100)
-        {
-            Profiler.BeginSample("ToggledTextField");
-            GUILayout.BeginHorizontal();
-            toggle = toggleStyle != null ? GUILayout.Toggle(toggle, toggleText, toggleStyle) : GUILayout.Toggle(toggle, toggleText);
-            SimpleTextField(ed, width);
-            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel);
-            GUILayout.EndHorizontal();
-            Profiler.EndSample();
-        }
-
-        // GUIContent overload for callers that need a tooltip on the toggle (cache the content to avoid per-frame allocations).
-        public static void ToggledTextBox(ref bool toggle, GUIContent toggleContent, IEditable ed, string? rightLabel = null,
-            GUIStyle? toggleStyle = null, float width = 100)
-        {
-            Profiler.BeginSample("ToggledTextField");
-            GUILayout.BeginHorizontal();
-            toggle = toggleStyle != null ? GUILayout.Toggle(toggle, toggleContent, toggleStyle) : GUILayout.Toggle(toggle, toggleContent);
-            SimpleTextField(ed, width);
-            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel);
-            GUILayout.EndHorizontal();
-            Profiler.EndSample();
-        }
-
-        public static bool ButtonTextBox(string buttonText, IEditable ed, string? rightLabel = null, GUIStyle? buttonStyle = null, float width = 100)
-        {
-            Profiler.BeginSample("ButtonTextBox");
-            GUILayout.BeginHorizontal();
-            bool pressed = buttonStyle != null ? GUILayout.Button(buttonText, buttonStyle) : GUILayout.Button(buttonText);
-            SimpleTextField(ed, width);
-            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel);
-            GUILayout.EndHorizontal();
-            Profiler.EndSample();
-            return pressed;
-        }
-
-#nullable restore
-
-        public static void SimpleLabel(string leftLabel, string rightLabel = "")
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(leftLabel, ExpandWidth(true));
-            if (!string.IsNullOrEmpty(rightLabel))
-                GUILayout.Label(rightLabel, ExpandWidth(false));
-            GUILayout.EndHorizontal();
-        }
-
-        public static void SimpleLabelInt(string leftLabel, int rightValue) => SimpleLabel(leftLabel, rightValue.ToString());
-
-        public static int ArrowSelector(int index, int numIndices, Action centerGuiAction)
-        {
-            if (numIndices == 0) return index;
-
-            GUILayout.BeginHorizontal();
-            //if (numIndices > 1 && GUILayout.Button("◀", GUILayout.ExpandWidth(false))) index = (index - 1 + numIndices) % numIndices; // Seems those are gone from KSP font
-            if (numIndices > 1 && GUILayout.Button("<", GUILayout.ExpandWidth(false))) index = (index - 1 + numIndices) % numIndices;
-            centerGuiAction();
-            //if (numIndices > 1 && GUILayout.Button("▶", GUILayout.ExpandWidth(false))) index = (index + 1) % numIndices;
-            if (numIndices > 1 && GUILayout.Button(">", GUILayout.ExpandWidth(false))) index = (index + 1) % numIndices;
-            GUILayout.EndHorizontal();
-
-            return index;
-        }
-
-        private static GUIStyle _arrowSelectorStyeGuiStyleExpand;
-
-        [UsedImplicitly]
-        public static GUIStyle ArrowSelectorStyeGuiStyleExpand => _arrowSelectorStyeGuiStyleExpand ??=
-            new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, stretchWidth = true };
-
-        private static GUIStyle _arrowSelectorStyeGuiStyleNoExpand;
-
-        [UsedImplicitly]
-        public static GUIStyle ArrowSelectorStyeGuiStyleNoExpand => _arrowSelectorStyeGuiStyleNoExpand ??=
-            new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, stretchWidth = false };
-
-        public static int ArrowSelector(int index, int modulo, string label, bool expandWidth = true)
-        {
-            return ArrowSelector(index, modulo, DrawLabel);
-
-            void DrawLabel() => GUILayout.Label(label, expandWidth ? ArrowSelectorStyeGuiStyleExpand : ArrowSelectorStyeGuiStyleNoExpand);
-        }
-
-        public static int HoursPerDay => GameSettings.KERBIN_TIME ? 6 : 24;
-        public static int DaysPerYear => GameSettings.KERBIN_TIME ? 426 : 365;
-
         public static string TimeToDHMS(double seconds, int decimalPlaces = 0)
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
 
+            // a calendar without days or years (a length of 0): hours are the largest unit
+            long year = KSPUtil.dateTimeFormatter.Year > 0 ? KSPUtil.dateTimeFormatter.Year : long.MaxValue;
+            long day = KSPUtil.dateTimeFormatter.Day > 0 ? KSPUtil.dateTimeFormatter.Day : long.MaxValue;
+
             // from a thousand years, years with an SI prefix (ISO 80000-3's "a"): "398.6 Ma", not "398597826y 072d 00h 06m 54s"
-            double years = seconds / KSPUtil.dateTimeFormatter.Year;
+            double years = seconds / year;
             if (Math.Abs(years) >= 1000) return years.ToSI() + "a";
 
-            string ret = "";
+            StringBuilder ret = _dhmsBuilder ??= new StringBuilder();
+            ret.Clear();
             bool showSecondsDecimals = decimalPlaces > 0;
 
             try
             {
-                string[] units = { "y", "d", "h", "m", "s" };
-                long[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
-
                 bool negative = seconds < 0;
                 seconds = Math.Abs(seconds);
                 // round to the decimals shown before splitting into units: 239.97 s is "4m 00.0s", not "3m 60.0s"
                 if (showSecondsDecimals)
                     seconds = (double)Math.Round((decimal)seconds, Math.Min(decimalPlaces, 9), MidpointRounding.AwayFromZero);
                 // no "-00.0s" for a value that rounds to zero
-                if (negative && (showSecondsDecimals ? seconds > 0 : seconds >= 1)) ret += "-";
+                if (negative && (showSecondsDecimals ? seconds > 0 : seconds >= 1)) ret.Append('-');
 
-                for (int i = 0; i < units.Length; i++)
+                for (int i = 0; i < DHMS_UNITS.Length; i++)
                 {
-                    long n = (long)(seconds / intervals[i]);
+                    long interval = i == 0 ? year : i == 1 ? day : DHMS_SECONDS[i];
+                    long n = (long)(seconds / interval);
                     bool first = ret.Length < 2;
                     // the seconds always show when nothing else did, after a "-" too ("-00.5s", not "-")
-                    if (!first || n != 0 || i == units.Length - 1)
+                    if (!first || n != 0 || i == DHMS_UNITS.Length - 1)
                     {
-                        if (!first) ret += " ";
+                        if (!first) ret.Append(' ');
 
-                        if (showSecondsDecimals && seconds < 60 && i == units.Length - 1)
-                            ret += seconds.ToString("00." + new string('0', decimalPlaces));
-                        else if (first) ret += n.ToString();
-                        else ret += n.ToString(i == 1 ? "000" : "00");
+                        if (showSecondsDecimals && seconds < 60 && i == DHMS_UNITS.Length - 1)
+                            ret.Append(seconds.ToString(SecondsFormat(decimalPlaces)));
+                        else if (first) ret.Append(n);
+                        else
+                        {
+                            // zero padded to two digits, three for the days
+                            if (i == 1 && n < 100) ret.Append('0');
+                            if (n < 10) ret.Append('0');
+                            ret.Append(n);
+                        }
 
-                        ret += units[i];
+                        ret.Append(DHMS_UNITS[i]);
                     }
 
-                    seconds -= n * intervals[i];
+                    seconds -= n * interval;
                 }
             }
             catch (Exception)
@@ -719,7 +358,27 @@ namespace MuMech
                 return "NaN";
             }
 
-            return ret;
+            return ret.ToString();
+        }
+
+        // TimeToDHMS's units; the year and day lengths come from KSP's calendar at each call
+        private static readonly char[] DHMS_UNITS = { 'y', 'd', 'h', 'm', 's' };
+        private static readonly long[] DHMS_SECONDS = { 0, 0, 3600, 60, 1 };
+
+        [ThreadStatic]
+        private static StringBuilder _dhmsBuilder;
+
+        private static readonly List<string> _secondsFormats = new List<string>();
+
+        // "00.0", "00.00"...: one string per number of decimals, made once
+        private static string SecondsFormat(int decimalPlaces)
+        {
+            lock (_secondsFormats)
+            {
+                while (_secondsFormats.Count <= decimalPlaces)
+                    _secondsFormats.Add("00." + new string('0', _secondsFormats.Count));
+                return _secondsFormats[decimalPlaces];
+            }
         }
 
         public static bool TryParseDHMS(string s, out double seconds)
@@ -738,7 +397,8 @@ namespace MuMech
                 int unitPos = s.IndexOf(units[i]);
                 if (unitPos == -1) continue;
 
-                if (!double.TryParse(s.Substring(0, unitPos), out double value)) return false;
+                // as a plain number in the same field reads it: "1,5h" is an hour and a half
+                if (!NumberText.TryParseDouble(s.Substring(0, unitPos), out double value)) return false;
                 seconds += value * intervals[i];
                 s = s.Substring(unitPos + 1);
                 parsedSomething = true;
@@ -765,29 +425,24 @@ namespace MuMech
         public static double FromToETA(Vector3 from, Vector3 to, double speed = 0) =>
             ArcDistance(from, to) / (speed > 0 ? speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
 
-        public static bool MouseIsOverWindow(MechJebCore core)
-        {
-            Vector2 mousePos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / Scale;
-
-            if (ComboBox.IsPopupActive && ComboBox.PopupRect.Contains(mousePos))
-                return true;
-
-            //try to check if the mouse is over any active DisplayModule
-            foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
-            {
-                // windows drawn by a MechJebUiHost report their own hover through the host
-                if (m.Enabled && m.ShowInCurrentScene && !m.IsOverlay && !MechJebUiHost.Owns(m) && m.WindowPos.Contains(mousePos))
-                    return true;
-            }
-
-            return false;
-        }
+        // MechJeb's windows are all drawn by the UI host, which reports its own hover
+        public static bool MouseIsOverWindow(MechJebCore core) => MechJebUiHost.MouseOverHostWindow();
 
         public static Coordinates GetMouseCoordinates(CelestialBody body)
         {
             Ray mouseRay = PlanetariumCamera.Camera.ScreenPointToRay(Input.mousePosition);
             mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
             Vector3d relOrigin = mouseRay.origin - body.position;
+
+            // a body without terrain (Jool, the Sun): the sphere of its radius, where stock's TerrainAltitude is 0
+            if (body.pqsController == null)
+            {
+                if (!PQS.LineSphereIntersection(relOrigin, mouseRay.direction, body.Radius, out Vector3d relSpherePosition))
+                    return null;
+                Vector3d spherePoint = body.position + relSpherePosition;
+                return new Coordinates(body.GetLatitude(spherePoint), Clamp180(body.GetLongitude(spherePoint)));
+            }
+
             double curRadius = body.pqsController.radiusMax;
             double lastRadius = 0;
             int loops = 0;
@@ -824,183 +479,6 @@ namespace MuMech
 
             return null;
         }
-
-        private static readonly Dictionary<int, string> _tooltipTexts = new Dictionary<int, string>();
-        private static GUIStyle _tooltipStyle;
-        private static Rect _tooltipRect;
-        private static DateTime _tooltipBeginDt;
-        private static bool _tooltipChanged;
-        private const float TooltipMaxWidth = 200f;
-        private const double TooltipShowDelay = 1000;
-        private static readonly int _tooltipWindowId = "MechJebTooltip".GetHashCode();
-
-        public static void RecordTooltip(int windowId)
-        {
-            if (Event.current.type != EventType.Repaint) return;
-
-            _tooltipTexts.TryGetValue(windowId, out string current);
-            current ??= string.Empty;
-
-            if (GUI.tooltip == current) return;
-
-            _tooltipChanged = true;
-            _tooltipBeginDt = DateTime.UtcNow;
-            _tooltipTexts[windowId] = GUI.tooltip;
-        }
-
-        public static void ShowTooltip(int windowId)
-        {
-            if (!_tooltipTexts.TryGetValue(windowId, out string text) || string.IsNullOrEmpty(text))
-                return;
-            if ((DateTime.UtcNow - _tooltipBeginDt).TotalMilliseconds <= TooltipShowDelay)
-                return;
-
-            if (_tooltipStyle == null)
-            {
-                var bg = new Texture2D(1, 1, TextureFormat.ARGB32, false) { hideFlags = HideFlags.HideAndDontSave };
-                bg.SetPixel(0, 0, new Color(0.1f, 0.1f, 0.1f, 1f));
-                bg.Apply();
-                _tooltipStyle = new GUIStyle(GUI.skin.box) { padding = new RectOffset(3, 3, 3, 3), alignment = TextAnchor.MiddleCenter, wordWrap = true };
-                _tooltipStyle.normal.background = bg;
-            }
-
-            if (_tooltipChanged)
-            {
-                var c = new GUIContent(text);
-                _tooltipStyle.CalcMinMaxWidth(c, out _, out float width);
-                width = Math.Min(width, TooltipMaxWidth);
-                float height = _tooltipStyle.CalcHeight(c, TooltipMaxWidth);
-                float mx = Input.mousePosition.x / Scale;
-                float my = (Screen.height - Input.mousePosition.y) / Scale;
-                _tooltipRect = new Rect(
-                    Math.Min(ScaledScreenWidth - width, mx + 15),
-                    Math.Min(ScaledScreenHeight - height, my + 10),
-                    width, height);
-                _tooltipChanged = false;
-            }
-
-            GUI.Window(_tooltipWindowId, _tooltipRect, _ => { }, text, _tooltipStyle);
-            GUI.BringWindowToFront(_tooltipWindowId);
-        }
-
-        [UsedImplicitly]
-        public class ComboBox
-        {
-            // Easy to use combobox class
-            // ***** For users *****
-            // Call the Box method with the latest selected item, list of text entries
-            // and an object identifying who is making the request.
-            // The result is the newly selected item.
-            // There is currently no way of knowing when a choice has been made
-
-            // Position of the popup
-            private static Rect _rect;
-
-            // Identifier of the caller of the popup, null if nobody is waiting for a value
-            private static object _popupOwner;
-            private static string[] _entries;
-
-            private static bool _popupActive;
-
-            // Result to be returned to the owner
-            private static int _selectedItem;
-
-            // Unity identifier of the window, just needs to be unique
-            private static readonly int _id = GUIUtility.GetControlID(FocusType.Passive);
-
-            // ComboBox GUI Style
-            private static readonly GUIStyle _style;
-
-            public static bool IsPopupActive => _popupOwner != null && _rect.height > 0 && _popupActive;
-            public static Rect PopupRect     => _rect;
-
-            static ComboBox()
-            {
-                _style = new GUIStyle(GUI.skin.window) { normal = { background = null }, onNormal = { background = null } };
-                _style.border.top = _style.border.bottom;
-                _style.padding.top = _style.padding.bottom;
-            }
-
-            public static void DrawGUI()
-            {
-                if (_popupOwner == null || _rect.height == 0 || !_popupActive)
-                    return;
-
-                if (_style.normal.background == null)
-                {
-                    _style.normal.background = MechJebBundlesManager.comboBoxBackground;
-                    _style.onNormal.background = MechJebBundlesManager.comboBoxBackground;
-                }
-
-                // Make sure the rectangle is fully on screen
-                _rect.x = Math.Max(0, Math.Min(_rect.x, ScaledScreenWidth - _rect.width));
-                _rect.y = Math.Max(0, Math.Min(_rect.y, ScaledScreenHeight - _rect.height));
-
-                _rect = GUILayout.Window(_id, _rect, identifier =>
-                {
-                    _selectedItem = GUILayout.SelectionGrid(-1, _entries, 1, YellowOnHover);
-                    if (GUI.changed)
-                        _popupActive = false;
-                }, "", _style);
-
-                //Cancel the popup if we click outside
-                if (Event.current.type == EventType.MouseDown && !_rect.Contains(Event.current.mousePosition))
-                    _popupOwner = null;
-            }
-
-            public static int Box(int selectedItem, string[] entries, object caller, bool expandWidth = true)
-            {
-                // Trivial cases (0-1 items)
-                if (entries.Length == 0)
-                    return 0;
-                if (entries.Length == 1)
-                {
-                    GUILayout.Label(entries[0]);
-                    return 0;
-                }
-
-                if (selectedItem >= entries.Length)
-                    selectedItem = entries.Length - 1;
-
-                if (DontUseDropDownMenu)
-                    return ArrowSelector(selectedItem, entries.Length, entries[selectedItem], expandWidth);
-
-                // A choice has been made, update the return value
-                if (_popupOwner == caller && !_popupActive)
-                {
-                    _popupOwner = null;
-                    selectedItem = _selectedItem;
-                    GUI.changed = true;
-                }
-
-                bool guiChanged = GUI.changed;
-                if (GUILayout.Button("↓ " + entries[selectedItem] + " ↓", GUILayout.ExpandWidth(expandWidth)))
-                {
-                    // We will set the changed status when we return from the menu instead
-                    GUI.changed = guiChanged;
-                    // Update the global state with the new items
-                    _popupOwner = caller;
-                    _popupActive = true;
-                    _entries = entries;
-                    // Magic value to force position update during repaint event
-                    _rect = new Rect(0, 0, 0, 0);
-                }
-
-                // The GetLastRect method only works during repaint event, but the Button will return false during repaint
-                if (Event.current.type == EventType.Repaint && _popupOwner == caller && _rect.height == 0)
-                {
-                    _rect = GUILayoutUtility.GetLastRect();
-                    // But even worse, I can't find a clean way to convert from relative to absolute coordinates
-                    Vector2 mousePos = Input.mousePosition;
-                    mousePos.y = Screen.height - mousePos.y;
-                    Vector2 clippedMousePos = Event.current.mousePosition;
-                    _rect.x = (_rect.x + mousePos.x) / Scale - clippedMousePos.x;
-                    _rect.y = (_rect.y + mousePos.y) / Scale - clippedMousePos.y;
-                }
-
-                return selectedItem;
-            }
-        }
     }
 
     public class Coordinates
@@ -1020,8 +498,8 @@ namespace MuMech
             double clampedLongitude = Clamp180(longitude);
             double latitudeAbs = Math.Abs(latitude);
             double longitudeAbs = Math.Abs(clampedLongitude);
-            return latitudeAbs.ToString("F" + precision) + "° " + (latitude > 0 ? "N" : "S") + (newline ? "\n" : ", ")
-                + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
+            return latitudeAbs.ToString("F" + precision) + "° " + (latitude >= 0 ? "N" : "S") + (newline ? "\n" : ", ")
+                + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude >= 0 ? "E" : "W");
         }
 
         public string ToStringDecimal(bool newline = false, int precision = 3) => ToStringDecimal(Latitude, Longitude, newline, precision);
@@ -1029,17 +507,19 @@ namespace MuMech
         public static string ToStringDMS(double latitude, double longitude, bool newline = false)
         {
             double clampedLongitude = Clamp180(longitude);
-            return AngleToDMS(latitude) + (latitude > 0 ? " N" : " S") + (newline ? "\n" : ", ")
-                + AngleToDMS(clampedLongitude) + (clampedLongitude > 0 ? " E" : " W");
+            return AngleToDMS(latitude) + (latitude >= 0 ? " N" : " S") + (newline ? "\n" : ", ")
+                + AngleToDMS(clampedLongitude) + (clampedLongitude >= 0 ? " E" : " W");
         }
 
         public string ToStringDMS(bool newline = false) => ToStringDMS(Latitude, Longitude, newline);
 
         public static string AngleToDMS(double angle)
         {
-            int degrees = (int)Math.Floor(Math.Abs(angle));
-            int minutes = (int)Math.Floor(60 * (Math.Abs(angle) - degrees));
-            int seconds = (int)Math.Floor(3600 * (Math.Abs(angle) - degrees - minutes / 60.0));
+            // rounded to the arc second first, then split in whole numbers: flooring each floating remainder read one second low
+            long totalSeconds = (long)Math.Round(3600 * Math.Abs(angle));
+            long degrees = totalSeconds / 3600;
+            long minutes = totalSeconds % 3600 / 60;
+            long seconds = totalSeconds % 60;
 
             return $"{degrees:0}° {minutes:00}' {seconds:00}\"";
         }

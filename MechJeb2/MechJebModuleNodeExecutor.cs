@@ -16,7 +16,32 @@ namespace MuMech
         // set by an autopilot that wants no warp for now, without changing the player's setting
         public bool AutowarpInhibited;
 
-        private bool _autowarp => Autowarp && !AutowarpInhibited;
+        private System.Func<bool> _autowarpOverride;
+
+        /// <summary>The module whose own Auto-warp applies now (SetAutowarpOverride), null while the general one does.</summary>
+        public object AutowarpOverrideUser { get; private set; }
+
+        /// <summary>The Auto-warp that applies now: an engaged autopilot's own, or the general one (Autowarp).</summary>
+        public bool EffectiveAutowarp => _autowarpOverride?.Invoke() ?? Autowarp;
+
+        /// <summary>
+        ///     An autopilot's own Auto-warp applies to the nodes this executor flies until it calls ClearAutowarpOverride. The
+        ///     general setting is not written. The last call wins.
+        /// </summary>
+        public void SetAutowarpOverride(object user, System.Func<bool> autowarp)
+        {
+            AutowarpOverrideUser = user;
+            _autowarpOverride    = autowarp;
+        }
+
+        public void ClearAutowarpOverride(object user)
+        {
+            if (!ReferenceEquals(AutowarpOverrideUser, user)) return;
+            AutowarpOverrideUser = null;
+            _autowarpOverride    = null;
+        }
+
+        private bool _autowarp => EffectiveAutowarp && !AutowarpInhibited;
 
         // how many seconds before a burn to end warp (and start ullaging in RO)
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -107,6 +132,7 @@ namespace MuMech
 
         public void ExecuteOneNode(object controller)
         {
+            if (!HasNodeToExecute()) return;
             Users.Add(controller);
             Mode = Modes.ONE_NODE;
             Init();
@@ -114,9 +140,17 @@ namespace MuMech
 
         public void ExecuteAllNodes(object controller)
         {
+            if (!HasNodeToExecute()) return;
             Users.Add(controller);
             Mode = Modes.ALL_NODES;
             Init();
+        }
+
+        // the landing predictions' aerobrake node is no burn: it goes first, and the executor starts only on a node of the player's
+        private bool HasNodeToExecute()
+        {
+            Core.GetComputerModule<MechJebModuleLandingPredictions>()?.RemoveAerobrakeNode();
+            return Vessel.patchedConicSolver != null && Vessel.patchedConicSolver.maneuverNodes.Count > 0;
         }
 
         private void Init()
@@ -124,17 +158,30 @@ namespace MuMech
             // a node executed anew may warp again, even after the player stopped the last warp
             Core.Warp.ClearStop();
             _direction = Vector3d.zero;
-            _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            _node = Vessel.patchedConicSolver.maneuverNodes[0];
+            _nodeUT = _node.UT;
+            _dvLeft = _node.GetBurnVector(Orbit).magnitude;
             Core.Thrust.Users.Add(this);
             Core.Attitude.Users.Add(this);
+            _inControl = true;
             TransitionTo(States.INITIAL_WARP);
         }
 
+        // whether the executor has taken the warp, throttle and attitude for a node (Init): only then does it give them back, so
+        // an Abort while idle, or an enable that never reached a node, leaves the player's throttle and attitude alone
+        private bool _inControl;
+
         public void Abort()
         {
-            Core.Warp.MinimumWarp();
-            Core.Thrust.ThrustOff();
-            Core.Attitude.AttitudeDeactivate();
+            if (_inControl)
+            {
+                Core.Warp.MinimumWarp();
+                Core.Thrust.ThrustOff();
+                Core.Attitude.AttitudeDeactivate();
+            }
+
+            // before Users.Clear, which disables the module at once: OnModuleDisabled has nothing left to give back
+            _inControl = false;
             Users.Clear();
             _direction = Vector3d.zero;
             _dvLeft = 0;
@@ -150,8 +197,13 @@ namespace MuMech
 
         protected override void OnModuleDisabled()
         {
-            Core.Attitude.AttitudeDeactivate();
-            Core.Thrust.ThrustOff();
+            if (_inControl)
+            {
+                Core.Attitude.AttitudeDeactivate();
+                Core.Thrust.ThrustOff();
+            }
+
+            _inControl = false;
             Core.Thrust.Users.Remove(this);
             State = States.IDLE;
             _dvLeft = 0;
@@ -165,6 +217,8 @@ namespace MuMech
         public States State = States.IDLE;
 
         private double _dvLeft; // for Principia
+        private ManeuverNode _node; // the node being executed (stock: Principia replaces its nodes)
+        private double _nodeUT; // its UT, kept current while it is there
         private Vector3d _direction; // de-rotated world vector
         private Vector3d _worldDirection => Planetarium.fetch.rotation * _direction;
         private double _ignitionUT;
@@ -192,7 +246,7 @@ namespace MuMech
             if (State != States.LEAD || RCSOnly)
                 return;
 
-            if (!Core.Thrust.AutoRCSUllaging || !ReflectionUtils.IsLoadedRealFuels)
+            if (!Core.Thrust.Limits.AutoRCSUllaging || !ReflectionUtils.IsLoadedRealFuels)
                 return;
 
             // always apply MIN_RCS_TIME of ullage right before the ignition time
@@ -228,9 +282,37 @@ namespace MuMech
                 return;
             }
 
-            // keep the dV used for the ignition time current while warping and aligning, not just in LEAD and BURN
+            // Principia removes the node once its burn time comes, and the burn goes on along the stored direction, even if it
+            // starts late; a node gone before its time was deleted, and there is nothing to burn
+            if (ReflectionUtils.IsLoadedPrincipia && !_hasNodes && State != States.BURN && VesselState.Time < _nodeUT)
+            {
+                Abort();
+                return;
+            }
+
+            // The first node is no longer the one being executed: a node was added before it, or it was deleted. Start over on the
+            // new first node, with its own wait and alignment, except when executing one node whose node is gone.
+            if (!ReflectionUtils.IsLoadedPrincipia && Vessel.patchedConicSolver.maneuverNodes[0] != _node)
+            {
+                if (Mode != Modes.ALL_NODES && !Vessel.patchedConicSolver.maneuverNodes.Contains(_node))
+                {
+                    Abort();
+                    return;
+                }
+
+                Init();
+            }
+
+            // keep the dV used for the ignition time current while warping and aligning, not just in LEAD and BURN. Under Principia
+            // the node holds the burn's dV until LEAD, where ullage starts to count against it, so a node deleted or changed
+            // before then is followed: a later node is burnt with its own dV.
             if (!ReflectionUtils.IsLoadedPrincipia)
                 UpdateDvLeft();
+            else if (_hasNodes && (State == States.INITIAL_WARP || State == States.ALIGNING || State == States.WARPING))
+            {
+                _nodeUT = Vessel.patchedConicSolver.maneuverNodes[0].UT;
+                _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            }
 
             _direction = NextDirection();
 
@@ -353,7 +435,12 @@ namespace MuMech
             UpdateDvLeft(); // we might be doing some RCS/ullage here so account for it.
         }
 
-        private void OnEnterBurn() { }
+        private void OnEnterBurn()
+        {
+            _lowestDvLeft     = double.MaxValue;
+            _lowestDvLeftTime = VesselState.Time;
+            _burnProgressSeen = false;
+        }
 
         private void OnEnterIdle() { }
 
@@ -374,12 +461,17 @@ namespace MuMech
 
             if (!RCSOnly)
             {
-                double timeConstant = _dvLeft > 10 || VesselState.MinThrustAcceleration > 0.25 * VesselState.MaxThrustAcceleration ? 0.5 : 2;
-                Core.Thrust.ThrustForDv(_dvLeft, timeConstant);
+                Vector3d axis = BurnAxis();
+                double timeConstant = _dvLeft > 10 || VesselState.MinThrustAccelerationAlong(axis) > 0.25 * VesselState.MaxThrustAccelerationAlong(axis)
+                    ? 0.5
+                    : 2;
+                Core.Thrust.ThrustForDv(_dvLeft, timeConstant, axis);
             }
         }
 
-        private void SetAttitude() => Core.Attitude.AttitudeTo(_worldDirection, AttitudeReference.INERTIAL_COT, this, KillRollRotation);
+        // an "RCS only" burn pushes along the control forward (DoRCS), not along the engines' thrust axis
+        private void SetAttitude() => Core.Attitude.AttitudeTo(_worldDirection, RCSOnly ? AttitudeReference.INERTIAL : AttitudeReference.INERTIAL_COT, this,
+            KillRollRotation);
 
         private bool ShouldTerminatePrincipia()
         {
@@ -393,8 +485,48 @@ namespace MuMech
             return true;
         }
 
+        // the lowest delta-v left in this burn, and when it was reached: an RCS burn that stops making progress ends
+        private double _lowestDvLeft = double.MaxValue, _lowestDvLeftTime;
+
+        // whether this burn has made progress (and so has thrust): the stall test waits for it
+        private bool _burnProgressSeen;
+
+        // the burn is done: remove its node and go on to the next one, or stop
+        private bool CompleteBurn()
+        {
+            Vessel.patchedConicSolver.maneuverNodes[0].RemoveSelf();
+
+            if (Mode == Modes.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
+                Init();
+            else
+                Abort();
+
+            return true;
+        }
+
         private bool ShouldTerminateStock()
         {
+            // An RCS burn on the main throttle tapers like an engine's, but thrusters don't fire for a very small input, so the last
+            // few cm/s may never be burnt off nor overshot. It ends once under 0.1 m/s is left, or once what's left hasn't dropped by
+            // 0.01 m/s for a second.
+            bool rcsBurn = RCSOnly || VesselState.RCSThrust;
+            // progress is 0.01 m/s within a second, well under 1 % of any RCS acceleration a burn would rely on
+            if (_dvLeft < _lowestDvLeft - 0.01)
+            {
+                // the first value of the burn is not progress. The stall clock starts once the burn has made progress, i.e. once it
+                // has thrust: VesselState's thrust acceleration counts engines only, not RCS
+                if (_lowestDvLeft < double.MaxValue)
+                    _burnProgressSeen = true;
+                _lowestDvLeft     = _dvLeft;
+                _lowestDvLeftTime = VesselState.Time;
+            }
+
+            // A finished RCS burn is a completed burn, whatever is left of it: it removes the node here, before and independently of
+            // any test of the dV left, which would take a weak RCS's leftover for "knocked off the burn", keep the node, and have the
+            // rendezvous autopilot restart the executor on it every tick.
+            if (rcsBurn && (_dvLeft < 0.1 || (_burnProgressSeen && VesselState.Time - _lowestDvLeftTime > 1)))
+                return CompleteBurn();
+
             if (AngleFromNode() < 0.5 * PI) return false;
 
             ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
@@ -436,7 +568,7 @@ namespace MuMech
         // on (the attitude controller ignores the thrust axis then) or no engine gives one. Measuring the angle from forward
         // instead never reached the alignment tolerance when the thrust is off the forward axis.
         private Vector3d BurnAxis() =>
-            Core.Thrust.DifferentialThrottle || VesselState.ThrustForward.sqrMagnitude < 0.5 ? VesselState.Forward : VesselState.ThrustForward;
+            RCSOnly || Core.Thrust.DifferentialThrottle || VesselState.ThrustForward.sqrMagnitude < 0.5 ? VesselState.Forward : VesselState.ThrustForward;
 
         // This handles safely getting the current burning node in Principia without grabbing any subsequent node after
         // principia cleans it up for us.
@@ -467,8 +599,8 @@ namespace MuMech
             if (ReflectionUtils.IsLoadedPrincipia && SafeCurrentPrincipiaNode() == null)
                 return _direction;
 
-            // FIXME: need to deal with RCS forward thrust accel here if we're RCSOnly
-            if (!ReflectionUtils.IsLoadedPrincipia && _dvLeft < VesselState.MaxThrustAcceleration)
+            double accel = RCSOnly ? RcsForwardThrust() / VesselState.Mass : VesselState.MaxThrustAccelerationAlong(BurnAxis());
+            if (!ReflectionUtils.IsLoadedPrincipia && _dvLeft < accel)
                 return _direction;
 
             return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
@@ -509,9 +641,27 @@ namespace MuMech
             _dvLeft -= Vector3d.Dot(dV, _worldDirection);
         }
 
-        // FIXME: this needs to work with RCSOnly
+        // The forward thrust of the RCS thrusters in kN. VesselState counts it whether or not the RCS group is on, and "RCS only" turns the
+        // group on only at ignition. RCSThrustAvailable is indexed by the direction of the force on the vessel, so the forward push is Up.
+        private double RcsForwardThrust() => VesselState.RCSThrustAvailable.Up;
+
         private double BurnTime(double dv, out double halfBurnTime, out double spoolupTime)
         {
+            // RCS burns: the "RCS only" toggle, or a vessel whose only thrust is its RCS on the main throttle (VesselState.RCSThrust). The
+            // stage stats hold no RCS, so their burn time comes from the forward RCS thrust. Constant mass: monopropellant is about 2 %
+            // of the mass for 50 m/s
+            if (RCSOnly || VesselState.RCSThrust)
+            {
+                double rcsThrust = RcsForwardThrust();
+                if (rcsThrust > 0)
+                {
+                    double rcsBurnTime = dv / (rcsThrust / VesselState.Mass);
+                    halfBurnTime = rcsBurnTime / 2;
+                    spoolupTime  = 0;
+                    return rcsBurnTime;
+                }
+            }
+
             double dvLeft = dv;
             double halfDvLeft = dv / 2;
 
@@ -525,19 +675,32 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate();
 
+            // no stage stats (a failed stats run): the current thrust gives an estimate, where the empty list would give 0 s
+            if (stats.VacStats.Count == 0)
+            {
+                double accel = VesselState.LimitedMaxThrustAcceleration;
+                burnTime     = accel > 0 ? dv / accel : 0;
+                halfBurnTime = burnTime / 2;
+                return burnTime;
+            }
+
             double lastStageBurnTime = 0;
             for (int mjPhase = stats.VacStats.Count - 1; mjPhase >= 0 && dvLeft > 0; mjPhase--)
             {
                 FuelStats s = stats.VacStats[mjPhase];
                 if (s.DeltaV <= 0 || s.Thrust <= 0)
                 {
-                    if (Core.Staging.Enabled)
+                    // a segment with nothing burning inside a stage (where the vacuum run lines up with the atmosphere's)
+                    // is no staging
+                    bool staging = mjPhase == stats.VacStats.Count - 1 || stats.VacStats[mjPhase + 1].KSPStage != s.KSPStage;
+
+                    if (staging && Core.Staging.Enabled)
                     {
                         // We staged again before autostagePreDelay is elapsed.
                         // Add the remaining wait time
-                        double delay = Core.Staging.AutostagePreDelay;
-                        if (burnTime - lastStageBurnTime < Core.Staging.AutostagePreDelay && mjPhase != stats.VacStats.Count - 1)
-                            delay += Core.Staging.AutostagePreDelay - (burnTime - lastStageBurnTime);
+                        double delay = Core.Staging.Rules.AutostagePreDelay;
+                        if (burnTime - lastStageBurnTime < Core.Staging.Rules.AutostagePreDelay && mjPhase != stats.VacStats.Count - 1)
+                            delay += Core.Staging.Rules.AutostagePreDelay - (burnTime - lastStageBurnTime);
                         burnTime += delay;
                         // the node is the middle of the burn: delays before it also move the ignition
                         if (halfDvLeft > 0)
@@ -564,9 +727,11 @@ namespace MuMech
 
                 // Right now, for simplicity, we're ignoring throttle limits for
                 // all but the current stage. This is wrong, but hopefully it's
-                // close enough for now.
+                // close enough for now. The current stage is every segment of the
+                // simulation's last KSP stage: a segment ends inside a stage when
+                // the number of running engines changes.
                 // TODO: Be smarter about throttle limits on future stages.
-                if (mjPhase == stats.VacStats.Count - 1)
+                if (s.KSPStage == stats.VacStats[stats.VacStats.Count - 1].KSPStage)
                 {
                     stageAvgAccel *= Core.Thrust.ThrottleFixedLimit;
                 }
@@ -592,19 +757,15 @@ namespace MuMech
             }
 
             //print("******** Found total spoolup time " + spoolupTime);
+            // a burn shorter than half the spool-up time gets twice its burn time as spool-up, so the lead grows smoothly up to the
+            // whole spool-up time
             if (spoolupTime > 0 && burnTime > 0)
             {
                 if (burnTime < spoolupTime * 0.5d)
-                {
-                    spoolupTime = burnTime / (spoolupTime * 0.5d);
-                    burnTime += spoolupTime;
-                    halfBurnTime += spoolupTime;
-                }
-                else
-                {
-                    burnTime += spoolupTime;
-                    halfBurnTime += spoolupTime;
-                }
+                    spoolupTime = 2 * burnTime;
+
+                burnTime += spoolupTime;
+                halfBurnTime += spoolupTime;
             }
 
             return burnTime;

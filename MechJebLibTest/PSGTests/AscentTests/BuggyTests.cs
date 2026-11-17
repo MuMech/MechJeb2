@@ -24,7 +24,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             var r0 = new V3(-4821814.88567718, 2840684.21567451, 3044792.18285841);
             var v0 = new V3(-207.145959092742, -351.61231101642, -6.44113221332937E-06);
             var u0 = new V3(-0.756795136086477, 0.44594494863847, 0.477906107902527);
-            double t0 = 222334531.385379;
+            double t0 = 0;
             double mu = 398600435436096;
             double rbody = 6371010;
             double attR = rbody + 250000;
@@ -48,7 +48,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
 
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-4);
 
@@ -79,7 +79,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             var r0 = new V3(1470817.12150277, -5396417.72296515, 3050610.07863681);
             var v0 = new V3(393.513790634158, 107.250777770179, 0.00161788515083675);
             var u0 = new V3(0.23076841882078, -0.846631607518583, 0.47954249382019);
-            double t0 = 666733.571923551;
+            double t0 = 0;
             double mu = 398600435436096;
             double rbody = 6371000;
 
@@ -100,7 +100,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -143,7 +143,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             var r0 = new V3(5591854.96465599, 126079.439022067, 3050616.55737457);
             var v0 = new V3(-9.1936944030452, 407.764494724287, 0.000353003400966649);
             var u0 = new V3(0.877712545724556, 0.0197197822130759, 0.478781640529633);
-            double t0 = 81786.024077168;
+            double t0 = 0;
             double mu = 398600435436096;
             double rbody = 6371000;
 
@@ -165,7 +165,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
 
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -188,7 +188,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             var r0 = new V3(-4230937.57027061, -3658393.88789034, 3050613.04457008);
             var v0 = new V3(266.772640873606, -308.526291373473, 0.00117499917444357);
             var u0 = new V3(-0.664193346276844, -0.574214958863673, 0.478669494390488);
-            double t0 = 134391.70903729;
+            double t0 = 0;
             double mu = 398600435436096;
             double rbody = 6371000;
 
@@ -206,7 +206,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
 
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -231,7 +231,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double thrust4 = Astro.ThrustFromMassesIspBurntime(529.255624515231, 306.288652498034, 279.000062751027, 17.4300000004006);
 
             Ascent ascent = Ascent.Builder()
-               .Initial(new V3(-2750001.81262551, -4870536.29021665, 3050610.57762817), new V3(355.169076284135, -200.527924207868, -0.00280072807318912), new V3(-0.431553114381181, -0.764704888551875, 0.478527367115021), 139051.267268641, 398600435436096, 6371000)
+               .Initial(new V3(-2750001.81262551, -4870536.29021665, 3050610.57762817), new V3(355.169076284135, -200.527924207868, -0.00280072807318912), new V3(-0.431553114381181, -0.764704888551875, 0.478527367115021), 0, 398600435436096, 6371000)
                .SetTarget(6551000, 6551000, 6551000, 0.499303792410538, 0, 0, 0, false, false, false)
                 //.SetTarget(8051000, 8051000, 8051000, 0.499303792410538, 0, 0, false, false)
                .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100105371403, 7, 7)
@@ -244,12 +244,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
 
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
-            solution.Bt(0, 0).ShouldEqual(150.314019929573, 1e-4);
-            solution.Bt(1, 0).ShouldEqual(399.27103168733788, 1e-3);
-            solution.Bt(2, 0).ShouldBeZero(1e-2);
-            solution.Bt(3, 0).ShouldBeZero(1e-2);
+            solution.Tgo(0, 0).ShouldEqual(150.314019929573, 1e-4);
+            solution.Tgo(0, 1).ShouldEqual(399.27103168733788, 1e-3);
+            solution.Tgo(0, 2).ShouldBeZero(1e-2);
+            solution.Tgo(0, 3).ShouldBeZero(1e-2);
 
             solution.TerminalKSPStage().ShouldEqual(4);
             solution.OptimizeKSPStage().ShouldEqual(4);
@@ -276,7 +276,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double thrust3 = Astro.ThrustFromMassesIspBurntime(529.255624515231, 306.288652498034, 279.000106442456, 17.4300000004006);
 
             Ascent ascent = Ascent.Builder()
-               .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 309907.485302214, 398600435436096, 6371000)
+               .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 0, 398600435436096, 6371000)
                .SetTarget(PER, 6371000, PER, 0.499303792410538, 0, 0, 0, false, false, false)
                .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100108674295, 7, 7)
                .AddStage(22640.1444759873, 7657.9646078915, thrust2, 427.000108671115, 4, 4)
@@ -287,7 +287,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -303,19 +303,19 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(1, true).ShouldEqual(2);
 
             Ascent ascent2 = Ascent.Builder()
-               .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 309907.485302214, 398600435436096, 6371000)
+               .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 0, 398600435436096, 6371000)
                .SetTarget(PER, 6371000, PER, 0.499303792410538, 0, 0, 0, false, false, false)
                .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100108674295, 7, 7)
                .AddStage(22640.1444759873, 7657.9646078915, thrust2, 427.000108671115, 4, 4)
                .AddCoast(529.255624515231, 529.255624515231, 200, 2000, 1, 0)
                .AddStage(529.255624515231, 306.288652498034, thrust3, 279.000106442456, 0, 0, true, false)
-               .OldSolution(solution)
+               .OldSolution(psg.Solution ?? throw new Exception("null solution"))
                .Build();
 
             ascent2.Run();
 
             Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+            using Solution solution2 = (psg2.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg2.PrimalFeasibility.ShouldBeZero(1e-5);
         }
@@ -329,7 +329,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             var v0 = new V3(247.04060855067507, -324.54186700561797, -5.8305065009617646E-07);
             var u0 = new V3(-0.69859864900017787, -0.5316864130313963, 0.47882089018821716);
             double m0 = 1033328.31931524;
-            double t0 = 650465.898893842;
+            double t0 = 0;
             double mu = 398600435436096;
             double incT = 0.499303792410538;
 
@@ -349,7 +349,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 

@@ -40,16 +40,17 @@ namespace MuMech
             MechJebModuleThrustController.TMode oldMode = Core.Thrust.Tmode;
             Core.Thrust.Tmode = newMode;
             if (Core.Thrust.Tmode != oldMode)
-            {
                 Core.Thrust.TransSpdAct = Convert.ToInt16(trans_spd);
-                if (Core.Thrust.Tmode == MechJebModuleThrustController.TMode.OFF)
-                {
-                    Core.Thrust.Users.Remove(this);
-                }
-                else
-                {
-                    Core.Thrust.Users.Add(this);
-                }
+
+            // Membership follows the mode picked, also when it was already set: another autopilot's ThrustOff sets OFF without
+            // removing the Translatron, and OFF then still releases the throttle
+            if (Core.Thrust.Tmode == MechJebModuleThrustController.TMode.OFF)
+            {
+                Core.Thrust.Users.Remove(this);
+            }
+            else
+            {
+                Core.Thrust.Users.Add(this);
             }
         }
 
@@ -68,13 +69,51 @@ namespace MuMech
                     Core.Attitude.AttitudeDeactivate();
                 }
 
+                Core.Thrust.PanicCut = false;
                 abort = AbortStage.OFF;
             }
             else
             {
+                StopOtherAutopilots();
+                Core.Thrust.ThrustOff();
+                Core.Thrust.PanicCut = true;
                 abort = AbortStage.THRUSTOFF;
                 Core.Thrust.Users.Add(this);
             }
+        }
+
+        // PANIC takes the vessel from every autopilot that flies it: they stop, and give back the throttle and the attitude, before
+        // the abort takes them. The rendezvous autopilot stops before the node executor it runs, and the landing autopilot that the
+        // abort engages later starts afresh.
+        private void StopOtherAutopilots()
+        {
+            Stop(Core.GetComputerModule<MechJebModuleRendezvousAutopilot>());
+            Stop(Core.GetComputerModule<MechJebModuleDockingAutopilot>());
+            Stop(Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>());
+            Stop(Core.GetComputerModule<MechJebModuleAscentPSGAutopilot>());
+            Stop(Core.GetComputerModule<MechJebModuleHoverslamAutopilot>());
+            Stop(Core.Spinup);
+
+            if (Core.Landing != null && Core.Landing.Enabled)
+                Core.Landing.StopLanding();
+
+            if (Core.Node != null && Core.Node.Enabled)
+                Core.Node.Abort();
+
+            if (Core.SmartASS != null && Core.SmartASS.target != MechJebModuleSmartASS.Target.OFF)
+            {
+                Core.SmartASS.target = MechJebModuleSmartASS.Target.OFF;
+                Core.SmartASS.Engage();
+            }
+
+            // the Translatron's own Keep mode ends with ThrustOff, after this
+            Core.Attitude.AttitudeDeactivate();
+        }
+
+        private static void Stop(ComputerModule module)
+        {
+            if (module != null && module.Enabled)
+                module.Users.Clear();
         }
 
         public void recursiveDecouple()
@@ -129,6 +168,11 @@ namespace MuMech
                 Core.Attitude.Users.Remove(this);
             }
 
+            // With no mode and no abort the Translatron has nothing to drive: leave the throttle to the player when another
+            // autopilot's ThrustOff turned the mode off
+            if (abort == AbortStage.OFF && Core.Thrust.Tmode == MechJebModuleThrustController.TMode.OFF && Core.Thrust.Users.Contains(this))
+                Core.Thrust.Users.Remove(this);
+
             if (abort != AbortStage.OFF)
             {
                 switch (abort)
@@ -139,11 +183,20 @@ namespace MuMech
                         abort = AbortStage.DECOUPLE;
                         break;
                     case AbortStage.DECOUPLE:
-                        recursiveDecouple();
-                        abort = AbortStage.BURNUP;
-                        burnUpTime = Planetarium.GetUniversalTime();
+                        // the burn-up follows even if the decoupling throws: it ends the throttle cut
+                        try
+                        {
+                            recursiveDecouple();
+                        }
+                        finally
+                        {
+                            abort = AbortStage.BURNUP;
+                            burnUpTime = Planetarium.GetUniversalTime();
+                        }
+
                         break;
                     case AbortStage.BURNUP:
+                        Core.Thrust.PanicCut = false;
                         if (Planetarium.GetUniversalTime() - burnUpTime < 2 || VesselState.SpeedVertical < 10)
                         {
                             Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;

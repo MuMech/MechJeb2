@@ -181,22 +181,29 @@ namespace MechJebLib.PSG
             return ci;
         }
 
+        // The first control of a phase with control continuity is tied to the last control of the previous phase, which
+        // already has unit norm (directly or through its own continuity), so it gets no unit norm constraint of its own:
+        // that would be linearly dependent with the continuity constraints (LICQ).
         private int ControlNormConstraints(double[] f, alglib.sparsematrix j, int ci)
         {
             for (int p = 0; p < _optimizer.Phases.Count; p++)
             {
                 PhaseProxy thisPhase = _vars[p];
+                Phase phase = _optimizer.Phases[p];
 
-                if (_optimizer.Phases[p].GuidedCoast)
+                if (phase.GuidedCoast)
                     continue;
 
-                if (_optimizer.Phases[p].Unguided)
+                if (phase.Unguided)
                 {
+                    if (phase.ControlContinuity)
+                        continue;
+
                     int k = 0;
 
-                    if (_firstPass) ConstraintNames[ci] = $"Control unit quaternion constraint for phase {p} grid {k}";
+                    if (_firstPass) ConstraintNames[ci] = $"Control unit vector constraint for phase {p} grid {k}";
 
-                    ci = ApplyScalarConstraintQ3(f, j, ci, x => x[0].magnitude - 1, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
+                    ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].magnitude - 1, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
 
                     continue;
                 }
@@ -206,9 +213,12 @@ namespace MechJebLib.PSG
                     if (k % 3 == 0)
                         continue;
 
-                    if (_firstPass) ConstraintNames[ci] = $"Control unit quaternion constraint for phase {p} grid {k}";
+                    if (k == 1 && phase.ControlContinuity)
+                        continue;
 
-                    ci = ApplyScalarConstraintQ3(f, j, ci, x => x[0].magnitude - 1, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
+                    if (_firstPass) ConstraintNames[ci] = $"Control unit vector constraint for phase {p} grid {k}";
+
+                    ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].magnitude - 1, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
                 }
             }
 
@@ -246,12 +256,12 @@ namespace MechJebLib.PSG
             {
                 if (_firstPass)
                 {
-                    ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: U attitude error x";
-                    ConstraintNames[ci + 1] = $"Continuity constraint for phase {p} and phase {p - 1}: U attitude error y";
-                    ConstraintNames[ci + 2] = $"Continuity constraint for phase {p} and phase {p - 1}: U attitude error z";
+                    ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: Ux";
+                    ConstraintNames[ci + 1] = $"Continuity constraint for phase {p} and phase {p - 1}: Uy";
+                    ConstraintNames[ci + 2] = $"Continuity constraint for phase {p} and phase {p - 1}: Uz";
                 }
 
-                ci = ApplyVectorConstraintQ3(f, j, ci, AttitudeError, new[] { prevPhase.U.Last, thisPhase.U.First }, new[] { prevPhase.U.LastIdx, thisPhase.U.FirstIdx });
+                ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.U.Last, thisPhase.U.First }, new[] { prevPhase.U.LastIdx, thisPhase.U.FirstIdx });
             }
 
             // mass continuity for coast-within-phase
@@ -262,14 +272,6 @@ namespace MechJebLib.PSG
             ci = ApplyScalarConstraint(f, j, ci, Diff, new[] { prevPhase.M.Last, thisPhase.M.First }, new[] { prevPhase.M.LastIdx, thisPhase.M.FirstIdx });
 
             return ci;
-
-            // Vector part of the relative rotation, sin(theta/2)*axis, which is zero iff x[1] = +/-x[0].  Three components instead
-            // of the four of x[0] - x[1], since the four would be linearly dependent with the unit norm constraints on both sides.
-            DualV3 AttitudeError(DualQ3[] x)
-            {
-                DualQ3 e = x[0].conjugate * x[1];
-                return new DualV3(e.x, e.y, e.z);
-            }
 
             DualV3 VecDiff(DualV3[] x) => x[0] - x[1];
 
@@ -418,12 +420,12 @@ namespace MechJebLib.PSG
 
             return ci;
 
-            Dual QAlphaConstraint(DualV3 r, DualV3 v, DualQ3 u)
+            Dual QAlphaConstraint(DualV3 r, DualV3 v, DualV3 u)
             {
                 Dual rm = r.magnitude;
                 DualV3 vr = v - DualV3.Cross(w, r);
                 Dual q = 0.5 * rho0InvQAlphaMax * NormalizedDensity(rm, rBody, h0) * vr.sqrMagnitude;
-                Dual alpha = DualV3.AngleUnit(vr.normalized, u.forward);
+                Dual alpha = DualV3.AngleUnit(vr.normalized, u);
 
                 return q * alpha / FUDGE_FACTOR;
             }
@@ -495,8 +497,8 @@ namespace MechJebLib.PSG
                     m3Idx = thisPhase.M.Idx(idx + 3);
                 }
 
-                Q3 u1, u2;
-                (int, int, int, int) u1Idx, u2Idx;
+                V3 u1, u2;
+                (int, int, int) u1Idx, u2Idx;
                 double t1, t2;
                 int t1Idx, t2Idx;
 
@@ -511,9 +513,9 @@ namespace MechJebLib.PSG
                 }
                 else if (_optimizer.Phases[p].GuidedCoast)
                 {
-                    u1 = u2 = Q3.zero;
+                    u1 = u2 = V3.zero;
                     t1 = t2 = 0;
-                    u1Idx = u2Idx = (-1, -1, -1, -1);
+                    u1Idx = u2Idx = (-1, -1, -1);
                     t1Idx = t2Idx = -1;
                 }
                 else
@@ -587,7 +589,7 @@ namespace MechJebLib.PSG
 
             return ci;
 
-            DualV3 PointVDot(ref GaussLegendreDualPoint d) => VDot(phase, d.R, d.V, d.M, d.U.forward, d.T);
+            DualV3 PointVDot(ref GaussLegendreDualPoint d) => VDot(phase, d.R, d.V, d.M, d.U, d.T);
         }
 
         // Vehicle acceleration (gravity + thrust - drag) in the given phase, with u the thrust direction and t the throttle.

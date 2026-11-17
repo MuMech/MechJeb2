@@ -26,7 +26,7 @@ namespace MuMech
         //Conserve RCS fuel
         public readonly bool conserveFuel;
 
-        [EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")] //Conserve RCS fuel threshold
+        [Persistent(pass = (int)Pass.GLOBAL), EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")] //Conserve RCS fuel threshold
         public readonly EditableDouble conserveThreshold = 0.05;
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL)), EditableInfoItem("#MechJeb_RCSTf", InfoItem.Category.Thrust)]
@@ -42,13 +42,23 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool rcsManualPID;
 
-        [Persistent(pass = (int)Pass.GLOBAL), ToggleInfoItem("#MechJeb_RCSThrottle", InfoItem.Category.Thrust)]
-        //RCS throttle when 0kn thrust
-        public bool rcsThrottle = true;
+        // RCS throttle when 0kn thrust. Per craft and off by default: KSP's "Fore by Throttle" on the RCS parts is the usual way to
+        // thrust forward on RCS, and this is a fallback for a craft built without it. Its own name in the files: KSP reads a value
+        // whatever its pass, so the global "rcsThrottle" of older versions would turn it on for every craft
+        [Persistent(name = "rcsThrottlePerCraft", pass = (int)(Pass.LOCAL | Pass.TYPE)), ToggleInfoItem("#MechJeb_RCSThrottle", InfoItem.Category.Thrust)]
+        public bool rcsThrottle;
 
         [Persistent(pass = (int)Pass.GLOBAL), ToggleInfoItem("#MechJeb_rcsForRotation", InfoItem.Category.Thrust)]
         //Use RCS for rotation
         public bool rcsForRotation = true;
+
+        [Persistent(pass = (int)Pass.GLOBAL), ToggleInfoItem("#MechJeb_rcsGimbalOnly", InfoItem.Category.Thrust)]
+        //Gimbals before RCS
+        public bool rcsGimbalOnly = true;
+
+        // the thrusters stop pitching and yawing when their torque is below this fraction of the gimbals'
+        [Persistent(pass = (int)Pass.GLOBAL), EditableInfoItem("#MechJeb_rcsGimbalThreshold", InfoItem.Category.Thrust)]
+        public readonly EditableDouble rcsGimbalThreshold = 0.1;
 
         public MechJebModuleRCSController(MechJebCore core)
             : base(core)
@@ -57,8 +67,12 @@ namespace MuMech
             pid = new PIDControllerV2(Kp, Ki, 1, -1);
         }
 
+        // the RCS group as it was when the controller was engaged, given back when it disengages
+        private bool rcsGroupWasOn;
+
         protected override void OnModuleEnabled()
         {
+            rcsGroupWasOn = Vessel != null && Vessel.ActionGroups[KSPActionGroup.RCS];
             setPIDParameters();
             pid.Reset();
             lastAct = Vector3d.zero;
@@ -113,7 +127,8 @@ namespace MuMech
 
         protected override void OnModuleDisabled()
         {
-            Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+            if (!rcsGroupWasOn)
+                Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
             base.OnModuleDisabled();
         }
 
@@ -168,8 +183,7 @@ namespace MuMech
             // We work in local vessel coordinate
             Vector3d velocityDelta = Quaternion.Inverse(Vessel.GetTransform().rotation) * worldVelocityDelta;
 
-            // Inside the threshold the group stays on and gets no command: with it off the thrust available reads zero, so a speed law built on
-            // that commands nothing, the error stays inside the threshold, and the group never comes back. RCS attitude control goes with it too.
+            // Inside the threshold the group stays on and gets no command: turning it off would take RCS attitude control with it.
             if (!Vessel.ActionGroups[KSPActionGroup.RCS])
             {
                 Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);

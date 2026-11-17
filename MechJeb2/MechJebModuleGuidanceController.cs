@@ -6,9 +6,11 @@
 
 extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
+using MechJebLib.Utils;
 using MechJebLibBindings;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -45,13 +47,27 @@ namespace MuMech
         public double StartCoast;
         public bool hasCoasted;
 
-        // guidance's private copy (the solver warm starts from its own), main thread only; T0 is the only field guidance mutates
+        // guidance's private copy (the solver warm starts from its own), main thread only.  Its clock is MET (VesselState.MET).
         public Solution? Solution;
 
         public PSGStatus Status = PSGStatus.ENABLED;
 
+        // what guidance does with RCS (PSGFeedback), said once at each change
+        private ScreenMessage _rcsCoastMessage = null!, _rcsTrimMessage = null!, _rcsOffMessage = null!;
+
+        // what the vessel flew since guidance was engaged, for the PSG Solution window
+        public readonly PSGFlownTrack FlownTrack = new PSGFlownTrack();
+
+        // the last Solution computed on the ground (it starts at MET zero), the one the vessel lifted off with, kept after
+        // Solution moves on, for the PSG Solution window
+        public Solution? PadSolution;
+
         public override void OnStart(PartModule.StartState state)
         {
+            _rcsCoastMessage = PSGFeedback.RcsCoastMessage();
+            _rcsTrimMessage  = PSGFeedback.RcsTrimMessage();
+            _rcsOffMessage   = PSGFeedback.RcsOffMessage();
+
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {
                 Core.AddToPostDrawQueue(DrawTrajectory);
@@ -62,6 +78,7 @@ namespace MuMech
         {
             Debug.Log("MechJebModuleGuidanceController: Enabled");
             ResetToAwaitingSolution();
+            FlownTrack.Clear();
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
             Core.Spinup.Users.Add(this);
@@ -73,8 +90,10 @@ namespace MuMech
         {
             Status = PSGStatus.ENABLED;
             Solution = null;
+            PadSolution = null;
             _allowExecution = false;
             hasCoasted = false;
+            _spentSince = double.NaN;
             Tgo = Vgo = CurrentPhaseTgo = 0;
             Pitch = Heading = 0;
             _inertial = V3.zero;
@@ -113,6 +132,9 @@ namespace MuMech
             if (!Enabled || Status == PSGStatus.ENABLED)
                 return;
 
+            if (Solution != null && !IsGrounded())
+                FlownTrack.Record(Core);
+
             if (Status == PSGStatus.FINISHED)
             {
                 Done();
@@ -129,8 +151,6 @@ namespace MuMech
             HandleSpinup();
 
             HandleThrottle();
-
-            DrawTrajectory();
         }
 
         private bool WillDoRCSButNotYet()
@@ -139,12 +159,16 @@ namespace MuMech
                 return false;
 
             // We might have wonky transforms and have a tiny bit of fore RCS, so require at least 10% of the max RCS thrust to be
-            // in the pointy direction (which should be "up" / y-axis per KSP/Unity semantics).
-            bool hasRCS = Vessel.hasEnabledRCSModules() &&
-                VesselState.RCSThrustAvailable.Up > 0.1 * VesselState.RCSThrustAvailable.MaxMagnitude();
+            // in the pointy direction (which should be "up" / y-axis per KSP/Unity semantics). VesselState counts the RCS thrust with the
+            // group off too: an ascent flown with RCS off ends without the RCS trim, as it always has.
+            bool hasRCS = HasForwardRCS() && Vessel.ActionGroups[KSPActionGroup.RCS];
 
             return hasRCS && Status != PSGStatus.TERMINAL_RCS && Vessel.currentStage == Solution.TerminalKSPStage();
         }
+
+        // at least 10 % of the RCS thrust pushes the vessel forward (the RCS group off counts too)
+        private bool HasForwardRCS() =>
+            Vessel.hasEnabledRCSModules() && VesselState.RCSThrustAvailable.Up > 0.1 * VesselState.RCSThrustAvailable.MaxMagnitude();
 
         private void HandleTerminal()
         {
@@ -152,7 +176,11 @@ namespace MuMech
                 return;
 
             if (!IsThrustOn())
+            {
+                // the spent stage's second is counted while thrust is asked for: a coast starts it again
+                _spentSince = double.NaN;
                 return;
+            }
 
             if (IsGrounded())
                 return;
@@ -160,6 +188,16 @@ namespace MuMech
             // if we've gone past the last stage we need to just stop
             if (Vessel.currentStage < Solution.TerminalKSPStage())
             {
+                Done();
+                return;
+            }
+
+            // the last stage has nothing left to burn, so the target is out of reach (a rocket short of delta-v runs dry before
+            // it, burning or in terminal guidance).  Nothing would stage it off, so stop here, once it has lasted a second so that
+            // an engine that is lighting does not count.
+            if (TerminalStageSpent())
+            {
+                Debug.Log($"[MechJebModuleGuidanceController] the last stage ran dry {Solution.Tgo(VesselState.MET):F1} s before the end of the burn.");
                 Done();
                 return;
             }
@@ -182,8 +220,8 @@ namespace MuMech
             // this handles termination of thrust for final stages of "fixed" burntime rockets, or any rocket where the terminal stage is not the
             // precise shutdown stage and so never gets terminal guidance (due to residuals Tgo may go less than zero so we wait for natural
             // termination of thrust).   no support for RCS terminal trim.
-            if (Solution.OptimizeKSPStage() != Solution.TerminalKSPStage() && Vessel.currentStage <= Solution.TerminalKSPStage() && Solution.Tgo(VesselState.Time) <= 0 &&
-                VesselState.ThrustAvailable == 0)
+            if (Solution.OptimizeKSPStage() != Solution.TerminalKSPStage() && Vessel.currentStage <= Solution.TerminalKSPStage() && Solution.Tgo(VesselState.MET) <= 0 &&
+                NoThrust(VesselState.ThrustAvailable))
             {
                 Done();
                 return;
@@ -204,7 +242,7 @@ namespace MuMech
                 return;
 
             // we need to be within 10 seconds of the end of the stage to run terminal guidance
-            if (Solution.TgoForKSPStage(VesselState.Time, Vessel.currentStage) > 10)
+            if (Solution.TgoForKSPStage(VesselState.MET, Vessel.currentStage) > 10)
                 return;
 
             // if we are in a coast then don't enter terminal guidance
@@ -212,11 +250,17 @@ namespace MuMech
                 return;
 
             // if we are coast-during then prevent coasting if we will be coasting this stage (first burn of burn-coast-burn)
-            if (_ascentSettings.CoastLocation == 0 && Vessel.currentStage == Solution.CoastKSPStage() && Solution.WillCoast(VesselState.Time))
+            if (Core.PSGSimulation.PlannedCoast().Kind == StageType.COAST_DURING && Vessel.currentStage == Solution.CoastKSPStage() &&
+                Solution.WillCoast(VesselState.MET))
                 return;
 
             if (Status != PSGStatus.TERMINAL_RCS)
+            {
+                if (Status != PSGStatus.TERMINAL && HasForwardRCS() && !Vessel.ActionGroups[KSPActionGroup.RCS] &&
+                    Vessel.currentStage == Solution.TerminalKSPStage())
+                    ScreenMessages.PostScreenMessage(_rcsOffMessage);
                 Status = PSGStatus.TERMINAL;
+            }
 
             Core.Warp.MinimumWarp();
 
@@ -240,14 +284,7 @@ namespace MuMech
 
             bool shouldEndTerminal = false;
 
-            // this handles ending TERMINAL guidance (but not TERMINAL_RCS) due to thrust fault in the last stage
-            if (Status == PSGStatus.TERMINAL && VesselState.ThrustCurrent == 0 && Vessel.currentStage < Solution.TerminalKSPStage())
-            {
-                Debug.Log("[MechJebModuleGuidanceController] no thrust in last stage.");
-                shouldEndTerminal = true;
-            }
-
-            if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), VesselState.Time, Vessel.currentStage))
+            if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), VesselState.MET, Vessel.currentStage))
                 shouldEndTerminal = true;
 
             if (shouldEndTerminal)
@@ -255,6 +292,7 @@ namespace MuMech
                 if (WillDoRCSButNotYet())
                 {
                     Debug.Log("[MechJebModuleGuidanceController] transition to RCS terminal guidance.");
+                    ScreenMessages.PostScreenMessage(_rcsTrimMessage);
                     Status = PSGStatus.TERMINAL_RCS;
                     if (!Vessel.ActionGroups[KSPActionGroup.RCS])
                         Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
@@ -267,9 +305,57 @@ namespace MuMech
             }
         }
 
+        // Thrust in kN too small to matter: under 1 mm/s² on this vessel.  Not an exact zero: with the engines out and the RCS group
+        // on, ThrustAvailable is the RCS thrust along the vessel's axis, which on a rocket with no RCS pushing forward is rounding
+        // noise of 1e-7 kN rather than 0.
+        private bool NoThrust(double thrust) => thrust < 1e-3 * VesselState.Mass;
+
+        private double _spentSince = double.NaN;
+
+        // On the terminal stage with no thrust left to give: the engines are out (a flamed-out engine adds nothing to
+        // ThrustAvailable, which also counts the RCS when the engines are out and the RCS group is on), or in the RCS trim the
+        // RCS is.  Only true once that has held for a second.
+        // under 1 m/s left in the current stage by the stage stats; not empty while they have nothing for it
+        private bool CurrentStageEmpty()
+        {
+            List<FuelStats> vac = Core.StageStats.VacStats;
+            bool found = false;
+            double dv = 0;
+            for (int i = 0; i < vac.Count; i++)
+                if (vac[i].KSPStage == Vessel.currentStage)
+                {
+                    found = true;
+                    dv += vac[i].DeltaV;
+                }
+
+            return found && dv < 1;
+        }
+
+        private bool TerminalStageSpent()
+        {
+            // a RealFuels engine that has not lit yet (MechJeb holding its ignition until the propellant settles) has no
+            // ThrustAvailable either, but still has its propellant: in a burn the stage stats must say it is empty too
+            bool spent = Solution != null && Vessel.currentStage == Solution.TerminalKSPStage() &&
+                (Status == PSGStatus.TERMINAL_RCS
+                    ? NoThrust(VesselState.RCSThrustAvailable.Up)
+                    : NoThrust(VesselState.ThrustAvailable) && CurrentStageEmpty());
+
+            if (!spent)
+            {
+                _spentSince = double.NaN;
+                return false;
+            }
+
+            if (double.IsNaN(_spentSince))
+                _spentSince = VesselState.Time;
+
+            return VesselState.Time - _spentSince >= 1;
+        }
+
+        // the plan's spin-up rides on its coast: the vessel spins up while it coasts, and staging waits for the spin
         private void HandleSpinup()
         {
-            if (Vessel.currentStage != _ascentSettings.SpinupStage)
+            if (!IsCoasting() || Vessel.currentStage != Core.PSGSimulation.PlannedSpinupStage())
                 return;
 
             Core.Spinup.AssertStart();
@@ -325,21 +411,21 @@ namespace MuMech
             // of autostaging to the top of the rocket.  If we don't, then when we cut the engines and do the
             // RCS trim, autostaging will stage off the spent engine if there's no relights.  This is unwanted
             // since the insertion stage may still have RCS which is necessary to complete the mission.
-            if (coastStage >= 0 && Vessel.currentStage >= coastStage && Solution.WillCoast(VesselState.Time))
+            if (coastStage >= 0 && Vessel.currentStage >= coastStage && Solution.WillCoast(VesselState.MET))
                 Core.Staging.AutoStageLimitRequest(coastStage, this);
             else
                 Core.Staging.AutoStageLimitRequest(Solution.TerminalKSPStage(), this);
 
             // terminal guidance may have shut down the burn before the coast slightly ahead of the (frozen) solution's planned
             // coast start, so stay in the coast until the solution's coast is behind us instead of relighting and marking it done.
-            bool solutionCoast = Solution.Coast(VesselState.Time);
+            bool solutionCoast = Solution.Coast(VesselState.MET);
 
-            if (solutionCoast || (IsCoasting() && Solution.WillCoast(VesselState.Time)))
+            if (solutionCoast || (IsCoasting() && Solution.WillCoast(VesselState.MET)))
             {
                 if (!IsCoasting())
                     DoCoast();
 
-                if (solutionCoast && Solution.StageTimeLeft(VesselState.Time) < UllageLeadTime)
+                if (solutionCoast && Solution.StageTimeLeft(VesselState.MET) < UllageLeadTime)
                     RCSOn();
 
                 ThrustOff();
@@ -355,6 +441,10 @@ namespace MuMech
                 // FIXME: edge trigger this instead of beating on it constantly
                 if (hasCoasted)
                     Core.PSGSimulation.MarkCoastDone();
+
+                // a solve started during the coast still has it ahead, which would start it again
+                if (IsCoasting())
+                    Core.PSGSimulation.CoastEnded();
 
                 ThrottleOn();
 
@@ -372,26 +462,27 @@ namespace MuMech
             if (Solution == null)
                 return;
 
-            // if we're not flying yet, continuously update the t0 of the solution
-            if (IsGrounded())
-                Solution.T0 = VesselState.Time;
+            V3 r0 = VesselState.OrbitalPosition.WorldToV3Rotated();
 
+            // the launch site turns with the planet while we wait on the ground, so turn the Solution with it (only a Solution
+            // computed on the ground is turned)
+            Solution.RotateToLaunchSite(r0);
+
+            // the Solution's clock is MET, which stays at zero until liftoff, so on the ground this flies its first point
             int idx = Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
 
             if (Status != PSGStatus.TERMINAL_RCS) // don't update vgo/tgo if we're in RCS
             {
-                Tgo = Solution.Tgo(VesselState.Time);
-                Vgo = Solution.Vgo(VesselState.Time);
+                Tgo = Solution.Tgo(VesselState.MET);
+                Vgo = Solution.Vgo(VesselState.MET);
                 if (idx >= 0)
-                    CurrentPhaseTgo = Solution.Tgo(VesselState.Time, idx);
+                    CurrentPhaseTgo = Solution.Tgo(VesselState.MET, idx);
             }
-
-            V3 r0 = VesselState.OrbitalPosition.WorldToV3Rotated();
 
             // lock the inertial heading at tgo < 2.0 for any staging event or terminal burnout
             // (2 seconds is to hopefully allow for variance due to residuals, it may be less)
-            if (IsGrounded() || (idx >= 0 && Solution.Tgo(VesselState.Time, idx) > 2.0))
-                (_inertial, _throttle) = Solution.InertialGuidance(VesselState.Time, VesselState.MinThrottle);
+            if (IsGrounded() || (idx >= 0 && Solution.Tgo(VesselState.MET, idx) > 2.0))
+                (_inertial, _throttle) = Solution.InertialGuidance(VesselState.MET, VesselState.MinThrottle);
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, _inertial);
 
@@ -434,7 +525,8 @@ namespace MuMech
             Vector3d rf = Planetarium.fetch.rotation * Solution.R(Solution.Tf).ToVector3d().xzy;
             Vector3d vf = Planetarium.fetch.rotation * Solution.V(Solution.Tf).ToVector3d().xzy;
 
-            _finalOrbit.UpdateFromStateVectors(rf.xzy, vf.xzy, MainBody, Solution.Tf);
+            // Tf is an MET, the orbit wants the UT of the end of the trajectory
+            _finalOrbit.UpdateFromStateVectors(rf.xzy, vf.xzy, MainBody, VesselState.Time + Solution.Tgo(VesselState.MET));
 
             GLUtils.DrawOrbit(_finalOrbit, Color.yellow);
         }
@@ -459,7 +551,7 @@ namespace MuMech
 
             // if the burn we just shut down is followed by the coast, start the coast.  for a coast in a lower KSP stage
             // (coast-before/dedicated) HandleThrottle then stages off the spent booster, as it does for a timed coast start.
-            if (Solution.CoastFollows(VesselState.Time))
+            if (Solution.CoastFollows(VesselState.MET))
             {
                 ThrustOff();
                 DoCoast();
@@ -490,19 +582,35 @@ namespace MuMech
 
         private void DoCoast()
         {
+            // a solve started before the coast plans the burn before it, so it must never arrive now
+            Core.PSGSimulation.CoastStarted();
+
             StartCoast = VesselState.Time;
             // force RCS on at the state transition
             if (!Vessel.ActionGroups[KSPActionGroup.RCS])
+            {
                 Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                ScreenMessages.PostScreenMessage(_rcsCoastMessage);
+            }
 
             Status = PSGStatus.COASTING;
 
             hasCoasted = true;
         }
 
+        // guidance flies in SI units and MET seconds, so this takes a DeNormalized() Solution
         public void SetSolution(Solution solution)
         {
+            Check.False(solution.Normalized, "guidance needs a DeNormalized() Solution");
+
+            // PSGSimulation cancels the solve in progress when the coast starts and when it ends (CoastStarted, CoastEnded), so a
+            // solution that arrives during the coast starts with it, and one that arrives after it has no coast
+            CheckDebug.True(!IsCoasting() || solution.CoastPhase(0));
+            CheckDebug.True(!hasCoasted || IsCoasting() || solution.CoastKSPStage() < 0);
+
             Solution = solution;
+            if (solution.T0 <= 0)
+                PadSolution = solution;
             if (Status == PSGStatus.ENABLED)
                 Status = PSGStatus.INITIALIZED;
         }

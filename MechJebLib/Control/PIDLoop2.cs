@@ -24,6 +24,9 @@ namespace MechJebLib.Control
         private double _ei1, _ed1;
         private double _u1 = double.NaN;
 
+        // no sample since construction or the last Reset(): the derivative has no history yet
+        private bool _first = true;
+
         // internal state for last measured and last output for low pass filters
         private double _y1 = double.NaN;
 
@@ -76,6 +79,15 @@ namespace MechJebLib.Control
             double ed = ApplyDeadband(C * r - y, DerivativeDeadband);
 
             PTerm = K * ep;
+
+            // the first sample starts the derivative's history, else the derivative would see the whole error as a step from 0:
+            // a kick of 2 N Td / (2 Td + N Ts) times the proportional term, about 30 times with N = 50 and Td = 1 s, every time a
+            // controller is engaged or Reset().  the integral keeps its trapezoid from 0, whose first step is half a rectangle.
+            if (_first)
+            {
+                _ed1 = ed;
+                _first = false;
+            }
 
             // Trapezoidal/Tustin/Bilinear derivative term.  With Td == 0 its pole is at -1, so a DTerm left from an
             // earlier Td would flip sign forever instead of decaying.
@@ -144,8 +156,9 @@ namespace MechJebLib.Control
 
         public void Reset()
         {
-            ITerm = DTerm = _ei1 = _ed1 = 0;
+            PTerm = ITerm = DTerm = _ei1 = _ed1 = 0;
             _y1 = _u1 = double.NaN;
+            _first = true;
         }
     }
 }

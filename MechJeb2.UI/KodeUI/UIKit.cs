@@ -9,7 +9,8 @@ namespace KodeUI
         {
             var childObj = new GameObject(id, typeof(RectTransform));
             childObj.layer = rectTransform.gameObject.layer;
-            childObj.transform.SetParent(rectTransform, true);
+            // local scale 1, not the inverse of the parent's scale: an object added to a scaled window draws at its size
+            childObj.transform.SetParent(rectTransform, false);
             RectTransform rect = childObj.GetComponent<RectTransform>();
             T child = childObj.AddComponent<T>();
 

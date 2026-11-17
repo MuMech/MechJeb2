@@ -3,10 +3,14 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using MechJebLib.FuelFlowSimulation;
+using MechJebLib.FuelFlowSimulation.PartModules;
 using MechJebLib.Primitives;
 using static MechJebLibTest.FuelFlowSimulationTests.PartFixtures;
+using static MechJebLibTest.FuelFlowSimulationTests.ResourceFixtures;
 using static MechJebLibTest.FuelFlowSimulationTests.RP1PartFixtures;
 
 namespace MechJebLibTest.FuelFlowSimulationTests
@@ -23,9 +27,16 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         ///     The Mainsail and the launch clamps are both in stage 0.  This is the stock
         ///     MechJebLibTest/Craft/Stock/Mainsail Tin Can.craft, as captured in Captures/MainsailTinCan.out.
         /// </summary>
-        public static SimVessel MainsailTinCan(bool kscPad = false)
+        public static SimVessel MainsailTinCan(bool kscPad = false) => MainsailTinCanAtStage(1, kscPad);
+
+        /// <summary>
+        ///     The MainsailTinCan with the CurrentStage the vessel starts with.  KSP gives it 1, the KSP stage the launch
+        ///     clamps are decoupled in plus one.  The editor can give it 0, one too low, and then the DecouplingAnalyzer
+        ///     raises it to 1 when it reaches the launch clamps, after it has visited the parts above them.
+        /// </summary>
+        public static SimVessel MainsailTinCanAtStage(int currentStage, bool kscPad = false)
         {
-            SimVessel v = NewVessel(1);
+            SimVessel v = NewVessel(currentStage);
             v.SetInitial(105865.0041307488,
                 new V3(576839.96092781203, -165406.15003102238, -1017.9253790531925),
                 new V3(48.231074597909611, 168.18874204753263, -1.392905019470582E-05),
@@ -106,6 +117,431 @@ namespace MechJebLibTest.FuelFlowSimulationTests
                 CrossFeed(jet, intake, tank);
 
             return Finish(v);
+        }
+
+        /// <summary>
+        ///     The JetTinCan with a RAPIER, in its AirBreathing mode, in place of the Whiplash.  This has not been captured in
+        ///     KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel RapierTinCan()
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart tank = Rockomax64BW(v, 1);
+            SimPart intake = ShockConeIntake(v, 2);
+            SimPart rapier = Rapier(v, 3, 0, new V3(1, 0, 0));
+
+            MakeRoot(tank);
+
+            Link(tank, intake);
+            Link(tank, rapier);
+
+            CrossFeed(rapier, intake, tank);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     A probe core on a Rockomax64 with two Mainsails in symmetry under it, in stage 0, which are canted out by cant
+        ///     radians either way in the x-y plane, as engines on the side of a stack are.  This has not been captured in KSP,
+        ///     so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel CantedMainsailPair(double cant)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart tank = Rockomax64BW(v, 2);
+            SimPart engine1 = LiquidEngineMainsailV2(v, 3, 0, new V3(Math.Cos(cant), Math.Sin(cant), 0));
+            SimPart engine2 = LiquidEngineMainsailV2(v, 4, 0, new V3(Math.Cos(cant), -Math.Sin(cant), 0));
+
+            MakeRoot(probe);
+
+            Link(probe, tank);
+            Link(tank, engine1);
+            Link(tank, engine2);
+
+            CrossFeed(engine2, engine1, tank, probe);
+
+            Symmetry(engine1, engine2);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     A probe core in a stock 2.5 m fairing, on a Rockomax64 and a Mainsail.  The Mainsail is in stage 1 and the
+        ///     fairing in stage 0, where it jettisons its panels of panelMass and leaves its base on the vessel.  This has not
+        ///     been captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel FairingTinCan(double panelMass)
+        {
+            SimVessel v = NewVessel(1);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart fairing = FairingSize2(v, 2, 0, panelMass);
+            SimPart tank = Rockomax64BW(v, 3);
+            SimPart engine = LiquidEngineMainsailV2(v, 4, 1, new V3(1, 0, 0));
+
+            MakeRoot(probe);
+
+            Link(probe, fairing);
+            Link(fairing, tank);
+            Link(tank, engine);
+
+            CrossFeed(engine, tank, fairing, probe);
+
+            return Finish(v);
+        }
+
+        // the litres of kerolox in the RD108TinCan's tank, at the RD-108's mixture ratio
+        public const double RD108_TIN_CAN_KEROLOX = 88000;
+
+        /// <summary>
+        ///     An RP-1 R-7 core stage cut down to a tin can: a procedural tank on an RD-108, the engine in stage 0.  The tank
+        ///     holds the kerosene, liquid oxygen and HTP in the ratios the RD-108 burns them so they all run out together, about
+        ///     90.7t of propellant for a ~289 s burn.  This has not been captured in KSP, so the persistentIds are made up, and
+        ///     the KSC pad conditions are those of the MyFalcon9Block5 capture.
+        /// </summary>
+        public static SimVessel RD108TinCan(bool kscPad = false)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart tank = ROTGenericTankSeparateKeroloxHTP(v, 1, -1, 4,
+                RD108_KEROSENE_RATIO * RD108_TIN_CAN_KEROLOX,
+                RD108_LQD_OXYGEN_RATIO * RD108_TIN_CAN_KEROLOX,
+                RD108_HTP_RATIO * RD108_TIN_CAN_KEROLOX);
+            SimPart engine = ROERD108(v, 2, 0, new V3(1, 0, 0));
+
+            MakeRoot(tank);
+
+            Link(tank, engine);
+
+            CrossFeed(engine, tank);
+
+            if (kscPad)
+                v.SetConditions(0.95934332780160259, 0.9864236759662981, 3.4102277931687742E-09);
+
+            return Finish(v);
+        }
+
+        // the litres of hydrolox in each of the RS68TinCanAsparagus's tanks, at the RS-68's mixture ratio
+        public const double RS68_TIN_CAN_HYDROLOX = 350000;
+
+        /// <summary>
+        ///     A Delta IV Heavy cut down to a tin can with stock asparagus staging: three stacks of a procedural hydrolox tank
+        ///     on an RS-68, the two boosters on radial decouplers, each with a fuel line feeding the core.  All three RS-68s are
+        ///     in stage 1 and the decouplers in stage 0.  The tanks hold the hydrolox in the ratio the RS-68 burns it, so the
+        ///     LqdHydrogen and LqdOxygen run out together.  Like the captured asparagus, the fuel lines put each booster's
+        ///     tank and RS-68 in the core's crossfeed set, so the core's set reaches the Ablator in the boosters' RS-68s.  This
+        ///     is built by hand rather than captured, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel RS68TinCanAsparagus()
+        {
+            SimVessel v = NewVessel(2);
+
+            var dir = new V3(1, 0, 0);
+
+            SimPart coreTank = RS68TinCanTank(v, 1, -1);
+            SimPart coreEngine = ROERS68(v, 2, 1, dir);
+
+            SimPart decouplerA = RadialDecoupler2(v, 3, 0, coreTank);
+            SimPart tankA = RS68TinCanTank(v, 4, 0);
+            SimPart engineA = ROERS68(v, 5, 1, dir);
+            SimPart fuelLineA = FuelLine(v, 6, 0);
+
+            SimPart decouplerB = RadialDecoupler2(v, 7, 0, coreTank);
+            SimPart tankB = RS68TinCanTank(v, 8, 0);
+            SimPart engineB = ROERS68(v, 9, 1, dir);
+            SimPart fuelLineB = FuelLine(v, 10, 0);
+
+            MakeRoot(coreTank);
+
+            Link(coreTank, coreEngine);
+            Link(coreTank, decouplerA);
+            Link(decouplerA, tankA);
+            Link(tankA, engineA);
+            Link(tankA, fuelLineA);
+            Link(coreTank, decouplerB);
+            Link(decouplerB, tankB);
+            Link(tankB, engineB);
+            Link(tankB, fuelLineB);
+
+            SimPart[] boosterA = { fuelLineA, engineA, tankA };
+            SimPart[] boosterB = { fuelLineB, engineB, tankB };
+
+            CrossFeedSet(Concat(new[] { coreEngine, coreTank }, boosterA, boosterB), coreEngine, coreTank);
+            CrossFeedSet(boosterA, boosterA);
+            CrossFeedSet(boosterB, boosterB);
+            CrossFeed(decouplerA);
+            CrossFeed(decouplerB);
+
+            Symmetry(decouplerA, decouplerB);
+            Symmetry(tankA, tankB);
+            Symmetry(engineA, engineB);
+            Symmetry(fuelLineA, fuelLineB);
+
+            return Finish(v);
+        }
+
+        // a full tank of the RS68TinCanAsparagus, 10 t dry
+        private static SimPart RS68TinCanTank(SimVessel v, uint persistentId, int inverseStage) =>
+            ROTGenericTankSeparateHydrolox(v, persistentId, inverseStage, 9,
+                RS68_LQD_HYDROGEN_RATIO * RS68_TIN_CAN_HYDROLOX,
+                RS68_LQD_OXYGEN_RATIO * RS68_TIN_CAN_HYDROLOX);
+
+        /// <summary>
+        ///     A probe core and a large battery bank on an ion engine, in stage 0.  With xenon a xenon tank feeds the engine
+        ///     its XenonGas (marked ignoreForIsp with xenonIgnoreForIsp), otherwise it runs on ElectricCharge alone.  With
+        ///     withMainsail a full Rockomax64 and a Mainsail sit beside it, and with electricRcs an RCS thruster on
+        ///     ElectricCharge alone.  This has not been captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel IonTinCan(bool xenon = false, bool xenonIgnoreForIsp = false, bool withMainsail = false,
+            bool electricRcs = false)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart battery = BatteryBankLarge(v, 2);
+            SimPart ion = IonEngine(v, 3, 0, new V3(1, 0, 0), xenon, xenonIgnoreForIsp);
+
+            MakeRoot(probe);
+
+            Link(probe, battery);
+
+            var crossFeed = new List<SimPart> { probe, battery, ion };
+
+            SimPart parent = battery;
+            if (xenon)
+            {
+                SimPart tank = XenonTank(v, 4);
+                Link(battery, tank);
+                crossFeed.Add(tank);
+                parent = tank;
+            }
+
+            Link(parent, ion);
+
+            if (withMainsail)
+            {
+                SimPart tank = Rockomax64BW(v, 5);
+                SimPart rocket = LiquidEngineMainsailV2(v, 6, 0, new V3(1, 0, 0));
+                Link(battery, tank);
+                Link(tank, rocket);
+                crossFeed.Add(tank);
+                crossFeed.Add(rocket);
+            }
+
+            if (electricRcs)
+            {
+                SimPart rcs = ElectricRcs(v, 7, 0);
+                Link(battery, rcs);
+                crossFeed.Add(rcs);
+            }
+
+            CrossFeed(crossFeed.ToArray());
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     The IonTinCan with its xenon tank and the ion engine in stage 1, and two Sepratron Is on the probe core in stage 0,
+        ///     to brake with when it lands.  Stage 0 decouples nothing, it only lights the Sepratrons.  This has not been captured
+        ///     in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel IonProbeWithBrakingSepratrons()
+        {
+            SimVessel v = NewVessel(1);
+
+            var dir = new V3(1, 0, 0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart battery = BatteryBankLarge(v, 2);
+            SimPart tank = XenonTank(v, 3);
+            SimPart ion = IonEngine(v, 4, 1, dir);
+            SimPart sepratron1 = SepMotor1(v, 5, 0, dir);
+            SimPart sepratron2 = SepMotor1(v, 6, 0, dir);
+
+            MakeRoot(probe);
+
+            Link(probe, battery);
+            Link(probe, sepratron1);
+            Link(probe, sepratron2);
+            Link(battery, tank);
+            Link(tank, ion);
+
+            CrossFeed(sepratron2, sepratron1, ion, tank, battery, probe);
+            CrossFeed(sepratron1);
+            CrossFeed(sepratron2);
+
+            Symmetry(sepratron1, sepratron2);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     A probe core on an FL-R750 RCS tank with an O-10 Puff and an RV-105 RCS block, which both burn the tank's
+        ///     monopropellant.  The Puff is in stage 0, the RCS block is switched on.  residuals stands in for the predicted
+        ///     residuals RealFuels would give the Puff.  This has not been captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel PuffTinCan(double residuals = 0)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart tank = RCSTank1_2(v, 2);
+            SimPart puff = OmsEngine(v, 3, 0, new V3(1, 0, 0), residuals);
+            SimPart rcs = RCSBlockV2(v, 4);
+
+            MakeRoot(probe);
+
+            Link(probe, tank);
+            Link(tank, puff);
+            Link(tank, rcs);
+
+            CrossFeed(rcs, puff, tank, probe);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     The PuffTinCan with a second FL-R750 on a radial decoupler, which drops it in stage 0.  The Puff ignites in
+        ///     stage 1 and, by stage priority flow, burns the drop tank down to its residuals first, so the vessel stages with
+        ///     the Puff still running on the core tank.  This has not been captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel PuffTinCanDropTank(double residuals)
+        {
+            SimVessel v = NewVessel(1);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart tank = RCSTank1_2(v, 2);
+            SimPart puff = OmsEngine(v, 3, 1, new V3(1, 0, 0), residuals);
+            SimPart rcs = RCSBlockV2(v, 4);
+            SimPart dropDecoupler = RadialDecoupler2(v, 5, 0, tank);
+            SimPart dropTank = RCSTank1_2(v, 6, 0);
+
+            MakeRoot(probe);
+
+            Link(probe, tank);
+            Link(tank, puff);
+            Link(tank, rcs);
+            Link(tank, dropDecoupler);
+            Link(dropDecoupler, dropTank);
+
+            CrossFeed(rcs, puff, tank, probe);
+            CrossFeed(dropDecoupler);
+            CrossFeed(dropTank);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     The vessel of MechJeb2 issue #1919: a probe core carrying an RV-105 RCS block, on a decoupler with an FL-R750
+        ///     RCS tank below it.  An O-10 Puff on the probe core ignites in stage 0, as the decoupler drops the tank, so
+        ///     neither the RCS block nor the Puff has any monopropellant left once the vessel stages.  This has not been
+        ///     captured in KSP, so the persistentIds are made up.
+        /// </summary>
+        public static SimVessel RcsOverDecoupledTank()
+        {
+            SimVessel v = NewVessel(1);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart rcs = RCSBlockV2(v, 2);
+            SimPart puff = OmsEngine(v, 3, 0, new V3(1, 0, 0));
+            SimPart decoupler = Decoupler2(v, 4, 0, probe);
+            SimPart tank = RCSTank1_2(v, 5, 0);
+
+            MakeRoot(probe);
+
+            Link(probe, rcs);
+            Link(probe, puff);
+            Link(probe, decoupler);
+            Link(decoupler, tank);
+
+            CrossFeed(rcs, puff, probe, decoupler);
+            CrossFeed(tank, decoupler);
+            CrossFeed(decoupler);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     A probe core with a Sepratron I set to throttleLimiter, in stage 0.  This has not been captured in KSP, so the
+        ///     persistentIds are made up.
+        /// </summary>
+        public static SimVessel SepratronTinCan(float throttleLimiter)
+        {
+            SimVessel v = NewVessel(0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart sepratron = SepMotor1(v, 2, 0, new V3(1, 0, 0), throttleLimiter);
+
+            MakeRoot(probe);
+
+            Link(probe, sepratron);
+
+            CrossFeed(sepratron, probe);
+            CrossFeed(sepratron);
+
+            return Finish(v);
+        }
+
+        // the litres of kerolox in each of the MerlinPair's full tanks, at the Merlin's mixture ratio
+        public const double MERLIN_PAIR_KEROLOX = 50000;
+
+        // the litres of kerolox a Merlin burns per second, at its mixture ratio
+        public const double MERLIN_KEROLOX_FLOW = 0.29972443f / (0.3877f * COOLED_RP1_DENSITY + 0.6123f * COOLED_LQD_OXYGEN_DENSITY);
+
+        /// <summary>
+        ///     A probe core with two pods in symmetry, each a procedural tank feeding a RealFuels Merlin and only that Merlin.
+        ///     Both Merlins are in stage 0.  Pod B's tank holds deficitSeconds less of the Merlin's flow than pod A's, as when
+        ///     its cryogenic propellants have boiled off a little faster.  autoCutoff is the RealFuels autoCutoff, which shuts
+        ///     a Merlin's symmetry counterpart down with it when it flames out.  Pod A's Merlin is listed before pod B's, so it
+        ///     is already in the active engines when pod B's flames out.  This is built by hand rather than captured, so the
+        ///     persistentIds are made up.
+        /// </summary>
+        public static SimVessel MerlinPair(bool autoCutoff, double deficitSeconds)
+        {
+            SimVessel v = NewVessel(0);
+
+            var dir = new V3(1, 0, 0);
+
+            SimPart probe = ProbeStackLarge(v, 1);
+            SimPart tankA = MerlinPairTank(v, 2, 0);
+            SimPart merlinA = ROEMerlin1D(v, 3, 0, dir);
+            SimPart tankB = MerlinPairTank(v, 4, deficitSeconds);
+            SimPart merlinB = ROEMerlin1D(v, 5, 0, dir);
+
+            foreach (SimPart merlin in new[] { merlinA, merlinB })
+                ((SimModuleEngines)merlin.Modules[0]).AutoCutoff = autoCutoff;
+
+            MakeRoot(probe);
+
+            Link(probe, tankA);
+            Link(tankA, merlinA);
+            Link(probe, tankB);
+            Link(tankB, merlinB);
+
+            CrossFeed(probe);
+            CrossFeed(merlinA, tankA);
+            CrossFeed(merlinB, tankB);
+
+            Symmetry(tankA, tankB);
+            Symmetry(merlinA, merlinB);
+
+            return Finish(v);
+        }
+
+        // a procedural tank of the MerlinPair, 5 t dry, holding deficitSeconds of the Merlin's flow less than it can
+        private static SimPart MerlinPairTank(SimVessel v, uint persistentId, double deficitSeconds)
+        {
+            double rp1 = 0.3877f * MERLIN_PAIR_KEROLOX;
+            double lox = 0.6123f * MERLIN_PAIR_KEROLOX;
+            double deficit = deficitSeconds * MERLIN_KEROLOX_FLOW;
+
+            SimPart p = ROTGenericTankSeparate(v, persistentId, -1, 4, rp1, lox);
+            AddResource(p, COOLED_RP1, rp1 - 0.3877f * deficit, rp1, COOLED_RP1_DENSITY);
+            AddResource(p, COOLED_LQD_OXYGEN, lox - 0.6123f * deficit, lox, COOLED_LQD_OXYGEN_DENSITY);
+            return p;
         }
 
         /// <summary>
@@ -622,6 +1058,93 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         }
 
         /// <summary>
+        ///     An RP-1 Titan II with a lead ballast payload under a procedural fairing, sitting in two launch clamps on the pad,
+        ///     staged for hot staging.  The LR87-11 is in stage 5 and the launch clamps in stage 4.  Stage 3 lights the LR91
+        ///     with the first stage still attached, and stage 2 fires the interstage adapter, a stack decoupler, which drops the
+        ///     first stage with the interstage fairing and activates the four nitrogen RCS thrusters of the upper stage.  Stage 1
+        ///     jettisons the payload fairing and stage 0 separates the payload.  This is MechJebLibTest/Craft/RP-1/My Titan II.craft,
+        ///     as captured in Captures/MyTitanII.out.
+        /// </summary>
+        public static SimVessel MyTitanII(bool kscPad = false)
+        {
+            SimVessel v = NewVessel(6);
+            v.SetInitial(739438.57563752739,
+                new V3(-3668572.7117899787, -4222113.456321435, 3050612.7645846731),
+                new V3(307.8813878902655, -267.51653126610785, -9.884522590961318E-06),
+                new V3(-0.57586806543135105, -0.6626513548363332, 0.4788205623626709));
+
+            var lr91Direction = new V3(-0.58332262599538898, -0.65609918749817053, 0.47882050275802612);
+            // the two chambers of the LR87 are canted apart, the last two thrust transforms point along the vessel
+            var lr87ChamberA = new V3(-0.60904901320175076, -0.63251068720394787, 0.47852879762649536);
+            var lr87ChamberB = new V3(-0.55688548172132579, -0.67888825598638847, 0.47852888703346252);
+            var lr87Axial = new V3(-0.5833228963956808, -0.65609943804752791, 0.47881972789764404);
+
+            SimPart payload = ROTServiceModule(v, 2289098390, -0.85024905204772949, 216.47669999999997);
+            SimPart fairingBase = KzResizableFairingBase(v, 3787586566, 0, 0.36134645342826843, payload);
+            SimPart avionics2 = ProceduralAvionics(v, 2933895313, 0, -0.71953253075480461, 42403.699999999997, 50);
+            SimPart tank2 = ROTGenericTankSeparateHypergolic(v, 3612462960, 0, 0.61927139759063721, 10529.605527740925, 11764.710972259074);
+            SimPart lr91 = ROELR91(v, 723236996, 3, lr91Direction, lr91Direction, lr91Direction, lr91Direction, lr91Direction,
+                lr91Direction);
+            SimPart interstage = KzInterstageAdapter2(v, 677988021, 2, 0.28844645619392395, lr91);
+            SimPart avionics1 = ProceduralAvionics(v, 2914987794, 2, -0.84630639478564262, 1675.7983340669045, 1675.7999999999995, 200);
+            SimPart tank1 = ROTGenericTankSeparateHypergolic(v, 3090975513, 2, 3.4792208671569824, 44653.809065127869, 53486.430734872098,
+                true);
+
+            SimPart[] clamps = { RP1LaunchClamp1(v, 1201024498, 4), RP1LaunchClamp1(v, 347487273, 4) };
+
+            SimPart lr87 = ROELR87_11(v, 3170772688, 5, lr87ChamberA, lr87ChamberB, lr87ChamberA, lr87ChamberB, lr87ChamberA, lr87ChamberB,
+                lr87Axial, lr87Axial);
+
+            SimPart[] interstageFairing = { KzProcFairingSide1(v, 2396440584, 2, 0.051677700132131577), KzProcFairingSide1(v, 574038679, 2, 0.051677700132131577), KzProcFairingSide1(v, 1338471937, 2, 0.051677700132131577), KzProcFairingSide1(v, 4059928443, 2, 0.051677700132131577) };
+
+            SimPart[] rcs = { RCSBlock138(v, 3962952172, 2), RCSBlock138(v, 3805247425, 2), RCSBlock138(v, 1699402223, 2), RCSBlock138(v, 1909377480, 2) };
+
+            SimPart[] nitrogenTanks = { RORFTankSM(v, 4273079064, 0, -0.9762495756149292, 11309.739999999998), RORFTankSM(v, 1522381228, 0, -0.9762495756149292, 11309.739999999998) };
+
+            SimPart[] payloadFairing = { KzProcFairingSide1(v, 3748101133, 1, 0.10445929318666458), KzProcFairingSide1(v, 62638139, 1, 0.10445929318666458) };
+
+            MakeRoot(payload);
+
+            Link(payload, fairingBase);
+            Link(fairingBase, avionics2);
+            foreach (SimPart p in payloadFairing)
+                Link(fairingBase, p);
+            Link(avionics2, tank2);
+            Link(tank2, lr91);
+            foreach (SimPart p in rcs)
+                Link(tank2, p);
+            foreach (SimPart p in nitrogenTanks)
+                Link(tank2, p);
+            Link(lr91, interstage);
+            Link(interstage, avionics1);
+            foreach (SimPart p in interstageFairing)
+                Link(interstage, p);
+            Link(avionics1, tank1);
+            foreach (SimPart p in clamps)
+                Link(tank1, p);
+            Link(tank1, lr87);
+
+            CrossFeedSet(new[] { payload, fairingBase }, payload);
+            CrossFeedSet(Concat(nitrogenTanks.Reverse().ToArray(), rcs.Reverse().ToArray(), new[] { lr91, tank2, avionics2, interstage, fairingBase }),
+                Concat(new[] { avionics2, tank2, lr91 }, rcs, nitrogenTanks));
+            CrossFeedSet(new[] { lr87, tank1, avionics1, interstage }, avionics1, tank1, lr87);
+            // the decouplers, launch clamps and fairings each have a set of their own
+            foreach (SimPart p in Concat(new[] { fairingBase, interstage }, clamps, interstageFairing, payloadFairing))
+                CrossFeed(p);
+
+            Symmetry(clamps);
+            Symmetry(interstageFairing);
+            Symmetry(rcs);
+            Symmetry(nitrogenTanks);
+            Symmetry(payloadFairing);
+
+            if (kscPad)
+                v.SetConditions(1.2128204505617977, 0.98832934925710891, 6.5586583939917773E-08);
+
+            return Finish(v);
+        }
+
+        /// <summary>
         ///     Borrows a SimVessel and sets every field that the KSP SimVesselManager would set, since pooled SimVessels
         ///     are not reset when they are released.  The conditions are vacuum and the initial state is zeros.
         /// </summary>
@@ -644,6 +1167,25 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             DecouplingAnalyzer.Analyze(v);
             v.UpdateEngineSet();
             return v;
+        }
+
+        /// <summary>
+        ///     Moves the part to the front of the vessel's parts and does the analysis over again.  KSP lists the root part
+        ///     first, but not always: in the editor a vessel can be re-rooted.
+        /// </summary>
+        public static SimVessel MovePartToFront(SimVessel v, SimPart part)
+        {
+            v.Parts.Remove(part);
+            v.Parts.Insert(0, part);
+
+            v.PartsRemainingInStage.Clear();
+            v.AvionicsRemainingInStage.Clear();
+            v.EnginesDroppedInStage.Clear();
+            v.EnginesActivatedInStage.Clear();
+            v.RCSActivatedInStage.Clear();
+            v.RCSDroppedInStage.Clear();
+
+            return Finish(v);
         }
 
         // KSP appends the vessel name to the name of the root part in some captures but not others, even between captures of

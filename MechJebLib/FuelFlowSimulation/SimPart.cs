@@ -99,11 +99,31 @@ namespace MechJebLib.FuelFlowSimulation
             p.Resources.Clear();
             p._resourceDrains.Clear();
             p._rcsDrains.Clear();
+            p._resourceKeys.Clear();
 
+            // every field back to its declared default: a pooled part goes to whichever vessel borrows it next, and a field
+            // that the builder or the updater sets only in some cases would otherwise keep the last vessel's value
             p.Vessel = null!;
+            p.Name = null!;
+            p.PersistentId = 0;
+            p.DecoupledInStage = -1;
+            p.StagingOn = true;
+            p.InverseStage = -1;
+            p.ActivatesEvenIfDisconnected = true;
+            p.IsThrottleLocked = false;
+            p.ResourcePriority = 0;
+            p.ResourceRequestRemainingThreshold = 1E-12;
+            p.IsEnabled = false;
+            p.Mass = 0;
+            p.DryMass = 0;
+            p.CrewMass = 0;
+            p.ModulesStagedMass = 0;
+            p.ModulesUnstagedMass = 0;
+            p.DisabledResourcesMass = 0;
+            p.EngineResiduals = 0;
+            p.IsRoot = false;
             p.IsLaunchClamp = false;
             p.IsEngine = false;
-            p.IsThrottleLocked = false;
         }
 
         public bool TryGetResource(int resourceId, out SimResource resource) => Resources.TryGetValue(resourceId, out resource);

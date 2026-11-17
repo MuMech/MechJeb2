@@ -35,7 +35,9 @@ namespace MuMech
 
         private static readonly TimeReference[] _timeReferences = { TimeReference.COMPUTED, TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING, TimeReference.CLOSEST_APPROACH };
 
-        internal static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+        internal readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+
+        internal override TimeSelector Timing => _timeSelector;
 
         // the "Create arrival node" option is only offered for these combinations
         internal bool PlanCaptureAvailable(bool isCelestialTarget) => Capture && (!isCelestialTarget || MatchOrbit || LagTime.Val != 0);
@@ -85,7 +87,8 @@ namespace MuMech
                 OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, lagTime, fixedTime, Coplanar, Capture && !MatchOrbit,
                     Capture);
 
-            if (Capture && PlanCapture)
+            // the arrival node only where the window offers it (its ViewUpdate clears PlanCapture elsewhere, and kOS has no window)
+            if (Capture && PlanCapture && PlanCaptureAvailable(target.Target is CelestialBody))
                 return new List<ManeuverParameters> { new ManeuverParameters(dV1, ut1), new ManeuverParameters(dV2, ut2) };
             return new List<ManeuverParameters> { new ManeuverParameters(dV1, ut1) };
         }

@@ -83,6 +83,14 @@ namespace MechJebLib.PSG
             return true;
         }
 
+        public FlightPlan DeepCopy()
+        {
+            var dup = new FlightPlan();
+            foreach (FlightPlanStage stage in Stages)
+                dup.Stages.Add(stage.DeepCopy());
+            return dup;
+        }
+
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -213,6 +221,13 @@ namespace MechJebLib.PSG
             StageType = stageType;
             SkipToNextBurn = skipToNextBurn;
             AtmoISP = atmoISP;
+        }
+
+        public FlightPlanStage DeepCopy()
+        {
+            var dup = (FlightPlanStage)MemberwiseClone();
+            dup.FuelStats = FuelStats.DeepCopy();
+            return dup;
         }
 
         public override string ToString()

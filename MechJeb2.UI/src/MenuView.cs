@@ -45,7 +45,9 @@ namespace MuMech.UI
 
         // ---- structure ----
 
-        static bool InMenu(DisplayModule m) => m.ShowInMenu && !m.TechLocked && m.ShowInCurrentScene;
+        // PSG Solution only while the ascent is a PSG one: under Classic it has nothing to show
+        static bool InMenu(DisplayModule m) => m.ShowInMenu && !m.TechLocked && m.ShowInCurrentScene &&
+                                               !(m is MechJebModulePSGSolutionGraph && m.Core.AscentSettings.AscentType != AscentType.PSG);
 
         int builtSignature;
         float nextCheck;
@@ -110,40 +112,11 @@ namespace MuMech.UI
             columns.Finish();
 
             List<DisplayModule> modules = Core.GetDisplayModules(MechJebModuleMenu.DisplayOrder.instance);
-            if (KodeWindow.ModernLayout)
-            {
-                GroupedColumns(w, columns, modules);
-                BuildEdge(w, r);
-                return;
-            }
-
-            int count = 0;
-            for (int i = 0; i < modules.Count; i++)
-                if (InMenu(modules[i])) count++;
-            int step = Mathf.CeilToInt((float)(count + 1) / menu.columns);
-
-            Layout column = KodeWindow.Panel(columns);
-            int inColumn = 0;
-            for (int i = 0; i < modules.Count; i++)
-            {
-                DisplayModule module = modules[i];
-                if (!InMenu(module)) continue;
-                if (inColumn == step)
-                {
-                    column = KodeWindow.Panel(columns);
-                    inColumn = 0;
-                }
-
-                w.Toggle(column, module.GetName(), () => module.Enabled, v => module.Enabled = v, () => ModuleTone(module));
-                inColumn++;
-            }
-
-            KodeWindow.Button(column, "#MechJeb_OnlineManualbutton", () => Application.OpenURL("https://github.com/MuMech/MechJeb2/wiki")); //"Online Manual"
-
+            GroupedColumns(w, columns, modules);
             BuildEdge(w, r);
         }
 
-        /// <summary>The locked-modules note and the "MechJeb" button on the screen edge (both layouts).</summary>
+        /// <summary>The locked-modules note and the "MechJeb" button on the screen edge.</summary>
         void BuildEdge(KodeWindow w, UIObject r)
         {
             UIText locked = GuidanceUi.Wrapped(r, "#MechJeb_ModuleAreLocked"); //"Some modules are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station."
@@ -164,7 +137,7 @@ namespace MuMech.UI
             w.Visible(button.gameObject, () => !menu.HideMenuButton);
         }
 
-        // ---- modern layout: the windows grouped by task ----
+        // ---- the windows grouped by task ----
 
         static readonly string[] groupKeys =
         {
@@ -177,12 +150,33 @@ namespace MuMech.UI
         {
             if (m is MechJebModuleCustomInfoWindow) return 4;
             string n = m.GetType().Name;
-            if (n.Contains("Ascent") || n.Contains("Landing") || n.Contains("Spaceplane") || n.Contains("Rover") || n.Contains("Waypoint")) return 0;
+            if (n.Contains("Ascent") || n.Contains("PSG") || n.Contains("Landing") || n.Contains("Spaceplane") || n.Contains("Rover") ||
+                n.Contains("Waypoint")) return 0;
             if (n.Contains("Maneuver") || n.Contains("NodeEditor") || n.Contains("Warp")) return 1;
             if (n.Contains("Rendezvous") || n.Contains("Docking")) return 2;
             if (n.Contains("SmartASS") || n.Contains("SmartRcs") || n.Contains("Translatron") || n.Contains("Attitude") || n.Contains("RCSBalancer") ||
                 n.Contains("ThrustWindow")) return 3;
             return 5;
+        }
+
+        /// <summary>How many columns the groups take, each whole, with at most <paramref name="step"/> rows a column; the manual button last.</summary>
+        static int ColumnsFor(List<DisplayModule>[] groups, int header, int step)
+        {
+            int columns = 1, inColumn = 0;
+            foreach (List<DisplayModule> g in groups)
+            {
+                if (g.Count == 0) continue;
+                int size = g.Count + header;
+                if (inColumn > 0 && inColumn + size > step)
+                {
+                    columns++;
+                    inColumn = 0;
+                }
+
+                inColumn += size;
+            }
+
+            return columns;
         }
 
         /// <summary>The same toggles under one header per task, the groups in order, split into the menu's columns.</summary>
@@ -193,35 +187,41 @@ namespace MuMech.UI
             foreach (DisplayModule m in modules)
                 if (InMenu(m)) groups[Group(m)].Add(m);
 
-            int rows = 1; // the online manual button
+            // a group is never split between columns: a column is as tall as its share of the rows, or as the largest group
+            int header = KodeWindow.ShowHeaders ? 1 : 0;
+            int rows = 1, largest = 0; // the online manual button
             foreach (List<DisplayModule> g in groups)
-                if (g.Count > 0) rows += g.Count + (KodeWindow.ShowHeaders ? 1 : 0);
-            int step = Mathf.CeilToInt((float)rows / menu.columns);
+                if (g.Count > 0)
+                {
+                    rows += g.Count + header;
+                    largest = Math.Max(largest, g.Count + header);
+                }
+
+            // whole groups leave gaps at the column ends: a taller column until they fit in the menu's columns
+            int step = Math.Max(Mathf.CeilToInt((float)rows / menu.columns), largest);
+            while (ColumnsFor(groups, header, step) > Math.Max(menu.columns, 1)) step++;
 
             Layout column = KodeWindow.Panel(columns);
             int inColumn = 0;
             for (int g = 0; g < groups.Length; g++)
             {
                 if (groups[g].Count == 0) continue;
-                // a group starts a new column rather than leaving its header alone at the bottom of one
-                if (inColumn > 0 && inColumn + 2 > step)
+                int size = groups[g].Count + header;
+                // the whole group in the next column when it doesn't fit in this one
+                if (inColumn > 0 && inColumn + size > step)
                 {
                     column = KodeWindow.Panel(columns);
                     inColumn = 0;
                 }
+
                 KodeWindow.Header(column, groupKeys[g]);
-                if (KodeWindow.ShowHeaders) inColumn++;
                 foreach (DisplayModule module in groups[g])
                 {
-                    if (inColumn >= step)
-                    {
-                        column = KodeWindow.Panel(columns);
-                        inColumn = 0;
-                    }
                     DisplayModule m = module;
                     w.CheckBox(column, m.GetName(), () => m.Enabled, v => m.Enabled = v, () => ModuleTone(m)); // checkboxes, as proposal 10A
-                    inColumn++;
                 }
+
+                inColumn += size;
             }
             KodeWindow.Button(column, "#MechJeb_OnlineManualbutton", () => Application.OpenURL("https://github.com/MuMech/MechJeb2/wiki")); //"Online Manual"
         }
@@ -234,7 +234,7 @@ namespace MuMech.UI
 
         protected override void BeforeSync()
         {
-            // what DrawGUI did before drawing
+            // before the bindings
             menu.AdvanceAnimation();
 
             if (Time.unscaledTime >= nextCheck)
@@ -305,14 +305,14 @@ namespace MuMech.UI
             KodeWindow.Label(row, "#MechJeb_MenuPos"); //Pos:
             MiscViewKit.BoundButton(w, row, () => sideNames[(int)menu.windowSide], menu.CycleSide, null, true);
             KodeWindow.Label(row, "#MechJeb_MenuCol"); //Col
-            KodeWindow.Button(row, "-", () => menu.columns = Math.Max(1, menu.columns - 1));
+            KodeWindow.Button(row, "-", () => menu.SetColumns(menu.columns - 1));
             UIText count = w.BoundLabel(row, "99", () => InfoText.Int(menu.columns));
             // a label's cell leaves room for longer text, which two digits don't need: just wide enough, centred between the buttons
             count.tmpText.alignment = TextAlignmentOptions.Center;
             GameObject cell = KodeWindow.CellOf(count);
             var size = cell.GetComponent<LayoutElement>();
             KodeWindow.Styled(cell, th => size.preferredWidth = TextMeasure.Measure("99", th).x + 2);
-            KodeWindow.Button(row, "+", () => menu.columns++);
+            KodeWindow.Button(row, "+", () => menu.SetColumns(menu.columns + 1));
         }
     }
 }

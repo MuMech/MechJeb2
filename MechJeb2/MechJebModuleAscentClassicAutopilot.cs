@@ -19,15 +19,87 @@ namespace MuMech
 
         private MechJebModuleLaunchCountdown Countdown => Core.LaunchCountdown;
 
+        /*
+         * gravity turn path
+         */
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool AutoPath = true;
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public float AutoTurnPerc = 0.05f;
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public float AutoTurnSpdFactor = 18.5f;
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDoubleMult TurnStartAltitude = new EditableDoubleMult(500, 1000);
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDoubleMult TurnStartVelocity = new EditableDoubleMult(50);
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDoubleMult TurnEndAltitude = new EditableDoubleMult(60000, 1000);
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble TurnEndAngle = 0;
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDoubleMult TurnShapeExponent = new EditableDoubleMult(0.4, 0.01);
+
+        public double AutoTurnStartAltitude =>
+            MainBody.atmosphere ? MainBody.RealMaxAtmosphereAltitude() * AutoTurnPerc : Vessel.terrainAltitude + 25;
+
+        public double AutoTurnStartVelocity => MainBody.atmosphere
+            ? AutoTurnSpdFactor * AutoTurnSpdFactor * AutoTurnSpdFactor * 0.015625f
+            : double.PositiveInfinity;
+
+        public double AutoTurnEndAltitude =>
+            MainBody.atmosphere
+                ? Math.Min(MainBody.RealMaxAtmosphereAltitude() * 0.85, AscentSettings.DesiredOrbitAltitude)
+                : Math.Min(30000, AscentSettings.DesiredOrbitAltitude * 0.85);
+
+        /*
+         * steering
+         */
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool CorrectiveSteering = false;
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble CorrectiveSteeringGain = new EditableDouble(3.0);
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool LimitAoA = true;
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble MaxAoA = 5;
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDoubleMult AOALimitFadeoutPressure = new EditableDoubleMult(2500);
+
+        /*
+         * circularization
+         */
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool SkipCircularization = false;
+
         private double _actualTurnStart;
+
+        // the altitude above sea level the vessel was engaged at on the ground (0 when engaged in flight): from a site above the
+        // turn start altitude the turn starts there, not from sea level
+        private double _launchAltitude;
 
         protected override void OnModuleEnabled()
         {
             _placedCircularizeNode = false;
             _coastWarping = false;
             _mode = AscentMode.PRELAUNCH;
-            _actualTurnStart = 0;
+            _launchAltitude = Vessel.LandedOrSplashed ? Math.Max(VesselState.AltitudeASL, 0) : 0;
+            _actualTurnStart = _launchAltitude;
 
+            AscentSettings.ApplyOwnValues(this, false);
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
             if (AscentSettings.Autostage) Core.Staging.Users.Add(this);
@@ -44,7 +116,8 @@ namespace MuMech
             Core.Thrust.Users.Remove(this);
             Core.Staging.Users.Remove(this);
             Countdown.Users.Remove(this);
-            AscentSettings.LaunchingToPlane = AscentSettings.LaunchingToMatchLan = AscentSettings.LaunchingToLan = false;
+            Countdown.Abort();
+            AscentSettings.ReleaseOwnValues(this);
 
             Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
 
@@ -52,13 +125,16 @@ namespace MuMech
             if (_mode == AscentMode.COAST_TO_APOAPSIS) Core.Warp.MinimumWarp();
         }
 
-        public double VerticalAscentEnd() => AscentSettings.AutoPath ? AscentSettings.AutoTurnStartAltitude : AscentSettings.TurnStartAltitude;
+        public double VerticalAscentEnd() => AutoPath ? AutoTurnStartAltitude : TurnStartAltitude;
 
-        private double SpeedAscentEnd() => AscentSettings.AutoPath ? AscentSettings.AutoTurnStartVelocity : AscentSettings.TurnStartVelocity;
+        // a turn shape of 0 drops the pitch to the end angle the moment the turn starts
+        private const double MIN_TURN_SHAPE_EXPONENT = 0.1;
+
+        private double SpeedAscentEnd() => AutoPath ? AutoTurnStartVelocity : TurnStartVelocity;
 
         private bool IsVerticalAscent(double altitude, double velocity)
         {
-            _actualTurnStart = Math.Min(_actualTurnStart, VerticalAscentEnd());
+            _actualTurnStart = Math.Min(_actualTurnStart, Math.Max(VerticalAscentEnd(), _launchAltitude));
             if (altitude < VerticalAscentEnd() && velocity < SpeedAscentEnd())
             {
                 _actualTurnStart = Math.Max(_actualTurnStart, altitude);
@@ -70,16 +146,33 @@ namespace MuMech
 
         public double FlightPathAngle(double altitude, double velocity)
         {
-            double turnEnd = AscentSettings.AutoPath ? AscentSettings.AutoTurnEndAltitude : AscentSettings.TurnEndAltitude;
-
             if (IsVerticalAscent(altitude, velocity)) return 90.0;
 
-            if (altitude > turnEnd) return AscentSettings.TurnEndAngle;
+            return TurnAngle(altitude, _actualTurnStart);
+        }
+
+        /// <summary>
+        ///     The planned path for the Ascent Path Editor's picture: vertical up to the turn start altitude, then the turn from
+        ///     there. Unlike FlightPathAngle it neither reads nor moves the turn start of a flight in progress.
+        /// </summary>
+        public double PlannedFlightPathAngle(double altitude)
+        {
+            double turnStart = VerticalAscentEnd();
+            return altitude < turnStart ? 90.0 : TurnAngle(altitude, turnStart);
+        }
+
+        private double TurnAngle(double altitude, double turnStart)
+        {
+            double turnEnd = AutoPath ? AutoTurnEndAltitude : TurnEndAltitude;
+
+            if (altitude > turnEnd) return TurnEndAngle;
 
             // below the altitude the turn started at (falling back, or a different altitude reference) Pow of a negative base is NaN
-            double turnFraction = altitude > _actualTurnStart ? (altitude - _actualTurnStart) / (turnEnd - _actualTurnStart) : 0;
+            double turnFraction = altitude > turnStart ? (altitude - turnStart) / (turnEnd - turnStart) : 0;
 
-            return Mathf.Clamp((float)(90.0 - Math.Pow(turnFraction, AscentSettings.TurnShapeExponent) * (90.0 - AscentSettings.TurnEndAngle)),
+            double turnShape = Math.Max(TurnShapeExponent, MIN_TURN_SHAPE_EXPONENT);
+
+            return Mathf.Clamp((float)(90.0 - Math.Pow(turnFraction, turnShape) * (90.0 - TurnEndAngle)),
                 0.01F, 89.99F);
         }
 
@@ -99,9 +192,8 @@ namespace MuMech
 
             if (Countdown.HoldForLiftoff(Status)) return;
 
-            // null when a part's blacklist removed the controller
-            Core.Solarpanel?.DriveForAscent();
-            Core.AntennaControl?.DriveForAscent();
+            Core.Solarpanel.DriveForAscent();
+            Core.AntennaControl.DriveForAscent();
 
             switch (_mode)
             {
@@ -168,7 +260,7 @@ namespace MuMech
 
             _desiredPitch = FlightPathAngle(VesselState.AltitudeASL, VesselState.SpeedSurface) * UtilMath.Deg2Rad;
 
-            if (AscentSettings.CorrectiveSteering)
+            if (CorrectiveSteering)
             {
                 double actualFlightPathAngle = Math.Atan2(VesselState.SpeedVertical, VesselState.SpeedSurfaceHorizontal);
 
@@ -177,7 +269,7 @@ namespace MuMech
                 double difficulty = VesselState.SurfaceVelocity.magnitude * 0.02 / VesselState.ThrustAccel(Core.Thrust.TargetThrottle);
                 difficulty = Clamp(difficulty, 0.1, 1.0);
 
-                double steerOffset = AscentSettings.CorrectiveSteeringGain * difficulty * fpaError;
+                double steerOffset = CorrectiveSteeringGain * difficulty * fpaError;
 
                 double steerAngle = Clamp(SafeAsin(steerOffset), -Math.PI / 6, Math.PI / 6);
 
@@ -212,7 +304,7 @@ namespace MuMech
             else
                 Core.Thrust.ThrustOff();
 
-            if (Core.Node.Autowarp)
+            if (AscentSettings.Autowarp)
             {
                 Core.Warp.WarpPhysicsAtRate(2); // 2x physics warp
                 _coastWarping = true;
@@ -231,13 +323,18 @@ namespace MuMech
 
         private bool DriveCircularizationBurn()
         {
-            if (!Vessel.patchedConicsUnlocked() || AscentSettings.SkipCircularization)
+            if (!Vessel.patchedConicsUnlocked() || SkipCircularization)
                 return false;
 
             if (_placedCircularizeNode)
             {
                 //finished circularize
                 if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
+                    return false;
+
+                // the node executor stopped with the node left (knocked off the burn, or aborted by the player): the
+                // ascent ends there and leaves the node to the player, rather than hold the throttle at 0
+                if (!Core.Node.Enabled)
                     return false;
             }
             else
@@ -312,11 +409,11 @@ namespace MuMech
 
         private Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
         {
-            if (!AscentSettings.LimitAoA)
+            if (!LimitAoA)
                 return desiredThrustVector;
 
-            double fade = VesselState.DynamicPressure < AscentSettings.AOALimitFadeoutPressure ? AscentSettings.AOALimitFadeoutPressure / VesselState.DynamicPressure : 1;
-            AscentSettings.CurrentMaxAoA = IsFinite(fade) ? Math.Min(fade * AscentSettings.MaxAoA, 180d) : 180d;
+            double fade = VesselState.DynamicPressure < AOALimitFadeoutPressure ? AOALimitFadeoutPressure / VesselState.DynamicPressure : 1;
+            AscentSettings.CurrentMaxAoA = IsFinite(fade) ? Math.Min(fade * MaxAoA, 180d) : 180d;
             AscentSettings.LimitingAoA = Vessel.altitude < MainBody.atmosphereDepth && Vector3d.Angle(VesselState.SurfaceVelocity, desiredThrustVector) > AscentSettings.CurrentMaxAoA;
 
             if (AscentSettings.LimitingAoA)

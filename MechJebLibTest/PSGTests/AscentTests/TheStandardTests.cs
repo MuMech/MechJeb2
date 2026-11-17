@@ -23,7 +23,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
             var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
             var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
-            double t0 = 661803.431918959;
+            double t0 = 0;
             double mu = 3.986004418e+14;
             double rbody = 6.371e+6;
 
@@ -47,7 +47,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Vgo(t0).ShouldEqual(9669.6899155829542, 1e-3);
@@ -73,6 +73,27 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.CoastFollows((solution.StartTime(2) + solution.EndTime(2)) / 2).ShouldBeTrue();
             solution.CoastFollows((solution.StartTime(3) + solution.EndTime(3)) / 2).ShouldBeFalse();
 
+            // the coast is ahead until it is over, and nothing is unguided
+            for (int p = 0; p < solution.Segments; p++)
+            {
+                double mid = (solution.StartTime(p) + solution.EndTime(p)) / 2;
+                Assert.Equal(p == 2, solution.Coast(mid));
+                Assert.Equal(p <= 2, solution.WillCoast(mid));
+                solution.Unguided(mid).ShouldBeFalse();
+            }
+
+            double midCoast = (solution.StartTime(2) + solution.EndTime(2)) / 2;
+            solution.StageTimeLeft(midCoast).ShouldEqual(solution.Tgo(midCoast, 2), 0);
+
+            // the delta-v left in each phase adds up to the delta-v to go
+            double dv = 0;
+            for (int p = 0; p < solution.Segments; p++)
+                dv += solution.DV(t0, p);
+            dv.ShouldEqual(solution.Vgo(t0), 1e-9);
+
+            (V3 u, _) = solution.InertialGuidance(t0, 0);
+            u.ShouldEqual(solution.U(t0).normalized, 1e-12);
+
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
@@ -81,7 +102,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.R(t0).ShouldEqual(r0, 1e-6);
             solution.V(t0).ShouldEqual(v0, 1e-6);
             solution.M(t0).ShouldEqual(49119.7842689869, 1e-6);
-            solution.Vgo(t0).ShouldEqual(9664.381839407506, 1e-3);
             solution.U(t0).normalized.ShouldEqual(new V3(0.77936242810570966, -0.56640344307712909, 0.26792040856856347), 1e-1);
 
             smaf.ShouldEqual(11463499.98898875, 1e-4);
@@ -100,7 +120,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
             var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
             var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
-            double t0 = 661803.431918959;
+            double t0 = 0;
             double mu = 3.986004418e+14;
             double rbody = 6.371e+6;
 
@@ -126,7 +146,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
             solution.Tgo(solution.T0, 1).ShouldBePositive();
@@ -173,7 +193,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
             var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
             var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
-            double t0 = 661803.431918959;
+            double t0 = 0;
             double mu = 3.986004418e+14;
             double rbody = 6.371e+6;
 
@@ -206,7 +226,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
             solution.Tgo(solution.T0, 1).ShouldBePositive();
@@ -251,7 +271,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
             var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
             var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
-            double t0 = 661803.431918959;
+            double t0 = 0;
             double mu = 3.986004418e+14;
             double rbody = 6.371e+6;
 
@@ -284,7 +304,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ascent.Run();
 
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
-            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+            using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();

@@ -207,5 +207,35 @@ namespace MechJebLibTest
             Assert.Equal("12 q", 1.23456e-29.ToSI(1, -30));
             Assert.Equal("123 q", 1.23456e-28.ToSI(1, -30));
         }
+
+        [Fact]
+        [InvariantCulture]
+        public void RoundToSITest()
+        {
+            Assert.Equal(13000, 12500d.RoundToSI(2));
+            Assert.Equal("13 k", 12500d.ToSI(2));
+            Assert.Equal(12000, 12499d.RoundToSI(2));
+            Assert.Equal(1000, 999.96.RoundToSI());
+            Assert.Equal(999.9, 999.94.RoundToSI(), 9);
+            Assert.Equal(-1200, (-1234d).RoundToSI(2));
+            Assert.Equal(0, 0d.RoundToSI());
+            Assert.True(double.IsNaN(double.NaN.RoundToSI()));
+            Assert.Equal(double.PositiveInfinity, double.PositiveInfinity.RoundToSI());
+
+            // the text only changes when the rounded value does
+            foreach (int sigFigs in new[] { 2, 3, 4 })
+            {
+                double last = double.NaN;
+                string? lastText = null;
+                for (double v = 0.0004; v < 2e6; v *= 1.00013)
+                {
+                    double key = v.RoundToSI(sigFigs);
+                    string text = v.ToSI(sigFigs);
+                    if (key.Equals(last)) Assert.Equal(lastText, text);
+                    last     = key;
+                    lastText = text;
+                }
+            }
+        }
     }
 }
