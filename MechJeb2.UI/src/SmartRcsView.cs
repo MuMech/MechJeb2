@@ -37,7 +37,10 @@ namespace MuMech.UI
             Tile(w, targets, "#MechJeb_SmartRcs_button2", MechJebModuleSmartRcs.Target.ZERO_RVEL); //"ZERO RVEL"
 
             w.SwitchRow(body, "#MechJeb_SmartRcs_checkbox2", () => Core.RCS.rcsThrottle, v => Core.RCS.rcsThrottle = v); //" RCS throttle when engines are offline"
+            UIText throttleNote = KodeWindow.Paragraph(body, "#MechJeb_SmartRcs_rcsThrottleNote");
+            w.Visible(throttleNote.gameObject, () => Core.RCS.rcsThrottle);
             w.SwitchRow(body, "#MechJeb_SmartRcs_checkbox3", () => Core.RCS.rcsForRotation, v => Core.RCS.rcsForRotation = v); // " Use RCS for rotation"
+            w.SwitchRow(body, "#MechJeb_rcsGimbalOnly", () => Core.RCS.rcsGimbalOnly, v => Core.RCS.rcsGimbalOnly = v); // "Gimbals before RCS"
 
             GuidanceUi.AutoBar(w, r, body.gameObject, "#MechJeb_SmartRcs_button3", () => blocked, () => GuidanceUi.OtherUser(Core.RCS.Users, smart)); //"AUTO"
         }
