@@ -80,7 +80,8 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             CheckBox(w, row, force, setForce);
-            KodeWindow.Label(row, label);
+            // the label and the extra buttons get fixed widths, so the fields and buttons line up from row to row
+            FixedWidth(KodeWindow.Label(row, label), 0, "HDG", "PIT", "ROL", "YAW");
             EditUi.Field(w, row, get, 37);
             KodeWindow.Label(row, "°");
 
@@ -98,8 +99,20 @@ namespace MuMech.UI
             foreach (Extra e in extras)
             {
                 Extra x = e;
-                KodeWindow.Button(row, x.Text, () => apply(x.Value()));
+                FixedWidth(KodeWindow.Button(row, x.Text, () => apply(x.Value())), 12, "180", "CUR"); // 12: the button's padding
             }
+        }
+
+        /// <summary>Make a widget as wide as the widest of <paramref name="texts"/> plus <paramref name="padding"/>, measured in the window's theme.</summary>
+        static void FixedWidth(Component c, float padding, params string[] texts)
+        {
+            var le = c.GetComponent<LayoutElement>() ?? c.gameObject.AddComponent<LayoutElement>();
+            KodeWindow.Styled(c.gameObject, th =>
+            {
+                float width = 0;
+                foreach (string t in texts) width = Mathf.Max(width, TextMeasure.Measure(t, th).x);
+                le.minWidth = le.preferredWidth = Mathf.Ceil(width + padding);
+            });
         }
 
         /// <summary>The surface targets' angle rows, smooth control and EXECUTE.</summary>
