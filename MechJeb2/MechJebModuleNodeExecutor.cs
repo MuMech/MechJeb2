@@ -155,6 +155,8 @@ namespace MuMech
 
         private void Init()
         {
+            // a node executed anew may warp again, even after the player stopped the last warp
+            Core.Warp.ClearStop();
             _direction = Vector3d.zero;
             _node = Vessel.patchedConicSolver.maneuverNodes[0];
             _nodeUT = _node.UT;
@@ -388,9 +390,16 @@ namespace MuMech
 
         private void OnEnterInitialWarp() => Core.Thrust.ThrustOff();
 
-        private void TickInitialWarp() => Core.Warp.WarpToUT(_ignitionUT - InitialWarpLeadTime);
+        private void TickInitialWarp() => Core.Warp.AutopilotWarpToUT(_ignitionUT - InitialWarpLeadTime);
 
-        private void OnEnterAligning() => Core.Thrust.ThrustOff();
+        private void OnEnterAligning()
+        {
+            Core.Thrust.ThrustOff();
+            // Auto-warp unticked while warping: stop the warp MechJeb started, once, which leaves the player free to warp by hand.
+            // The warp controller would otherwise keep warping to its stored UT
+            if (!_autowarp && Core.Warp.warpToUT > 0)
+                Core.Warp.MinimumWarp();
+        }
 
         private void TickAligning()
         {
@@ -408,7 +417,7 @@ namespace MuMech
         private void TickWarping()
         {
             SetAttitude();
-            Core.Warp.WarpToUT(_ignitionUT - LeadTime);
+            Core.Warp.AutopilotWarpToUT(_ignitionUT - LeadTime);
         }
 
         private void OnEnterLead() => Core.Thrust.ThrustOff();

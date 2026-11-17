@@ -25,6 +25,9 @@ namespace MuMech
         [ToggleInfoItem("#MechJeb_HoverslamAutoWarp", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamAutoWarp_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Hoverslam auto-warp
         public bool AutoWarp = true;
 
+        // whether the coast asked the warp controller for a warp
+        private bool _warping;
+
         [ToggleInfoItem("#MechJeb_HoverslamHoldUpright", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamHoldUpright_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Hold upright after touchdown
         public bool HoldUpright;
 
@@ -45,6 +48,8 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             Reset();
+            // engaged anew, it may warp again even after the player stopped the last warp
+            Core.Warp.ClearStop();
             Core.Thrust.Users.Add(this);
             Core.Attitude.Users.Add(this);
             if (Autostage) Core.Staging.Users.Add(this);
@@ -54,7 +59,10 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             Reset();
-            Core.Warp.MinimumWarp(true);
+            // only a warp the coast started: one the player started by hand goes on
+            if (_warping && Core.Warp.MechJebWarping)
+                Core.Warp.MinimumWarp(true);
+            _warping = false;
             Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
             Core.Attitude.Users.Remove(this);
@@ -171,9 +179,16 @@ namespace MuMech
         {
             Core.Attitude.AttitudeTo(Core.Hoverslam.IgnitionAttitude, AttitudeReference.INERTIAL_COT, this);
             if (AutoWarp)
-                Core.Warp.WarpToUT(Core.Hoverslam.IgnitionUT);
-            else if (!MuUtils.PhysicsRunning() && VesselState.Time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT)
+            {
+                Core.Warp.AutopilotWarpToUT(Core.Hoverslam.IgnitionUT);
+                _warping = true;
+            }
+            else if (_warping || (!MuUtils.PhysicsRunning() && VesselState.Time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT))
+            {
+                // Auto-warp unticked while warping ends the warp MechJeb started, as at ignition
+                _warping = false;
                 Core.Warp.MinimumWarp(true);
+            }
         }
 
         private void OnEnterBurn() => Core.Thrust.TargetThrottle = 1.0f;

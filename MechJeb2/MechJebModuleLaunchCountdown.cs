@@ -73,6 +73,9 @@ namespace MuMech
             return Start(TimeToPlane(Core.PSGSimulation.LAN));
         }
 
+        // whether the countdown asked the warp controller for a warp, so Abort (also on Disengage) and unticking Auto-warp end it
+        private bool _warping;
+
         /// <summary>
         ///     Stops the countdown and ends the launch to plane or LAN, whose flags the PSG guidance keeps flying to after T-0.
         ///     Disengaging an ascent autopilot calls it, so a countdown never outlives the launch it was started for.
@@ -81,6 +84,15 @@ namespace MuMech
         {
             Active = false;
             AscentSettings.LaunchingToPlane = AscentSettings.LaunchingToMatchLan = AscentSettings.LaunchingToLan = false;
+            StopWarping();
+        }
+
+        private void StopWarping()
+        {
+            if (!_warping)
+                return;
+            _warping = false;
+            Core.Warp.MinimumWarp();
         }
 
         /// <summary>
@@ -160,12 +172,21 @@ namespace MuMech
                     if (VesselState.ThrustAvailable < 10E-4) // only stage if we have no engines active
                         StageManager.ActivateNextStage();
                     Active = false;
+                    // the warp ended with the countdown: a later disengage must not touch the player's own warp
+                    _warping = false;
                 }
             }
             else
             {
                 if (AscentSettings.Autowarp)
-                    Core.Warp.WarpToUT(_launchTime - System.Math.Max(AscentSettings.WarpCountDown, 0)); // never past T-0
+                {
+                    Core.Warp.AutopilotWarpToUT(_launchTime - System.Math.Max(AscentSettings.WarpCountDown, 0)); // never past T-0
+                    _warping = true;
+                }
+                else
+                {
+                    StopWarping();
+                }
             }
 
             _lastTMinus = TMinus;
@@ -181,6 +202,8 @@ namespace MuMech
                 Core.PSGSimulation.FlushSolution();
 
             double launchTime = VesselState.Time + timeToLaunch;
+            // a countdown started anew may warp again, even after the player stopped the last warp
+            Core.Warp.ClearStop();
 
             if (AscentSettings.OverrideWarpToPlane)
             {

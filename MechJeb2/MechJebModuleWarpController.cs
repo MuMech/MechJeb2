@@ -33,14 +33,93 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_MJWarpControl", InfoItem.Category.Misc)] //MJ Warp Control
         public void ControlWarpButton() { }
 
+        // set while MechJeb itself changes the rate, so the rate change event can tell its changes from anyone else's
+        private bool _settingRate;
+
+        // The warp someone else stopped: the player's stop key, or a mod such as Kerbal Alarm Clock, set the rate to 1x while MechJeb
+        // was warping to this UT. The autopilots ask again every tick, so AutopilotWarpToUT raises no warp until that time has
+        // passed, the player warps by hand, or a new warp is started with ClearStop. WarpToUT, what other mods call, is such a
+        // new warp.
+        private double _stoppedUT = double.NaN;
+
+        // A rate warp (WarpRegularAtRate, WarpPhysicsAtRate: the landing, the classic ascent's coast, the rover) has no UT: someone
+        // else stopping it holds it at its rate until the autopilot stops asking, the player warps again, or ClearStop.
+        private bool _rateStopped;
+
+        // the physics ticks the warp controller has seen, and the last one an autopilot asked for a rate warp in: an autopilot that
+        // warps by rate asks every tick, so a gap of more than a tick or two means it has stopped
+        private long _tick;
+        private long _lastRateRequestTick = long.MinValue / 2;
+
+        private bool RateWarping => _tick - _lastRateRequestTick <= 2;
+
+        // the rate index the last change left, MechJeb's own included: a stop is a drop to 1x from above. KSP fires the same event
+        // when it switches the warp mode at 1x, or sets the rate it already has on unpause, and those are no stop
+        private int _lastSeenIndex;
+
+        /// <summary>True while MechJeb's autopilots hold off warping because someone else stopped its warp.</summary>
+        public bool StoppedByOther => !double.IsNaN(_stoppedUT) || (_rateStopped && RateWarping);
+
+        /// <summary>True while one of MechJeb's autopilots is warping: to a UT, or by rate in the last ticks.</summary>
+        public bool MechJebWarping => warpToUT > 0 || RateWarping;
+
+        /// <summary>Lets MechJeb warp again after someone else stopped it, for a warp the player starts anew.</summary>
+        public void ClearStop()
+        {
+            _stoppedUT   = double.NaN;
+            _rateStopped = false;
+        }
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            GameEvents.onTimeWarpRateChanged.Add(OnTimeWarpRateChanged);
+            base.OnStart(state);
+        }
+
+        public override void OnDestroy()
+        {
+            GameEvents.onTimeWarpRateChanged.Remove(OnTimeWarpRateChanged);
+            base.OnDestroy();
+        }
+
+        // KSP fires this from inside TimeWarp.SetRate, so MechJeb's own changes are the ones made while _settingRate is set
+        private void OnTimeWarpRateChanged()
+        {
+            int index = TimeWarp.CurrentRateIndex;
+            int last  = _lastSeenIndex;
+            _lastSeenIndex = index;
+
+            if (_settingRate || index == last)
+                return;
+
+            if (index == 0)
+            {
+                if (warpToUT > 0)
+                {
+                    _stoppedUT = warpToUT;
+                    warpToUT   = 0.0;
+                }
+
+                if (RateWarping)
+                    _rateStopped = true;
+            }
+            else if (index > last)
+            {
+                // the player warps again: MechJeb manages the warp again
+                ClearStop();
+            }
+        }
+
         public override void OnFixedUpdate()
         {
+            _tick++;
+
             // a warp stopped by the player, or by KSP, ends at 1x too: SAS goes back to the player's setting
             if (_sasBeforeWarp != null && TimeWarp.CurrentRateIndex == 0)
                 RestoreSAS();
 
             if (warpToUT > 0)
-                WarpToUT(warpToUT);
+                AutopilotWarpToUT(warpToUT);
         }
 
         internal void PauseWarp()
@@ -90,7 +169,9 @@ namespace MuMech
                         Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
                     }
 
-                    TimeWarp.SetRate(rateIndex, instant);
+                    _settingRate = true;
+                    try { TimeWarp.SetRate(rateIndex, instant); }
+                    finally { _settingRate = false; }
 
                     // back at 1x, or KSP refused the rate
                     if (TimeWarp.CurrentRateIndex == 0)
@@ -99,13 +180,35 @@ namespace MuMech
             }
         }
 
+        /// <summary>
+        ///     Warps to that UT, as a new request: it warps even after someone else stopped MechJeb's last warp. For other mods (kOS's
+        ///     WARPTOUT, RasterPropMonitor's warp buttons), which call it once for each warp the player asks for. The warp then goes on
+        ///     by itself until that UT, or until someone else stops it. MechJeb's autopilots, which ask every tick, call
+        ///     <see cref="AutopilotWarpToUT" /> instead.
+        /// </summary>
         public void WarpToUT(double UT, double maxRate = -1)
+        {
+            ClearStop();
+            AutopilotWarpToUT(UT, maxRate);
+        }
+
+        /// <summary>
+        ///     Warps to that UT for an autopilot that asks every tick. After someone else stopped the warp (the player, or a mod such as
+        ///     Kerbal Alarm Clock), it raises no warp until the stopped warp's UT has passed, the player warps by hand, or
+        ///     <see cref="ClearStop" /> is called for a new warp.
+        /// </summary>
+        public void AutopilotWarpToUT(double UT, double maxRate = -1)
         {
             if (UT <= VesselState.Time)
             {
                 warpToUT = 0.0;
                 return;
             }
+
+            // a UT warp someone else stopped holds until its UT (with no stop, _stoppedUT is NaN and this never returns)
+            if (VesselState.Time < _stoppedUT)
+                return;
+            _stoppedUT = double.NaN;
 
             if (maxRate < 0)
                 maxRate = TimeWarp.fetch.warpRates[TimeWarp.fetch.warpRates.Length - 1];
@@ -141,18 +244,32 @@ namespace MuMech
                 VesselState.AltitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, MainBody))
             {
                 //too low to use any regular warp rates. Use physics warp at a max of x2:
-                WarpPhysicsAtRate((float)Math.Min(desiredRate, 2));
+                PhysicsAtRate((float)Math.Min(desiredRate, 2), false, true);
             }
             else
             {
-                WarpRegularAtRate((float)desiredRate, useQuickWarp, useQuickWarp);
+                RegularAtRate((float)desiredRate, useQuickWarp, useQuickWarp);
             }
 
             warpToUT = UT;
         }
 
-        //warp at the highest regular warp rate that is <= maxRate
+        // an autopilot asks for a rate warp: after a gap it is a new warp, which a stop of the last one no longer holds
+        private void NoteRateRequest()
+        {
+            if (!RateWarping)
+                _rateStopped = false;
+            _lastRateRequestTick = _tick;
+        }
+
+        //warp at the highest regular warp rate that is <= maxRate. After someone else stopped it, it only lowers the warp.
         public void WarpRegularAtRate(float maxRate, bool instantOnIncrease = false, bool instantOnDecrease = true)
+        {
+            NoteRateRequest();
+            RegularAtRate(maxRate, instantOnIncrease, instantOnDecrease, _rateStopped);
+        }
+
+        private void RegularAtRate(float maxRate, bool instantOnIncrease, bool instantOnDecrease, bool noIncrease = false)
         {
             if (!CheckRegularWarp()) return;
 
@@ -160,15 +277,21 @@ namespace MuMech
             {
                 DecreaseRegularWarp(instantOnDecrease);
             }
-            else if (TimeWarp.CurrentRateIndex + 1 < TimeWarp.fetch.warpRates.Length &&
+            else if (!noIncrease && TimeWarp.CurrentRateIndex + 1 < TimeWarp.fetch.warpRates.Length &&
                      TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
             {
                 IncreaseRegularWarp(instantOnIncrease);
             }
         }
 
-        //warp at the highest regular warp rate that is <= maxRate
+        //warp at the highest physics warp rate that is <= maxRate. After someone else stopped it, it only lowers the warp.
         public void WarpPhysicsAtRate(float maxRate, bool instantOnIncrease = false, bool instantOnDecrease = true)
+        {
+            NoteRateRequest();
+            PhysicsAtRate(maxRate, instantOnIncrease, instantOnDecrease, _rateStopped);
+        }
+
+        private void PhysicsAtRate(float maxRate, bool instantOnIncrease, bool instantOnDecrease, bool noIncrease = false)
         {
             if (!CheckPhysicsWarp()) return;
 
@@ -176,7 +299,7 @@ namespace MuMech
             {
                 DecreasePhysicsWarp(instantOnDecrease);
             }
-            else if (TimeWarp.CurrentRateIndex + 1 < TimeWarp.fetch.physicsWarpRates.Length &&
+            else if (!noIncrease && TimeWarp.CurrentRateIndex + 1 < TimeWarp.fetch.physicsWarpRates.Length &&
                      TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
             {
                 IncreasePhysicsWarp(instantOnIncrease);
