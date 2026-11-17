@@ -48,7 +48,6 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             Reset();
-            _warping = false;
             // engaged anew, it may warp again even after the player stopped the last warp
             Core.Warp.ClearStop();
             Core.Thrust.Users.Add(this);

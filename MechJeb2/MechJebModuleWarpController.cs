@@ -205,12 +205,10 @@ namespace MuMech
                 return;
             }
 
-            if (StoppedByOther)
-            {
-                if (VesselState.Time < _stoppedUT)
-                    return;
-                _stoppedUT = double.NaN;
-            }
+            // a UT warp someone else stopped holds until its UT (with no stop, _stoppedUT is NaN and this never returns)
+            if (VesselState.Time < _stoppedUT)
+                return;
+            _stoppedUT = double.NaN;
 
             if (maxRate < 0)
                 maxRate = TimeWarp.fetch.warpRates[TimeWarp.fetch.warpRates.Length - 1];

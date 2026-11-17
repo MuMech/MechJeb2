@@ -202,7 +202,6 @@ namespace MuMech
                 Core.PSGSimulation.FlushSolution();
 
             double launchTime = VesselState.Time + timeToLaunch;
-            _warping = false;
             // a countdown started anew may warp again, even after the player stopped the last warp
             Core.Warp.ClearStop();
 
