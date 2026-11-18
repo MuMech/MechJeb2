@@ -1210,16 +1210,19 @@ namespace MechJebLib.PSG
         // then to the vessel after liftoff until the first Solution computed in flight replaces it (which is never turned).
         private void MaybeRotateLaunchSite() => Solution?.RotateToLaunchSite(_in.R);
 
-        // Updates Tgo/Vgo/CurrentPhaseTgo/Pitch/Heading -- "display" only and could be moved
+        // Updates Tgo/Vgo/CurrentPhaseTgo/Pitch/Heading -- "display" only and could be moved.  It runs after UpdateState, so the
+        // tick that ends the ascent is already FINISHED here: the values stay those of the last guided tick, not the Solution
+        // read past its end (the RCS trim runs past it), which the UI and kOS would go on showing after the autopilot disengages.
         private void UpdateDisplayVariables()
         {
-            if (Solution == null)
+            if (Solution == null || IsFinished)
                 return;
 
             // the Solution's clock is MET, which stays at zero until liftoff, so on the ground this flies its first point
             int p = CurrentPhase(IsCoasting);
 
-            if (_state != PSGState.TERMINAL_RCS) // don't update vgo/tgo if we're in RCS
+            // frozen from the engine cut on: the RCS trim runs past the end of the Solution
+            if (_state != PSGState.TERMINAL_RCS)
             {
                 Tgo = Solution.Tgo(_in.Met);
                 Vgo = Solution.Vgo(_in.Met);

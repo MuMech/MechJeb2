@@ -206,6 +206,34 @@ namespace MechJebLibTest.PSGTests
         }
 
         [Fact]
+        public void TgoAndVgoStayFrozenAsTheTrimEnds()
+        {
+            AscentFlight flight = OneStage();
+            flight.RcsThrust = 1;
+            flight.RCSGroup = true;
+            // a slow trim, which ends well past the end of the Solution
+            flight.RcsTrajectoryRate = 0.1;
+            Solution solution = Solve(flight.Plan(), MET0, Cut(60));
+            flight.Engage(solution);
+
+            // frozen at the engine cut
+            Assert.True(flight.RunUntil(PSGState.TERMINAL_RCS));
+            double tgo = flight.Machine.Tgo;
+            double vgo = flight.Machine.Vgo;
+            double phaseTgo = flight.Machine.CurrentPhaseTgo;
+
+            flight.Fly();
+
+            Assert.True(flight.In(PSGState.TERMINAL_RCS).Count() > 1);
+            Assert.True(flight.EnteredAt(PSGState.FINISHED) > solution.Tf);
+            // the tick the trim ends doesn't read the Solution past its end
+            Assert.Equal(tgo, flight.Machine.Tgo);
+            Assert.Equal(vgo, flight.Machine.Vgo);
+            Assert.Equal(phaseTgo, flight.Machine.CurrentPhaseTgo);
+            Assert.True(flight.Machine.Tgo >= 0);
+        }
+
+        [Fact]
         public void RcsGroupOffSkipsTheTrim()
         {
             AscentFlight flight = OneStage();
