@@ -20,7 +20,7 @@ namespace MuMech.MechJebKos
     // NOTE: the PSG unguided/fixed stage *lists* (EditableIntList) are not yet exposed -- they need a
     // kOS list wrapper. The scalar coast/spinup stage settings are here.
     [KOSNomenclature("MechJebAscentPSG")]
-    public class AscentPSGBinding : AscentBindingBase<MechJebModuleAscentPSGAutopilot>
+    public class AscentPSGBinding : AscentBindingBase<MechJebModulePSGAutopilot>
     {
         private const double DEG2RAD = Math.PI / 180.0;
         private const double RAD2DEG = 180.0 / Math.PI;
@@ -90,17 +90,19 @@ namespace MuMech.MechJebKos
             // is a solution drops the rocket on the pad, so a launch script that stages itself should wait on HASSOLUTION
             // (e.g. "WAIT UNTIL ADDONS:MECHJEB:ASCENT:PSG:HASSOLUTION") before releasing the clamps. Starting a timed launch
             // clears the solution until the optimizer solves again, and MechJeb holds its own T-0 staging until then.
-            AddSuffix("HASSOLUTION", new Suffix<BooleanValue>(() => Core.Guidance.Solution != null,
+            AddSuffix("HASSOLUTION", new Suffix<BooleanValue>(() => Core.PSGAutopilot.Solution != null,
                 "True once the optimizer has produced a guidance solution; starting a timed launch clears it until the optimizer solves again. Wait on this before staging to launch manually (a timed launch holds its own staging until there is one)."));
-            AddSuffix("GUIDANCESTATUS", new Suffix<StringValue>(() => Core.Guidance.Status.ToString(),
-                "PSG guidance controller status (ENABLED, INITIALIZED, BURNING, COASTING, TERMINAL, ...)."));
-            AddSuffix("VGO", new Suffix<ScalarValue>(() => Core.Guidance.Vgo,
+            AddSuffix("GUIDANCESTATUS", new Suffix<StringValue>(() => Core.PSGAutopilot.GuidanceStatus,
+                "PSG guidance status: ENABLED (no solution yet), INITIALIZED (the countdown holds the throttle), BURNING (from ignition on the pad), COASTING, TERMINAL_STAGING (staging off a cut stage), TERMINAL, TERMINAL_RCS or FINISHED. STATE gives the autopilot's own states."));
+            AddSuffix("STATE", new Suffix<StringValue>(() => Core.PSGAutopilot.State.ToString(),
+                "PSG ascent autopilot state: PRELAUNCH, VERTICAL_ASCENT, PITCH_PROGRAM, BURNING, JETTISON, COASTING, TERMINAL, TERMINAL_RCS or FINISHED (use HASSOLUTION to wait for a solution)."));
+            AddSuffix("VGO", new Suffix<ScalarValue>(() => Core.PSGAutopilot.Vgo,
                 "Velocity-to-go of the current guidance solution in m/s."));
-            AddSuffix("TGO", new Suffix<ScalarValue>(() => Core.Guidance.Tgo,
+            AddSuffix("TGO", new Suffix<ScalarValue>(() => Core.PSGAutopilot.Tgo,
                 "Time-to-go (until the end of the burn) of the current guidance solution in seconds."));
-            AddSuffix("HEADING", new Suffix<ScalarValue>(() => Core.Guidance.Heading,
+            AddSuffix("HEADING", new Suffix<ScalarValue>(() => Core.PSGAutopilot.Heading,
                 "Guidance-commanded heading in degrees."));
-            AddSuffix("PITCH", new Suffix<ScalarValue>(() => Core.Guidance.Pitch,
+            AddSuffix("PITCH", new Suffix<ScalarValue>(() => Core.PSGAutopilot.Pitch,
                 "Guidance-commanded pitch in degrees."));
             AddSuffix("INFEASIBILITY", new Suffix<ScalarValue>(() => Core.PSGSimulation.LastInfeasibility,
                 "Infeasibility (constraint residual norm) of the last optimizer run; near zero is converged."));

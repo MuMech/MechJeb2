@@ -47,7 +47,7 @@ namespace MuMech.UI
         {
             (StageType kind, int stage) = core.PSGSimulation.PlannedCoast();
             // once the coast is over, its relight is behind: an engine with no ignitions left in the burn after it is fine
-            if (kind != StageType.COAST_DURING || stage < 0 || core.Guidance.hasCoasted)
+            if (kind != StageType.COAST_DURING || stage < 0 || core.PSGAutopilot.HasCoasted)
                 return false;
 
             System.Collections.Generic.List<Part> parts = core.vessel != null ? core.vessel.parts : EditorLogic.fetch?.ship?.parts;

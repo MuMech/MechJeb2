@@ -137,7 +137,7 @@ namespace MuMech.UI
                 () => PsgAttention.CoastTimesInverted(core));
             w.Attention(Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgMaxCoast", psgs.MaxCoast, "s", 50), "#MechJeb_NewUI_PsgCoast_tooltip"), //Max coast
                 () => PsgAttention.CoastTimesInverted(core));
-            Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgUllageLead", core.Guidance.UllageLeadTime, "s", 50), "#MechJeb_NewUI_PsgUllageLead_tooltip"); //Ullage lead time
+            Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgUllageLead", core.PSGAutopilot.UllageLeadTime, "s", 50), "#MechJeb_NewUI_PsgUllageLead_tooltip"); //Ullage lead time
             Tip(OptionRows.Field(g, "ω", core.AscentSettings.SpinupAngularVelocity, "rpm", 50), "#MechJeb_NewUI_PsgSpin_tooltip");
             UIText relight = g.Note(RelightNote);
             KodeWindow.ToneText(relight, Tone.Caution);

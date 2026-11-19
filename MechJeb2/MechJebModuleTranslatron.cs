@@ -90,7 +90,7 @@ namespace MuMech
             Stop(Core.GetComputerModule<MechJebModuleRendezvousAutopilot>());
             Stop(Core.GetComputerModule<MechJebModuleDockingAutopilot>());
             Stop(Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>());
-            Stop(Core.GetComputerModule<MechJebModuleAscentPSGAutopilot>());
+            Stop(Core.GetComputerModule<MechJebModulePSGAutopilot>());
             Stop(Core.GetComputerModule<MechJebModuleHoverslamAutopilot>());
             Stop(Core.Spinup);
 

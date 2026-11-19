@@ -192,11 +192,11 @@ namespace MuMech
             // the guidance rows are only shown for a PSG ascent, so the classic one builds no strings for them
             if (_ascentSettings.AscentType == AscentType.PSG)
             {
-                vgo = $"vgo: {Core.Guidance.Vgo:F1}";
-                heading = $"heading: {Core.Guidance.Heading:F1}";
-                tgo = $"tgo: {Core.Guidance.Tgo:F3}";
-                pitch = $"pitch: {Core.Guidance.Pitch:F1}";
-                label26 = $"{CachedLocalizer.Instance.MechJebAscentLabel26}{Core.Guidance.Status}";
+                vgo = $"vgo: {Core.PSGAutopilot.Vgo:F1}";
+                heading = $"heading: {Core.PSGAutopilot.Heading:F1}";
+                tgo = $"tgo: {Core.PSGAutopilot.Tgo:F3}";
+                pitch = $"pitch: {Core.PSGAutopilot.Pitch:F1}";
+                label26 = $"{CachedLocalizer.Instance.MechJebAscentLabel26}{Core.PSGAutopilot.State}";
                 label27 = $"{CachedLocalizer.Instance.MechJebAscentLabel27}{Core.PSGSimulation.SuccessfulConverges}";
                 label28 = $"{CachedLocalizer.Instance.MechJebAscentLabel28}{Core.PSGSimulation.LastLmStatus}";
                 n = $"n: {Core.PSGSimulation.LastLmIterations}({Core.PSGSimulation.MaxLmIterations})";
@@ -206,9 +206,9 @@ namespace MuMech
                     label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.PSGSimulation.LastFailureMessage}{UnreachableCause()}";
                 // the optimizer only runs while the autopilot (or kOS) uses it: no line before the autopilot is engaged
                 optimizerState = Core.PSGSimulation.Enabled
-                    ? Core.Guidance.Solution == null && Core.PSGSimulation.ProgressDetail != null
+                    ? Core.PSGAutopilot.Solution == null && Core.PSGSimulation.ProgressDetail != null
                         ? "Optimizer: " + Core.PSGSimulation.ProgressDetail
-                        : PSGFeedback.OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.Guidance.Solution == null, Core.Guidance.IsCoasting(),
+                        : PSGFeedback.OptimizerStateText(Core.PSGSimulation.State, Core.PSGSimulation.StateSeconds, Core.PSGAutopilot.Solution == null, Core.PSGAutopilot.IsCoasting,
                             Core.PSGSimulation.LastFailureMessage != null ? Core.PSGSimulation.Staleness : 0)
                     : null;
                 // the figures belong to the last solve: kept in flight after the ascent ended (they say why), but not on the pad with the
@@ -249,9 +249,9 @@ namespace MuMech
         private void UpdatePhaseLines()
         {
             PhaseLineCount = 0;
-            if (_ascentSettings.AscentType != AscentType.PSG || Core.Guidance.Solution == null) return;
+            if (_ascentSettings.AscentType != AscentType.PSG || Core.PSGAutopilot.Solution == null) return;
 
-            Solution solution = Core.Guidance.Solution;
+            Solution solution = Core.PSGAutopilot.Solution;
             string[] terminal = solution.TerminalLines();
             for (int psgPhase = solution.Segments - 1; psgPhase >= 0 && PhaseLineCount < MAX_PHASE_LINES - terminal.Length; psgPhase--)
                 PhaseLines[PhaseLineCount++] = PhaseString(solution, VesselState.MET, psgPhase);

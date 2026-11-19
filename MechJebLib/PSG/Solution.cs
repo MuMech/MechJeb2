@@ -18,8 +18,10 @@ namespace MechJebLib.PSG
     // give each thread its own DeepCopy().
     //
     // FlightPlan is the snapshot of the plan this solution was built from (see AscentBuilder.FlightPlan), not the caller's
-    // live plan, and nothing may change it.  Each phase's FlightPlanIndex indexes its Stages, and since the stage list is
-    // frozen in flight the same index finds the stage in the live plan too.
+    // live plan.  Each phase's FlightPlanIndex indexes its Stages, and since the stage list is frozen in flight the same index
+    // finds the stage in the live plan too.  The solver's own copy never changes it; the DeNormalized() copy guidance flies
+    // has its own FlightPlan, which guidance reconciles in place with the stage stats (FlightPlan.ReconcileStages) to follow
+    // which of its stages are gone.
     //
     // A Solution stays in one system of units for its whole life, and every accessor takes and returns that system's units.
     // SolutionBuilder and AscentGuesser build it Normalized, in the units of its Problem's Scale, which the optimizer and its
@@ -303,46 +305,7 @@ namespace MechJebLib.PSG
             return _tmax[n] - _tmin[n];
         }
 
-        // The burn time left in a KSP stage, summed over all of its burn phases.  This does not start from the phase the clock
-        // is in: a vessel can stage ahead of the clock (a fixed booster burning out before its predicted end), and starting
-        // from the booster phase would find no phases for the new stage and return zero.  Tgo gives zero for phases in the
-        // past, so a stage burned past its predicted end (residuals) still returns zero.
-        public double TgoForKSPStage(double t, int kspStage)
-        {
-            double sum = 0;
-            for (int i = 0; i < Phases.Count; i++)
-            {
-                if (Phases[i].Coast || Phases[i].KSPStage != kspStage)
-                    continue;
-                sum += Tgo(t, i);
-            }
-
-            return sum;
-        }
-
         public double Vgo(double t) => DV(Tf) - DV(t);
-
-        public bool Coast(double t) => Phases[IndexFor(t)].Coast;
-
-        // Specialized API to determine if we still have the coast in our future or not
-        // (or if we're in a coast right now)
-        public bool WillCoast(double t)
-        {
-            for (int i = IndexFor(t); i < Phases.Count; i++)
-                if (Phases[i].Coast)
-                    return true;
-
-            return false;
-        }
-
-        // true if we're in a coast, or the phase after the current one is a coast.  Unlike WillCoast this is false for a burn
-        // which is followed by other burns before the coast.
-        public bool CoastFollows(double t)
-        {
-            int idx = IndexFor(t);
-
-            return Phases[idx].Coast || (idx + 1 < Phases.Count && Phases[idx + 1].Coast);
-        }
 
         public int CoastKSPStage()
         {
@@ -357,14 +320,18 @@ namespace MechJebLib.PSG
 
         public int TerminalMJPhase() => Phases[TerminalIndex()].MJPhase;
 
-        // SolutionBuilder.AnalyzeStages always flags a terminal stage, so a Solution without one is a bug
-        // (AscentGuesser solutions skip AnalyzeStages and must not be asked)
-        private int TerminalIndex()
+        // The phase that ends the ascent: the phases after it are pruned stages the optimizer gives no burn time, which are
+        // never flown.  SolutionBuilder.AnalyzeStages always flags a terminal stage, so a Solution without one is a bug
+        // (AscentGuesser solutions skip AnalyzeStages and must not be asked).
+        public int TerminalIndex()
         {
             int idx = Phases.FindIndex(p => p.TerminalStage);
             Check.True(idx >= 0, "Solution has no terminal stage");
             return idx;
         }
+
+        // the phase of the coast, or -1 without one (a Solution has at most one)
+        public int CoastIndex() => Phases.FindIndex(p => p.Coast);
 
         // -1 if no stage needs a precise shutdown (e.g. all fixed burn time stages with no coast)
         public int OptimizeKSPStage()
@@ -393,17 +360,22 @@ namespace MechJebLib.PSG
         // the stage of this solution's FlightPlan snapshot that the phase was built from, null without a FlightPlan
         public FlightPlanStage? FlightPlanStage(int phase) => FlightPlan?.Stages[Phases[phase].FlightPlanIndex];
 
-        // the time left until the end of the phase the clock is in
-        public double StageTimeLeft(double t) => _tmax[IndexFor(t)] - t;
-
-        // engineMinThrottle is the fraction of available thrust the engines currently produce at zero KSP throttle
-        public (V3, double) InertialGuidance(double t, double engineMinThrottle)
+        /// <summary>
+        ///     The thrust direction and KSP throttle of phase p, on its own interpolant at t clamped to the phase.  Guidance flies
+        ///     the phase the vessel is in, which residuals put ahead of or behind the clock: a stage burning past its predicted end
+        ///     holds the end of its phase, and one that burned out early starts the next phase from its start.
+        /// </summary>
+        /// <param name="phase">The phase the vessel is flying</param>
+        /// <param name="t">The current MET</param>
+        /// <param name="engineMinThrottle">The fraction of available thrust the engines currently produce at zero KSP throttle</param>
+        public (V3, double) InertialGuidance(int phase, double t, double engineMinThrottle)
         {
-            using Vec xRaw = Interpolate(t);
+            t = Clamp(t, _tmin[phase], _tmax[phase]);
+
+            using Vec xRaw = Interpolate(phase, t);
             var x = InterpolantLayout.CreateFrom(xRaw);
             V3 u0 = (_rotation * x.U).normalized;
 
-            int phase = IndexFor(t);
             // don't command less than the optimizer's throttle floor if the interpolant dips between collocation points
             double thrustPct = Clamp(x.T, Phases[phase].MinThrottle, 1.0);
             double kspThrottle = engineMinThrottle < 1.0 ? (thrustPct - engineMinThrottle) / (1.0 - engineMinThrottle) : 1.0;
@@ -477,66 +449,6 @@ namespace MechJebLib.PSG
         private Vec Interpolate(double t) => _interpolants[IndexFor(t)].Evaluate(t);
 
         private Vec Interpolate(int segment, double t) => _interpolants[segment].Evaluate(t);
-
-        /// <summary>
-        ///     This handles the precise termination of a burn segment.  Our trajectory only supports one
-        ///     coast in a multiburnphase-coast-multiburnphase layout.  The multiburn phase may be a combination
-        ///     of fixed burntime and precise burning stages.
-        ///     We need to support:
-        ///     - precise shutdown at the termination of the ascent
-        ///     - precise shutdown before a coast
-        ///     - precise shutdown before fixed burntime upper stages
-        ///     - some timing fuzz (particularly when we got over Tf or burn slightly into the coast segment)
-        ///     - staging during the 10-second terminal phase
-        ///     So based on the time:
-        ///     - if we're over Tf, just return the terminal conditions at the end of the trajectory
-        ///     - if we're in a coast phase, back up to find the burn phase
-        ///     - if we're in a fixed phase, back up to find the previous allow shutdown phase
-        ///     - if we're in an allow shutdown phase, and the next phase is also allow shutdown (and not a coast), go forward
-        ///     The result should be the right trajectory segment+phase to check the terminal conditions against.
-        /// </summary>
-        /// <param name="pos">Current BCI position</param>
-        /// <param name="vel">Current BCI velocity</param>
-        /// <param name="t">Current MET</param>
-        /// <param name="kspStage">The vessel's current KSP stage, which the checked phase must not come before</param>
-        /// <returns></returns>
-        public bool TerminalGuidanceSatisfied(V3 pos, V3 vel, double t, int kspStage)
-        {
-            /*
-             NOTE: This algorithm suggests that there's a higher level abstraction above a phase/physical rocket stage which fuses
-             Phases into Multi-Phase segments based on them being adjacent and either all AllowShutdown or not (or I guess
-             adjacent coasts, but I expect the optimizer to remove those as adjacent coasts are trivially fuse-able).
-
-             XXX: This tests for the angular momentum exceeding the target, so it is only applicable for orbit raising / ascents.
-            */
-            var hf = V3.Cross(pos, vel);
-
-            (V3 rT, V3 vT) = StateVectors(Tf);
-
-            if (t < Tf)
-            {
-                // the vessel may have staged ahead of the clock (a fixed booster burning out before its predicted end), so
-                // never check against a phase before the current KSP stage, such as the end of that booster
-                int first = Max(IndexForKSPStage(kspStage, false), 0);
-                int idx = Max(IndexFor(t), first);
-                // back up to find an AllowShutdown stage if we've gone past the terminal time and
-                // hit a coast or a fixed burn time stage (the first phase may be a coast in a solution
-                // computed during the coast, so don't walk off the front)
-                while (idx > first && (!Phases[idx].AllowShutdown || Phases[idx].Coast))
-                    idx--;
-                // go forward to the end of this multi-stage burn segment until we hit a coast or fixed stages
-                while (idx < Segments - 1 && Phases[idx].AllowShutdown && Phases[idx + 1].AllowShutdown && !Phases[idx + 1].Coast)
-                    idx++;
-                (rT, vT) = StateVectors(_tmax[idx]);
-            }
-
-            var hT = V3.Cross(rT, vT);
-
-            if (hf.magnitude > hT.magnitude)
-                Print($"Terminal conditions met -- hf: {hf.magnitude} hT: {hT.magnitude}");
-
-            return hf.magnitude > hT.magnitude;
-        }
 
         public void Dispose()
         {

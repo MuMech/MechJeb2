@@ -234,9 +234,10 @@ namespace MechJebLibTest.PSGTests
         }
 
         // A fixed booster can burn out a little before the frozen solution predicts, so the vessel is in the upper stage while
-        // the clock is still in the booster phase.  Guidance must then see the whole upper stage burn ahead of it, and must not
-        // compare against the end of the booster (hotstaging puts the vessel ahead of that state, which used to end the ascent
-        // and kill the throttle at separation).
+        // the clock is still in the booster phase.  Guidance tracks the vessel into the upper stage's phase by its engines, and
+        // must then see that phase's whole burn ahead of it (terminal guidance waits for its end, not the booster's: hotstaging
+        // puts the vessel ahead of the booster end state, which used to end the ascent and kill the throttle at separation), and
+        // steer the start of that phase.
         [Fact]
         public void StagingAheadOfTheClock()
         {
@@ -263,27 +264,25 @@ namespace MechJebLibTest.PSGTests
             solution.OptimizeKSPStage().ShouldEqual(2);
             solution.TerminalKSPStage().ShouldEqual(2);
 
+            // terminal guidance flies the upper stage: the last phase, with a precise shutdown; the fixed booster burns out
+            solution.TerminalIndex().ShouldEqual(1);
+            solution.Phases[1].PreciseShutdown.ShouldBeTrue();
+            solution.Phases[0].PropellantLeft.ShouldBeFalse();
+
             double boosterEnd = solution.EndTime(0);
             double upperBurn  = solution.EndTime(1) - solution.StartTime(1);
 
             // the clock is still in the booster phase, but the upper stage burn is all ahead of us
-            solution.TgoForKSPStage(boosterEnd - 0.1, 2).ShouldEqual(upperBurn, 1e-9);
-            solution.TgoForKSPStage(boosterEnd + 0.1, 2).ShouldEqual(upperBurn - 0.1, 1e-9);
-            solution.TgoForKSPStage(boosterEnd - 0.1, 4).ShouldEqual(0.1, 1e-9);
+            solution.Tgo(boosterEnd - 0.1, 1).ShouldEqual(upperBurn, 1e-9);
+            solution.Tgo(boosterEnd + 0.1, 1).ShouldEqual(upperBurn - 0.1, 1e-9);
+            solution.Tgo(boosterEnd - 0.1, 0).ShouldEqual(0.1, 1e-9);
             // burned past the end of the booster
-            solution.TgoForKSPStage(boosterEnd + 0.1, 4).ShouldBeZero();
+            solution.Tgo(boosterEnd + 0.1, 0).ShouldBeZero();
 
-            // ahead of the booster end state after hotstaging, but nowhere near the end of the upper stage
-            double t = boosterEnd - 0.3;
-            (V3 r, V3 v) = solution.StateVectors(t);
-            solution.TerminalGuidanceSatisfied(r, v + 20 * v.normalized, t, 2).ShouldBeFalse();
-
-            // a genuine cutoff at the end of the upper stage still fires
-            double tf = solution.Tf;
-            (V3 rf, V3 vf) = solution.StateVectors(tf);
-            solution.TerminalGuidanceSatisfied(rf, vf + vf.normalized, tf - 0.1, 2).ShouldBeTrue();
-            (V3 rEarly, V3 vEarly) = solution.StateVectors(tf - 5);
-            solution.TerminalGuidanceSatisfied(rEarly, vEarly, tf - 5, 2).ShouldBeFalse();
+            // the upper stage steers from the start of its phase
+            (V3 u, _)      = solution.InertialGuidance(1, boosterEnd - 0.1, 0);
+            (V3 uStart, _) = solution.InertialGuidance(1, solution.StartTime(1), 0);
+            u.ShouldEqual(uStart, 1e-12);
         }
 
         // The clock is MET, and a solve started in flight starts at the MET of its initial state.  The optimizer doesn't depend
@@ -381,10 +380,13 @@ namespace MechJebLibTest.PSGTests
                 r.ShouldEqual(turned.R(t), 0);
                 v.ShouldEqual(turned.V(t), 0);
 
-                (V3 u, double throttle) = turned.InertialGuidance(t, 0.25);
-                (V3 u0, double throttle0) = solution.InertialGuidance(t, 0.25);
-                u.ShouldEqual(turn * u0, 1e-12);
-                throttle.ShouldEqual(throttle0, 0);
+                for (int p = 0; p < turned.Segments; p++)
+                {
+                    (V3 u, double throttle) = turned.InertialGuidance(p, t, 0.25);
+                    (V3 u0, double throttle0) = solution.InertialGuidance(p, t, 0.25);
+                    u.ShouldEqual(turn * u0, 1e-12);
+                    throttle.ShouldEqual(throttle0, 0);
+                }
 
                 turned.M(t).ShouldEqual(solution.M(t), 0);
                 turned.DV(t).ShouldEqual(solution.DV(t), 0);
@@ -526,20 +528,20 @@ namespace MechJebLibTest.PSGTests
          * trajectories start in flight at MET 4096 s (normalized 32), so the segments' tbar is the normalized time since then.
          */
 
-        private const double LENGTH_SCALE   = 1 << 20;
-        private const double VELOCITY_SCALE = 1 << 13;
-        private const double MASS_SCALE     = 1 << 10;
-        private const double TIME_SCALE     = LENGTH_SCALE / VELOCITY_SCALE;
-        private const double T0             = 4096;
-        private const double TBAR0          = T0 / TIME_SCALE;
+        internal const double LENGTH_SCALE   = 1 << 20;
+        internal const double VELOCITY_SCALE = 1 << 13;
+        internal const double MASS_SCALE     = 1 << 10;
+        internal const double TIME_SCALE     = LENGTH_SCALE / VELOCITY_SCALE;
+        internal const double T0             = 4096;
+        internal const double TBAR0          = T0 / TIME_SCALE;
         private const double MU             = 4e14;
         private const double RBODY          = 6e6;
 
         private static readonly Scale _scale = new Scale(LENGTH_SCALE, VELOCITY_SCALE, MASS_SCALE);
 
-        private static readonly V3 _xHat = new V3(1, 0, 0);
-        private static readonly V3 _yHat = new V3(0, 1, 0);
-        private static readonly V3 _zHat = new V3(0, 0, 1);
+        internal static readonly V3 _xHat = new V3(1, 0, 0);
+        internal static readonly V3 _yHat = new V3(0, 1, 0);
+        internal static readonly V3 _zHat = new V3(0, 0, 1);
 
         // the normalized time since the start of the trajectory, for the MET t
         private static double Tbar(double t) => (t - T0) / TIME_SCALE;
@@ -551,11 +553,11 @@ namespace MechJebLibTest.PSGTests
         private static V3 RBarAt(double tbar) => new V3(1, tbar / 8, 0);
         private static V3 VBarAt(double tbar) => new V3(0, 1 + tbar / 4, 0);
 
-        private static V3 ExpectedR(double t) => RBarAt(Tbar(t)) * LENGTH_SCALE;
-        private static V3 ExpectedV(double t) => VBarAt(Tbar(t)) * VELOCITY_SCALE;
+        internal static V3 ExpectedR(double t) => RBarAt(Tbar(t)) * LENGTH_SCALE;
+        internal static V3 ExpectedV(double t) => VBarAt(Tbar(t)) * VELOCITY_SCALE;
 
         // a normalized burn phase for a stage that burns from m0 to mf (kg) in bt seconds at full throttle
-        private static Phase NewBurn(int kspStage, int mjPhase, double m0, double mf, double isp, double bt, bool allowShutdown = true,
+        internal static Phase NewBurn(int kspStage, int mjPhase, double m0, double mf, double isp, double bt, bool allowShutdown = true,
             bool unguided = false, double minThrottle = 1.0)
         {
             using var phase = Phase.NewStage(m0, mf, Astro.ThrustFromMassesIspBurntime(m0, mf, isp, bt), isp, kspStage, mjPhase,
@@ -563,13 +565,13 @@ namespace MechJebLibTest.PSGTests
             return phase.Rescale(_scale);
         }
 
-        private static Phase NewCoast(int kspStage, int mjPhase, double m)
+        internal static Phase NewCoast(int kspStage, int mjPhase, double m)
         {
             using var phase = Phase.NewCoast(m, m, 0, 1000, kspStage, mjPhase);
             return phase.Rescale(_scale);
         }
 
-        private readonly struct Seg
+        internal readonly struct Seg
         {
             public readonly Phase             Phase;
             public readonly double            Tbar0;
@@ -599,19 +601,24 @@ namespace MechJebLibTest.PSGTests
         }
 
         // the SI copy of the normalized solution
-        private static Solution Build(params Seg[] segs)
+        private static Solution Build(params Seg[] segs) => Build(null, segs);
+
+        // the SI copy of the normalized solution, built from the flight plan (the phases' FlightPlanIndex index its stages)
+        internal static Solution Build(FlightPlan? plan, params Seg[] segs)
         {
-            using Solution normalized = BuildNormalized(segs);
+            using Solution normalized = BuildNormalized(plan, segs);
             return normalized.DeNormalized();
         }
 
+        private static Solution BuildNormalized(params Seg[] segs) => BuildNormalized(null, segs);
+
         // each segment is a single cubic Hermite node whose end slopes are both the chord's, so it interpolates linearly
-        private static Solution BuildNormalized(params Seg[] segs)
+        private static Solution BuildNormalized(FlightPlan? plan, params Seg[] segs)
         {
             InterpolantLayout x0 = segs[0].Y0;
             var problem = new Problem(_scale, x0.R, x0.V, x0.U, x0.M, TBAR0, MU, RBODY / LENGTH_SCALE, 0, 0, 0, 0, V3.zero,
                 new Kepler3(1, 0, 0));
-            var solution = new Solution(problem, null);
+            var solution = new Solution(problem, plan);
 
             using var y    = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             using var ynew = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
@@ -868,37 +875,11 @@ namespace MechJebLibTest.PSGTests
             solution.Tgo(4176, 1).ShouldEqual(16, 0);
             solution.Tgo(4176, 2).ShouldEqual(32, 0);
 
-            // Tgo(t) runs negative past Tf, which HandleTerminal's Tgo <= 0 test relies on when a burn runs long
+            // Tgo(t) runs negative past Tf, when a burn runs long
             solution.Tgo(T0).ShouldEqual(288, 0);
             solution.Tgo(4176).ShouldEqual(208, 0);
             solution.Tgo(4384).ShouldBeZero();
             solution.Tgo(4400).ShouldEqual(-16, 0);
-
-            // the time left until the end of the phase the clock is in, which isn't clamped to the phase either
-            solution.StageTimeLeft(4288).ShouldEqual(64, 0);
-            solution.StageTimeLeft(4224).ShouldEqual(128, 0);
-            solution.StageTimeLeft(4000).ShouldEqual(160, 0);
-            solution.StageTimeLeft(4400).ShouldEqual(-16, 0);
-        }
-
-        [Fact]
-        public void TgoForKSPStage()
-        {
-            using Solution solution = TheStandardLike();
-
-            solution.TgoForKSPStage(T0, 4).ShouldEqual(64, 0);
-            solution.TgoForKSPStage(T0, 2).ShouldEqual(32, 0);
-            // stage 1's coast doesn't count, only its burn
-            solution.TgoForKSPStage(T0, 1).ShouldEqual(32, 0);
-            solution.TgoForKSPStage(T0, 0).ShouldEqual(32, 0);
-            // the fairing jettison stage has no phase
-            solution.TgoForKSPStage(T0, 3).ShouldBeZero();
-
-            solution.TgoForKSPStage(4208, 1).ShouldEqual(16, 0);
-            solution.TgoForKSPStage(4208, 0).ShouldEqual(32, 0);
-            // burned out, and staying burned out when the stage runs long into the next phase
-            solution.TgoForKSPStage(4208, 4).ShouldBeZero();
-            solution.TgoForKSPStage(4288, 1).ShouldBeZero();
         }
 
         private static void ShouldSplit(Solution solution, double t, double burn1, double coast, double burn2)
@@ -939,42 +920,32 @@ namespace MechJebLibTest.PSGTests
         {
             using Solution solution = TheStandardLike();
 
-            double[] mid          = { 4128, 4176, 4208, 4288, 4368 };
-            bool[]   coast        = { false, false, false, true, false };
-            bool[]   willCoast    = { true, true, true, true, false };
-            bool[]   coastFollows = { false, false, true, true, false };
-            bool[]   unguided     = { true, false, false, false, false };
+            double[] mid      = { 4128, 4176, 4208, 4288, 4368 };
+            bool[]   coast    = { false, false, false, true, false };
+            bool[]   unguided = { true, false, false, false, false };
 
             for (int p = 0; p < solution.Segments; p++)
             {
-                Assert.Equal(coast[p], solution.Coast(mid[p]));
-                Assert.Equal(willCoast[p], solution.WillCoast(mid[p]));
-                Assert.Equal(coastFollows[p], solution.CoastFollows(mid[p]));
+                Assert.Equal(coast[p], solution.CoastPhase(p));
                 Assert.Equal(unguided[p], solution.Unguided(mid[p]));
             }
 
-            // the coast runs from its start time up to its end time
-            solution.Coast(4224).ShouldBeTrue();
-            solution.Coast(4352).ShouldBeFalse();
-            solution.WillCoast(4352).ShouldBeFalse();
-            solution.CoastFollows(4160).ShouldBeFalse();
-            solution.CoastFollows(4192).ShouldBeTrue();
+            // the coast comes before the last stage: the burns before it, the coast, and the burn after it
+            solution.CoastIndex().ShouldEqual(3);
+            solution.TerminalIndex().ShouldEqual(4);
 
             // before T0 the clock is in the first phase, and past Tf in the last
             solution.Unguided(4000).ShouldBeTrue();
-            solution.WillCoast(4000).ShouldBeTrue();
-            solution.Coast(4500).ShouldBeFalse();
-            solution.WillCoast(4500).ShouldBeFalse();
-            solution.CoastFollows(4500).ShouldBeFalse();
             solution.Unguided(4500).ShouldBeFalse();
 
+            // a solution computed during the coast starts with it
+            using Solution coastFirst = CoastFirst();
+            coastFirst.CoastIndex().ShouldEqual(0);
+            coastFirst.TerminalIndex().ShouldEqual(1);
+
             using Solution allFixed = AllFixed();
-            foreach (double t in new double[] { T0, 4128, 4192 })
-            {
-                allFixed.Coast(t).ShouldBeFalse();
-                allFixed.WillCoast(t).ShouldBeFalse();
-                allFixed.CoastFollows(t).ShouldBeFalse();
-            }
+            allFixed.CoastIndex().ShouldEqual(-1);
+            allFixed.TerminalIndex().ShouldEqual(1);
         }
 
         [Fact]
@@ -1031,63 +1002,50 @@ namespace MechJebLibTest.PSGTests
             using Solution solution = TheStandardLike();
 
             // halfway through p1 the direction is between x and y, and comes back normalized
-            (V3 u, double throttle) = solution.InertialGuidance(4176, 0);
+            (V3 u, double throttle) = solution.InertialGuidance(1, 4176, 0);
             u.ShouldEqual(new V3(1, 1, 0).normalized, 1e-12);
             // the throttle there is 0.625, mapped onto the KSP throttle range above the engines' minimum
             throttle.ShouldEqual(0.625, 1e-12);
-            solution.InertialGuidance(4176, 0.5).Item2.ShouldEqual(0.25, 1e-12);
+            solution.InertialGuidance(1, 4176, 0.5).Item2.ShouldEqual(0.25, 1e-12);
             // engines that can't throttle down that far get the 1% floor rather than a shutdown
-            solution.InertialGuidance(4176, 0.75).Item2.ShouldEqual(0.01, 0);
+            solution.InertialGuidance(1, 4176, 0.75).Item2.ShouldEqual(0.01, 0);
             // and engines that can't throttle at all run at full
-            solution.InertialGuidance(4176, 1).Item2.ShouldEqual(1, 0);
+            solution.InertialGuidance(1, 4176, 1).Item2.ShouldEqual(1, 0);
 
             // late in p1 the interpolated throttle (0.34375) is below the phase's 50% minimum, and the minimum wins
-            solution.InertialGuidance(4188, 0).Item2.ShouldEqual(0.5, 1e-12);
-            solution.InertialGuidance(4188, 0.5).Item2.ShouldEqual(0.01, 0);
+            solution.InertialGuidance(1, 4188, 0).Item2.ShouldEqual(0.5, 1e-12);
+            solution.InertialGuidance(1, 4188, 0.5).Item2.ShouldEqual(0.01, 0);
 
             // a full throttle phase runs at full whatever the engines' minimum
-            solution.InertialGuidance(4128, 0).Item2.ShouldEqual(1, 0);
-            solution.InertialGuidance(4128, 0.5).Item2.ShouldEqual(1, 0);
+            solution.InertialGuidance(0, 4128, 0).Item2.ShouldEqual(1, 0);
+            solution.InertialGuidance(0, 4128, 0.5).Item2.ShouldEqual(1, 0);
 
-            // the coast commands no thrust, which comes out as the floor (HandleThrottle cuts the engines in a coast)
-            (V3 uCoast, double coastThrottle) = solution.InertialGuidance(4288, 0);
+            // the coast commands no thrust, which comes out as the floor (guidance cuts the engines in a coast)
+            (V3 uCoast, double coastThrottle) = solution.InertialGuidance(3, 4288, 0);
             uCoast.ShouldEqual(new V3(0, 1, 1).normalized, 1e-12);
             coastThrottle.ShouldEqual(0.01, 0);
         }
 
-        // TerminalGuidanceSatisfied fires once the vessel's angular momentum passes that of the state it targets.  r × v grows along
-        // the synthetic trajectories, so this pins down the target time: the state at tTarget satisfies it if it is a hair
-        // faster, and doesn't if it is a hair slower.
-        private static void ShouldTargetStateAt(Solution solution, double tTarget, double t, int kspStage)
-        {
-            (V3 r, V3 v) = solution.StateVectors(tTarget);
-            solution.TerminalGuidanceSatisfied(r, v * (1 + 1e-9), t, kspStage).ShouldBeTrue();
-            solution.TerminalGuidanceSatisfied(r, v * (1 - 1e-9), t, kspStage).ShouldBeFalse();
-        }
-
+        // Guidance flies the phase the vessel is in, which residuals put ahead of or behind the clock, so the time is clamped to
+        // that phase rather than the phase the clock is in being flown.
         [Fact]
-        public void TerminalGuidanceTarget()
+        public void InertialGuidanceClampsToThePhase()
         {
             using Solution solution = TheStandardLike();
 
-            // p1 and the precise shutdown p2 are one multi-stage burn, which ends with p2
-            ShouldTargetStateAt(solution, 4224, 4176, 2);
-            ShouldTargetStateAt(solution, 4224, 4208, 1);
-            // staged ahead of the clock out of the booster, the burn ahead is the target rather than the end of the booster
-            ShouldTargetStateAt(solution, 4224, 4128, 2);
-            // a shutdown running a little late into the coast still targets the end of the burn before it
-            ShouldTargetStateAt(solution, 4224, 4288, 1);
-            // still in stage 1 with the clock in the fixed upper stage, it backs up past the coast to the burn
-            ShouldTargetStateAt(solution, 4224, 4368, 1);
-            // in the fixed upper stage itself the target is the end of the trajectory, and past Tf it always is
-            ShouldTargetStateAt(solution, 4384, 4368, 0);
-            ShouldTargetStateAt(solution, 4384, 4400, 1);
+            // the booster burned out early: with the clock still in the booster, p1 starts from its start (x, full throttle)
+            (V3 uEarly, double throttleEarly) = solution.InertialGuidance(1, 4150, 0);
+            uEarly.ShouldEqual(new V3(1, 0, 0), 1e-12);
+            throttleEarly.ShouldEqual(1, 1e-12);
 
-            // a solution computed during the coast starts with it, and the target is the burn after it, even for a stage below
-            // every burn
-            using Solution coastFirst = CoastFirst();
-            ShouldTargetStateAt(coastFirst, 4224, 4128, 1);
-            ShouldTargetStateAt(coastFirst, 4224, 4128, 0);
+            // p1 burns past its predicted end: it holds its end (y, with the 50% minimum over the 0.25 the interpolant ends at),
+            // not the start of the burn after it or its own extrapolation
+            (V3 uLate, double throttleLate) = solution.InertialGuidance(1, 4200, 0);
+            uLate.ShouldEqual(new V3(0, 1, 0), 1e-12);
+            throttleLate.ShouldEqual(0.5, 1e-12);
+
+            // the clock in the coast while the vessel still burns p2 holds the end of p2
+            solution.InertialGuidance(2, 4288, 0).Item1.ShouldEqual(new V3(0, 1, 0), 1e-12);
         }
 
         [Fact]
@@ -1141,8 +1099,10 @@ namespace MechJebLibTest.PSGTests
 
             solution.Tgo(T0, 1).ShouldBeZero();
             solution.DV(T0, 1).ShouldBeZero();
-            solution.TgoForKSPStage(T0, 1).ShouldBeZero();
             solution.IndexForKSPStage(1, false).ShouldEqual(1);
+
+            // the burn is the last stage, which terminal guidance flies: the pruned stage after it is never flown
+            solution.TerminalIndex().ShouldEqual(0);
 
             solution.TerminalKSPStage().ShouldEqual(2);
             solution.OptimizeKSPStage().ShouldEqual(2);
@@ -1153,9 +1113,6 @@ namespace MechJebLibTest.PSGTests
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
             rf.ShouldEqual(ExpectedR(4160), 1e-12);
             vf.ShouldEqual(ExpectedV(4160), 1e-12);
-
-            // the end of the burn is still the target after walking forward onto the pruned stage
-            ShouldTargetStateAt(solution, 4160, 4159, 2);
         }
 
         // the fields Rescale and DeNormalize convert
@@ -1197,9 +1154,9 @@ namespace MechJebLibTest.PSGTests
             solution.DV(TBAR0, 0).ShouldEqual(dv0, 1e-12);
             solution.Tgo(TBAR0).ShouldEqual(2.25, 0);
             solution.Tgo(TBAR0 + 0.625, 1).ShouldEqual(0.125, 0);
-            solution.TgoForKSPStage(TBAR0, 4).ShouldEqual(0.5, 0);
-            solution.StageTimeLeft(TBAR0 + 1.5).ShouldEqual(0.5, 0);
-            solution.Coast(TBAR0 + 1.5).ShouldBeTrue();
+            solution.Tgo(TBAR0, 0).ShouldEqual(0.5, 0);
+            solution.Tgo(TBAR0 + 1.5, 3).ShouldEqual(0.5, 0);
+            solution.CoastIndex().ShouldEqual(3);
 
             solution.Phases[0].Normalized.ShouldBeTrue();
             solution.Phases[0].VexVacuum.ShouldEqual(Vex(256) / VELOCITY_SCALE, 0);
@@ -1220,8 +1177,8 @@ namespace MechJebLibTest.PSGTests
             using Solution si = solution.DeNormalized();
 
             // the direction and the throttle have no units, and are the same at the same instant
-            (V3 u, double throttle) = solution.InertialGuidance(TBAR0 + 0.625, 0.5);
-            (V3 siU, double siThrottle) = si.InertialGuidance(4176, 0.5);
+            (V3 u, double throttle) = solution.InertialGuidance(1, TBAR0 + 0.625, 0.5);
+            (V3 siU, double siThrottle) = si.InertialGuidance(1, 4176, 0.5);
             siU.ShouldEqual(u, 0);
             siThrottle.ShouldEqual(throttle, 0);
 
@@ -1264,7 +1221,7 @@ namespace MechJebLibTest.PSGTests
             copy.M(4128).ShouldEqual(6144, 1e-12);
             copy.DV(4160).ShouldEqual(Vex(256) * Math.Log(2), 1e-12);
             copy.Unguided(4128).ShouldBeTrue();
-            copy.InertialGuidance(4188, 0).Item2.ShouldEqual(0.5, 1e-12);
+            copy.InertialGuidance(1, 4188, 0).Item2.ShouldEqual(0.5, 1e-12);
             copy.TerminalKSPStage().ShouldEqual(0);
             copy.TerminalMJPhase().ShouldEqual(1);
             copy.OptimizeKSPStage().ShouldEqual(1);

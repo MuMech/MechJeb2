@@ -168,8 +168,8 @@ namespace MuMech.UI
             UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Classic.SkipCircularization,
                 v => Classic.SkipCircularization = v); //Skip Circularization
             w.Visible(skip, () => !psg);
-            UnityEngine.UI.Toggle trajectory = w.SwitchRow(g, "#MechJeb_NewUI_PsgDrawTrajectory", () => Core.Guidance.ShouldDrawTrajectory, //Draw trajectory on map
-                v => Core.Guidance.ShouldDrawTrajectory = v);
+            UnityEngine.UI.Toggle trajectory = w.SwitchRow(g, "#MechJeb_NewUI_PsgDrawTrajectory", () => Core.PSGAutopilot.ShouldDrawTrajectory, //Draw trajectory on map
+                v => Core.PSGAutopilot.ShouldDrawTrajectory = v);
             w.Visible(trajectory, () => psg);
             // the global setting (also in Settings), read by both ascent types: shown for both, its label says it is global
             UnityEngine.UI.Toggle rss = w.SwitchRow(g, "#MechJeb_NewUI_RssModeGlobal", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v); //Module disabling does not kill throttle (global: the tooltip says so)

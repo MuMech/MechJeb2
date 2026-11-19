@@ -119,12 +119,8 @@ namespace MuMech.UI
             return deltaText;
         }
 
-        Tone GuidanceTone()
-        {
-            if (Core.Guidance.IsStable()) return Tone.Good;
-            if (Core.Guidance.IsInitializing() || Core.Guidance.Status == PSGStatus.FINISHED) return Tone.Caution;
-            return Tone.Bad;
-        }
+        // flying a Solution, or still waiting for one (or done)
+        Tone GuidanceTone() => Core.PSGAutopilot.HasSolution && !Core.PSGAutopilot.IsFinished ? Tone.Good : Tone.Caution;
 
         // the autopilot status line: plain, yellow or red with the autopilot's severity (read with the text, by UpdateStrings)
         Tone StatusTone() => menu.autopilotStatusLevel switch
@@ -426,7 +422,7 @@ namespace MuMech.UI
             UIText optimizer = w.Wrap(w.BoundLabel(box, () => menu.optimizerState ?? " ", true));
             w.Visible(optimizer, () => menu.optimizerState != null);
             w.ToneText(optimizer, () => Psgs.State == OptimizerState.NO_PLAN || Psgs.State == OptimizerState.RETRYING ? Tone.Bad
-                : Psgs.LastFailureMessage != null && Psgs.Staleness > 3 && Core.Guidance.Solution != null ? Tone.Warn : Tone.Normal);
+                : Psgs.LastFailureMessage != null && Psgs.Staleness > 3 && Core.PSGAutopilot.Solution != null ? Tone.Warn : Tone.Normal);
 
             Layout n = KodeWindow.Row(box);
             w.BoundLabel(n, "n: 100(100)", () => menu.n ?? " ");

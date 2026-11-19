@@ -43,6 +43,9 @@ namespace MuMech
         // Autopilots switch their modules on and off all flight: only windows have an enabled state to save
         protected virtual bool SavesEnabled => false;
 
+        // the name of a module this one replaced: until it saved its own settings, they are in that module's node
+        public virtual string FormerName => null;
+
         private bool _enabled;
 
         public bool Enabled

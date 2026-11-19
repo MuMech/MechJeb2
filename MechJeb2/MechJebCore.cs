@@ -34,7 +34,7 @@ namespace MuMech
 
         private bool _ready;
 
-        public MechJebModuleGuidanceController Guidance;
+        public MechJebModulePSGAutopilot PSGAutopilot;
         public MechJebModulePSGSimulation PSGSimulation;
         public MechJebModuleAttitudeController Attitude;
         public MechJebModuleStagingController Staging;
@@ -830,7 +830,7 @@ namespace MuMech
             AntennaControl = GetComputerModule<MechJebModuleDeployableAntennaController>();
             Landing = GetComputerModule<MechJebModuleLandingAutopilot>();
             Settings = GetComputerModule<MechJebModuleSettings>();
-            Guidance = GetComputerModule<MechJebModuleGuidanceController>();
+            PSGAutopilot = GetComputerModule<MechJebModulePSGAutopilot>();
             PSGSimulation = GetComputerModule<MechJebModulePSGSimulation>();
             StageStats = GetComputerModule<MechJebModuleStageStats>();
             AscentSettings = GetComputerModule<MechJebModuleAscentSettings>();
@@ -968,6 +968,17 @@ namespace MuMech
                         string logicName = (module as DisplayModule)?.LogicModuleName;
                         if (logicName != null && moduleGlobal == null && global.HasNode(logicName))
                             moduleGlobal = global.GetNode(logicName);
+
+                        // a module that replaced another (renamed or merged): until it saved its own settings, they are in that
+                        // module's nodes
+                        string formerName = module.FormerName;
+                        if (formerName != null)
+                        {
+                            if (moduleType == null && type.HasNode(formerName))
+                                moduleType = type.GetNode(formerName);
+                            if (moduleGlobal == null && global.HasNode(formerName))
+                                moduleGlobal = global.GetNode(formerName);
+                        }
 
                         module.OnLoad(moduleLocal, moduleType, moduleGlobal);
 

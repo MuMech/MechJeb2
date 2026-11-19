@@ -62,6 +62,9 @@ namespace MechJebLib.PSG
 
                 phase.TerminalStage = false;
 
+                // a burn the optimizer shut down with propellant left, which guidance cuts at its planned end
+                phase.PropellantLeft = phase.AllowShutdown && !phase.Coast && freeBurntimeLeft;
+
                 // hit a stage with some free propellant left
                 if (phase.AllowShutdown && freeBurntimeLeft)
                     pruningStages = true;
