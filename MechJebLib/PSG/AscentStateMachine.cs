@@ -219,7 +219,7 @@ namespace MechJebLib.PSG
     /// <summary>How a burn of the Solution ends: see the table in the AscentStateMachine doc.</summary>
     internal enum BurnEnd
     {
-        COAST,     // the burn right before the coast: cut at the coast's start
+        COAST,     // the last burn flown before the coast: cut at the coast's start
         JETTISON,  // cut at its planned end with propellant left, before a fixed upper stack, and staged off
         DEPLETION, // burns out, into its residuals, and autostaging drops it
         TERMINAL,  // the last stage, with a precise shutdown: cut on the target's angular momentum
@@ -241,8 +241,8 @@ namespace MechJebLib.PSG
     ///
     ///     BurnEnd    the burn                             it ends                               then
     ///     ---------  -----------------------------------  ------------------------------------  ------------------------------------
-    ///     COAST      the one right before the coast       at the coast's start, however much    COASTING (CoastDue), which does with
-    ///                                                     it has left, or burned out in its     its KSP stage what the coast's kind
+    ///     COAST      the last one flown before the        at the coast's start, however much    COASTING (CoastDue), which does with
+    ///                coast                                it has left, or burned out in its     its KSP stage what the coast's kind
     ///                                                     own KSP stage                         says (below)
     ///     JETTISON   one the optimizer ends with          at its planned end                    JETTISON stages until its engines
     ///                propellant left, before a burn in                                          leave the vessel (JettisonDue,
@@ -263,10 +263,15 @@ namespace MechJebLib.PSG
     ///     COAST_AFTER                    the coast carries it, and JETTISON drops it as the coast ends (CarriedBurn)
     ///
     ///     Any burn can run dry before its end, which the stage stats show (ReconcileStages): guidance moves on to the next
-    ///     one, or into the coast if it was the burn before it.  Burns before a coast only end at it from the burn right
+    ///     one, or into the coast if it was the burn before it.  Burns before a coast only end at it from the last burn flown
     ///     before it, and only in its own KSP stage (OnStageOf).  The last stage can run dry short of the target, burning or
     ///     in terminal guidance (TerminalSpentNow).  The cuts on the clock are made on the tick nearest their time (Reached),
     ///     out of time warp (CutNear).
+    ///
+    ///     Guidance never flies a phase the Solution skips (Solution.Skip): one the optimizer shrank to nothing, or a pruned
+    ///     stage after the last stage.  A coast it skips is no coast (Solution.CoastIndex), and the burns around it end as
+    ///     though it weren't there (Solution.NextPhase): a coast-during shrunk to nothing, with the burn before it, is the one
+    ///     burn after it.
     /// </remarks>
     public class AscentStateMachine
     {
@@ -863,20 +868,13 @@ namespace MechJebLib.PSG
                 : solution.KSPStage(p);
         }
 
-        // The coast, if it comes before the last stage: a coast after it is pruned with the stages after the last stage, which
-        // the optimizer gives no burn time.
-        private int LiveCoastIndex()
-        {
-            int coast = Solution!.CoastIndex();
-            return coast >= 0 && coast < Solution.TerminalIndex() ? coast : -1;
-        }
-
         // The phase the vessel is flying: the coast while coasting, else the first burn of the Solution's burns before the coast
-        // (before it) or after it (after it), up to the last stage, whose stage is still there, or -1 once none is.
+        // (before it) or after it (after it), up to the last stage, whose stage is still there, or -1 once none is.  Phases the
+        // Solution skips are never flown, and a coast it skips is no coast (Solution.CoastIndex).
         private int CurrentPhase(bool coasting)
         {
             Solution solution = Solution!;
-            int coast = LiveCoastIndex();
+            int coast = solution.CoastIndex();
 
             if (coasting)
                 return coast;
@@ -893,22 +891,22 @@ namespace MechJebLib.PSG
             }
 
             for (int p = first; p <= last; p++)
-                if (!solution.CoastPhase(p) && !PhaseDone(p))
+                if (!solution.Skip(p) && !solution.CoastPhase(p) && !PhaseDone(p))
                     return p;
 
             return -1;
         }
 
-        // The coast starts as soon as the burns before it are gone, or in the burn right before it: at its planned start, cutting
-        // that burn however much it has left (it would overshoot), or when it has burned out.  Not while the vessel is still in
-        // an earlier burn (a booster burning on past its planned end), whose stage TickCoasting would stage off with its
+        // The coast starts as soon as the burns before it are gone, or in the last burn flown before it: at its planned start,
+        // cutting that burn however much it has left (it would overshoot), or when it has burned out.  Not while the vessel is
+        // still in an earlier burn (a booster burning on past its planned end), whose stage TickCoasting would stage off with its
         // propellant.
         private bool CoastDue()
         {
             if (HasCoasted || _in.Grounded)
                 return false;
 
-            int coast = LiveCoastIndex();
+            int coast = Solution!.CoastIndex();
             if (coast < 0)
                 return false;
 
@@ -919,7 +917,7 @@ namespace MechJebLib.PSG
             if (BurnEndOf(p) != BurnEnd.COAST)
                 return false;
 
-            return Reached(Solution!.StartTime(coast)) || (OnStageOf(p) && NoThrust(_in.ThrustAvailable) && CurrentStageEmpty());
+            return Reached(Solution.StartTime(coast)) || (OnStageOf(p) && NoThrust(_in.ThrustAvailable) && CurrentStageEmpty());
         }
 
         private bool CoastOver()
@@ -951,7 +949,7 @@ namespace MechJebLib.PSG
             {
                 int p = CurrentPhase(false);
                 if (p >= 0 && BurnEndOf(p) == BurnEnd.COAST)
-                    t = Solution.StartTime(LiveCoastIndex());
+                    t = Solution.StartTime(Solution.CoastIndex());
                 else if (JettisonCut(p))
                     t = Solution.EndTime(p);
                 else
@@ -969,13 +967,17 @@ namespace MechJebLib.PSG
             if (p == solution.TerminalIndex())
                 return solution.Phases[p].PreciseShutdown ? BurnEnd.TERMINAL : BurnEnd.BURNOUT;
 
-            if (!HasCoasted && p == LiveCoastIndex() - 1)
+            // the next phase guidance flies, past the ones the Solution skips
+            int next = solution.NextPhase(p);
+            int coast = solution.CoastIndex();
+
+            if (!HasCoasted && coast >= 0 && next == coast)
                 return BurnEnd.COAST;
 
             // a cut needs a burn in a lower KSP stage after it, for JETTISON to stage to, and a flight plan stage to mark done
             // (_handedOff); one that can't be made burns on
-            if (solution.Phases[p].PropellantLeft && !solution.CoastPhase(p + 1) && solution.FlightPlanIndex(p) >= 0 &&
-                StageOf(p + 1) < StageOf(p))
+            if (solution.Phases[p].PropellantLeft && next >= 0 && !solution.CoastPhase(next) && solution.FlightPlanIndex(p) >= 0 &&
+                StageOf(next) < StageOf(p))
                 return BurnEnd.JETTISON;
 
             return BurnEnd.DEPLETION;
@@ -1093,7 +1095,7 @@ namespace MechJebLib.PSG
         private int NextBurn()
         {
             int p = CurrentPhase(false);
-            return JettisonDue(p) ? p + 1 : p;
+            return JettisonDue(p) ? Solution!.NextPhase(p) : p;
         }
 
         // Before UpdateState, in BURNING and JETTISON: a burn JETTISON drops whose engines are gone is done, which moves
@@ -1261,7 +1263,7 @@ namespace MechJebLib.PSG
         // the KSP stage autostaging stops at (see UpdateAutostageLimit)
         private int AutostageFloor()
         {
-            int coast = LiveCoastIndex();
+            int coast = Solution!.CoastIndex();
             return coast >= 0 && (IsCoasting || !HasCoasted) ? StageOf(coast) : StageOf(Solution!.TerminalIndex());
         }
 

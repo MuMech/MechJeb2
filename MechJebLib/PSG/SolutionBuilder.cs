@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System.Collections.Generic;
 using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLib.PSG
@@ -27,28 +29,41 @@ namespace MechJebLib.PSG
             _phases = phases.DeepCopy();
             _flightPlan = flightPlan;
             _ascentProblem = ascentProblem;
-            AnalyzeStages();
+
+            double[] bt = new double[_phases.Count];
+            double[] mf = new double[_phases.Count];
+            for (int p = 0; p < _phases.Count; p++)
+            {
+                bt[p] = _vars[p].Bt();
+                mf[p] = _vars[p].M.Last;
+            }
+
+            AnalyzeStages(_phases, bt, mf);
         }
 
         private readonly double[] _tau = { 0, 0.5 - Sqrt(3) / 6, 0.5 + Sqrt(3) / 6 };
 
-        private void AnalyzeStages()
+        // A phase shorter than this, in normalized time, is too short to fly (Phase.Skip).  Guidance pauses the optimizer before
+        // the end of a phase (PSGSimulation's PreStageTime), so the burn guidance is flying is never this short in a new
+        // Solution: a phase this short is one the optimizer shrank, or a pruned stage.
+        internal const double SKIP_TIME = 1e-3;
+
+        // Flags the phases for guidance from the optimizer's burn times bt and end masses mf, both normalized: the burn with the
+        // precise shutdown, the terminal stage, the burns cut with propellant left, and the phases guidance skips.
+        internal static void AnalyzeStages(PhaseCollection phases, IReadOnlyList<double> bt, IReadOnlyList<double> mf)
         {
             int optimizedShutdownIndex = -1;
             int terminalStageIndex = -1;
             bool pruningStages = false;
 
-            for (int p = 0; p < _phases.Count; p++)
+            for (int p = 0; p < phases.Count; p++)
             {
-                Phase phase = _phases[p];
-                PhaseProxy thisPhase = _vars[p];
-                double mf = thisPhase.M.Last;
-                double bt = thisPhase.Bt();
+                Phase phase = phases[p];
 
                 // is there unburned propellant going to be left in this stage?
-                bool freeBurntimeLeft = mf - phase.Mf > 1e-3;
+                bool freeBurntimeLeft = mf[p] - phase.Mf > 1e-3;
                 // is this is a prunable stage (negligible propellant use after we can prune)
-                bool prunableStage = pruningStages && bt < 1e-3;
+                bool prunableStage = pruningStages && bt[p] < SKIP_TIME;
 
                 // coasts are AllowShutdown, but there's no engine to shut down precisely, so they must not take the flag
                 // from the burn before them
@@ -71,10 +86,24 @@ namespace MechJebLib.PSG
             }
 
             if (optimizedShutdownIndex >= 0)
-                _phases[optimizedShutdownIndex].PreciseShutdown = true;
+                phases[optimizedShutdownIndex].PreciseShutdown = true;
 
             Check.True(terminalStageIndex >= 0, "no terminal stage found");
-            _phases[terminalStageIndex].TerminalStage = true;
+            phases[terminalStageIndex].TerminalStage = true;
+
+            // Guidance never flies a phase too short to fly, nor the pruned stages after the terminal stage (all of them shorter
+            // than SKIP_TIME too).  The terminal stage is always flown, however short: it ends the ascent, and terminal guidance
+            // trims it.
+            for (int p = 0; p < phases.Count; p++)
+                phases[p].Skip = p > terminalStageIndex || (p < terminalStageIndex && bt[p] < SKIP_TIME);
+
+            // The zero coast constraint shrinks the burn before a coast-during to nothing with the coast (AscentProblem.
+            // ZeroCoastConstraint), so both are skipped and guidance flies the stage as the one burn after the coast.  A burn
+            // before it that is still flown would be flown until its stage burns out, with no hand-off to the burn after it.
+            for (int p = 1; p < phases.Count; p++)
+                if (phases.IsDuringCoast(p) && phases[p].Skip && !phases[p - 1].Skip)
+                    Print($"[SolutionBuilder] [WARNING] the coast-during of phase {p} is too short to fly (bt: {bt[p]}), but the burn " +
+                        $"before it isn't (bt: {bt[p - 1]})");
         }
 
         public Solution Build()

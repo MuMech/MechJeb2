@@ -55,6 +55,11 @@ namespace MechJebLib.PSG
         // shut down early), which guidance then cuts at its planned end rather than letting it burn out
         public bool PropellantLeft;
 
+        // assigned in the solution for a phase guidance never flies: one the optimizer left too short to fly (under
+        // SolutionBuilder.SKIP_TIME, such as a coast it shrank to nothing), and the pruned stages after the terminal stage.  The
+        // phase stays in the Solution, whose phases line up with the optimizer's for the warm start of the next solve.
+        public bool Skip;
+
         // mass continuity assigned to the last two stages in a burn-coast-burn sequence in the same phase (coast during)
         public bool MassContinuity;
 
@@ -111,6 +116,7 @@ namespace MechJebLib.PSG
             phase.PreciseShutdown = false;
             phase.TerminalStage = false;
             phase.PropellantLeft = false;
+            phase.Skip = false;
             phase.MassContinuity = false;
             phase.Unguided = false;
             phase.Normalized = false;
@@ -239,6 +245,8 @@ namespace MechJebLib.PSG
                 sb.Append(" (control-continuity)");
             if (PropellantLeft)
                 sb.Append(" (propellant-left)");
+            if (Skip)
+                sb.Append(" (skip)");
             return sb.ToString();
         }
 
