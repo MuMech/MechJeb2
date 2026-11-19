@@ -92,22 +92,22 @@ namespace MechJebLibTest.PSGTests
             flight.PitchRate = 10;
             flight.Engage(Solve(flight.Plan(), MET0, Fixed(60), Fixed(40), Fixed(30)));
 
-            // the countdown's prelaunch, which nothing holds for
+            // the countdown's prelaunch, with the throttle off and the axes let go
             flight.Step();
             Assert.Equal(PSGState.PRELAUNCH, flight.Machine.State);
             AscentCommand cmd = flight.Log.Last().Command;
             Assert.True(cmd.DrivePrelaunch);
-            Assert.False(cmd.CheckLiftoffHold);
-            Assert.Equal(AscentThrottle.NONE, cmd.Throttle);
+            Assert.Equal(AscentThrottle.OFF, cmd.Throttle);
+            Assert.Equal(AscentAttitude.OFF, cmd.Attitude);
+            Assert.False(cmd.DriveAscentParts);
 
-            // straight up under the guidance throttle, behind the liftoff hold
+            // straight up under the guidance throttle
             flight.PrelaunchDone = true;
             flight.Step();
             Assert.Equal(PSGState.VERTICAL_ASCENT, flight.Machine.State);
             cmd = flight.Log.Last().Command;
             Assert.Equal(AscentAttitude.VERTICAL, cmd.Attitude);
             Assert.Equal(AscentThrottle.GUIDED, cmd.Throttle);
-            Assert.True(cmd.CheckLiftoffHold);
             Assert.True(cmd.DriveAscentParts);
 
             // off the pad, below the pitch start height
@@ -127,6 +127,104 @@ namespace MechJebLibTest.PSGTests
             Assert.True(flight.RunUntil(PSGState.BURNING, 20));
             Assert.InRange(flight.EnteredAt(PSGState.BURNING) - start, 8.5, 9.1);
             Assert.Equal("PRELAUNCH VERTICAL_ASCENT PITCH_PROGRAM BURNING", flight.Sequence());
+        }
+
+        // the three stages on the pad, the countdown's prelaunch done
+        private static AscentFlight OnThePad()
+        {
+            AscentFlight flight = ThreeStages();
+            flight.HasAtmosphere = true;
+            flight.Grounded = true;
+            flight.LiftedOff = false;
+            flight.AltitudeBottom = 0;
+            return flight;
+        }
+
+        [Fact]
+        public void PadHoldsInPrelaunchUntilThereIsASolution()
+        {
+            AscentFlight flight = OnThePad();
+            flight.Machine.Start();
+
+            // the prelaunch done isn't driven again: the vessel waits with the throttle off and the axes let go
+            flight.Run(1);
+            Assert.Equal(PSGState.PRELAUNCH, flight.Machine.State);
+            Assert.All(flight.Log, t => Assert.False(t.Command.DrivePrelaunch));
+            AscentCommand cmd = flight.Log.Last().Command;
+            Assert.Equal(AscentThrottle.OFF, cmd.Throttle);
+            Assert.Equal(AscentAttitude.OFF, cmd.Attitude);
+            Assert.Equal("ENABLED", flight.Machine.GuidanceStatus);
+
+            // the first solve arrives: straight up under the guidance throttle
+            Assert.True(flight.Machine.SetSolution(Solve(flight.Plan(), MET0, Fixed(60), Fixed(40), Fixed(30))));
+            flight.Step();
+            Assert.Equal(PSGState.VERTICAL_ASCENT, flight.Machine.State);
+            Assert.Equal(AscentThrottle.GUIDED, flight.Log.Last().Command.Throttle);
+            Assert.Equal("BURNING", flight.Machine.GuidanceStatus);
+        }
+
+        [Fact]
+        public void PadHoldsInPrelaunchThroughTheCountdown()
+        {
+            AscentFlight flight = OnThePad();
+            flight.CountdownActive = true;
+            flight.Engage(Solve(flight.Plan(), MET0, Fixed(60), Fixed(40), Fixed(30)));
+
+            // a Solution, but no throttle and no autostaging until T-0
+            flight.Run(1);
+            Assert.Equal(PSGState.PRELAUNCH, flight.Machine.State);
+            AscentCommand cmd = flight.Log.Last().Command;
+            Assert.Equal(AscentThrottle.OFF, cmd.Throttle);
+            Assert.Equal(-1, cmd.AutostageLimit);
+            Assert.Equal("INITIALIZED", flight.Machine.GuidanceStatus);
+
+            // T-0 stages and ends the countdown
+            flight.CountdownActive = false;
+            flight.Step();
+            Assert.Equal(PSGState.VERTICAL_ASCENT, flight.Machine.State);
+            Assert.Equal(AscentThrottle.GUIDED, flight.Log.Last().Command.Throttle);
+            Assert.Equal("BURNING", flight.Machine.GuidanceStatus);
+        }
+
+        [Fact]
+        public void ASolutionDroppedOnThePadGoesBackToPrelaunch()
+        {
+            AscentFlight flight = OnThePad();
+            flight.Engage(Solve(flight.Plan(), MET0, Fixed(60), Fixed(40), Fixed(30)));
+            flight.Step();
+            Assert.Equal(PSGState.VERTICAL_ASCENT, flight.Machine.State);
+
+            // a countdown started on the pad (PSGSimulation.FlushSolution): the autopilot runs the prelaunch again
+            flight.Machine.ResetGuidance();
+            flight.PrelaunchDone = false;
+            flight.CountdownActive = true;
+            flight.Step();
+            Assert.Equal(PSGState.PRELAUNCH, flight.Machine.State);
+            AscentCommand cmd = flight.Log.Last().Command;
+            Assert.True(cmd.DrivePrelaunch);
+            Assert.Equal(AscentThrottle.OFF, cmd.Throttle);
+            Assert.Equal("PRELAUNCH VERTICAL_ASCENT PRELAUNCH", flight.Sequence());
+        }
+
+        [Fact]
+        public void PrelaunchEngagedInFlightCutsNothing()
+        {
+            AscentFlight flight = OneStage();
+            flight.PrelaunchDone = false;
+            flight.Machine.Start();
+
+            // the countdown's prelaunch skips itself off the pad, and the throttle and attitude are left alone meanwhile
+            flight.Step();
+            Assert.Equal(PSGState.PRELAUNCH, flight.Machine.State);
+            AscentCommand cmd = flight.Log.Last().Command;
+            Assert.True(cmd.DrivePrelaunch);
+            Assert.Equal(AscentThrottle.NONE, cmd.Throttle);
+            Assert.Equal(AscentAttitude.NONE, cmd.Attitude);
+
+            // off the pad nothing holds for a Solution: the pitch program flies without one
+            flight.PrelaunchDone = true;
+            flight.Step();
+            Assert.Equal(PSGState.PITCH_PROGRAM, flight.Machine.State);
         }
 
         [Fact]

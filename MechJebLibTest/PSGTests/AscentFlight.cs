@@ -172,7 +172,7 @@ namespace MechJebLibTest.PSGTests
         public bool   HasAtmosphere;
         public double AltitudeBottom   = 100000;
         public bool   PrelaunchDone    = true;
-        public bool   AllowThrottle    = true;
+        public bool   CountdownActive;
         public double PitchStartHeight = 100;
         public double PitchRate        = 1;
         public double UllageLeadTime   = 2;
@@ -475,7 +475,7 @@ namespace MechJebLibTest.PSGTests
                 VacT = _statsTime,
                 PartIds = PartIds(),
                 PrelaunchDone = PrelaunchDone,
-                AllowThrottle = AllowThrottle,
+                CountdownActive = CountdownActive,
                 PitchStartHeight = PitchStartHeight,
                 PitchRate = PitchRate,
                 UllageLeadTime = UllageLeadTime,

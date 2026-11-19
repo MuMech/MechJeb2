@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using KSP.Localization;
 using KSP.UI.Screens;
 using MechJebLib.Functions;
@@ -5,7 +6,8 @@ using MechJebLib.Functions;
 namespace MuMech
 {
     /// <summary>
-    ///     The launch sequence the ascent autopilots share: the countdown, warping to it, staging at T-0 and the prelaunch hold.
+    ///     The launch sequence the ascent autopilots share: the countdown, warping to it, the prelaunch, and staging at T-0, which
+    ///     waits while an autopilot isn't ready to fly (SetLaunchHold).  The autopilots hold the vessel on the pad until T-0.
     ///     An engaged autopilot adds itself to Users, so a countdown started while no autopilot is engaged doesn't run until one is.
     ///     The countdown owns the launch mode (the three Launching* flags of the ascent settings): only Abort ends it, not a window.
     /// </summary>
@@ -30,9 +32,21 @@ namespace MuMech
         /// <summary>The target's LAN when a launch into its plane or to its LAN started: the LAN that launch flies to.</summary>
         public double TargetLan { get; private set; }
 
-        // Starting a countdown flushes the PSG solution and the optimizer restarts cold late in the countdown, which can take longer
-        // than the countdown does. Staging with no solution would release the rocket at zero throttle, so T-0 waits for one.
-        private bool WaitingForGuidance => AscentSettings.AscentType == AscentType.PSG && Core.PSGAutopilot.Solution == null;
+        // the users holding T-0, the staging, until they are ready to fly
+        private readonly HashSet<object> _launchHolds = new HashSet<object>();
+
+        /// <summary>
+        ///     Holds T-0, the staging, while user isn't ready to fly: the PSG autopilot until it has a Solution.  Starting a
+        ///     countdown flushes the PSG solution and the optimizer restarts cold late in the countdown, which can take longer than
+        ///     the countdown does, and staging with no solution would release the rocket at zero throttle.
+        /// </summary>
+        public void SetLaunchHold(object user, bool hold)
+        {
+            if (hold)
+                _launchHolds.Add(user);
+            else
+                _launchHolds.Remove(user);
+        }
 
         // the target inclination, one for both ascent types
         public EditableDouble InclinationSetting => AscentSettings.DesiredInclination;
@@ -123,19 +137,6 @@ namespace MuMech
             return false;
         }
 
-        /// <summary>Returns true while the countdown is still running after prelaunch, when the autopilot must not fly yet.</summary>
-        public bool HoldForLiftoff(AscentStatus status)
-        {
-            if (!Active)
-                return false;
-
-            status.Set(TMinus <= 0 && WaitingForGuidance
-                ? "Holding launch for guidance"
-                : Localizer.Format("#MechJeb_Ascent_status6")); //"Awaiting liftoff"
-            Core.Attitude.SetAxisControl(false, false, false);
-            return true;
-        }
-
         // The countdown only runs while an autopilot is engaged. One started with none engaged and engaged after T-0 counts down
         // to the next launch of the same kind, rather than launch at once, off the window it was timed for.
         protected override void OnModuleEnabled()
@@ -167,7 +168,7 @@ namespace MuMech
             if (TMinus < 3 * VesselState.DeltaT || (TMinus > 10.0 && _lastTMinus < 1.0))
             {
                 // StageManager stages the active vessel, so T-0 holds while the player is on another one
-                if (!WaitingForGuidance && Vessel.isActiveVessel)
+                if (_launchHolds.Count == 0 && Vessel.isActiveVessel)
                 {
                     if (VesselState.ThrustAvailable < 10E-4) // only stage if we have no engines active
                         StageManager.ActivateNextStage();
