@@ -714,6 +714,57 @@ namespace MechJebLibTest.PSGTests
                 new Seg(burn, 0.5, 1, 512, 256, _yHat, _yHat, 1, 1));
         }
 
+        /*
+         * A coast-during the optimizer shrank to nothing, which shrinks the burn before it to nothing too (the zero coast
+         * constraint), behind a fixed booster and ahead of a pruned stage.  SolutionBuilder.AnalyzeStages marks the phases
+         * guidance never flies as Skip.
+         *
+         *   p  phase                              KSP  t (s)       mass (kg)
+         *   0  fixed booster                       2   4096-4160   4096 -> 2048
+         *   1  burn before the coast, skipped      1   4160         768
+         *   2  coast, skipped                      1   4160         768
+         *   3  burn, precise shutdown, terminal    1   4160-4224    768 ->  512
+         *   4  pruned stage, skipped               0   4224         256
+         */
+        private static Solution ZeroCoastDuring()
+        {
+            Phase booster = NewBurn(2, 2, 4096, 2048, 300, 64, false);
+            Phase burn1 = NewBurn(1, 1, 768, 512, 300, 64);
+            burn1.Skip = true;
+            Phase coast = NewCoast(1, 1, 768);
+            coast.Skip = true;
+            Phase burn2 = NewBurn(1, 1, 768, 512, 300, 64);
+            burn2.PreciseShutdown = true;
+            burn2.TerminalStage = true;
+            Phase pruned = NewBurn(0, 0, 256, 128, 300, 64);
+            pruned.Skip = true;
+
+            return Build(
+                new Seg(booster, 0, 0.5, 4096, 2048, _xHat, _xHat, 1, 1),
+                new Seg(burn1, 0.5, 0.5, 768, 768, _xHat, _xHat, 1, 1),
+                new Seg(coast, 0.5, 0.5, 768, 768, _xHat, _xHat, 0, 0),
+                new Seg(burn2, 0.5, 1, 768, 512, _xHat, _xHat, 1, 1),
+                new Seg(pruned, 1, 1, 256, 256, _xHat, _xHat, 1, 1));
+        }
+
+        // a coast-before the optimizer shrank to nothing: the burn cut before it (KSP stage 2, 4096-4160 s), the skipped coast
+        // in KSP stage 1 at 4160 s, and the fixed last stage (KSP stage 1, 4160-4224 s)
+        private static Solution ZeroCoastBefore()
+        {
+            Phase burn = NewBurn(2, 2, 4096, 1024, 300, 64);
+            burn.PropellantLeft = true;
+            burn.PreciseShutdown = true;
+            Phase coast = NewCoast(1, 1, 768);
+            coast.Skip = true;
+            Phase upper = NewBurn(1, 1, 768, 512, 300, 64, false);
+            upper.TerminalStage = true;
+
+            return Build(
+                new Seg(burn, 0, 0.5, 4096, 2048, _xHat, _xHat, 1, 1),
+                new Seg(coast, 0.5, 0.5, 768, 768, _xHat, _xHat, 0, 0),
+                new Seg(upper, 0.5, 1, 768, 512, _xHat, _xHat, 1, 1));
+        }
+
         // a single burn that ends in the state (rf, vf), in m and m/s
         private static Solution EndingAt(V3 rf, V3 vf)
         {
@@ -994,6 +1045,85 @@ namespace MechJebLibTest.PSGTests
             allFixed.IndexForKSPStage(1, false).ShouldEqual(0);
             allFixed.IndexForKSPStage(0, false).ShouldEqual(1);
             allFixed.IndexForKSPStage(0, true).ShouldEqual(-1);
+        }
+
+        // The phases guidance flies pass over the skipped ones: the skipped coast is no coast, the booster goes on to the burn
+        // after it, and the pruned stage has no phase to fly.
+        [Fact]
+        public void SkippedPhasesAreNotFlown()
+        {
+            using Solution solution = ZeroCoastDuring();
+
+            bool[] skip = { false, true, true, false, true };
+            for (int p = 0; p < solution.Segments; p++)
+                Assert.Equal(skip[p], solution.Skip(p));
+
+            solution.CoastIndex().ShouldEqual(-1);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.TerminalIndex().ShouldEqual(3);
+
+            solution.NextPhase(0).ShouldEqual(3);
+            solution.NextPhase(1).ShouldEqual(3);
+            solution.NextPhase(2).ShouldEqual(3);
+            solution.NextPhase(3).ShouldEqual(-1);
+            solution.NextPhase(4).ShouldEqual(-1);
+
+            solution.IndexForKSPStage(2, false).ShouldEqual(0);
+            // stage 1 burns in the burn after the skipped coast, and has no coast to fly
+            solution.IndexForKSPStage(1, false).ShouldEqual(3);
+            solution.IndexForKSPStage(1, true).ShouldEqual(-1);
+            // the pruned stage is never flown
+            solution.IndexForKSPStage(0, false).ShouldEqual(-1);
+
+            // the skipped coast-before is no coast either: the burn cut before it goes on to the last stage
+            using Solution before = ZeroCoastBefore();
+            before.CoastIndex().ShouldEqual(-1);
+            before.CoastKSPStage().ShouldEqual(-1);
+            before.NextPhase(0).ShouldEqual(2);
+            before.IndexForKSPStage(1, false).ShouldEqual(2);
+            before.IndexForKSPStage(1, true).ShouldEqual(-1);
+
+            // without skipped phases the next phase is the one after it
+            using Solution standard = TheStandardLike();
+            for (int p = 0; p < standard.Segments - 1; p++)
+                standard.NextPhase(p).ShouldEqual(p + 1);
+            standard.NextPhase(standard.Segments - 1).ShouldEqual(-1);
+        }
+
+        // A skipped phase is still part of the trajectory: its times, its kind and the state along it are what the optimizer
+        // solved, and the warm start's split still splits at a skipped coast (the burns before it are mapped onto the burns
+        // before the coast of the next problem).
+        [Fact]
+        public void SkippedPhasesStayInTheTrajectory()
+        {
+            using Solution solution = ZeroCoastDuring();
+
+            solution.Segments.ShouldEqual(5);
+            solution.T0.ShouldEqual(T0, 0);
+            solution.Tf.ShouldEqual(4224, 0);
+
+            double[] start = { 4096, 4160, 4160, 4160, 4224 };
+            double[] end   = { 4160, 4160, 4160, 4224, 4224 };
+            for (int p = 0; p < solution.Segments; p++)
+            {
+                solution.StartTime(p).ShouldEqual(start[p], 0);
+                solution.EndTime(p).ShouldEqual(end[p], 0);
+                Assert.Equal(p == 2, solution.CoastPhase(p));
+            }
+
+            foreach (double t in new double[] { 4128, 4160, 4192, 4224 })
+            {
+                solution.R(t).ShouldEqual(ExpectedR(t), 1e-9);
+                solution.V(t).ShouldEqual(ExpectedV(t), 1e-9);
+            }
+
+            ShouldSplit(solution, T0, 64, 0, 64);
+            ShouldSplit(solution, 4128, 32, 0, 64);
+            // past the skipped coast everything left is the burn after it
+            ShouldSplit(solution, 4192, 0, 0, 32);
+
+            using Solution before = ZeroCoastBefore();
+            ShouldSplit(before, T0, 64, 0, 64);
         }
 
         [Fact]

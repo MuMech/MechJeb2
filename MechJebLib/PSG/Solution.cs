@@ -31,6 +31,12 @@ namespace MechJebLib.PSG
     // in seconds in an SI one.  A solution computed on the ground starts at MET zero, so guidance waiting on the pad always
     // gets its first point, and one computed in flight starts at the MET of its initial state.  While it waits on the ground
     // the launch site turns with the planet, which RotateToLaunchSite turns the solution to follow.
+    //
+    // A phase SolutionBuilder.AnalyzeStages marks Skip (one the optimizer left too short to fly, or a pruned stage) is never
+    // flown, but it stays in the Solution: its phases line up with the optimizer's for the warm start of the next solve, which
+    // reads the old Solution phase by phase.  The queries about what guidance flies (CoastIndex, CoastKSPStage, NextPhase,
+    // IndexForKSPStage) pass over skipped phases.  The trajectory is still the optimizer's, skipped phases and all: the state at
+    // a time (IndexFor), the times of the phases, TgoSplit, and what each phase is (CoastPhase).
     public class Solution : IDisposable
     {
         public readonly bool Normalized;
@@ -263,8 +269,10 @@ namespace MechJebLib.PSG
             return shortfall;
         }
 
-        // the time left in the burn before the coast, in the coast, and in the burn after it (each may be multi-stage); without
-        // a coast every burn counts as the burn after it
+        // The time left in the burn before the coast, in the coast, and in the burn after it (each may be multi-stage); without
+        // a coast every burn counts as the burn after it.  This is the warm start's split (Optimizer.TranscribePreviousSolution),
+        // which counts skipped phases on purpose: the next problem has the coast the optimizer shrank to nothing too, and the
+        // burns before it are mapped onto the burns before this coast.
         public (double burn1, double coast, double burn2) TgoSplit(double t)
         {
             double burn1 = 0, coast = 0, burn2 = 0;
@@ -307,13 +315,11 @@ namespace MechJebLib.PSG
 
         public double Vgo(double t) => DV(Tf) - DV(t);
 
+        // the KSP stage of the coast guidance flies, or -1 without one
         public int CoastKSPStage()
         {
-            for (int i = 0; i < Phases.Count; i++)
-                if (Phases[i].Coast)
-                    return Phases[i].KSPStage;
-
-            return -1;
+            int coast = CoastIndex();
+            return coast >= 0 ? Phases[coast].KSPStage : -1;
         }
 
         public int TerminalKSPStage() => Phases[TerminalIndex()].KSPStage;
@@ -321,17 +327,19 @@ namespace MechJebLib.PSG
         public int TerminalMJPhase() => Phases[TerminalIndex()].MJPhase;
 
         // The phase that ends the ascent: the phases after it are pruned stages the optimizer gives no burn time, which are
-        // never flown.  SolutionBuilder.AnalyzeStages always flags a terminal stage, so a Solution without one is a bug
-        // (AscentGuesser solutions skip AnalyzeStages and must not be asked).
+        // skipped.  SolutionBuilder.AnalyzeStages always flags a terminal stage, and never skips it, so a Solution without one
+        // is a bug (AscentGuesser solutions skip AnalyzeStages and must not be asked).
         public int TerminalIndex()
         {
             int idx = Phases.FindIndex(p => p.TerminalStage);
             Check.True(idx >= 0, "Solution has no terminal stage");
+            CheckDebug.False(Phases[idx].Skip);
             return idx;
         }
 
-        // the phase of the coast, or -1 without one (a Solution has at most one)
-        public int CoastIndex() => Phases.FindIndex(p => p.Coast);
+        // The phase of the coast guidance flies, or -1 without one (a Solution has at most one).  A coast the optimizer shrank to
+        // nothing is skipped, and so is a coast after the terminal stage.
+        public int CoastIndex() => Phases.FindIndex(p => p.Coast && !p.Skip);
 
         // -1 if no stage needs a precise shutdown (e.g. all fixed burn time stages with no coast)
         public int OptimizeKSPStage()
@@ -345,7 +353,21 @@ namespace MechJebLib.PSG
 
         public bool Unguided(double t) => Phases[IndexFor(t)].Unguided;
 
+        // the phase's kind: a skipped coast is still a coast
         public bool CoastPhase(int phase) => Phases[phase].Coast;
+
+        // guidance never flies the phase (Phase.Skip)
+        public bool Skip(int phase) => Phases[phase].Skip;
+
+        // the phase guidance flies after this one: the next one that isn't skipped, or -1 if none is left
+        public int NextPhase(int phase)
+        {
+            for (int i = phase + 1; i < Phases.Count; i++)
+                if (!Phases[i].Skip)
+                    return i;
+
+            return -1;
+        }
 
         public int KSPStage(int phase) => Phases[phase].KSPStage;
 
@@ -427,6 +449,7 @@ namespace MechJebLib.PSG
             return _tmax.Count - 1;
         }
 
+        // the phase guidance flies in KSP stage kspStage, or the coast when coasting, or -1: skipped phases are never flown
         public int IndexForKSPStage(int kspStage, bool coasting)
         {
             // phases are in chronological order, which is descending KSPStage order, so walking backwards and
@@ -435,6 +458,8 @@ namespace MechJebLib.PSG
 
             for (int i = Phases.Count - 1; i >= 0; i--)
             {
+                if (Phases[i].Skip)
+                    continue;
                 // only ever one coast phase so this test is good enough
                 if (Phases[i].Coast && coasting)
                     return i;

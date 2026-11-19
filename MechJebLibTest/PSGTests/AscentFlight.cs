@@ -345,8 +345,9 @@ namespace MechJebLibTest.PSGTests
 
         /// <summary>
         ///     A Solution over the flight plan's stages that aren't done, from startIndex (the bottom by default) up, one leg each,
-        ///     starting at MET start.  As SolutionBuilder.AnalyzeStages does, the last leg is the terminal stage and the last
-        ///     optimized burn has the precise shutdown.  Guidance flies its own copy of the flight plan.
+        ///     starting at MET start.  As SolutionBuilder.AnalyzeStages does, the last leg is the terminal stage, the last
+        ///     optimized burn has the precise shutdown, and the legs before it too short to fly (a zero-length coast or burn) are
+        ///     skipped.  Guidance flies its own copy of the flight plan.
         /// </summary>
         public static Solution Solve(FlightPlan plan, double start, int startIndex, params Leg[] legs)
         {
@@ -376,15 +377,17 @@ namespace MechJebLibTest.PSGTests
                 }
                 else
                 {
-                    phase = NewBurn(stage.KSPStage, stage.MJStage, m, m / 2, 300, leg.Seconds, leg.AllowShutdown);
+                    // a zero-length burn burns nothing, though its stage's thrust needs a burn time
+                    phase = NewBurn(stage.KSPStage, stage.MJStage, m, m / 2, 300, leg.Seconds > 0 ? leg.Seconds : 1, leg.AllowShutdown);
                     phase.PropellantLeft = leg.PropellantLeft;
-                    segs[k] = new Seg(phase, tbar, tbar1, m, m / 2, _yHat, _yHat, 1, 1);
+                    segs[k] = new Seg(phase, tbar, tbar1, m, leg.Seconds > 0 ? m / 2 : m, _yHat, _yHat, 1, 1);
                     m /= 4;
                 }
 
                 phase.FlightPlanIndex = indices[k];
                 phase.PreciseShutdown = k == precise;
                 phase.TerminalStage = k == legs.Length - 1;
+                phase.Skip = !phase.TerminalStage && leg.Seconds / TIME_SCALE < SolutionBuilder.SKIP_TIME;
                 tbar = tbar1;
             }
 

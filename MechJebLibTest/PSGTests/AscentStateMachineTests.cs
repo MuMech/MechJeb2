@@ -383,11 +383,12 @@ namespace MechJebLibTest.PSGTests
          * How burns end
          */
 
-        // the BurnEnd of each phase of a Solution, and "-" for its coast
+        // the BurnEnd of each phase of a Solution, "-" for its coast, and "skip" for a phase guidance never flies
         private static string BurnEnds(AscentFlight flight, Solution solution)
         {
             flight.Engage(solution);
-            return string.Join(" ", solution.Phases.Select((phase, p) => phase.Coast ? "-" : flight.Machine.BurnEndOf(p).ToString()));
+            return string.Join(" ", solution.Phases.Select((phase, p) =>
+                phase.Skip ? "skip" : phase.Coast ? "-" : flight.Machine.BurnEndOf(p).ToString()));
         }
 
         [Fact]
@@ -421,6 +422,22 @@ namespace MechJebLibTest.PSGTests
             // an optimized burn the optimizer burns out
             flight = TwoStages();
             Assert.Equal("DEPLETION TERMINAL", BurnEnds(flight, Solve(flight.Plan(), MET0, Optimized(40), Cut(30))));
+
+            // Phases the optimizer shrank to nothing are skipped.  A coast-during shrunk to nothing takes the burn before it
+            // with it (the zero coast constraint), and its stage is one burn.
+            flight = TwoStages(80);
+            Assert.Equal("skip skip DEPLETION BURNOUT",
+                BurnEnds(flight, Solve(flight.Plan(DURING, 1), MET0, Cut(0), Coast(0), Fixed(80), Fixed(30))));
+
+            // without its coast the burn cut before a coast-before is cut before a fixed upper stack
+            flight = ThreeStages();
+            Assert.Equal("JETTISON skip DEPLETION BURNOUT",
+                BurnEnds(flight, Solve(flight.Plan(BEFORE, 1), MET0, Cut(50), Coast(0), Fixed(40), Fixed(30))));
+
+            // without the burn before a coast-during, the booster is the last burn before the coast
+            flight = ThreeStages();
+            Assert.Equal("COAST skip - DEPLETION BURNOUT",
+                BurnEnds(flight, Solve(flight.Plan(DURING, 1), MET0, Fixed(60), Cut(0), Coast(20), Fixed(40), Fixed(30))));
         }
 
         /*
@@ -733,6 +750,101 @@ namespace MechJebLibTest.PSGTests
             Assert.Equal(StagedBy.AUTOSTAGING, flight.Stagings[1].By);
             Assert.Equal(1, flight.Stagings[1].From);
             AtAbout(solution.EndTime(1), flight.Stagings[1].Met);
+            Assert.All(flight.Engines, e => Assert.Equal(1, e.Burns));
+        }
+
+        /*
+         * Phases the optimizer shrank to nothing, which guidance skips (Phase.Skip)
+         */
+
+        // a skipped coast is no coast: no events, no RCS, and the autostaging stops at the last stage
+        private static void NoCoast(AscentFlight flight)
+        {
+            Assert.Equal(0, flight.Count(AscentEvents.COAST_STARTED));
+            Assert.Equal(0, flight.Count(AscentEvents.COAST_ENDED));
+            Assert.Equal(0, flight.Count(AscentMessages.RCS_COAST));
+            Assert.DoesNotContain(flight.Log, t => t.Command.RCSGroupOn);
+            Assert.All(flight.Log.Where(t => t.State != PSGState.FINISHED), t => Assert.Equal(0, t.Command.AutostageLimit));
+            Assert.False(flight.Machine.HasCoasted);
+        }
+
+        // A coast-during in the last stage the optimizer shrank to nothing, with the burn before it (the zero coast constraint):
+        // the stage is one burn, never cut and relit, and terminal guidance ends it at the end of the burn after the coast.
+        [Fact]
+        public void ZeroCoastDuringIsOneBurn()
+        {
+            AscentFlight flight = OneStage();
+            // BURN:0 COAST_DURING:0 BURN:0
+            Solution solution = Solve(flight.Plan(DURING, 0), MET0, Cut(0), Coast(0), Cut(60));
+            flight.Engage(solution);
+
+            flight.Fly();
+
+            Assert.Equal("PRELAUNCH PITCH_PROGRAM BURNING TERMINAL FINISHED", flight.Sequence());
+            AtAbout(solution.Tf - 10, flight.EnteredAt(PSGState.TERMINAL), DT);
+            AtAbout(solution.Tf, flight.EnteredAt(PSGState.FINISHED), 2 * DT);
+            NoCoast(flight);
+            Assert.Equal(1, flight.EngineOf(1).Burns);
+            Assert.InRange(flight.EngineOf(1).Fuel, 39.9, 40.1);
+        }
+
+        // the same before the last stage: the stage burns out into the last stage, which autostaging lights
+        [Fact]
+        public void ZeroCoastDuringBeforeTheLastStage()
+        {
+            AscentFlight flight = TwoStages(80);
+            // BURN:0 BURN:1 COAST_DURING:1 BURN:1
+            Solution solution = Solve(flight.Plan(DURING, 1), MET0, Cut(0), Coast(0), Fixed(80), Fixed(30));
+            flight.Engage(solution);
+
+            flight.Fly();
+
+            Assert.Equal("PRELAUNCH PITCH_PROGRAM BURNING FINISHED", flight.Sequence());
+            NoCoast(flight);
+            Assert.All(flight.Log, t => Assert.Equal(AscentStaging.NONE, t.Command.Staging));
+            Staging staging = Assert.Single(flight.Stagings);
+            Assert.Equal(StagedBy.AUTOSTAGING, staging.By);
+            AtAbout(MET0 + 80, staging.Met, 0, flight.StatsPeriod + 2 * DT);
+            Assert.All(flight.Engines, e => Assert.Equal(1, e.Burns));
+        }
+
+        // A coast-before the optimizer shrank to nothing: the burn cut before it is cut before a fixed upper stack, which JETTISON
+        // drops at its planned end.
+        [Fact]
+        public void ZeroCoastBeforeJettisons()
+        {
+            AscentFlight flight = ThreeStages();
+            // BURN:0 BURN:1 COAST_BEFORE:1 BURN:2
+            Solution solution = Solve(flight.Plan(BEFORE, 1), MET0, Cut(50), Coast(0), Fixed(40), Fixed(30));
+            flight.Engage(solution);
+
+            flight.Fly();
+
+            Assert.Equal("PRELAUNCH PITCH_PROGRAM BURNING JETTISON BURNING FINISHED", flight.Sequence());
+            AtAbout(MET0 + 50, flight.EnteredAt(PSGState.JETTISON));
+            NoCoast(flight);
+            Assert.Equal(StagedBy.IMMEDIATE, flight.Stagings[0].By);
+            Assert.Equal(2, flight.Stagings[0].From);
+            Assert.InRange(flight.EngineOf(3).Fuel, 9.9, 10.1);
+            Assert.All(flight.Engines, e => Assert.Equal(1, e.Burns));
+        }
+
+        // The burn before a coast-during shrunk to nothing, with a coast that isn't: the coast starts as the booster before it
+        // ends, and the coast's stage lights once, after it.
+        [Fact]
+        public void SkippedBurnBeforeACoast()
+        {
+            AscentFlight flight = ThreeStages();
+            // BURN:0 BURN:1 COAST_DURING:1 BURN:1 BURN:2
+            Solution solution = Solve(flight.Plan(DURING, 1), MET0, Fixed(60), Cut(0), Coast(20), Fixed(40), Fixed(30));
+            flight.Engage(solution);
+
+            flight.Fly();
+
+            Assert.Equal("PRELAUNCH PITCH_PROGRAM BURNING COASTING BURNING FINISHED", flight.Sequence());
+            AtAbout(MET0 + 60, flight.EnteredAt(PSGState.COASTING));
+            Assert.Equal(1, flight.Count(AscentEvents.COAST_STARTED));
+            AtAbout(solution.EndTime(2), flight.At(AscentEvents.COAST_ENDED));
             Assert.All(flight.Engines, e => Assert.Equal(1, e.Burns));
         }
 

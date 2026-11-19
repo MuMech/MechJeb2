@@ -257,8 +257,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.CoastKSPStage().ShouldEqual(-1);
             solution.IndexForKSPStage(7, false).ShouldEqual(0);
             solution.IndexForKSPStage(4, false).ShouldEqual(1);
-            solution.IndexForKSPStage(2, false).ShouldEqual(2);
-            solution.IndexForKSPStage(0, false).ShouldEqual(3);
+            // the stages after the terminal stage are pruned (skipped), so guidance has no phase to fly in them
+            solution.Skip(2).ShouldBeTrue();
+            solution.Skip(3).ShouldBeTrue();
+            solution.IndexForKSPStage(2, false).ShouldEqual(-1);
+            solution.IndexForKSPStage(0, false).ShouldEqual(-1);
             solution.IndexForKSPStage(0, true).ShouldEqual(-1);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
