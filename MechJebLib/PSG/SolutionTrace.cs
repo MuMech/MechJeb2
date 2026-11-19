@@ -18,8 +18,10 @@ namespace MechJebLib.PSG
     ///     A SI Solution sampled for plotting and export: a row per sample, phase by phase, with SamplesPerNode samples across
     ///     each interpolant node so that what the cubic pieces do between their collocation points shows.  Each phase is sampled
     ///     on its own interpolant from its start to its end, so a jump at a phase boundary shows as two rows at the same MET.
-    ///     It also keeps the phase boundaries, the node boundaries and the collocation points.  Sampling evaluates the solution,
-    ///     which updates its lookup caches: sample on the thread that owns it.
+    ///     The vertical rise of a solution computed on the ground comes first, as phase -1 in the first phase's stage.  It
+    ///     also keeps the phase boundaries, the node boundaries and the collocation points of the phases, which the rise, not
+    ///     being optimizer output, doesn't add to.  Sampling evaluates the solution, which updates its lookup caches: sample
+    ///     on the thread that owns it.
     /// </summary>
     public sealed class SolutionTrace
     {
@@ -51,8 +53,11 @@ namespace MechJebLib.PSG
 
         private readonly List<double>[] _columns = new List<double>[ColumnCount];
 
-        // the MET where each phase starts, and the end of the last one
+        // the MET where the rise and each phase starts, and the end of the last one
         public readonly List<double> PhaseBoundaries = new List<double>();
+
+        // the number of phases, without the rise
+        public int PhaseCount { get; private set; }
 
         // the bounds between interpolant nodes, of every phase
         public readonly List<double> NodeBoundaries = new List<double>();
@@ -83,6 +88,7 @@ namespace MechJebLib.PSG
             NodeBoundaries.Clear();
             Knots.Clear();
             T0 = Tf = 0;
+            PhaseCount = 0;
         }
 
         /// <summary>
@@ -98,10 +104,26 @@ namespace MechJebLib.PSG
 
             Clear();
             Aero = solution.Aero;
-            T0 = solution.T0;
+            T0 = solution.TStart;
             Tf = solution.Tf;
+            PhaseCount = solution.Segments;
 
             var bounds = new List<double>();
+
+            if (solution.HasRise)
+            {
+                PhaseBoundaries.Add(solution.TStart);
+                solution.RiseNodeBoundaries(bounds);
+
+                for (int n = 0; n + 1 < bounds.Count; n++)
+                {
+                    double left = bounds[n], right = bounds[n + 1];
+                    for (int k = 0; k < samplesPerNode; k++)
+                        AddRiseRow(solution, left + (right - left) * k / samplesPerNode);
+                }
+
+                AddRiseRow(solution, solution.T0);
+            }
 
             for (int p = 0; p < solution.Segments; p++)
             {
@@ -137,25 +159,37 @@ namespace MechJebLib.PSG
 
         private void AddRow(Solution solution, int p, double t)
         {
-            InterpolantLayout x = solution.State(p, t);
             Phase phase = solution.Phases[p];
+            double dv = solution.DV(Math.Min(Math.Max(t, solution.StartTime(p)), solution.EndTime(p)));
+            AddRow(solution, solution.State(p, t), t, p, phase.KSPStage, phase.MJPhase, phase.Coast, phase.Unguided, dv);
+        }
+
+        // a row on the vertical rise, which the first phase's stage burns, guided straight up
+        private void AddRiseRow(Solution solution, double t)
+        {
+            Phase phase = solution.Phases[0];
+            AddRow(solution, solution.RiseState(t), t, -1, phase.KSPStage, phase.MJPhase, false, false, solution.DV(t));
+        }
+
+        private void AddRow(Solution solution, InterpolantLayout x, double t, int p, int kspStage, int mjPhase, bool coast, bool unguided,
+            double dv)
+        {
             AeroModel aero = solution.Aero;
             (double pitch, double heading) = Astro.ECIToPitchHeading(x.R, x.U);
 
             Add(Column.MET, t);
             Add(Column.PHASE, p);
-            Add(Column.KSP_STAGE, phase.KSPStage);
-            Add(Column.MJ_PHASE, phase.MJPhase);
-            Add(Column.COAST, phase.Coast ? 1 : 0);
-            Add(Column.UNGUIDED, phase.Unguided ? 1 : 0);
+            Add(Column.KSP_STAGE, kspStage);
+            Add(Column.MJ_PHASE, mjPhase);
+            Add(Column.COAST, coast ? 1 : 0);
+            Add(Column.UNGUIDED, unguided ? 1 : 0);
             Add(Column.ALTITUDE, x.R.magnitude - aero.RBody);
             Add(Column.SPEED, x.V.magnitude);
             Add(Column.SURFACE_SPEED, aero.SurfaceVelocity(x.R, x.V).magnitude);
             Add(Column.PITCH, Rad2Deg(pitch));
             Add(Column.HEADING, Rad2Deg(heading));
-            Add(Column.THROTTLE, phase.Coast ? 0 : x.T);
+            Add(Column.THROTTLE, coast ? 0 : x.T);
             Add(Column.MASS, x.M);
-            double dv = solution.DV(Math.Min(Math.Max(t, solution.StartTime(p)), solution.EndTime(p)));
             Add(Column.DELTA_V, dv);
             Add(Column.DELTA_V_LEFT, solution.DV(solution.Tf) - dv);
             Add(Column.AOA, Rad2Deg(aero.AngleOfAttack(x.R, x.V, x.U)));

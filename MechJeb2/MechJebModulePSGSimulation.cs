@@ -715,6 +715,12 @@ namespace MuMech
                    .SetTarget(peR, apR, attR, Deg2Rad(Inc), Deg2Rad(lan), ArgP, fpa, attachAltFlag, lanflag, ArgPFlag)
                    .FlightPlan(FlightPlan);
 
+                // On the ground guidance flies straight up at full throttle to the pitch start height before the pitch program,
+                // so the solve starts at the top of that rise, which the solution keeps in front of its first phase.  After
+                // liftoff the solves are paused until guidance takes over, past the rise.
+                if (!Vessel.VesselOffGround())
+                    ascentBuilder.VerticalRise(Max(_ascentSettings.PitchStartHeight - VesselState.AltitudeBottom, 0));
+
                 // note that we have to solve the atmospheric solution even when flying in vacuum, or the optimizer may decide to dip back
                 // into the atmosphere again and burn up the rocket.
                 if (MainBody.atmosphere)

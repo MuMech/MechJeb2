@@ -41,8 +41,35 @@ namespace MechJebLib.PSG
             _vars = new VariableProxy(_optimizer.Problem, _optimizer.Phases, _optimizer.Terminal, _optimizer.N);
 
             Problem problem = _optimizer.Problem;
-            _atmosphere = problem.H0 > 0 && problem.Rho0CdAref > 0;
-            _invDensityR0 = problem.H0 > 0 ? 1.0 / NormalizedDensity(problem.R0.magnitude, problem.RBody, problem.H0).M : 0;
+            _atmosphere = HasAtmosphere(problem);
+            _invDensityR0 = InvDensityR0(problem);
+        }
+
+        // whether the dynamics have drag and back pressure (VDotAtmo) or are in vacuum (VDotVacuum)
+        internal static bool HasAtmosphere(Problem problem) => problem.H0 > 0 && problem.Rho0CdAref > 0;
+
+        // one over the density at the problem's initial position, which the engines' back pressure is relative to (0 without
+        // an atmosphere): their VexCurrent is the exhaust velocity there
+        internal static double InvDensityR0(Problem problem) =>
+            problem.H0 > 0 ? 1.0 / NormalizedDensity(problem.R0.magnitude, problem.RBody, problem.H0).M : 0;
+
+        /// <summary>
+        ///     VDot at full throttle in doubles, for the AscentGuesser and the VerticalRise, with the drag written so that it is
+        ///     still finite at zero airspeed on the pad.  Normalized units.
+        /// </summary>
+        internal static V3 FullThrottleAcceleration(Problem problem, Phase phase, double invDensityR0, V3 r, V3 v, double m, V3 u)
+        {
+            double rm = r.magnitude;
+            V3 gravity = -r / (rm * rm * rm);
+
+            if (!HasAtmosphere(problem))
+                return gravity + phase.VacThrust / m * u;
+
+            double density = NormalizedDensity(rm, problem.RBody, problem.H0).M;
+            V3 vr = v - V3.Cross(problem.W, r);
+            V3 drag = 0.5 * problem.Rho0CdAref * density * vr.magnitude * vr;
+            double thrust = phase.Mdot * (phase.VexCurrent + (phase.VexVacuum - phase.VexCurrent) * (1.0 - density * invDensityR0));
+            return gravity + thrust / m * u - drag / m;
         }
 
         public readonly struct ConstraintArgs

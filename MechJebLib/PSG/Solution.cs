@@ -32,6 +32,12 @@ namespace MechJebLib.PSG
     // gets its first point, and one computed in flight starts at the MET of its initial state.  While it waits on the ground
     // the launch site turns with the planet, which RotateToLaunchSite turns the solution to follow.
     //
+    // A solution computed on the ground may start with the vertical rise guidance flies before it pitches over, which was
+    // presolved ahead of the optimizer (VerticalRise): the trajectory then starts at TStart on the ground, and its phases at T0
+    // at the top of the rise.  The rise is not a phase, so the phases, their times and indices, and the state on a phase's own
+    // interpolant are the optimizer's.  Only the queries by time see it: the state before T0 (R, V, U, M, StateVectors), the
+    // delta-v used and left (DV, Vgo), and the time and delta-v left in the first phase, which burns the rise.
+    //
     // A phase SolutionBuilder.AnalyzeStages marks Skip (one the optimizer left too short to fly, or a pruned stage) is never
     // flown, but it stays in the Solution: its phases line up with the optimizer's for the warm start of the next solve, which
     // reads the old Solution phase by phase.  The queries about what guidance flies (CoastIndex, CoastKSPStage, NextPhase,
@@ -56,11 +62,14 @@ namespace MechJebLib.PSG
         private readonly List<double>         _dvend        = new List<double>();
         private readonly List<VecInterpolant> _interpolants = new List<VecInterpolant>();
 
+        // the vertical rise from TStart to T0, or null (see Problem.Rise)
+        private VecInterpolant? _rise;
+
         // in SI units, for TerminalLines
         private readonly double _mu;
         private readonly double _rbody;
 
-        // the initial position the solution was solved from, in its units
+        // the launch site the solution was solved at (the start of the rise, or the initial position), in its units
         private readonly V3 _r0;
 
         // the turn RotateToLaunchSite applies to every vector the solution returns
@@ -68,24 +77,37 @@ namespace MechJebLib.PSG
 
         public int Segments => Phases.Count;
 
-        // the MET of the start and the end of the trajectory
+        // the MET of the start of the phases and the end of the trajectory
         public double T0 => _tmin[0];
         public double Tf => _tmax[Segments - 1];
 
+        // the trajectory starts with the vertical rise to T0
+        public bool HasRise => _rise != null;
+
+        // the MET of the start of the trajectory: of the rise, or of the phases
+        public double TStart => _rise?.MinT ?? T0;
+
+        // computed on the ground at liftoff, so RotateToLaunchSite turns it to follow the launch site
+        public bool FromPad => TStart <= 0;
+
         // a normalized solution for the problem
         public Solution(Problem problem, FlightPlan? flightPlan)
-            : this(problem.Scale, true, problem.Mu, problem.RBody * problem.Scale.LengthScale, problem.R0, AeroModel.From(problem), flightPlan)
+            : this(problem.Scale, true, problem.Mu, problem.RBody * problem.Scale.LengthScale, problem.R0, AeroModel.From(problem), flightPlan,
+                problem.Rise?.DeepCopy())
         {
         }
 
-        private Solution(Scale scale, bool normalized, double mu, double rbody, V3 r0, AeroModel aero, FlightPlan? flightPlan)
+        // takes ownership of rise
+        private Solution(Scale scale, bool normalized, double mu, double rbody, V3 r0, AeroModel aero, FlightPlan? flightPlan,
+            VecInterpolant? rise)
         {
             Aero = aero;
             Scale = scale;
             Normalized = normalized;
             _mu = mu;
             _rbody = rbody;
-            _r0 = r0;
+            _rise = rise;
+            _r0 = rise != null ? RiseRaw(rise.MinT).R : r0;
             FlightPlan = flightPlan;
         }
 
@@ -98,7 +120,8 @@ namespace MechJebLib.PSG
             Phases.Add(phase.DeepCopy());
             _interpolants.Add(interpolant);
             int idx = _interpolants.Count - 1;
-            double dvstart = _dvend.Count > 0 ? _dvend[_dvend.Count - 1] : 0;
+            // the first phase burns the rise
+            double dvstart = _dvend.Count > 0 ? _dvend[_dvend.Count - 1] : RiseDV(phase, T0);
             double dvend = dvstart + phase.DeltaVFromMass(M(idx, interpolant.MinT), M(idx, interpolant.MaxT));
             _dvstart.Add(dvstart);
             _dvend.Add(dvend);
@@ -106,7 +129,7 @@ namespace MechJebLib.PSG
 
         public Solution DeepCopy()
         {
-            var dup = new Solution(Scale, Normalized, _mu, _rbody, _r0, Aero, FlightPlan?.DeepCopy()) { _rotation = _rotation };
+            var dup = new Solution(Scale, Normalized, _mu, _rbody, _r0, Aero, FlightPlan?.DeepCopy(), _rise?.DeepCopy()) { _rotation = _rotation };
             for (int i = 0; i < _interpolants.Count; i++)
                 dup.AddSegment(_interpolants[i].DeepCopy(), Phases[i]);
             return dup;
@@ -120,9 +143,6 @@ namespace MechJebLib.PSG
         {
             Check.True(Normalized, "the Solution is already in SI units");
 
-            var dup = new Solution(Scale, false, _mu, _rbody, _r0 * Scale.LengthScale, Aero.DeNormalize(Scale),
-                FlightPlan?.DeepCopy()) { _rotation = _rotation };
-
             using var yScale = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             new InterpolantLayout
             {
@@ -132,6 +152,12 @@ namespace MechJebLib.PSG
                 U = V3.one,
                 T = 1
             }.CopyTo(yScale);
+
+            VecInterpolant? rise = _rise?.DeepCopy();
+            rise?.Rescale(Scale.TimeScale, yScale);
+
+            var dup = new Solution(Scale, false, _mu, _rbody, _r0 * Scale.LengthScale, Aero.DeNormalize(Scale),
+                FlightPlan?.DeepCopy(), rise) { _rotation = _rotation };
 
             for (int i = 0; i < _interpolants.Count; i++)
             {
@@ -147,15 +173,15 @@ namespace MechJebLib.PSG
         ///     The launch site turns with the planet while the vessel waits on the ground, so this turns a solution computed on
         ///     the ground about the planet's pole (V3.northpole), from the launch site it was solved at to r0, the launch site
         ///     now.  Every vector the solution returns is turned, which carries its initial position and velocity exactly onto the
-        ///     moved launch site and keeps its inclination.  A solution computed in flight (T0 > 0) is never turned.  Once the
-        ///     vessel has lifted off a solution computed on the ground keeps following the vessel, which is close enough while it
-        ///     climbs over the launch site, until the first solution computed in flight replaces it.
-        ///     Only the direction of r0 matters, so it can be in meters or normalized units.  Each call replaces the last
-        ///     rotation, so it can be called every tick.
+        ///     moved launch site and keeps its inclination, and the vertical rise along with the rest.  A solution which doesn't
+        ///     start at liftoff (FromPad) is never turned.  Once the vessel has lifted off a solution computed on the ground
+        ///     keeps following the vessel, which is close enough while it climbs over the launch site, until the first solution
+        ///     computed in flight replaces it.  Only the direction of r0 matters, so it can be in meters or normalized units.
+        ///     Each call replaces the last rotation, so it can be called every tick.
         /// </summary>
         public void RotateToLaunchSite(V3 r0)
         {
-            if (T0 > 0)
+            if (!FromPad)
                 return;
 
             // the angle about the pole between the two launch sites' projections onto the equator
@@ -179,10 +205,31 @@ namespace MechJebLib.PSG
             return x;
         }
 
-        // adds the bounds between phase p's interpolant nodes, its start and end included
-        public void NodeBoundaries(int p, List<double> into)
+        /// <summary>The state on the vertical rise at t, turned like every other accessor.  It extrapolates outside the rise.</summary>
+        public InterpolantLayout RiseState(double t)
         {
-            VecInterpolant interpolant = _interpolants[p];
+            Check.True(HasRise, "the Solution has no vertical rise");
+
+            InterpolantLayout x = RiseRaw(t);
+            x.R = _rotation * x.R;
+            x.V = _rotation * x.V;
+            x.U = _rotation * x.U;
+            return x;
+        }
+
+        // adds the bounds between the rise's interpolant nodes, its start and end included
+        public void RiseNodeBoundaries(List<double> into)
+        {
+            Check.True(HasRise, "the Solution has no vertical rise");
+
+            AddNodeBoundaries(_rise!, into);
+        }
+
+        // adds the bounds between phase p's interpolant nodes, its start and end included
+        public void NodeBoundaries(int p, List<double> into) => AddNodeBoundaries(_interpolants[p], into);
+
+        private static void AddNodeBoundaries(VecInterpolant interpolant, List<double> into)
+        {
             for (int i = 0; i < interpolant.NodeCount; i++)
                 into.Add(interpolant.NodeLeftT(i));
             if (interpolant.NodeCount > 0)
@@ -227,19 +274,47 @@ namespace MechJebLib.PSG
             return InterpolantLayout.CreateFrom(xRaw).M;
         }
 
-        // the delta-v used since the start of the trajectory
+        // the delta-v used since the start of the trajectory, the rise included
         public double DV(double t)
         {
+            if (InRise(t))
+                return RiseDV(Phases[0], t);
+
             int idx = IndexFor(t);
             double dv = Phases[idx].DeltaVFromMass(M(idx, _tmin[idx]), M(idx, t));
             return _dvstart[idx] + dv;
         }
 
-        // the delta-v left in phase n
+        // the delta-v left in phase n, the rest of the rise included in the first phase
         public double DV(double t, int n)
         {
+            double mf = M(n, _tmax[n]);
+
+            if (n == 0 && InRise(t))
+                return Phases[0].DeltaVFromMass(RiseRaw(Max(t, TStart)).M, mf);
+
             t = Clamp(t, _tmin[n], _tmax[n]);
-            return Phases[n].DeltaVFromMass(M(n, t), M(n, _tmax[n]));
+            return Phases[n].DeltaVFromMass(M(n, t), mf);
+        }
+
+        // the time is before T0 on a solution with a rise
+        private bool InRise(double t) => _rise != null && t < T0;
+
+        // the state on the rise, unturned
+        private InterpolantLayout RiseRaw(double t)
+        {
+            using Vec xRaw = _rise!.Evaluate(t);
+            return InterpolantLayout.CreateFrom(xRaw);
+        }
+
+        // the delta-v the first phase burns on the rise from its start to t (none without a rise)
+        private double RiseDV(Phase first, double t)
+        {
+            if (_rise == null)
+                return 0;
+
+            t = Clamp(t, TStart, _rise.MaxT);
+            return first.DeltaVFromMass(RiseRaw(TStart).M, RiseRaw(t).M);
         }
 
         /// <summary>
@@ -305,12 +380,14 @@ namespace MechJebLib.PSG
         // runs negative past Tf
         public double Tgo(double t) => Tf - t;
 
-        // the time left in phase n: all of it before the phase starts, and none of it once it is over
+        // the time left in phase n: all of it before the phase starts, and none of it once it is over.  The first phase
+        // starts with the rise.
         public double Tgo(double t, int n)
         {
-            if (t > _tmin[n])
+            double start = n == 0 ? TStart : _tmin[n];
+            if (t > start)
                 return Max(_tmax[n] - t, 0);
-            return _tmax[n] - _tmin[n];
+            return _tmax[n] - start;
         }
 
         public double Vgo(double t) => DV(Tf) - DV(t);
@@ -471,7 +548,8 @@ namespace MechJebLib.PSG
             return idx;
         }
 
-        private Vec Interpolate(double t) => _interpolants[IndexFor(t)].Evaluate(t);
+        // the rise before T0
+        private Vec Interpolate(double t) => InRise(t) ? _rise!.Evaluate(t) : _interpolants[IndexFor(t)].Evaluate(t);
 
         private Vec Interpolate(int segment, double t) => _interpolants[segment].Evaluate(t);
 
@@ -480,6 +558,8 @@ namespace MechJebLib.PSG
             foreach (VecInterpolant i in _interpolants)
                 i.Dispose();
             _interpolants.Clear();
+            _rise?.Dispose();
+            _rise = null;
         }
     }
 }

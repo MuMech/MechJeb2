@@ -349,7 +349,17 @@ namespace MechJebLibTest.PSGTests
         ///     optimized burn has the precise shutdown, and the legs before it too short to fly (a zero-length coast or burn) are
         ///     skipped.  Guidance flies its own copy of the flight plan.
         /// </summary>
-        public static Solution Solve(FlightPlan plan, double start, int startIndex, params Leg[] legs)
+        public static Solution Solve(FlightPlan plan, double start, int startIndex, params Leg[] legs) =>
+            Solve(plan, start, startIndex, double.NaN, 1, legs);
+
+        /// <summary>
+        ///     Like Solve, with the vertical rise of a solution computed on the ground in front of it, from MET riseStart to
+        ///     start, and every burn planned at the given throttle (which is also its MinThrottle).
+        /// </summary>
+        public static Solution SolveWithRise(FlightPlan plan, double riseStart, double start, double throttle, params Leg[] legs) =>
+            Solve(plan, start, plan.Stages.Count - 1, riseStart, throttle, legs);
+
+        private static Solution Solve(FlightPlan plan, double start, int startIndex, double riseStart, double throttle, Leg[] legs)
         {
             var indices = new List<int>();
             for (int i = startIndex; i >= 0; i--)
@@ -362,6 +372,7 @@ namespace MechJebLibTest.PSGTests
             var segs = new Seg[legs.Length];
             double tbar = (start - T0) / TIME_SCALE;
             double m = 64 * Math.Pow(4, legs.Length);
+            double riseM0 = 2 * m;
 
             for (int k = 0; k < legs.Length; k++)
             {
@@ -378,9 +389,10 @@ namespace MechJebLibTest.PSGTests
                 else
                 {
                     // a zero-length burn burns nothing, though its stage's thrust needs a burn time
-                    phase = NewBurn(stage.KSPStage, stage.MJStage, m, m / 2, 300, leg.Seconds > 0 ? leg.Seconds : 1, leg.AllowShutdown);
+                    phase = NewBurn(stage.KSPStage, stage.MJStage, m, m / 2, 300, leg.Seconds > 0 ? leg.Seconds : 1, leg.AllowShutdown,
+                        minThrottle: throttle);
                     phase.PropellantLeft = leg.PropellantLeft;
-                    segs[k] = new Seg(phase, tbar, tbar1, m, leg.Seconds > 0 ? m / 2 : m, _yHat, _yHat, 1, 1);
+                    segs[k] = new Seg(phase, tbar, tbar1, m, leg.Seconds > 0 ? m / 2 : m, _yHat, _yHat, throttle, throttle);
                     m /= 4;
                 }
 
@@ -391,7 +403,7 @@ namespace MechJebLibTest.PSGTests
                 tbar = tbar1;
             }
 
-            return Build(plan, segs);
+            return double.IsNaN(riseStart) ? Build(plan, segs) : BuildWithRise(plan, (riseStart - T0) / TIME_SCALE, riseM0, segs);
         }
 
         public static Solution Solve(FlightPlan plan, double start, params Leg[] legs) => Solve(plan, start, plan.Stages.Count - 1, legs);

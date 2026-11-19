@@ -486,7 +486,7 @@ namespace MuMech
         // guidance flies in SI units and MET seconds, so this takes a DeNormalized() Solution
         public void SetSolution(Solution solution)
         {
-            if (_machine.SetSolution(solution) && solution.T0 <= 0)
+            if (_machine.SetSolution(solution) && solution.FromPad)
                 PadSolution = solution;
         }
 
@@ -557,11 +557,12 @@ namespace MuMech
             const int SEGMENTS = 50;
 
             _trajectory.Clear();
-            double dt = (Solution.Tf - Solution.T0) / SEGMENTS;
+            // from the ground, with the vertical rise
+            double dt = (Solution.Tf - Solution.TStart) / SEGMENTS;
 
             for (int i = 0; i <= SEGMENTS; i++)
             {
-                double t = Solution.T0 + dt * i;
+                double t = Solution.TStart + dt * i;
 
                 _trajectory.Add(Solution.R(t).V3ToWorldRotated() + MainBody.position);
             }

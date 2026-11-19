@@ -120,8 +120,8 @@ namespace MechJebLib.PSG
             _flightPlan = flightPlan;
 
             // the same atmosphere as AscentProblem
-            _atmosphere = problem.H0 > 0 && problem.Rho0CdAref > 0;
-            _invDensityR0 = problem.H0 > 0 ? 1.0 / AscentProblem.NormalizedDensity(problem.R0.magnitude, problem.RBody, problem.H0).M : 0;
+            _atmosphere = AscentProblem.HasAtmosphere(problem);
+            _invDensityR0 = AscentProblem.InvDensityR0(problem);
 
             Scale scale = problem.Scale;
             _rFloor = Min(problem.R0.magnitude, problem.RBody) - IMPACT_MARGIN / scale.LengthScale;
@@ -195,22 +195,8 @@ namespace MechJebLib.PSG
             }
         }
 
-        // the optimizer's dynamics (AscentProblem.VDotAtmo and VDotVacuum) at full throttle, with the drag written so that
-        // it is still finite at zero airspeed on the pad
-        private V3 Acceleration(V3 r, V3 v, double m, V3 u)
-        {
-            double rm = r.magnitude;
-            V3 gravity = -r / (rm * rm * rm);
-
-            if (!_atmosphere)
-                return gravity + _phase.VacThrust / m * u;
-
-            double density = AscentProblem.NormalizedDensity(rm, _problem.RBody, _problem.H0).M;
-            V3 vr = SurfaceVelocity(r, v);
-            V3 drag = 0.5 * _problem.Rho0CdAref * density * vr.magnitude * vr;
-            double thrust = _phase.Mdot * (_phase.VexCurrent + (_phase.VexVacuum - _phase.VexCurrent) * (1.0 - density * _invDensityR0));
-            return gravity + thrust / m * u - drag / m;
-        }
+        // the optimizer's dynamics (AscentProblem.VDotAtmo and VDotVacuum) at full throttle
+        private V3 Acceleration(V3 r, V3 v, double m, V3 u) => AscentProblem.FullThrottleAcceleration(_problem, _phase, _invDensityR0, r, v, m, u);
 
         private void Rhs(Vec yin, double t, Vec dyout)
         {
@@ -577,7 +563,7 @@ namespace MechJebLib.PSG
                 double twr = LiftoffTWR();
                 // the guess also runs in flight when there is no solution to start from: then the first phase is the current stage,
                 // at its current mass, and the problem's MET is past zero
-                if (_problem.T0 > 0)
+                if (!_problem.PadStart)
                     throw new Exception(
                         $"No ascent found from here: the rocket falls back even flying almost straight up (thrust-to-weight now {twr:F2})");
                 throw new Exception(twr < 1
@@ -630,7 +616,8 @@ namespace MechJebLib.PSG
 
             _rT = _problem.Terminal.GuessRadius();
             _incT = _problem.Terminal.IncT();
-            _padStart = _problem.T0 <= 0;
+            // from the pad, or from the top of the vertical rise presolved from it, which is still going straight up
+            _padStart = _problem.PadStart;
             _kickVariables = _padStart && _atmosphere;
             _tStackEnd = StackEndTime();
 

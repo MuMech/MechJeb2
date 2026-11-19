@@ -129,6 +129,48 @@ namespace MechJebLibTest.PSGTests
             Assert.Equal("PRELAUNCH VERTICAL_ASCENT PITCH_PROGRAM BURNING", flight.Sequence());
         }
 
+        // A solution computed on the ground starts its phases at the top of the vertical rise, which it planned at full
+        // throttle (VerticalRise), so the vertical ascent flies full throttle whatever the first phase's throttle is, from the
+        // pad until the pitch program, which flies the planned throttle.  Without the rise the vertical ascent flies the
+        // first phase's throttle.
+        [Fact]
+        public void TheVerticalRiseIsFlownAtFullThrottle()
+        {
+            AscentFlight flight = OnThePad();
+            flight.Engage(SolveWithRise(flight.Plan(), MET0, MET0 + 2, 0.5, Fixed(60), Fixed(40), Fixed(30)));
+            Assert.True(flight.Machine.Solution!.HasRise);
+
+            flight.Step();
+            Assert.Equal(PSGState.VERTICAL_ASCENT, flight.Machine.State);
+            AscentCommand cmd = flight.Log.Last().Command;
+            Assert.Equal(AscentAttitude.VERTICAL, cmd.Attitude);
+            Assert.Equal(AscentThrottle.GUIDED, cmd.Throttle);
+            Assert.Equal(1, cmd.ThrottleValue);
+
+            // off the pad, below the pitch start height, still in the rise
+            flight.Grounded = false;
+            flight.LiftedOff = true;
+            flight.AltitudeBottom = 50;
+            flight.Run(1);
+            Assert.Equal(PSGState.VERTICAL_ASCENT, flight.Machine.State);
+            Assert.All(flight.Log, t => Assert.Equal(1, t.Command.ThrottleValue));
+
+            flight.AltitudeBottom = 150;
+            flight.Step();
+            Assert.Equal(PSGState.PITCH_PROGRAM, flight.Machine.State);
+            cmd = flight.Log.Last().Command;
+            Assert.Equal(AscentThrottle.GUIDED, cmd.Throttle);
+            cmd.ThrottleValue.ShouldEqual(0.5, 1e-12);
+
+            AscentFlight noRise = OnThePad();
+            noRise.Engage(SolveWithRise(noRise.Plan(), double.NaN, MET0, 0.5, Fixed(60), Fixed(40), Fixed(30)));
+            Assert.False(noRise.Machine.Solution!.HasRise);
+
+            noRise.Step();
+            Assert.Equal(PSGState.VERTICAL_ASCENT, noRise.Machine.State);
+            noRise.Log.Last().Command.ThrottleValue.ShouldEqual(0.5, 1e-12);
+        }
+
         // the three stages on the pad, the countdown's prelaunch done
         private static AscentFlight OnThePad()
         {

@@ -630,9 +630,16 @@ namespace MechJebLib.PSG
 
         private void TickVerticalAscent()
         {
-            //during the vertical ascent we just thrust straight up at max throttle
             _cmd.Attitude = AscentAttitude.VERTICAL;
             _cmd.Heading = Heading;
+
+            // a solution with the vertical rise in front of it planned the rise at full throttle (VerticalRise)
+            if (Solution is { HasRise: true })
+            {
+                _cmd.Throttle = AscentThrottle.GUIDED;
+                _cmd.ThrottleValue = 1.0;
+                return;
+            }
 
             ThrottleGuided();
         }
@@ -1239,7 +1246,8 @@ namespace MechJebLib.PSG
             if (Solution == null || IsFinished)
                 return;
 
-            // the Solution's clock is MET, which stays at zero until liftoff, so on the ground this flies its first point
+            // the Solution's clock is MET, which stays at zero until liftoff, so on the ground this shows the whole solution
+            // (with its vertical rise, if it has one) and steers by the first point of its first phase
             int p = CurrentPhase(IsCoasting);
 
             // frozen from the engine cut on: the RCS trim runs past the end of the Solution

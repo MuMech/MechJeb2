@@ -612,43 +612,65 @@ namespace MechJebLibTest.PSGTests
 
         private static Solution BuildNormalized(params Seg[] segs) => BuildNormalized(null, segs);
 
-        // each segment is a single cubic Hermite node whose end slopes are both the chord's, so it interpolates linearly
-        private static Solution BuildNormalized(FlightPlan? plan, params Seg[] segs)
+        private static Solution BuildNormalized(FlightPlan? plan, params Seg[] segs) => BuildNormalized(plan, null, segs);
+
+        /// <summary>
+        ///     The SI copy of the normalized solution with a vertical rise in front of its phases (Solution.HasRise), as a
+        ///     solution computed on the ground has: on the shared R and V from riseTbar0 to the first segment's start, burning
+        ///     the first segment's stage from riseM0 (kg) down to its mass there, at full throttle straight out along R.
+        /// </summary>
+        internal static Solution BuildWithRise(FlightPlan? plan, double riseTbar0, double riseM0, params Seg[] segs)
+        {
+            Seg first = segs[0];
+            var rise = new Seg(first.Phase, riseTbar0, first.Tbar0, riseM0, first.Y0.M * MASS_SCALE, RBarAt(riseTbar0).normalized,
+                RBarAt(first.Tbar0).normalized, 1, 1);
+            using Solution normalized = BuildNormalized(plan, rise, segs);
+            return normalized.DeNormalized();
+        }
+
+        // each segment is a single cubic Hermite node whose end slopes are both the chord's, so it interpolates linearly; the
+        // rise's Phase is not used
+        private static Solution BuildNormalized(FlightPlan? plan, Seg? rise, Seg[] segs)
         {
             InterpolantLayout x0 = segs[0].Y0;
             var problem = new Problem(_scale, x0.R, x0.V, x0.U, x0.M, TBAR0, MU, RBODY / LENGTH_SCALE, 0, 0, 0, 0, V3.zero,
-                new Kepler3(1, 0, 0));
+                new Kepler3(1, 0, 0), rise.HasValue ? LinearInterpolant(rise.Value) : null);
             var solution = new Solution(problem, plan);
+            // the solution keeps its own copy
+            problem.Rise?.Dispose();
 
+            foreach (Seg seg in segs)
+                solution.AddSegment(LinearInterpolant(seg), seg.Phase);
+
+            return solution;
+        }
+
+        private static VecInterpolant LinearInterpolant(Seg seg)
+        {
             using var y    = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             using var ynew = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             using var dy   = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
 
-            foreach (Seg seg in segs)
+            double h = seg.Tbar1 - seg.Tbar0;
+            // a zero-length segment (a pruned stage) has no slope, and CubicHermiteVecNode makes it a constant
+            double invH = h > 0 ? 1 / h : 0;
+            var slope = new InterpolantLayout
             {
-                double h = seg.Tbar1 - seg.Tbar0;
-                // a zero-length segment (a pruned stage) has no slope, and CubicHermiteVecNode makes it a constant
-                double invH = h > 0 ? 1 / h : 0;
-                var slope = new InterpolantLayout
-                {
-                    R = (seg.Y1.R - seg.Y0.R) * invH,
-                    V = (seg.Y1.V - seg.Y0.V) * invH,
-                    M = (seg.Y1.M - seg.Y0.M) * invH,
-                    U = (seg.Y1.U - seg.Y0.U) * invH,
-                    T = (seg.Y1.T - seg.Y0.T) * invH
-                };
+                R = (seg.Y1.R - seg.Y0.R) * invH,
+                V = (seg.Y1.V - seg.Y0.V) * invH,
+                M = (seg.Y1.M - seg.Y0.M) * invH,
+                U = (seg.Y1.U - seg.Y0.U) * invH,
+                T = (seg.Y1.T - seg.Y0.T) * invH
+            };
 
-                seg.Y0.CopyTo(y);
-                seg.Y1.CopyTo(ynew);
-                slope.CopyTo(dy);
+            seg.Y0.CopyTo(y);
+            seg.Y1.CopyTo(ynew);
+            slope.CopyTo(dy);
 
-                // the solution's clock is normalized MET
-                var interpolant = VecInterpolant.Rent();
-                interpolant.Append(CubicHermiteVecNode.Rent(TBAR0 + seg.Tbar0, h, y, dy, ynew, dy), TBAR0 + seg.Tbar0, TBAR0 + seg.Tbar1);
-                solution.AddSegment(interpolant, seg.Phase);
-            }
-
-            return solution;
+            // the solution's clock is normalized MET
+            var interpolant = VecInterpolant.Rent();
+            interpolant.Append(CubicHermiteVecNode.Rent(TBAR0 + seg.Tbar0, h, y, dy, ynew, dy), TBAR0 + seg.Tbar0, TBAR0 + seg.Tbar1);
+            return interpolant;
         }
 
         /*
@@ -665,7 +687,8 @@ namespace MechJebLibTest.PSGTests
          *
          * The thrust direction is x in the booster, turns from x to y in p1, and turns from y to z in the coast.
          */
-        private static Solution TheStandardLike(bool normalized = false)
+        // with rise, the vertical rise of a solution computed on the ground is in front of it, 32 s (4064-4096 s) from 16384 kg
+        private static Solution TheStandardLike(bool normalized = false, bool rise = false)
         {
             Phase booster = NewBurn(4, 7, 8192, 4096, 256, 64, false, true);
             Phase burn1   = NewBurn(2, 5, 2048, 1024, 320, 32, minThrottle: 0.5);
@@ -684,6 +707,8 @@ namespace MechJebLibTest.PSGTests
                 new Seg(upper, 2, 2.25, 256, 128, _zHat, _zHat, 1, 1)
             };
 
+            if (rise)
+                return BuildWithRise(null, -0.25, 16384, segs);
             return normalized ? BuildNormalized(segs) : Build(segs);
         }
 
