@@ -12,6 +12,10 @@ namespace KodeKit
     /// A drop-down: a button showing the current entry; clicking it opens a popup list
     /// above every window, positioned under the button, clamped on screen, at the window's scale.
     /// A click on an entry selects it; a click anywhere else closes the popup without a change.
+    /// While the list is open it owns the keyboard: KSP's keyboard lock is held (released only once Escape and Enter are up,
+    /// FINDINGS rule 43), uGUI's own navigation events are off (they would move an unseen selection and submit it), and
+    /// Up/Down/Home/End/PageUp/PageDown move a highlight, a letter jumps to the next entry starting with it, Enter picks the
+    /// highlighted entry and Escape closes (FINDINGS rule 54).
     /// </summary>
     public class ComboBox
     {
@@ -28,6 +32,13 @@ namespace KodeKit
         RectTransform list;
         // the entries array the open popup's rows were made from: a list that changes comes as a new array, which closes it
         string[] popupEntries;
+        // the open popup's rows and the keyboard's highlight among them (-1: none), with the highlighted row's own tint
+        UIButton[] rows;
+        int highlight = -1;
+        Color highlightWas;
+        readonly FieldKeyboardLock keys;
+        // uGUI's navigation setting while a list holds the keyboard (one list is open at a time)
+        static bool navigationWas, navigationOff;
 
         public bool IsOpen => popup != null;
         public RectTransform PopupList => list;
@@ -55,6 +66,8 @@ namespace KodeKit
             this.dots = dots;
             Button = KodeWindow.Button(parent, "", Toggle, flexible);
             label = Button.GetComponentInChildren<TMP_Text>();
+            // on the button, which outlives the popup: the lock waits for the closing key's release, and a closing window drops it
+            keys = Button.gameObject.AddComponent<FieldKeyboardLock>();
 
             // a dropdown field: dark field background, entry on the left, a caret on the right
             Button.Content.ChildAlignment(TextAnchor.MiddleLeft);
@@ -226,6 +239,13 @@ namespace KodeKit
         {
             Open?.Close();
             Open = this;
+            keys.Lock();
+            if (!navigationOff && UnityEngine.EventSystems.EventSystem.current != null)
+            {
+                navigationWas = UnityEngine.EventSystems.EventSystem.current.sendNavigationEvents;
+                UnityEngine.EventSystems.EventSystem.current.sendNavigationEvents = false;
+                navigationOff = true;
+            }
 
             Canvas root = Overlay.Root;
             var canvasRt = (RectTransform)root.transform;
@@ -280,6 +300,9 @@ namespace KodeKit
                 }
             }
             panel.gameObject.AddComponent<LayoutElement>().minWidth = ((RectTransform)Button.transform).rect.width;
+            this.rows = rows;
+            highlight = -1;
+            popup.AddComponent<PopupKeys>().Combo = this;
 
             // same scale as the window the button lives in (MechJeb UI scale)
             float scale = Button.transform.lossyScale.x / canvasRt.lossyScale.x;
@@ -289,6 +312,82 @@ namespace KodeKit
             float maxHeight = MaxListHeight() / scale;
             if (list.rect.height > maxHeight) ScrollRows(panel, maxHeight, rows);
             PlaceUnderButton();
+            if (rows.Length > 0) Highlight(Mathf.Clamp(get(), 0, rows.Length - 1));
+        }
+
+        // ---- the keyboard, while the list is open ----
+
+        /// <summary>Reads the keys each frame while its popup exists.</summary>
+        class PopupKeys : MonoBehaviour
+        {
+            public ComboBox Combo;
+
+            void Update()
+            {
+                if (Combo == null || !Combo.IsOpen || Combo.rows == null) return;
+                if (Input.GetKeyDown(KeyCode.DownArrow)) Combo.Move(1);
+                else if (Input.GetKeyDown(KeyCode.UpArrow)) Combo.Move(-1);
+                else if (Input.GetKeyDown(KeyCode.PageDown)) Combo.Move(8);
+                else if (Input.GetKeyDown(KeyCode.PageUp)) Combo.Move(-8);
+                else if (Input.GetKeyDown(KeyCode.Home)) Combo.Highlight(0);
+                else if (Input.GetKeyDown(KeyCode.End)) Combo.Highlight(Combo.rows.Length - 1);
+                else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+                {
+                    if (Combo.highlight >= 0) Combo.Select(Combo.highlight);
+                }
+                else if (Input.GetKeyDown(KeyCode.Escape)) Combo.Close();
+                else
+                {
+                    string typed = Input.inputString;
+                    for (int i = 0; i < typed.Length; i++)
+                        if (char.IsLetterOrDigit(typed[i]))
+                            Combo.Typeahead(typed[i]);
+                }
+            }
+        }
+
+        void Move(int by)
+        {
+            if (rows == null || rows.Length == 0) return;
+            int i = highlight < 0 ? (by > 0 ? 0 : rows.Length - 1) : highlight + by;
+            Highlight(Mathf.Clamp(i, 0, rows.Length - 1));
+        }
+
+        /// <summary>The next entry, after the highlighted one and wrapping, whose text starts with <paramref name="c"/>.</summary>
+        void Typeahead(char c)
+        {
+            if (rows == null) return;
+            c = char.ToUpperInvariant(c);
+            for (int k = 1; k <= rows.Length; k++)
+            {
+                int i = (Math.Max(highlight, 0) + k) % rows.Length;
+                string t = rows[i].GetComponentInChildren<TMP_Text>().text;
+                if (t.Length > 0 && char.ToUpperInvariant(t[0]) == c)
+                {
+                    Highlight(i);
+                    return;
+                }
+            }
+        }
+
+        void Highlight(int i)
+        {
+            if (rows == null || i < 0 || i >= rows.Length || i == highlight) return;
+            if (highlight >= 0 && rows[highlight] != null) rows[highlight].GetComponent<Image>().color = highlightWas;
+            highlight = i;
+            var img = rows[i].GetComponent<Image>();
+            highlightWas = img.color;
+            img.color = highlightWas * Color.Lerp(Color.white, KodeWindow.ThemeOf(Button.gameObject).Accent, 0.6f);
+            if (Scroll == null) return;
+            // keep the highlighted row in view
+            var row = (RectTransform)rows[i].transform;
+            RectTransform c = Scroll.content;
+            float viewport = Scroll.viewport.rect.height;
+            float top = -(row.localPosition.y + row.rect.yMax);
+            float y = c.anchoredPosition.y;
+            if (top < y) y = top;
+            else if (top + row.rect.height > y + viewport) y = top + row.rect.height - viewport;
+            c.anchoredPosition = new Vector2(c.anchoredPosition.x, Mathf.Clamp(y, 0, Mathf.Max(0, c.rect.height - viewport)));
         }
 
         /// <summary>
@@ -369,6 +468,14 @@ namespace KodeKit
 
         public void Close()
         {
+            keys.UnlockAfterKeys();
+            if (navigationOff && Open == this)
+            {
+                if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.sendNavigationEvents = navigationWas;
+                navigationOff = false;
+            }
+            rows = null;
+            highlight = -1;
             if (popup != null) UnityEngine.Object.Destroy(popup);
             popup = null;
             popupEntries = null;
