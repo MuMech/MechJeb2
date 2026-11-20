@@ -930,8 +930,8 @@ namespace MechJebLib.PSG
         // late
         private bool Reached(double t) => t - _in.Met < 0.5 * _in.Dt;
 
-        // A cut on the clock is CUT_WARP_TIME away or less: the coast's start in the burn before it, its end in the coast, or the
-        // end of a burn JETTISON drops.  Time warp would make it late, and the coast's ullage needs physics.
+        // A cut on the clock is CUT_WARP_TIME away or less: the coast's start in the burn before it, the start of its ullage in
+        // the coast, or the end of a burn JETTISON drops.  Time warp would make it late, and the coast's ullage needs physics.
         private bool CutNear()
         {
             if (Solution == null)
@@ -943,7 +943,9 @@ namespace MechJebLib.PSG
                 int coast = CurrentPhase(true);
                 if (coast < 0)
                     return false;
-                t = Solution.EndTime(coast);
+                // the ullage starts UllageLeadTime before the coast's end (TickCoasting) and RCS doesn't fire on rails, so warp
+                // drops before that, with CUT_WARP_TIME to come off it: one tick of high warp can be longer than the lead
+                t = Solution.EndTime(coast) - Math.Max(_in.UllageLeadTime, 0);
             }
             else
             {
