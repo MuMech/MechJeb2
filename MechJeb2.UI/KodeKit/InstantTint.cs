@@ -34,6 +34,9 @@ namespace KodeKit
             InstantTint t = s.GetComponent<InstantTint>() ?? s.gameObject.AddComponent<InstantTint>();
             t.selectable = s;
             t.colors = cb;
+            // turned off, not destroyed, by Off: a restyle switches a widget's look back and forth in one frame (the skin's
+            // sprite-swap button look, then the widget's own colour tint), and a destroyed component lingers to the frame's end
+            t.enabled = true;
             t.Paint(true);
         }
 
@@ -41,9 +44,9 @@ namespace KodeKit
         public static void Off(Selectable s)
         {
             InstantTint t = s.GetComponent<InstantTint>();
-            if (t == null) return;
+            if (t == null || !t.enabled) return;
+            t.enabled = false;
             if (s.targetGraphic != null) s.targetGraphic.canvasRenderer.SetColor(Color.white);
-            Destroy(t);
         }
 
         void Paint(bool force = false)
