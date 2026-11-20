@@ -33,16 +33,16 @@ namespace KodeKit
             s.targetGraphic = img;
             if (Highlight != null || Active != null)
             {
+                InstantTint.Off(s);
                 s.transition = Selectable.Transition.SpriteSwap;
                 s.spriteState = new SpriteState { highlightedSprite = Highlight, pressedSprite = Active, disabledSprite = Disabled };
             }
             else
             {
-                s.transition = Selectable.Transition.ColorTint;
                 ColorBlock cb = ColorBlock.defaultColorBlock;
                 cb.highlightedColor = new Color(1f, 1f, 0.75f);
                 cb.pressedColor = new Color(0.7f, 0.9f, 0.7f);
-                s.colors = cb;
+                InstantTint.Use(s, cb); // uGUI's colour tint without its tween's garbage (FINDINGS rule 52)
             }
         }
     }
