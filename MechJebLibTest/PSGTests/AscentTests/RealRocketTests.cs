@@ -17,6 +17,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
     [ParallelTestMethods]
     public class RealRocketTests
     {
+        // guidance's default pitch start height, which the PSG simulation rises to straight up from the pad before it solves
+        private const double RISE = 100;
+
         // This is the classic test from Betts.
         [Fact]
         public void Delta3GeoSynchronous()
@@ -54,6 +57,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(72783.770115, 32294.000000, 1083100.000000, isp3, 2, 2)
                .AddStage(23464.000000, 6644.000000, 110094.000000, isp4, 1, 1)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, lanT, argpT, 0, false, true, true)
                .Build();
 
@@ -71,10 +75,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(0).ShouldEqual(v0, 1e-6);
             solution.M(0).ShouldEqual(301454.000000, 1e-6);
 
-            solution.Tgo(solution.T0, 0).ShouldEqual(75.200000, 1e-3);
-            solution.Tgo(solution.T0, 1).ShouldEqual(75.200000, 1e-3);
-            solution.Tgo(solution.T0, 2).ShouldEqual(110.600000, 1e-3);
-            solution.Tgo(solution.T0, 3).ShouldEqual(663.139, 1e-3);
+            solution.Tgo(solution.TStart, 0).ShouldEqual(75.200000, 1e-3);
+            solution.Tgo(solution.TStart, 1).ShouldEqual(75.200000, 1e-3);
+            solution.Tgo(solution.TStart, 2).ShouldEqual(110.600000, 1e-3);
+            solution.Tgo(solution.TStart, 3).ShouldEqual(664.01199254810535, 1e-3);
 
             solution.Tgo(0).ShouldEqual(924.139, 1e-3);
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
@@ -89,7 +93,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(1, false).ShouldEqual(3);
             solution.IndexForKSPStage(1, true).ShouldEqual(-1);
 
-            //solution.U(0).normalized.ShouldEqual(new V3(0.69734975209707417, 0.6074944955387559, 0.38033374967291772), 1e-2);
+            //solution.U(solution.T0).normalized.ShouldEqual(new V3(0.69734975209707417, 0.6074944955387559, 0.38033374967291772), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
@@ -151,6 +155,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(SECOND_STAGE_M0, SECOND_STAGE_MF, 0, 1300, 1, 1, massContinuity: true)
                .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1, minThrottle: 0.385389461457581, massContinuity: true)
                .Initial(r0, v0, r0.normalized, T0, MU, R_BODY)
+               .VerticalRise(RISE)
                .SetTarget(PER_T, APR_T, PER_T, INC_T, LAN_T, ARGP_T, 0, false, true, true)
                .Build();
 
@@ -165,14 +170,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(0).ShouldEqual(v0, 1e-6);
             solution.M(0).ShouldEqual(FIRST_STAGE_M0, 1e-6);
 
-            solution.Tgo(solution.T0, 0).ShouldEqual(FIRST_BT, 1e-3);
-            solution.Tgo(solution.T0, 1).ShouldBeLessThanOrEqual(SECOND_BT);
+            solution.Tgo(solution.TStart, 0).ShouldEqual(FIRST_BT, 1e-3);
+            solution.Tgo(solution.TStart, 1).ShouldBeLessThanOrEqual(SECOND_BT);
             // NOTE: this GTO case sits at the edge of what the SQP solver can handle (ultimately wants a
             // convex SCvx formulation), so the optimizer converges to slightly different feasible solutions
             // across runtimes/platforms. The soft outputs below carry loose tolerances; the terminal orbit
             // (per/apr/inc/lan/argp) is still pinned tightly. See TODO: convert to SCvx.
-            solution.Tgo(solution.T0, 2).ShouldEqual(1055.0665736765161, 5e-2);
-            (solution.Tgo(solution.T0, 1) + solution.Tgo(solution.T0, 3)).ShouldEqual(381.26954084989723, 5e-2);
+            solution.Tgo(solution.TStart, 2).ShouldEqual(1055.0665736765161, 5e-2);
+            (solution.Tgo(solution.TStart, 1) + solution.Tgo(solution.TStart, 3)).ShouldEqual(381.26954084989723, 5e-2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Tgo(0).ShouldEqual(1600.5671186447382, 5e-2);
@@ -186,7 +191,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(1, false).ShouldEqual(1);
             solution.IndexForKSPStage(1, true).ShouldEqual(2);
 
-            (double pitch, double heading) = Astro.ECIToPitchHeading(r0, solution.U(0));
+            (double pitch, double heading) = Astro.ECIToPitchHeading(solution.R(solution.T0), solution.U(solution.T0));
             Rad2Deg(pitch).ShouldEqual(83.373269308213963, 5e-2);
             Rad2Deg(heading).ShouldEqual(89.53966801098629, 1e-1);
 
@@ -238,6 +243,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(r0, v0, u0, T0, MU, R_BODY)
+               .VerticalRise(RISE)
                .SetTarget(PER_T, APR_T, PER_T, INC_T, 3.7873644768277, 3.14159265358979, 0, false, false, false)
                .AerodynamicConstants(0.5, 10.7, 1.2494765593625, 2000, 0, 7566.61914736748, new V3(0, 0, 7.2921151467069236E-05))
                .AddStage(FIRST_STAGE_M0, FIRST_STAGE_MF, FIRST_THRUST, FIRST_ISP, 3, 3, allowShutdown: false,

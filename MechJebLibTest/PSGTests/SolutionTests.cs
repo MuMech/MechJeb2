@@ -26,8 +26,10 @@ namespace MechJebLibTest.PSGTests
 
         // KerbinTests.MainSailTinCanVacuum: a burn, a coast-during coast and the rest of the burn.  With a plan the three phases
         // are built from its stages 2, 1 and 0 (see TinCanFlightPlan).  met0 is the MET of the initial state, and turn turns
-        // the initial state (the launch site turning with the planet when it turns about the pole).
-        private static Ascent.AscentBuilder TinCanBuilder(FlightPlan? plan = null, double met0 = 0, Q3? turn = null)
+        // the initial state (the launch site turning with the planet when it turns about the pole).  The initial state is on
+        // the pad, so the solve starts at the top of a vertical rise of rise meters, as the PSG simulation's does on the
+        // ground, and with no rise it is a solve in flight.
+        private static Ascent.AscentBuilder TinCanBuilder(FlightPlan? plan = null, double met0 = 0, Q3? turn = null, double rise = RISE)
         {
             bool hasPlan = plan != null;
             Q3 q = turn ?? Q3.identity;
@@ -39,6 +41,7 @@ namespace MechJebLibTest.PSGTests
                .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0, massContinuity: true,
                     flightPlanIndex: hasPlan ? 0 : -1)
                .Initial(q * _tinCanR0, q * _tinCanV0, q * _tinCanU0, met0, 3531600000000, 600000)
+               .VerticalRise(rise)
                .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false);
 
             if (plan != null)
@@ -253,6 +256,7 @@ namespace MechJebLibTest.PSGTests
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4, allowShutdown: false)
                .AddStage(31980, 6125.823788668185, 443700, 315, 2, 2)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(peR, peR, peR, Deg2Rad(28.608), Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -285,10 +289,11 @@ namespace MechJebLibTest.PSGTests
             u.ShouldEqual(uStart, 1e-12);
         }
 
-        // The clock is MET, and a solve started in flight starts at the MET of its initial state.  The optimizer doesn't depend
-        // on absolute time, so the same problem started at MET 100 is the MET 0 trajectory moved 100 s later.  The two only
-        // agree to the optimizer's convergence: this solve is flat enough that moving the start by 1e-9 s already moves the
-        // states by ~5e-6 (relative), while a clock that is off by even a fraction of a second fails by orders of magnitude.
+        // The clock is MET, and a solve started after liftoff starts at the MET of its initial state, here on the ground with
+        // its rise, as off a moon.  The optimizer and the rise don't depend on absolute time, so the same problem started at
+        // MET 100 is the MET 0 trajectory moved 100 s later.  The two only agree to the optimizer's convergence: this solve is
+        // flat enough that moving the start by 1e-9 s already moves the states by ~5e-6 (relative), while a clock that is off
+        // by even a fraction of a second fails by orders of magnitude.
         [Fact]
         public void StartMetShiftsTheTrajectory()
         {
@@ -303,9 +308,10 @@ namespace MechJebLibTest.PSGTests
             using Solution s0 = (ascent.GetOptimizer()?.Solution ?? throw new Exception("null solution")).DeNormalized();
             using Solution s1 = (shifted.GetOptimizer()?.Solution ?? throw new Exception("null solution")).DeNormalized();
 
-            // the shifted trajectory starts at its initial state at MET0
-            s0.T0.ShouldBeZero();
-            s1.T0.ShouldEqual(MET0, 1e-12);
+            // the shifted trajectory starts at its initial state at MET0, and rises from there
+            s0.TStart.ShouldBeZero();
+            s1.TStart.ShouldEqual(MET0, 1e-12);
+            s1.T0.ShouldEqual(s0.T0 + MET0, 1e-12);
             s1.R(MET0).ShouldEqual(_tinCanR0, 1e-6);
             s1.V(MET0).ShouldEqual(_tinCanV0, 1e-6);
 
@@ -363,7 +369,7 @@ namespace MechJebLibTest.PSGTests
             normalized.RotateToLaunchSite(r0);
             using Solution turnedSI = normalized.DeNormalized();
 
-            turned.T0.ShouldBeZero();
+            turned.TStart.ShouldBeZero();
             turned.R(0).ShouldEqual(r0, 1e-6);
             turned.V(0).ShouldEqual(turn * _tinCanV0, 1e-6);
 
@@ -440,7 +446,7 @@ namespace MechJebLibTest.PSGTests
         {
             const double MET0 = 100;
 
-            Ascent ascent = TinCanBuilder(met0: MET0).Build();
+            Ascent ascent = TinCanBuilder(met0: MET0, rise: 0).Build();
             ascent.Run();
 
             using Solution solution = (ascent.GetOptimizer()?.Solution ?? throw new Exception("null solution")).DeNormalized();
@@ -461,10 +467,11 @@ namespace MechJebLibTest.PSGTests
         // the pad.  TinCan is in vacuum with an equatorial target, so it is symmetric about the pole: the old solution turned
         // to the launch site warm starts the problem there as well as it does on the pad it was solved at, and the solve lands
         // on the old trajectory turned.  The old solution is itself a warm start, as on the pad, since a warm start from the
-        // cold start changes the objective and takes many iterations wherever it is.  Without the turn the guess misses the
-        // box constraints pinning the initial state, so InitialPrimalFeasibility is 1e-2 instead of 4e-11, and the solve still
-        // lands on the turned trajectory, but takes 17 iterations instead of 1 to move the whole trajectory onto the launch
-        // site.
+        // cold start changes the objective and takes many iterations wherever it is.  That warm start stops at a primal
+        // feasibility of 5e-8, so this solve takes 6 iterations to tighten it (a third warm start takes 1).  Without the turn
+        // the guess misses the box constraints pinning the initial state, so InitialPrimalFeasibility is 1e-2 instead of 3e-9,
+        // and the solve still lands on the turned trajectory, but takes 30 iterations instead of 6 to move the whole trajectory
+        // onto the launch site.
         [Fact]
         public void WarmStartFromATurnedLaunchSite()
         {
@@ -490,10 +497,12 @@ namespace MechJebLibTest.PSGTests
             Optimizer psg = warm.GetOptimizer() ?? throw new Exception("null optimizer");
             psg.Success().ShouldBeTrue();
             psg.InitialPrimalFeasibility.ShouldBeZero(1e-3);
-            Assert.InRange(psg.Iterations, 0, 5);
+            Assert.InRange(psg.Iterations, 0, 10);
             using Solution s1 = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
-            s1.T0.ShouldBeZero();
+            // the rise from the turned launch site is the same, to the integrator's round-off
+            s1.TStart.ShouldBeZero();
+            s1.T0.ShouldEqual(s0.T0, 1e-9);
             s1.Segments.ShouldEqual(s0.Segments);
             s1.Tf.ShouldEqual(s0.Tf, SOLVE_TOL);
 
