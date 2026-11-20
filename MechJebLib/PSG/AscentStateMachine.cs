@@ -359,6 +359,9 @@ namespace MechJebLib.PSG
         // the KSP stage JETTISON last saw, to tell a stage it fired
         private int _jettisonStage;
 
+        // the flight plan index of the burn JETTISON is dropping (JettisonCandidate), -1 before it starts
+        private int _jettisoning = -1;
+
         // the stage stats the Solution's flight plan was last reconciled with (NaN to reconcile again)
         private double _reconciledVacT = double.NaN;
 
@@ -392,6 +395,7 @@ namespace MechJebLib.PSG
             Solution = null;
             HasCoasted = false;
             _handedOff.Clear();
+            _jettisoning = -1;
             _reconciledVacT = double.NaN;
             _spentSince = double.NaN;
             _terminalSpent = false;
@@ -647,6 +651,9 @@ namespace MechJebLib.PSG
 
         private void OnEnterJettison()
         {
+            // the latch is off here (it is read only once it is set), so this is the burn JETTISON was entered for
+            _jettisoning = -1;
+            _jettisoning = JettisonCandidate();
             _jettisonStage = _in.CurrentStage;
             Print($"[AscentStateMachine] jettisoning the burn of KSP stage {JettisonStage()} from KSP stage {_in.CurrentStage}");
         }
@@ -1043,8 +1050,14 @@ namespace MechJebLib.PSG
 
         // the flight plan index of the burn JETTISON drops if its engines are still on, or -1: a burn cut before a fixed upper stack
         // (JettisonDue), or the burn a COAST_AFTER coast carried (CarriedBurn)
+        // Once JETTISON has started on a burn it drops that one: a Solution solved before the cut that lands while JETTISON waits
+        // for KSP's staging cooldown can end the burn later than now (the vessel was behind when it started), which would take
+        // guidance back to BURNING and throttle the cut engines up again (a RealFuels engine with no relights lost).
         private int JettisonCandidate()
         {
+            if (_state == PSGState.JETTISON && _jettisoning >= 0 && !_handedOff.Contains(_jettisoning))
+                return _jettisoning;
+
             int p = CurrentPhase(false);
             return JettisonDue(p) ? Solution!.FlightPlanIndex(p) : CarriedBurn();
         }
@@ -1095,7 +1108,8 @@ namespace MechJebLib.PSG
         private int NextBurn()
         {
             int p = CurrentPhase(false);
-            return JettisonDue(p) ? Solution!.NextPhase(p) : p;
+            bool latched = p >= 0 && _state == PSGState.JETTISON && _jettisoning >= 0 && Solution!.FlightPlanIndex(p) == _jettisoning;
+            return latched || JettisonDue(p) ? Solution!.NextPhase(p) : p;
         }
 
         // Before UpdateState, in BURNING and JETTISON: a burn JETTISON drops whose engines are gone is done, which moves
