@@ -241,12 +241,13 @@ namespace MechJebLib.PSG
     ///
     ///     BurnEnd    the burn                             it ends                               then
     ///     ---------  -----------------------------------  ------------------------------------  ------------------------------------
-    ///     COAST      the last one flown before the        at the coast's start, however much    COASTING (CoastDue), which does with
-    ///                coast                                it has left, or burned out in its     its KSP stage what the coast's kind
-    ///                                                     own KSP stage                         says (below)
-    ///     JETTISON   one the optimizer ends with          at its planned end                    JETTISON stages until its engines
-    ///                propellant left, before a burn in                                          leave the vessel (JettisonDue,
-    ///                a lower KSP stage (a fixed upper                                           UpdateJettison); engines that burn on
+    ///     COAST      the last one flown before the        at the later of the coast's start     COASTING (CoastDue), which does with
+    ///                coast                                and the planned angular momentum      its KSP stage what the coast's kind
+    ///                                                     there, or burned out in its own KSP   says (below)
+    ///                                                     stage
+    ///     JETTISON   one the optimizer ends with          at the later of its planned end and   JETTISON stages until its engines
+    ///                propellant left, before a burn in    the planned angular momentum there,   leave the vessel (JettisonDue,
+    ///                a lower KSP stage (a fixed upper     in its own KSP stage                  UpdateJettison); engines that burn on
     ///                stack)                                                                     in the next burn aren't cut (BurnsOn)
     ///     DEPLETION  any other before the last stage      burns out, into its residuals (a     autostaging drops it, and the stage
     ///                                                     cut it can't make burns on too)       stats show it gone (ReconcileStages)
@@ -266,7 +267,8 @@ namespace MechJebLib.PSG
     ///     one, or into the coast if it was the burn before it.  Burns before a coast only end at it from the last burn flown
     ///     before it, and only in its own KSP stage (OnStageOf).  The last stage can run dry short of the target, burning or
     ///     in terminal guidance (TerminalSpentNow).  The cuts on the clock are made on the tick nearest their time (Reached),
-    ///     out of time warp (CutNear).
+    ///     out of time warp (CutNear); a burn cut before a coast or a fixed stack also waits for the angular momentum the plan
+    ///     has at that time (EndStateReached), so a burn behind its plan is not cut with the propellant it still needs.
     ///
     ///     Guidance never flies a phase the Solution skips (Solution.Skip): one the optimizer shrank to nothing, or a pruned
     ///     stage after the last stage.  A coast it skips is no coast (Solution.CoastIndex), and the burns around it end as
@@ -293,6 +295,10 @@ namespace MechJebLib.PSG
         private const double IGNITION_TIMEOUT = 10;
 
         private const double MIN_PITCH_RATE = 0.1; // degrees per second
+
+        // the relative margin of EndStateReached: without one a burn exactly on its plan can miss the planned angular momentum
+        // by the interpolants' rounding and burn on far past its end
+        private const double END_STATE_TOLERANCE = 1e-5;
 
         // what guidance commands, for the UI and kOS
         public double Pitch           { get; private set; }
@@ -917,7 +923,10 @@ namespace MechJebLib.PSG
             if (BurnEndOf(p) != BurnEnd.COAST)
                 return false;
 
-            return Reached(Solution.StartTime(coast)) || (OnStageOf(p) && NoThrust(_in.ThrustAvailable) && CurrentStageEmpty());
+            // at its planned start, once the vessel has the angular momentum the plan has there (a burn behind its plan burns
+            // on), or once the burn is spent
+            return (Reached(Solution.StartTime(coast)) && EndStateReached(coast, Solution.StartTime(coast))) ||
+                (OnStageOf(p) && NoThrust(_in.ThrustAvailable) && CurrentStageEmpty());
         }
 
         private bool CoastOver()
@@ -1023,7 +1032,28 @@ namespace MechJebLib.PSG
         // stage to stage to: the next burn's is its ignition, which is left to autostaging (ullage), so JETTISON watches the
         // burn's engines leave instead.  A COAST_AFTER coast is the exception, which carries the burn before it in the burn's own
         // KSP stage: JETTISON drops that burn as the coast ends (CarriedBurn).
-        private bool JettisonDue(int p) => JettisonCut(p) && Reached(Solution!.EndTime(p));
+        //
+        // The cut is at the later of the burn's planned end and the tick its angular momentum reaches the plan's there
+        // (EndStateReached), and only in the burn's own KSP stage: a burn behind its plan (an engine short of thrust, a booster
+        // below it that burned late, a plan the optimizer could not update in the last PreStageTime of the phase) burns on
+        // until it gets there, or until it is spent.
+        private bool JettisonDue(int p) =>
+            JettisonCut(p) && OnStageOf(p) && Reached(Solution!.EndTime(p)) && EndStateReached(p, Solution.EndTime(p));
+
+        // The vessel's angular momentum at the next tick reaches the plan's on phase p at MET t, within a relative
+        // END_STATE_TOLERANCE: on the plan the two only meet to the rounding of the interpolants.  Like TerminalConditionsMet,
+        // only for an ascent, whose angular momentum grows while it burns.
+        private bool EndStateReached(int p, double t)
+        {
+            InterpolantLayout end = Solution!.State(p, t);
+            double hT = V3.Cross(end.R, end.V).magnitude;
+
+            double dt = _in.Dt;
+            V3 v1 = _in.V + _in.A * dt;
+            V3 x1 = _in.R + _in.V * dt + 0.5 * _in.A * dt * dt;
+
+            return V3.Cross(x1, v1).magnitude >= hT * (1 - END_STATE_TOLERANCE);
+        }
 
         // phase p is a burn JETTISON drops at its end
         private bool JettisonCut(int p) => p >= 0 && !_in.Grounded && BurnEndOf(p) == BurnEnd.JETTISON;
