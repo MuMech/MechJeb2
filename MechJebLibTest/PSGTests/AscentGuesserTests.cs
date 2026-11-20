@@ -23,7 +23,7 @@ namespace MechJebLibTest.PSGTests
         private const double EARTH_MU = 3.986004418e+14;
         private const double EARTH_RADIUS = 6.371e+6;
 
-        private static void CheckGuess(Problem problem, PhaseCollection phases)
+        private static void CheckGuess(Problem problem, PhaseCollection phases, Action<Solution>? check = null)
         {
             var stopwatch = Stopwatch.StartNew();
             var guesser = new AscentGuesser(problem, null);
@@ -51,6 +51,37 @@ namespace MechJebLibTest.PSGTests
             Astro.FlightPathAngle(rf, vf).ShouldBeZero(1e-6);
             (rT * vf.sqrMagnitude - 1).ShouldBeZero(1e-6);
             incf.ShouldEqual(Abs(incT), 1e-5);
+
+            check?.Invoke(solution);
+        }
+
+        // The problem from the top of a 100 m vertical rise, as AscentBuilder.Build() makes it on the ground.  The rise ends
+        // under the 50 m/s vertical speed where the guess used to stop climbing straight up: the guess now kicks over at
+        // once at the top, as guidance does.  In an atmosphere its pitchover is under way half a second later, and in vacuum
+        // it starts on linear tangent steering.
+        private static void CheckRiseGuess(Problem pad, PhaseCollection phases)
+        {
+            Problem top = VerticalRise.Presolve(pad, phases, 100 / pad.Scale.LengthScale);
+            phases.FixLastShutdownStage();
+
+            Assert.NotNull(top.Rise);
+            Assert.InRange(V3.Dot(top.V0, top.R0.normalized) * top.Scale.VelocityScale, 0, 50);
+
+            CheckGuess(top, phases, solution =>
+            {
+                solution.HasRise.ShouldBeTrue();
+
+                if (AscentProblem.HasAtmosphere(top))
+                {
+                    double t = solution.T0 + 0.5 / top.Scale.TimeScale;
+                    Rad2Deg(V3.Angle(solution.U(t), solution.R(t))).ShouldBeGreaterThan(0.01);
+                }
+                else
+                {
+                    (double pitch, _) = Astro.ECIToPitchHeading(solution.R(solution.T0), solution.U(solution.T0));
+                    Rad2Deg(pitch).ShouldBeLessThan(85);
+                }
+            });
         }
 
         private static PhaseCollection Phases(Problem problem, params Phase[] phases)
@@ -63,8 +94,7 @@ namespace MechJebLibTest.PSGTests
         }
 
         // the Titan2Tests rocket in vacuum, which has no planetary rotation, so it starts with 408 m/s of horizontal airspeed
-        [Fact]
-        public void Titan2Circular()
+        private static (Problem, PhaseCollection) Titan2CircularProblem()
         {
             var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
             var v0 = new V3(0, 407.862893197274, 0);
@@ -74,9 +104,23 @@ namespace MechJebLibTest.PSGTests
             var problem = new Problem(r0, v0, r0.normalized, 157355.487476332, 0, EARTH_MU, EARTH_RADIUS, 0, 0, 0, 0, V3.zero,
                 new Kepler3(rT, 0, incT));
 
-            CheckGuess(problem, Phases(problem,
+            return (problem, Phases(problem,
                 Phase.NewStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4),
                 Phase.NewStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)));
+        }
+
+        [Fact]
+        public void Titan2Circular()
+        {
+            (Problem problem, PhaseCollection phases) = Titan2CircularProblem();
+            CheckGuess(problem, phases);
+        }
+
+        [Fact]
+        public void Titan2CircularFromTheTopOfTheRise()
+        {
+            (Problem problem, PhaseCollection phases) = Titan2CircularProblem();
+            CheckRiseGuess(problem, phases);
         }
 
         // the Titan II with its first stage cut to 1000 kN can't lift its own weight: the guess fails, and says so with the figure
@@ -116,8 +160,7 @@ namespace MechJebLibTest.PSGTests
         }
 
         // Carnasa's TheStandard in an atmosphere, with a coast and an elliptical target: the guess is circular at periapsis
-        [Fact]
-        public void TheStandardAtmosphere()
+        private static (Problem, PhaseCollection) TheStandardAtmosphereProblem()
         {
             var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
             var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
@@ -133,17 +176,30 @@ namespace MechJebLibTest.PSGTests
             var problem = new Problem(r0, v0, u0, 49119.7842689869, 0, EARTH_MU, EARTH_RADIUS, 7200, 0.5 * 10 * 1.225, 0, 0,
                 7.29211585e-5 * V3.northpole, new Kepler3(smaT, eccT, incT));
 
-            CheckGuess(problem, Phases(problem,
+            return (problem, Phases(problem,
                 Phase.NewStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3),
                 Phase.NewStage(2848.62586760223, 1363.71123994759, thrust2, 270.15767003304, 1, 1),
                 Phase.NewCoast(678.290157913434, 678.290157913434, 0, 450, 1, 1),
                 Phase.NewStage(678.290157913434, 177.582604389742, thrust3, 230.039271734103, 0, 0, allowShutdown: false)));
         }
 
+        [Fact]
+        public void TheStandardAtmosphere()
+        {
+            (Problem problem, PhaseCollection phases) = TheStandardAtmosphereProblem();
+            CheckGuess(problem, phases);
+        }
+
+        [Fact]
+        public void TheStandardAtmosphereFromTheTopOfTheRise()
+        {
+            (Problem problem, PhaseCollection phases) = TheStandardAtmosphereProblem();
+            CheckRiseGuess(problem, phases);
+        }
+
         // the Mainsail Tin Can from the KerbinTests, without its coast, in Kerbin's atmosphere.  It can't make the 100 km orbit of
         // the KerbinTests without the coast, but it has a few seconds of burn to spare going to 75 km
-        [Fact]
-        public void MainSailTinCanAtmosphere()
+        private static (Problem, PhaseCollection) MainSailTinCanAtmosphereProblem()
         {
             const double MU = 3531600000000;
             var r0 = new V3(365592.912061998, -475862.737003702, -1017.92554628857);
@@ -154,8 +210,22 @@ namespace MechJebLibTest.PSGTests
             var problem = new Problem(r0, v0, u0, 79699.9986022711, 0, MU, 600000, 6797.80562531277, 0.5 * 19.6 * 1.22497705725583, 0, 0,
                 new V3(0, 0, 0.000291570900559802), new Kepler3(675000, 0, 0));
 
-            CheckGuess(problem, Phases(problem,
+            return (problem, Phases(problem,
                 Phase.NewStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, ispCurrent: 285.387620615011)));
+        }
+
+        [Fact]
+        public void MainSailTinCanAtmosphere()
+        {
+            (Problem problem, PhaseCollection phases) = MainSailTinCanAtmosphereProblem();
+            CheckGuess(problem, phases);
+        }
+
+        [Fact]
+        public void MainSailTinCanAtmosphereFromTheTopOfTheRise()
+        {
+            (Problem problem, PhaseCollection phases) = MainSailTinCanAtmosphereProblem();
+            CheckRiseGuess(problem, phases);
         }
     }
 }
