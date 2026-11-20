@@ -423,14 +423,13 @@ namespace KodeKit
             {
                 img.sprite = null;
                 img.color = Color.white;
-                button.transition = Selectable.Transition.ColorTint;
                 ColorBlock cb = ColorBlock.defaultColorBlock;
                 cb.normalColor = new Color(1, 1, 1, 0);
                 cb.highlightedColor = new Color(1, 1, 1, 0.12f);
                 cb.pressedColor = new Color(1, 1, 1, 0.2f);
                 cb.selectedColor = cb.normalColor;
                 cb.disabledColor = DisabledTint(cb.normalColor);
-                button.colors = cb;
+                InstantTint.Use(button, cb); // uGUI's colour tint without its tween's garbage (FINDINGS rule 52)
                 th.ApplyText(label, bar.gameObject.activeSelf ? bar.color : th.Text);
                 line.color = new Color(1, 1, 1, 0.07f);
             });

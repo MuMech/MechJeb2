@@ -47,14 +47,13 @@ namespace KodeKit
             img.type = sprite != null && sprite.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Simple;
             img.color = color;
             s.targetGraphic = img;
-            s.transition = Selectable.Transition.ColorTint;
             ColorBlock cb = ColorBlock.defaultColorBlock;
             cb.normalColor = cb.selectedColor = normal;
             cb.highlightedColor = hover;
             cb.pressedColor = press;
             cb.disabledColor = DisabledTint(normal);
-            cb.fadeDuration = 0.05f;
-            s.colors = cb;
+            // the colours of uGUI's colour-tint transition, without its tween's garbage (FINDINGS rule 52)
+            InstantTint.Use(s, cb);
         }
 
         /// <summary>
