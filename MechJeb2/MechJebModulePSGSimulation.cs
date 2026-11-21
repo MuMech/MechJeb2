@@ -498,22 +498,7 @@ namespace MuMech
             return true;
         }
 
-        // Guidance is handed a solution only on the pad, in a burn or in the coast.  One that converges once the autopilot has
-        // moved on (the vertical ascent and the pitch program, a jettison, terminal guidance, the end) is late, and is thrown away.
-        private bool TakesSolution()
-        {
-            switch (Core.PSGAutopilot.State)
-            {
-                case PSGState.PRELAUNCH:
-                case PSGState.BURNING:
-                case PSGState.COASTING:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        // what the optimizer reports while guidance takes no solution (TakesSolution)
+        // what the optimizer reports while guidance takes no solution (AscentStateMachine.TakesSolution)
         private OptimizerState PausedState()
         {
             switch (Core.PSGAutopilot.State)
@@ -548,16 +533,17 @@ namespace MuMech
 
                 if (psg.Success() && psg.Solution != null)
                 {
-                    if (!TakesSolution())
+                    // one that converges once guidance has moved on is late (AscentStateMachine.TakesSolution): it is thrown away,
+                    // and the next solve warm starts from the last one guidance took
+                    Solution flown = psg.Solution.DeNormalized();
+                    if (!Core.PSGAutopilot.SetSolution(flown))
                     {
                         Debug.Log($"[MechJebModulePSGSimulation] threw away a late solution: the autopilot is in {Core.PSGAutopilot.State}");
                         return;
                     }
 
                     _solution = psg.Solution;
-                    Solution flown = psg.Solution.DeNormalized();
                     CheckReach(flown);
-                    Core.PSGAutopilot.SetSolution(flown);
 
                     // the coast's start and end cancel the job, so a job started in the coast lands in it
                     CheckDebug.True(!_vacuumCoastJob || Core.PSGAutopilot.IsCoasting);
@@ -669,11 +655,9 @@ namespace MuMech
                     attR = apR;
             }
 
-            // Solves start only while guidance takes their solutions: one started in any other state would be thrown away
-            // (HandleDoneTask).  The vertical ascent and the pitch program fly a fixed program, and the pitch program hands over
-            // to guidance where it meets the solution's pitch, which a re-solve from the climb would move.  Terminal guidance
-            // flies the end of a frozen solution.
-            if (!TakesSolution())
+            // solves start only while guidance takes their solutions (AscentStateMachine.TakesSolution): one started in any other
+            // state would be thrown away (HandleDoneTask)
+            if (!Core.PSGAutopilot.TakesSolution)
             {
                 SetState(PausedState());
                 return;

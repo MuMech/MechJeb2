@@ -269,24 +269,31 @@ namespace MechJebLibTest.PSGTests
             Assert.Equal(PSGState.PITCH_PROGRAM, flight.Machine.State);
         }
 
+        // The vertical ascent and the pitch program fly the pad Solution to guidance, so a Solution that arrives in them (a solve
+        // still running at liftoff) is refused: it would move the pitch the pitch program hands over at.
         [Fact]
-        public void PitchProgramMeetsTheGuidanceOfANewSolutionAtOnce()
+        public void ClimbRefusesALateSolution()
         {
-            // in an atmosphere at 1°/s with no Solution, the pitch program pitches down to 3° in 87 s
-            AscentFlight flight = OneStage();
-            flight.HasAtmosphere = true;
-            flight.Machine.Start();
-            flight.Run(87);
-            Assert.Equal(PSGState.PITCH_PROGRAM, flight.Machine.State);
+            AscentFlight flight = OnThePad();
+            Solution pad = Solve(flight.Plan(), MET0, Fixed(60), Fixed(40), Fixed(30));
+            flight.Engage(pad);
+            Assert.True(flight.Machine.TakesSolution);
 
-            // where the synthetic trajectory's guidance pitch is about 5°
-            flight.TrajectoryT = MET0 + 87;
-            Assert.True(flight.Machine.SetSolution(Solve(flight.Plan(), MET0, Fixed(100))));
-
-            // below it on the Solution's first tick: guidance takes over then, not a tick later
             flight.Step();
-            Assert.Equal(PSGState.BURNING, flight.Machine.State);
-            Assert.InRange(flight.Machine.Pitch, 4, 6);
+            Assert.Equal(PSGState.VERTICAL_ASCENT, flight.Machine.State);
+            Assert.False(flight.Machine.TakesSolution);
+            Assert.False(flight.Machine.SetSolution(Solve(flight.Plan(), MET0, Fixed(60), Fixed(40), Fixed(30))));
+
+            // off the pad, above the pitch start height
+            flight.Grounded = false;
+            flight.LiftedOff = true;
+            flight.AltitudeBottom = 150;
+            flight.Step();
+            Assert.Equal(PSGState.PITCH_PROGRAM, flight.Machine.State);
+            Assert.False(flight.Machine.TakesSolution);
+            Assert.False(flight.Machine.SetSolution(Solve(flight.Plan(), MET0, Fixed(60), Fixed(40), Fixed(30))));
+
+            Assert.Same(pad, flight.Machine.Solution);
         }
 
         /*
@@ -678,6 +685,31 @@ namespace MechJebLibTest.PSGTests
             Assert.InRange(flight.StagingRefusals, 99, 101);
             Assert.Equal(StagedBy.IMMEDIATE, flight.Stagings[0].By);
             AtAbout(MET0 + 52, flight.Stagings[0].Met);
+            Assert.All(flight.Engines, e => Assert.Equal(1, e.Burns));
+        }
+
+        // A solve started before the cut lands while JETTISON waits for KSP to stage, its booster ending 3 s later (the vessel
+        // was behind when it started).  Flown, it would take guidance back to BURNING and throttle the cut booster up again (a
+        // RealFuels engine with no relights lost), so it is refused and the jettison goes on (#2782).
+        [Fact]
+        public void JettisonRefusesALateSolution()
+        {
+            AscentFlight flight = ThreeStages();
+            flight.RefuseStagingUntil = MET0 + 51;
+            Solution pad = Solve(flight.Plan(), MET0, Cut(50), Fixed(40), Fixed(30));
+            flight.Engage(pad);
+
+            Assert.True(flight.RunUntil(PSGState.JETTISON, 100));
+            flight.Run(0.4);
+            Assert.Equal(PSGState.JETTISON, flight.Machine.State);
+            Assert.False(flight.Machine.TakesSolution);
+
+            Assert.False(flight.Machine.SetSolution(Solve(flight.FlownPlan, MET0 + 39, Cut(14), Fixed(40), Fixed(30))));
+            Assert.Same(pad, flight.Machine.Solution);
+
+            flight.Fly();
+
+            Assert.Equal("PRELAUNCH PITCH_PROGRAM BURNING JETTISON BURNING FINISHED", flight.Sequence());
             Assert.All(flight.Engines, e => Assert.Equal(1, e.Burns));
         }
 

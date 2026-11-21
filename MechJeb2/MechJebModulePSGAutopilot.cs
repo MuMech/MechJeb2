@@ -481,11 +481,19 @@ namespace MuMech
          * Solutions
          */
 
-        // guidance flies in SI units and MET seconds, so this takes a DeNormalized() Solution
-        public void SetSolution(Solution solution)
+        /// <summary>Whether SetSolution takes a Solution now: in PRELAUNCH, BURNING and COASTING (AscentStateMachine.TakesSolution).</summary>
+        public bool TakesSolution => _machine.TakesSolution;
+
+        // guidance flies in SI units and MET seconds, so this takes a DeNormalized() Solution.  False if it was ignored
+        // (TakesSolution).
+        public bool SetSolution(Solution solution)
         {
-            if (_machine.SetSolution(solution) && solution.FromPad)
+            if (!_machine.SetSolution(solution))
+                return false;
+
+            if (solution.FromPad)
                 PadSolution = solution;
+            return true;
         }
 
         /// <summary>

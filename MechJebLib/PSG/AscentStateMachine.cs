@@ -341,6 +341,15 @@ namespace MechJebLib.PSG
         // flying the Solution, after the pitch program
         public bool IsGuided => _state == PSGState.BURNING || _state == PSGState.JETTISON || IsCoasting || IsTerminal;
 
+        /// <summary>
+        ///     Whether SetSolution takes a Solution now: on the pad, in a burn or in the coast.  A Solution that arrives in any other
+        ///     state is late: the vertical ascent and the pitch program fly the pad Solution to guidance (a new one would move the
+        ///     pitch the pitch program hands over at), a jettison drops the burn its Solution cut (one that ends that burn later
+        ///     would take it back to BURNING and throttle the cut engines up again), and terminal guidance flies to the end of the
+        ///     Solution it started with.  PSGSimulation starts no solve in them.
+        /// </summary>
+        public bool TakesSolution => _state == PSGState.PRELAUNCH || _state == PSGState.BURNING || IsCoasting;
+
         /// <summary>Set when the coast starts, and kept after it: the Solution's burns before the coast are behind the vessel.</summary>
         public bool HasCoasted { get; private set; }
 
@@ -418,22 +427,20 @@ namespace MechJebLib.PSG
         }
 
         /// <summary>
-        ///     Takes a DeNormalized() Solution to fly (guidance flies in SI units and MET seconds).  False if it was ignored: terminal
-        ///     guidance flies to the end of the Solution it started with.
+        ///     Takes a DeNormalized() Solution to fly (guidance flies in SI units and MET seconds).  False if it was ignored, outside
+        ///     PRELAUNCH, BURNING and COASTING (TakesSolution).
         /// </summary>
         public bool SetSolution(Solution solution)
         {
             Check.False(solution.Normalized, "guidance needs a DeNormalized() Solution");
 
+            if (!TakesSolution)
+                return false;
+
             // PSGSimulation cancels the solve in progress when the coast starts and when it ends (CoastStarted, CoastEnded), so a
             // solution that arrives during the coast starts with it, and one that arrives after it has no coast
             CheckDebug.True(!IsCoasting || solution.CoastPhase(0));
             CheckDebug.True(!HasCoasted || IsCoasting || solution.CoastIndex() < 0);
-
-            // terminal guidance flies to the end of the Solution it started with (PSGSimulation drops the solve in progress when
-            // it starts, so this is only a solve that was done before)
-            if (IsTerminal || IsFinished)
-                return false;
 
             Solution = solution;
 
