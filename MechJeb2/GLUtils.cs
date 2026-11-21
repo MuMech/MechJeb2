@@ -260,7 +260,8 @@ namespace MuMech
 
         private static readonly List<Vector3d> _points = new List<Vector3d>();
 
-        public static void DrawOrbit(Orbit o, Color c)
+        // dashed: every other degree of the orbit (DrawPath's dashes), for an orbit that is a preview rather than the flight plan
+        public static void DrawOrbit(Orbit o, Color c, bool dashed = false)
         {
             _points.Clear();
 
@@ -283,7 +284,7 @@ namespace MuMech
                 }
             }
 
-            DrawPath(o.referenceBody, _points, c, true);
+            DrawPath(o.referenceBody, _points, c, true, dashed);
         }
     }
 }

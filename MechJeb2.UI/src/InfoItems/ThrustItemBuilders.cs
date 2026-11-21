@@ -17,7 +17,7 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             Tooltips.Add(KodeWindow.LabelOf(w.Toggle(row, key, get, set, tone)).gameObject, tooltipKey);
-            EditUi.Field(w, row, () => ed, width);
+            EditUi.Field(w, row, () => ed, width, label: key);
             KodeWindow.Label(row, unit);
         }
 
@@ -70,9 +70,9 @@ namespace MuMech.UI
         {
             Layout electric = KodeWindow.Row(p);
             w.Toggle(electric, "#MechJeb_Ascent_checkbox20", () => t.ElectricThrottle, v => t.ElectricThrottle = v, LimiterTones.Electric(t, OptionRows.GeneralLimitsApply(t)));
-            EditUi.Field(w, electric, () => t.ElectricThrottleLo, 30);
+            EditUi.Field(w, electric, () => t.ElectricThrottleLo, 30, label: "#MechJeb_NewUI_Label_ElectricLo"); //Electric limit, low
             KodeWindow.Label(electric, "% Hi");
-            EditUi.Field(w, electric, () => t.ElectricThrottleHi, 30);
+            EditUi.Field(w, electric, () => t.ElectricThrottleHi, 30, label: "#MechJeb_NewUI_Label_ElectricHi"); //Electric limit, high
             KodeWindow.Label(electric, "%");
         }
 

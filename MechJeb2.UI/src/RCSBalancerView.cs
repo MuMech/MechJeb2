@@ -39,7 +39,7 @@ namespace MuMech.UI
                     double rounded = Math.Round(sliderVal, sliderPrecision);
                     Balancer.overdrive = new EditableDoubleMult(rounded, 0.01);
                 }
-            }, 0f, 1f);
+            }, 0f, 1f, "#MechJeb_RCSBalancer_label1"); //"Overdrive"
 
             KodeWindow.Paragraph(smart, "#MechJeb_RCSBalancer_label2"); //"Overdrive increases power when possible, at the cost of RCS fuel efficiency."
 

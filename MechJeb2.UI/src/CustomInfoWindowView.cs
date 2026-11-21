@@ -22,7 +22,7 @@ namespace MuMech.UI
         InfoItem[] built;
         float nextRefresh;
         MechJebModuleCustomInfoWindow.CompactMode builtCompact;
-        bool builtFixed;
+        bool builtFixed, builtClickThrough;
         LayoutElement rootSize;
         ResizeGrip grip;
         int shownWidth = -1;
@@ -48,11 +48,17 @@ namespace MuMech.UI
 
         public CustomInfoWindowView(MechJebModuleCustomInfoWindow window) : base(window) => this.window = window;
 
+        /// <summary>"CustomInfoWindow:" and the window's saved id ("CustomInfoWindow:Delta_V_Stats"), which a rename keeps.</summary>
+        protected override string AgentName => "CustomInfoWindow:" + window.id;
+
         protected override float MinWidth => 250;
 
         protected override Color OverlayBackground => window.backgroundColor;
 
         protected override bool ClickThrough => window.ClickThrough;
+
+        // its drawn values go with the window: the editor's copy then reads the values afresh
+        protected override void Destroyed() => window.DrawnValue = null;
 
         protected override void BuildContents(KodeWindow w)
         {
@@ -87,6 +93,11 @@ namespace MuMech.UI
                     ScreenMessageStyle.UPPER_RIGHT); //Configuration of <<1>> window copied to clipboard.
             });
 
+            // its read-outs as a Markdown table, from the title's menu (the editor's Copy as Markdown is the second path)
+            KodeKit.Headless.MenuEntry markdown = KodeKit.Headless.MenuEntry.Item("#MechJeb_NewUI_CopyValuesMarkdown", s => InfoItemMenu.CopyWindowMarkdown(window, widgets.ShownText)); //Copy values as Markdown
+            markdown.Name = "copy-markdown";
+            w.AddTitleMenuItem(markdown);
+
             // IMGUI's window is 250 wide and wraps long values: same width for the rows (minus the window's side padding)
             builtFixed = window.WidthFixed;
             widgets = new InfoItemWidgets(w)
@@ -94,6 +105,13 @@ namespace MuMech.UI
                 TextColor = () => window.text, RowWidth = MinWidth - 2 * w.Behaviour.Theme.Padding, FixedWidth = builtFixed,
                 ValueTooltips = !window.IsOverlay // the view rebuilds when that changes
             };
+            // what it draws, for the editor's Copy values as Markdown while this window is open
+            window.DrawnValue = widgets.ShownText;
+            // a right-click on a value: copy it, show it in the editor, add it to another window; none on a window that lets the
+            // pointer through (an overlay, click through: the view rebuilds when they change), whose rows must not catch it
+            builtClickThrough = window.ClickThrough;
+            itemLists.Clear();
+            if (!window.IsOverlay && !builtClickThrough) widgets.ValueMenu = (item, shown) => InfoItemMenu.Entries(window, item, shown, ItemList);
             foreach (InfoItem item in built)
             {
                 if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
@@ -147,7 +165,7 @@ namespace MuMech.UI
 
         protected override void BeforeSync()
         {
-            if (Changed() || window.Compact != builtCompact || window.WidthFixed != builtFixed && !grip.Dragging)
+            if (Changed() || window.Compact != builtCompact || window.WidthFixed != builtFixed && !grip.Dragging || window.ClickThrough != builtClickThrough)
             {
                 RebuildRequested = true;
                 return;
@@ -157,6 +175,54 @@ namespace MuMech.UI
             if (Time.realtimeSinceStartup < nextRefresh) return;
             nextRefresh = Time.realtimeSinceStartup + 1f / Mathf.Max(1, window.refreshRate);
             widgets.Refresh();
+        }
+
+        // another custom window's item list as a commit target on this window's path, made at the first add to it from a read-out's
+        // menu: the add is one commit (AnyCommit, AnySettled, the agent bridge's feed) whose undo state is that window's items
+        readonly Dictionary<MechJebModuleCustomInfoWindow, KodeKit.Headless.CommitTarget<int>> itemLists =
+            new Dictionary<MechJebModuleCustomInfoWindow, KodeKit.Headless.CommitTarget<int>>();
+
+        KodeKit.Headless.CommitTarget<int> ItemList(MechJebModuleCustomInfoWindow other)
+        {
+            if (Window == null) return null;
+            if (itemLists.TryGetValue(other, out KodeKit.Headless.CommitTarget<int> t)) return t;
+            t = Window.Target("ItemList", () => other.items.Count, _ => { }, other.GetName());
+            t.State = new ItemsState(other);
+            itemLists[other] = t;
+            return t;
+        }
+
+        /// <summary>What an undo of an add restores: the window's items in their order.</summary>
+        sealed class ItemsState : KodeKit.Headless.IUndoState
+        {
+            readonly MechJebModuleCustomInfoWindow w;
+            public ItemsState(MechJebModuleCustomInfoWindow w) => this.w = w;
+            public object Take() => new Shot { Items = w.items.ToArray() };
+
+            // value equality, as the commit path compares states
+            sealed class Shot
+            {
+                public InfoItem[] Items;
+
+                public override bool Equals(object o)
+                {
+                    if (!(o is Shot s) || s.Items.Length != Items.Length) return false;
+                    for (int i = 0; i < Items.Length; i++)
+                        if (!ReferenceEquals(s.Items[i], Items[i])) return false;
+                    return true;
+                }
+
+                public override int GetHashCode() => Items.Length;
+            }
+
+            public bool Restore(object state)
+            {
+                if (!(state is Shot shot)) return false;
+                w.items.Clear();
+                w.items.AddRange(shot.Items);
+                w.Dirty = true;
+                return true;
+            }
         }
 
         // the editor adds, removes and moves items in place

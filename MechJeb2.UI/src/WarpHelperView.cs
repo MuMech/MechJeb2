@@ -70,7 +70,7 @@ namespace MuMech.UI
 
             Layout time = KodeWindow.Row(r);
             KodeWindow.Label(time, "#MechJeb_WarpHelper_label2", true); //"Warp for: "
-            LockWhileWarping(w, EditUi.Field(w, time, () => helper.timeOffset, 100));
+            LockWhileWarping(w, EditUi.Field(w, time, () => helper.timeOffset, 100).History("warp.time"));
             w.Visible(time.gameObject, () => helper.warpTarget == MechJebModuleWarpHelper.WarpTarget.Time);
 
             // I wonder if I should check for target that don't make sense
@@ -85,7 +85,7 @@ namespace MuMech.UI
 
             Layout lead = KodeWindow.Row(r);
             KodeWindow.Label(lead, "#MechJeb_WarpHelper_label5"); //"Lead time: "
-            EditUi.Field(w, lead, () => helper.leadTime, 100);
+            EditUi.Field(w, lead, () => helper.leadTime, 100).History("warp.leadTime");
 
             // useQuickWarpInfoItem()
             w.Toggle(r, "#MechJeb_WarpHelper_checkbox1", () => Core.Warp.useQuickWarp, v => Core.Warp.useQuickWarp = v); //"Quick warp"

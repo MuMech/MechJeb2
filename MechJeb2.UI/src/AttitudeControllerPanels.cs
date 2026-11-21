@@ -194,7 +194,8 @@ namespace MuMech.UI
 
             public void Tog(string text, Func<T, bool> get, Action<T, bool> set) => Tog(Parent, text, get, set);
 
-            public void Fld(UIObject row, Func<T, EditableDoubleMult> ed, float width)
+            /// <summary>[field] on the active controller's editable; <paramref name="label"/> names it (null: the label right before it).</summary>
+            public void Fld(UIObject row, Func<T, EditableDoubleMult> ed, float width, string label = null)
             {
                 EditFields.Field(w, row, () =>
                 {
@@ -208,7 +209,7 @@ namespace MuMech.UI
                 {
                     T c = C;
                     return c == null || ed(c).IsParsed;
-                });
+                }, label: label);
             }
 
             /// <summary>label (flexible)... [field]</summary>
@@ -224,7 +225,7 @@ namespace MuMech.UI
             {
                 Layout row = Row();
                 Tog(row, label, get, set);
-                Fld(row, ed, width);
+                Fld(row, ed, width, label);
             }
 
             /// <summary>label (flexible) + a live vector, committed only while this controller is the active one.</summary>
@@ -412,8 +413,8 @@ namespace MuMech.UI
             // "Clegg" once, as the row's label, a toggle under each of the Velocity and Position fields
             Layout clegg = p.Row();
             Tooltips.Add(Cell(clegg, "Clegg", COL1, true).gameObject, "Clegg integrator: the integral term resets when the error changes sign.");
-            p.Tog(Column(clegg, COL), "", c => c.VelClegg, (c, v) => c.VelClegg = v);
-            p.Tog(Column(clegg, COL), "", c => c.PosClegg, (c, v) => c.PosClegg = v);
+            p.W.Named(p.Tog(Column(clegg, COL), "", c => c.VelClegg, (c, v) => c.VelClegg = v), "Clegg (velocity)");
+            p.W.Named(p.Tog(Column(clegg, COL), "", c => c.PosClegg, (c, v) => c.PosClegg = v), "Clegg (position)");
 
             p.Edit("Smooth torque", c => c.SmoothTorque, 50);
             p.Edit("Soften", c => c.Soften, 50);
@@ -474,8 +475,8 @@ namespace MuMech.UI
         {
             Layout row = p.Row();
             Tooltips.Add(Cell(row, label, 100, true).gameObject, tooltip);
-            p.Fld(row, vel, 56);
-            p.Fld(row, pos, 56);
+            p.Fld(row, vel, 56, label + " (velocity)");
+            p.Fld(row, pos, 56, label + " (position)");
         }
     }
 }

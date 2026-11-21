@@ -46,21 +46,21 @@ namespace MuMech.UI
         static void Apoapsis(OpContext c)
         {
             var op = (OperationApoapsis)c.Op;
-            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Ap_label1", () => op.NewApA, "km"); //New apoapsis:
+            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Ap_label1", () => op.NewApA, "km", history: "planner.apoapsis"); //New apoapsis:
             OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Periapsis(OpContext c)
         {
             var op = (OperationPeriapsis)c.Op;
-            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Pe_label", () => op.NewPeA, "km"); //New periapsis:
+            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Pe_label", () => op.NewPeA, "km", history: "planner.periapsis"); //New periapsis:
             OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void SemiMajor(OpContext c)
         {
             var op = (OperationSemiMajor)c.Op;
-            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Sa_label", () => op.NewSma, "km"); //New Semi-Major Axis:
+            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_Sa_label", () => op.NewSma, "km", history: "planner.sma"); //New Semi-Major Axis:
             OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
@@ -74,15 +74,15 @@ namespace MuMech.UI
         static void Ellipticize(OpContext c)
         {
             var op = (OperationEllipticize)c.Op;
-            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_both_label1", () => op.NewPeA, "km"); //New periapsis:
-            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_both_label2", () => op.NewApA, "km"); //New apoapsis:
+            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_both_label1", () => op.NewPeA, "km", history: "planner.periapsis"); //New periapsis:
+            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_both_label2", () => op.NewApA, "km", history: "planner.apoapsis"); //New apoapsis:
             OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
         static void Inclination(OpContext c)
         {
             var op = (OperationInclination)c.Op;
-            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_inclination_label", () => op.NewInc, "°"); //New inclination:
+            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_inclination_label", () => op.NewInc, "°", history: "planner.inclination"); //New inclination:
             OpUi.TimeSelectorRows(c.W, c.Panel, c.Op.Timing);
         }
 
@@ -157,9 +157,9 @@ namespace MuMech.UI
             OpUi.DynamicParagraph(c.W, c.Panel, Description);
             Layout row = KodeWindow.Row(c.Panel);
             KodeWindow.Label(row, "#MechJeb_resonant_label2", true); //New orbital period ratio :
-            EditUi.Field(c.W, row, () => op.ResonanceNumerator, 30);
+            EditUi.Field(c.W, row, () => op.ResonanceNumerator, 30, label: "#MechJeb_NewUI_Label_RatioNumerator"); //Period ratio, numerator
             KodeWindow.Label(row, "/");
-            EditUi.Field(c.W, row, () => op.ResonanceDenominator, 30);
+            EditUi.Field(c.W, row, () => op.ResonanceDenominator, 30, label: "#MechJeb_NewUI_Label_RatioDenominator"); //Period ratio, denominator
             OpUi.TimeSelectorRows(c.W, c.Panel, op._timeSelector);
         }
 
@@ -177,7 +177,7 @@ namespace MuMech.UI
             }
 
             Layout row = KodeWindow.Row(c.Panel);
-            OpUi.AngleRow(c.W, row, () => TargetLongitude(c), EditableAngle.Direction.EW, false);
+            OpUi.AngleRow(c.W, row, () => TargetLongitude(c), EditableAngle.Direction.EW, false, "#MechJeb_stationary_label1"); //Target longitude
             KodeWindow.IconButton(row, Sprites.Arrow(Sprites.Direction.Left), () => Move(-10));
             KodeWindow.Label(row, "10m");
             KodeWindow.IconButton(row, Sprites.Arrow(Sprites.Direction.Right), () => Move(10));
@@ -216,7 +216,7 @@ namespace MuMech.UI
             // two-burn capture vs single-burn intercept/flyby: radio buttons whose texts depend on the kind of target
             void CaptureRadios(Layout row, string captureKey, string interceptKey)
             {
-                w.Segmented(row, new[] { captureKey, interceptKey }, () => op.Capture ? 0 : 1, i => op.Capture = i == 0);
+                w.Segmented(row, new[] { captureKey, interceptKey }, () => op.Capture ? 0 : 1, i => op.Capture = i == 0, label: "#MechJeb_NewUI_Label_Arrival"); //Arrival
             }
 
             Layout celestial = KodeWindow.Row(c.Panel);

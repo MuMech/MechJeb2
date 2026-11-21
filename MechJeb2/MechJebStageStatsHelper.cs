@@ -83,6 +83,15 @@ namespace MuMech
         internal int DisplayState => StageDisplayState;
         internal int TwrBody { get => TWRBody; set => TWRBody = infoItems.TWRBody = value; }
 
+        // a stage row's details (MechJeb2.UI's hover card on a row): read only, from the last simulation
+        internal bool HasRow(int row) => row >= 0 && row < stages.Count && stages[row] < stats.AtmoStats.Count && stages[row] < stats.VacStats.Count;
+        internal int KspStageOf(int row) => stats.AtmoStats[stages[row]].KSPStage;
+        // with RCS shown, the RCS Isp, as the Isp column and the burn time do
+        internal double AtmoIspOf(int row) => showRcs ? stats.AtmoStats[stages[row]].RcsISP : stats.AtmoStats[stages[row]].Isp;
+        internal double VacIspOf(int row) => _isp(stages[row]);
+        internal double BurnTimeOf(int row) => _deltaTime(stages[row]);
+        internal IReadOnlyList<EngineSignature> EnginesOf(int row) => Vac(stages[row]).EngineSignatures;
+
         // the body for the editor's TWR.  the index is saved with the info items, so it can be out of range once the bodies
         // change (a planet pack removed): the home body then
         private CelestialBody TwrCelestialBody =>

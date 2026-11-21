@@ -45,7 +45,7 @@ namespace MuMech.UI
             KodeWindow w = c.W;
             MechJebModuleManeuverPlanner planner = c.Planner;
 
-            new ComboBox(w, c.Panel, () => op.ModeIndex, i => op.ModeIndex = i, () => OperationAdvancedTransfer.ModeNames);
+            new ComboBox(w, c.Panel, () => op.ModeIndex, i => op.ModeIndex = i, () => OperationAdvancedTransfer.ModeNames, name: "#MechJeb_NewUI_Label_Mode"); //Mode
 
             // Limited time
             Layout limited = KodeWindow.Panel(c.Panel);

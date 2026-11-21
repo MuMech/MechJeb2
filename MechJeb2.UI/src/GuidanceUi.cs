@@ -251,5 +251,9 @@ namespace MuMech.UI
         /// <summary>GuiUtils.TimeToDHMS(seconds, decimalPlaces) without allocations, with the game's day and year lengths.</summary>
         public static CharText AppendDHMS(this CharText ct, double seconds, int decimalPlaces) =>
             ct.AppendDHMS(seconds, decimalPlaces, KSPUtil.dateTimeFormatter.Day, KSPUtil.dateTimeFormatter.Year);
+
+        /// <summary>GuiUtils.TimeToDHMS(seconds, decimalPlaces) into a buffer (a table's cell), with the game's day and year lengths.</summary>
+        public static KodeKit.Headless.CharBuffer AppendDHMS(this KodeKit.Headless.CharBuffer b, double seconds, int decimalPlaces) =>
+            b.AppendDHMS(seconds, decimalPlaces, KSPUtil.dateTimeFormatter.Day, KSPUtil.dateTimeFormatter.Year);
     }
 }

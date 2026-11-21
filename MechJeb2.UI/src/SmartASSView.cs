@@ -38,9 +38,9 @@ namespace MuMech.UI
         // ---- private helpers ----
 
         /// <summary>GUILayout.Toggle(value, "", NoExpandWidth): a switch with no label.</summary>
-        static void CheckBox(KodeWindow w, UIObject parent, Func<bool> get, Action<bool> set)
+        static void CheckBox(KodeWindow w, UIObject parent, Func<bool> get, Action<bool> set, string label)
         {
-            w.Switch(parent, get, set);
+            w.Switch(parent, get, set, label);
         }
 
         // ---- rows ----
@@ -56,7 +56,7 @@ namespace MuMech.UI
                 ss.Engage();
             }
             w.Toggle(row, "#MechJeb_SmartASS_checkbox3", () => ss.forceRol, Set);
-            EditUi.Field(w, row, () => ss.rol, 30);
+            EditUi.Field(w, row, () => ss.rol, 30, label: "#MechJeb_SmartASS_checkbox3");
             KodeWindow.Label(row, "°");
         }
 
@@ -79,7 +79,7 @@ namespace MuMech.UI
             Func<bool> force, Action<bool> setForce, params Extra[] extras)
         {
             Layout row = KodeWindow.Row(parent);
-            CheckBox(w, row, force, setForce);
+            CheckBox(w, row, force, setForce, label);
             // the label and the extra buttons get fixed widths, so the fields and buttons line up from row to row
             FixedWidth(KodeWindow.Label(row, label), 0, "HDG", "PIT", "ROL", "YAW");
             EditUi.Field(w, row, get, 37);
@@ -142,7 +142,7 @@ namespace MuMech.UI
             Layout common = KodeWindow.Panel(p);
             Layout smooth = KodeWindow.Row(common);
             w.Toggle(smooth, "Smooth Control:", () => ss.smoothControl, v => ss.smoothControl = v);
-            EditUi.Field(w, smooth, () => ss.degreesPerSecond, 40);
+            EditUi.Field(w, smooth, () => ss.degreesPerSecond, 40, label: "Smooth Control:");
             KodeWindow.Label(smooth, "°/s");
             KodeWindow.Button(common, "#MechJeb_SmartASS_button58", () => ss.Engage(), ButtonRole.Primary, true); // "EXECUTE"
             w.Visible(common.gameObject, () => ss.ShowsSurfaceAngles);

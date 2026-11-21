@@ -23,7 +23,7 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
             Layout grid = KodeWindow.Row(r);
-            w.Segmented(grid, help.Topics, () => help.SelTopic, i => help.SelTopic = i, ChoiceStyle.Tabs); // navigation
+            w.Segmented(grid, help.Topics, () => help.SelTopic, i => help.SelTopic = i, ChoiceStyle.Tabs, "#MechJeb_NewUI_Label_Topic"); // navigation; Topic
 
             for (int t = 0; t < help.Topics.Length; t++)
             {

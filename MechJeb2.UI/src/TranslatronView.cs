@@ -50,7 +50,7 @@ namespace MuMech.UI
             UIObject r = w.Root;
             Layout body = KodeWindow.Panel(r);
 
-            w.Segmented(body, modeKeys, () => Mode, i => tr.SetMode((MechJebModuleThrustController.TMode)i));
+            w.Segmented(body, modeKeys, () => Mode, i => tr.SetMode((MechJebModuleThrustController.TMode)i), label: "#MechJeb_NewUI_Label_Mode"); //Mode
             w.SwitchRow(body, "#MechJeb_Trans_kill_h", () => Thrust.TransKillH, v => Thrust.TransKillH = v);
 
             void ApplySpeed() => Thrust.TransSpdAct = (float)tr.trans_spd.Val;
@@ -70,6 +70,7 @@ namespace MuMech.UI
             string panic = KodeWindow.Loc("#MechJeb_Trans_PANIC"), noPanic = KodeWindow.Loc("#MechJeb_Trans_NOPANIC");
             UIButton p = KodeWindow.Padded(MiscViewKit.BoundButton(w, body, () => tr.Aborting ? noPanic : panic, tr.PanicSwitch, null, true), 6);
             w.BindRole(p, () => tr.Aborting ? ButtonRole.Selected : ButtonRole.Danger);
+            KodeWindow.NameButton(p, "#MechJeb_Trans_PANIC");
 
             GuidanceUi.AutoBar(w, r, body.gameObject, "#MechJeb_Trans_auto", AutoMode, () => GuidanceUi.OtherUser(Thrust.Users, tr));
         }

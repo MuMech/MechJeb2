@@ -103,7 +103,7 @@ namespace MuMech.UI
             Layout shape = KodeWindow.Row(r);
             KodeWindow.Label(shape, "#MechJeb_AscentPathEd_label10"); //"Turn shape:"
             w.Slider(shape, () => (float)Autopilot.TurnShapeExponent, v => menu.ApplyTurnShapeSlider(v, Autopilot.TurnShapeExponent), 0.1f, 1f);
-            EditUi.Field(w, shape, Autopilot.TurnShapeExponent, 50);
+            EditUi.Field(w, shape, Autopilot.TurnShapeExponent, 50, label: "#MechJeb_AscentPathEd_label10");
             KodeWindow.Label(shape, "%");
 
             BuildPathPicture(w, r);
@@ -113,7 +113,7 @@ namespace MuMech.UI
         static void SliderRows(KodeWindow w, UIObject parent, string key, Func<string> value, Func<float> get, Action<float> set, float min, float max)
         {
             LabelAndValue(w, parent, key, value);
-            w.Slider(KodeWindow.Row(parent), get, set, min, max);
+            w.Slider(KodeWindow.Row(parent), get, set, min, max, key);
         }
 
         // the label on the left, the value on the right

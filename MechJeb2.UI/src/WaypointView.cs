@@ -11,7 +11,8 @@ namespace MuMech.UI
 {
     /// <summary>
     /// MechJebModuleWaypointWindow ("Waypoints") in KodeKit: three pages (waypoints, settings, routes) built once, shown by the
-    /// module's page. The module keeps the state and the actions (both UIs call them); the lists are pooled rows in a ScrollView.
+    /// module's page. The module keeps the state and the actions (both UIs call them); the waypoints are a virtual list (only
+    /// the rows in view are built and updated), the routes pooled rows in a ScrollView.
     /// The module draws the red map marker of the selected waypoint itself, through MechJebCore's post-draw queue.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleWaypointWindow))]
@@ -36,11 +37,11 @@ namespace MuMech.UI
         double statDist, statEta;
 
         // waypoints page
-        ScrollView wpScroll;
-        Layout wpContent;
+        VirtualList<WpRow> wpList;
         Layout editPanel;
-        readonly List<WpRow> rows = new List<WpRow>();
+        float editPanelHeight = -1; // measured when first shown and after a restyle
         int panelFor = -2;
+        int panelVersion = -1;
 
         // routes page
         ScrollView routeScroll;
@@ -55,13 +56,12 @@ namespace MuMech.UI
         ScrollView settingsScroll;
         Pages lastPage = (Pages)(-1);
 
-        class WpRow
+        public class WpRow
         {
             public Layout Item;
             public TMP_Text Label;
             public Image Background;
             public CharText Text;
-            public bool Shown = true;
             public int Tone = -1; // 0 normal, 1 selected, 2 quicksave
             public bool Current;
             // GetNameWithCoords is only rebuilt when something it shows changed
@@ -109,11 +109,16 @@ namespace MuMech.UI
             UIText empty = KodeWindow.Paragraph(page, "#MechJeb_NewUI_NoWaypoints"); //No waypoints: Add Waypoint, then click the map.
             KodeWindow.ToneText(empty, KodeWindow.Tone.Dim);
             w.Visible(empty.gameObject, () => Ap == null || Ap.Waypoints.Count == 0);
-            wpScroll = KodeWindow.ScrollList(page, ListHeight, out wpContent, 2);
+            wpList = new VirtualList<WpRow>(w, page, ListHeight, 0, CreateRow, row => row.Item.rectTransform, BindRow, 2);
 
-            // the selected waypoint's edit panel; it is moved under the selected row
-            editPanel = KodeWindow.Panel(wpContent);
+            // the selected waypoint's edit panel: under the selected row, which the list makes taller by the panel's height
+            editPanel = KodeWindow.Panel(wpList.Content);
             editPanel.Spacing(1);
+            RectTransform pr = editPanel.rectTransform;
+            pr.anchorMin = new Vector2(0, 1);
+            pr.anchorMax = new Vector2(1, 1);
+            pr.pivot = new Vector2(0.5f, 1);
+            KodeWindow.Styled(editPanel.gameObject, th => editPanelHeight = -1);
 
             Layout limits = KodeWindow.Row(editPanel);
             KodeWindow.Label(limits, "  Radius: ");
@@ -128,14 +133,14 @@ namespace MuMech.UI
             {
                 m._tmpMinSpeed = s;
                 Selected(wp => { if (MechJebModuleWaypointWindow.TryParseNonNegative(s, out float v)) wp.MinSpeed = v; });
-            }, 40);
+            }, 40, label: "#MechJeb_NewUI_Label_MinSpeed"); //Min speed
             KodeWindow.Button(limits, "A", () => m.MinSpeedToRest(m.SelIndex));
             KodeWindow.Label(limits, " - ");
             EditFields.Field(w, limits, () => m._tmpMaxSpeed, s =>
             {
                 m._tmpMaxSpeed = s;
                 Selected(wp => { if (MechJebModuleWaypointWindow.TryParseNonNegative(s, out float v)) wp.MaxSpeed = v; });
-            }, 40);
+            }, 40, label: "#MechJeb_NewUI_Label_MaxSpeed"); //Max speed
             KodeWindow.Button(limits, "A", () => m.MaxSpeedToRest(m.SelIndex));
             KodeWindow.FlexibleSpace(limits);
             UIButton qs = KodeWindow.Button(limits, "QS", () => m.ToggleQuicksave(m.SelIndex, Alt));
@@ -147,13 +152,13 @@ namespace MuMech.UI
             {
                 m._tmpLat = s;
                 Selected(wp => { if (MechJebModuleWaypointWindow.TryParseCoord(s, false, out double v)) wp.Latitude = v; });
-            }, 125);
+            }, 125, label: "#MechJeb_Latitude"); //Latitude
             KodeWindow.Label(coords, " -  Lon ");
             EditFields.Field(w, coords, () => m._tmpLon, s =>
             {
                 m._tmpLon = s;
                 Selected(wp => { if (MechJebModuleWaypointWindow.TryParseCoord(s, true, out double v)) wp.Longitude = v; });
-            }, 125);
+            }, 125, label: "#MechJeb_Longitude"); //Longitude
             editPanel.gameObject.SetActive(false);
 
             Layout buttons = KodeWindow.Row(page);
@@ -180,16 +185,23 @@ namespace MuMech.UI
             if (wp != null) action(wp);
         }
 
-        WpRow CreateRow(int index)
+        /// <summary>The waypoints' virtual list (for tests and the agent bridge).</summary>
+        public VirtualList<WpRow> WaypointList => wpList;
+
+        WpRow CreateRow(UIObject content)
         {
             KodeWindow w = Window;
             var row = new WpRow();
-            row.Item = wpContent.Add<Layout>("Waypoint");
+            row.Item = content.Add<Layout>("Waypoint");
             row.Item.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false).Spacing(1);
             row.Item.FlexibleLayout(true, false);
             row.Item.Finish();
 
-            UIButton b = KodeWindow.Button(row.Item, "", () => m.WaypointClicked(index, Alt), true);
+            UIButton b = KodeWindow.Button(row.Item, "", () =>
+            {
+                int index = wpList.IndexOf(row);
+                if (index >= 0) m.WaypointClicked(index, Alt);
+            }, true);
             row.Label = b.GetComponentInChildren<TMP_Text>();
             row.Background = b.GetComponent<Image>();
             // a fixed-size cell with no layout group, so the distance and ETA changing every frame don't relayout the list
@@ -208,6 +220,38 @@ namespace MuMech.UI
 
             w.Behaviour.AddRestyle(() => PaintRow(row));
             return row;
+        }
+
+        // each waypoint's speeds and running distance and ETA from the last per-frame pass, so a row bound between two passes
+        // (a scroll, in LateUpdate) shows its waypoint at once
+        readonly List<double> rowDist = new List<double>(), rowEta = new List<double>(), rowMaxSpeed = new List<double>();
+        readonly List<float> rowMinSpeed = new List<float>();
+
+        // a row shows another waypoint: forget what it showed and write it now
+        void BindRow(WpRow row, int index)
+        {
+            row.NameWithCoords = null;
+            row.Tone = -1;
+            List<MechJebWaypoint> wps = Ap?.Waypoints;
+            if (wps == null || index >= wps.Count || index >= rowDist.Count) return;
+            WriteRow(row, index, wps[index]);
+        }
+
+        void WriteRow(WpRow row, int i, MechJebWaypoint wp)
+        {
+            row.Text.Clear().Append('[').AppendInt(i + 1).Append("] - ").Append(NameWithCoords(row, wp)).Append(" - R: ").Append(wp.Radius, 1)
+                .Append(" m\n       S: ").Append(rowMinSpeed[i], 0).Append(" ~ ").Append(rowMaxSpeed[i], 0).Append(" - D: ").AppendSI(rowDist[i], -1)
+                .Append("m - ETA: ").AppendDHMS(rowEta[i], 0);
+            row.Text.Commit();
+
+            int tone = i == m.SelIndex ? 1 : wp.Quicksave ? 2 : 0;
+            bool current = i == Ap.WaypointIndex;
+            if (tone != row.Tone || current != row.Current)
+            {
+                row.Tone = tone;
+                row.Current = current;
+                PaintRow(row);
+            }
         }
 
         void PaintRow(WpRow row)
@@ -236,70 +280,68 @@ namespace MuMech.UI
             List<MechJebWaypoint> wps = Ap.Waypoints;
             int n = wps.Count;
             if (m.SelIndex >= n) m.SelIndex = -1;
-            while (rows.Count < n) rows.Add(CreateRow(rows.Count));
+            wpList.SetCount(n);
+            UpdateEditPanel();
 
-            double eta = 0, dist = 0;
-            for (int i = 0; i < rows.Count; i++)
+            // the totals need every waypoint; only the rows in view are written
+            while (rowDist.Count < n)
             {
-                WpRow row = rows[i];
-                bool show = i < n;
-                if (show != row.Shown)
-                {
-                    row.Shown = show;
-                    row.Item.gameObject.SetActive(show);
-                }
-                if (!show) continue;
-
+                rowDist.Add(0);
+                rowEta.Add(0);
+                rowMaxSpeed.Add(0);
+                rowMinSpeed.Add(0);
+            }
+            int first = wpList.Model.RenderFirst, last = wpList.Model.RenderLast;
+            double eta = 0, dist = 0;
+            for (int i = 0; i < n; i++)
+            {
                 MechJebWaypoint wp = wps[i];
                 m.AccumulateStats(i, wp, ref eta, ref dist, out double maxSpeed, out float minSpeed);
-
-                row.Text.Clear().Append('[').AppendInt(i + 1).Append("] - ").Append(NameWithCoords(row, wp)).Append(" - R: ").Append(wp.Radius, 1)
-                    .Append(" m\n       S: ").Append(minSpeed, 0).Append(" ~ ").Append(maxSpeed, 0).Append(" - D: ").AppendSI(dist, -1)
-                    .Append("m - ETA: ").AppendDHMS(eta, 0);
-                row.Text.Commit();
-
-                int tone = i == m.SelIndex ? 1 : wp.Quicksave ? 2 : 0;
-                bool current = i == Ap.WaypointIndex;
-                if (tone != row.Tone || current != row.Current)
-                {
-                    row.Tone = tone;
-                    row.Current = current;
-                    PaintRow(row);
-                }
+                rowDist[i] = dist;
+                rowEta[i] = eta;
+                rowMaxSpeed[i] = maxSpeed;
+                rowMinSpeed[i] = minSpeed;
+                if (i < first || i > last) continue;
+                WpRow row = wpList.RowAt(i);
+                if (row != null) WriteRow(row, i, wp);
             }
             statDist = dist;
             statEta = eta;
 
-            // the edit panel sits under the selected row
+            // scroll to the current waypoint when it changes and nothing is selected: its top 160 px down the list
+            if (m.SelIndex == -1 && Ap.WaypointIndex > -1 && m._lastIndex != Ap.WaypointIndex && Ap.WaypointIndex < n)
+                wpList.SetOffset(wpList.Model.RowTop(Ap.WaypointIndex) - 160);
+            m._lastIndex = Ap.WaypointIndex;
+        }
+
+        /// <summary>The edit panel sits under the selected row, 1 px below its button; the list makes that row taller by the panel.</summary>
+        void UpdateEditPanel()
+        {
             int sel = m.SelIndex;
             if (sel != panelFor)
             {
                 panelFor = sel;
-                if (sel >= 0 && sel < rows.Count)
-                {
-                    editPanel.transform.SetParent(rows[sel].Item.transform, false);
-                    editPanel.transform.SetAsLastSibling();
-                    editPanel.gameObject.SetActive(true);
-                }
-                else
-                {
-                    editPanel.gameObject.SetActive(false);
-                }
+                panelVersion = -1;
+                editPanel.gameObject.SetActive(sel >= 0);
             }
-
-            // scroll to the current waypoint when it changes and nothing is selected
-            if (m.SelIndex == -1 && Ap.WaypointIndex > -1 && m._lastIndex != Ap.WaypointIndex && Ap.WaypointIndex < n) ScrollTo(Ap.WaypointIndex);
-            m._lastIndex = Ap.WaypointIndex;
-        }
-
-        void ScrollTo(int index)
-        {
-            RectTransform content = wpScroll.Content.rectTransform;
-            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
-            float top = -rows[index].Item.rectTransform.anchoredPosition.y;
-            float max = Mathf.Max(0, content.rect.height - wpScroll.Viewport.rectTransform.rect.height);
-            content.anchoredPosition = new Vector2(content.anchoredPosition.x, Mathf.Clamp(top - 160, 0, max));
-            wpScroll.ScrollRect.StopMovement();
+            if (sel < 0)
+            {
+                wpList.SetExpanded(-1, 0);
+                return;
+            }
+            if (editPanelHeight < 0)
+            {
+                RectTransform pr = editPanel.rectTransform;
+                LayoutRebuilder.ForceRebuildLayoutImmediate(pr);
+                editPanelHeight = LayoutUtility.GetPreferredHeight(pr);
+                pr.sizeDelta = new Vector2(0, editPanelHeight);
+                panelVersion = -1;
+            }
+            wpList.SetExpanded(sel, editPanelHeight + 1);
+            if (panelVersion == wpList.Model.GeometryVersion) return;
+            panelVersion = wpList.Model.GeometryVersion;
+            editPanel.rectTransform.anchoredPosition = new Vector2(0, -(wpList.Model.RowTop(sel) + wpList.Model.RowHeight + 1));
+            editPanel.transform.SetAsLastSibling();
         }
 
         // ---------------- settings page ----------------
@@ -337,7 +379,7 @@ namespace MuMech.UI
             routeScroll = KodeWindow.ScrollList(page, ListHeight, out routeContent, 2);
 
             Layout buttons = KodeWindow.Row(page);
-            EditFields.Field(w, buttons, () => m._saveName, s => m._saveName = s, 150);
+            EditFields.Field(w, buttons, () => m._saveName, s => m._saveName = s, 150, label: "#MechJeb_NewUI_Label_RouteName", kind: FieldKind.Text); //Route name
             KodeWindow.Button(buttons, "Save", m.SaveCurrentRoute).PreferredWidth(50);
             RoverUi.DynButton(w, buttons, () => Alt ? "Add" : "Load", () => m.LoadSelectedRoute(Alt), 50);
             KodeWindow.Button(buttons, "Waypoints", m.ShowWaypointsPage, true);
@@ -414,8 +456,8 @@ namespace MuMech.UI
             {
                 // IMGUI resets the shared scroll position when the page changes
                 lastPage = page;
-                ScrollView sv = page == Pages.WAYPOINTS ? wpScroll : page == Pages.SETTINGS ? settingsScroll : routeScroll;
-                sv.Content.rectTransform.anchoredPosition = Vector2.zero;
+                if (page == Pages.WAYPOINTS) wpList.SetOffset(0);
+                else (page == Pages.SETTINGS ? settingsScroll : routeScroll).Content.rectTransform.anchoredPosition = Vector2.zero;
             }
 
             switch (page)
