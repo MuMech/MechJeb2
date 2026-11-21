@@ -19,11 +19,11 @@ namespace MuMech.UI
             string unit = null, float width = 60, Func<Tone> tone = null) =>
             ed == null
                 ? g.Switch(label, get, set, tone: tone)
-                : g.Switch(label, get, set, () => ed.Text, s => ed.Text = s, width, unit, EditUi.Valid(ed), tone);
+                : g.Switch(label, get, set, () => ed.Text, s => ed.Text = s, width, unit, EditUi.Valid(ed), tone, FieldKind.Number);
 
         /// <summary>label [field] unit on an IEditable (MechJeb's labels often start with spaces: they are trimmed).</summary>
         public static Layout Field(KodeWindow.PropertyGrid g, string label, IEditable ed, string unit, float width = 60) =>
-            g.Field(KodeWindow.Loc(label).Trim(), () => ed.Text, s => ed.Text = s, width, unit, EditUi.Valid(ed));
+            g.Field(KodeWindow.Loc(label).Trim(), () => ed.Text, s => ed.Text = s, width, unit, EditUi.Valid(ed), FieldKind.Number);
 
         /// <summary>
         /// The thrust limiters of <paramref name="l"/> (the controller's general ones, or a module's own), one switch row each,
@@ -52,11 +52,11 @@ namespace MuMech.UI
             Layout electric = Switch(g, "#MechJeb_Ascent_checkbox20", () => l.ElectricThrottle, v => l.ElectricThrottle = v,
                 tone: LimiterTones.Electric(t, applies));
             TMPro.TMP_InputField lo = EditFields.Field(w, electric, () => l.ElectricThrottleLo.Text, s => l.ElectricThrottleLo.Text = s, 55,
-                () => l.ElectricThrottleLo.IsParsed);
+                () => l.ElectricThrottleLo.IsParsed, label: "#MechJeb_NewUI_Label_ElectricLo"); //Electric limit, low
             Layout hi = KodeWindow.Row(electric);
             hi.FlexibleLayout(false, false);
             KodeWindow.Label(hi, "% Hi");
-            EditUi.Field(w, hi, () => l.ElectricThrottleHi, 40);
+            EditUi.Field(w, hi, () => l.ElectricThrottleHi, 40, label: "#MechJeb_NewUI_Label_ElectricHi"); //Electric limit, high
             KodeWindow.Label(hi, "%");
             g.Dim(lo.gameObject, hi.gameObject, () => !l.ElectricThrottle);
 
@@ -107,7 +107,7 @@ namespace MuMech.UI
             Field(g, "#MechJeb_NewUI_PreDelay", r.AutostagePreDelay, "s", 50); //Delay before staging
             Field(g, "#MechJeb_NewUI_PostDelay", r.AutostagePostDelay, "s", 50); //Delay after staging
             g.Field(CachedLocalizer.Instance.MechJebAscentLabel44.Trim(), () => r.ClampAutoStageThrustPct.Text, x => SetClamp(r, x), 50, "%",
-                () => r.ClampAutoStageThrustPct.IsParsed); //"Clamp AutoStage Thrust "
+                () => r.ClampAutoStageThrustPct.IsParsed, FieldKind.Number); //"Clamp AutoStage Thrust "
 
             g.Note("#MechJeb_Ascent_label38"); //"Stage fairings when:"
             Switch(g, s._sFairingMaxDynamicPressure.Trim(), () => r.FairingMaxDynamicPressureEnabled, v => r.FairingMaxDynamicPressureEnabled = v,

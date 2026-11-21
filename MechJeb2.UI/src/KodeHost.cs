@@ -43,6 +43,9 @@ namespace MuMech.UI
 
         readonly Dictionary<DisplayModule, KodeView> views = new Dictionary<DisplayModule, KodeView>();
 
+        // the modules seen on last frame: one that turns on is a window opened, which comes above the others
+        readonly HashSet<DisplayModule> wasEnabled = new HashSet<DisplayModule>();
+
         // views whose per-frame update threw, logged once each; the other windows still update
         readonly HashSet<KodeView> failedSync = new HashSet<KodeView>();
 
@@ -57,7 +60,15 @@ namespace MuMech.UI
             KodeWindow.TooltipFor = TooltipTexts.For;
             KodeWindow.TitleBarOnly = () => settings != null && settings.UseTitlebarDragging;
             MechJebUiHost.Register(this);
+            // the agent bridge, for tests and full control: off unless KSP is launched with -mechjeb-ui-agent <port>
+            // (or MECHJEB_UI_AGENT_PORT is set)
+            KodeKit.Agent.AgentServer.StartFromLaunch();
             MechJebModuleSettings.Changed += OnSettingsChanged;
+            KodeWindow.InputHistory.Changed += OnInputHistoryChanged;
+            // the keyboard shortcuts (opt-in window toggles): KSP's keys read, the bindings followed in the settings
+            WindowShortcuts.Start();
+            // the command palette's "open" action, which a shortcut can be bound to (none by default)
+            PaletteCommands.Start();
             // the font is searched again in each scene when the last search found none
             arialMetricSearched = false;
             Debug.Log("[MechJeb2.UI] KodeHost registered");
@@ -65,12 +76,21 @@ namespace MuMech.UI
 
         void OnDestroy()
         {
+            // the agent bridge's requests waiting for this scene are dropped (503), and new ones answered 503 until the next host pumps
+            KodeKit.Agent.AgentServer.HostGone();
             MechJebUiHost.Unregister(this);
             MechJebModuleSettings.Changed -= OnSettingsChanged;
+            KodeWindow.InputHistory.Changed -= OnInputHistoryChanged;
             DestroyViews();
+            KodeWindow.Focus.Forget();
+            WindowShortcuts.Stop();
+            PaletteCommands.Stop();
             // this closure would keep the host, and through it the vessel's MechJeb, in memory until the next scene's host
             KodeWindow.TitleBarOnly = () => false;
         }
+
+        // a field's recent values changed: saved with the global settings
+        void OnInputHistoryChanged() => InputHistorySettings.Save(settings);
 
         // ---- IMechJebUiHost ----
 
@@ -79,6 +99,13 @@ namespace MuMech.UI
 
         public bool MouseOverWindow()
         {
+            // a dialog's blocker covers the whole screen, and so does the command palette's
+            if (CommandPalette.IsOpen) return true;
+            if (Dialogs.IsOpen) return true;
+            // a toast takes the click that dismisses it: the part or the map under it mustn't get it too
+            if (Toasts.PointerOver) return true;
+            // an open context menu under the pointer: its click is the menu's
+            if (ContextMenus.Hovered) return true;
             // overlays (custom windows as a HUD) don't lock the game's controls, as in GuiUtils.MouseIsOverWindow
             foreach (KodeView v in views.Values)
                 if (v.Visible && !v.Module.IsOverlay && v.Window.Behaviour.Hovered) return true;
@@ -91,6 +118,14 @@ namespace MuMech.UI
 
         void Update()
         {
+            // a source scope (KodeKit's CommitPath.As) left open by a handler that threw would give its source to every later edit
+            if (KodeKit.Headless.CommitPath.ResetScopes()) Debug.LogWarning("[MechJeb] a KodeKit source scope was left open; closed");
+            // the agent bridge's requests, answered on the main thread (nothing to do while it is off)
+            if (KodeKit.Agent.AgentServer.Running) KodeKit.Agent.AgentServer.Pump();
+            // an edit remembered for a window that wasn't built again (closed, or its vessel switched) lets go of the old window
+            KodeWindow.Focus.Expire();
+            // the fields' recent values, read again when MechJeb loaded its global settings
+            InputHistorySettings.Follow();
             MechJebCore c = FindCore();
             // Unity's == counts a destroyed core (its pod deleted in the editor, or destroyed in flight) as null: compare the
             // references, so the views of a destroyed core are let go
@@ -106,6 +141,8 @@ namespace MuMech.UI
             {
                 settings = s;
                 positionScale = GuiUtils.Scale;
+                Toasts.Scale = GuiUtils.Scale;
+                CommandPalette.Scale = GuiUtils.Scale;
                 ApplyTheme();
             }
             // a language switch: the views keep many texts made when they were built (tooltips, button captions, cached
@@ -113,9 +150,12 @@ namespace MuMech.UI
             string lang = Localizer.CurrentLanguage;
             if (lang != language)
             {
-                if (language != null) DestroyViews();
+                if (language != null) DestroyViews(true);
                 language = lang;
             }
+            // the windows as shortcut actions, the bindings as saved
+            WindowShortcuts.Follow(core, settings);
+            PaletteCommands.Follow(core);
             if (core == null)
             {
                 Tooltips.FollowPointer(null);
@@ -140,6 +180,7 @@ namespace MuMech.UI
                 views[m].Destroy();
                 failedSync.Remove(views[m]);
                 views.Remove(m);
+                wasEnabled.Remove(m);
             }
 
             foreach (ComputerModule cm in modules)
@@ -153,13 +194,18 @@ namespace MuMech.UI
                     // first shown, or its structure changed (e.g. items added to a custom window): build it (again, in place)
                     if (v != null)
                     {
-                        v.Destroy();
+                        v.Destroy(true);
                         failedSync.Remove(v);
                     }
                     v = Build(m, factory);
                 }
                 if (v == null) continue;
-                v.SetVisible(want);
+                // opened since it was last shown (the module turned on): above the other windows; shown again only, it keeps its place
+                bool opened = m.Enabled && !wasEnabled.Contains(m);
+                // seen only once shown: a window enabled while the UI is hidden is raised when the UI is shown
+                if (!m.Enabled) wasEnabled.Remove(m);
+                else if (want) wasEnabled.Add(m);
+                v.SetVisible(want, opened);
                 if (!want) continue;
                 try
                 {
@@ -213,6 +259,8 @@ namespace MuMech.UI
         {
             if (s != settings) return;
             ApplyTheme();
+            Toasts.Scale = GuiUtils.Scale;
+            CommandPalette.Scale = GuiUtils.Scale;
             if (GuiUtils.Scale.Equals(positionScale)) return;
             KeepPositionsOnScreen(positionScale, GuiUtils.Scale);
             positionScale = GuiUtils.Scale;
@@ -252,9 +300,12 @@ namespace MuMech.UI
         {
             KodeWindow.ShowHeaders = settings.UiSectionHeaders;
             bool key = KodeWindow.ShowHeaders;
-            if (layoutKey != null && key != layoutKey) DestroyViews();
+            if (layoutKey != null && key != layoutKey) DestroyViews(true);
             layoutKey = key;
         }
+
+        // canvas units within which a dragged window's edge snaps to another edge, with Snap windows on
+        const float SnapDistance = 8;
 
         /// <summary>
         /// The new UI's settings → KodeKit theme: KSP's stock sprites at MechJeb's text size, the new UI's own skin on top (Classic,
@@ -264,6 +315,7 @@ namespace MuMech.UI
         {
             if (settings == null) return;
             ApplyLayout();
+            WindowBehaviour.SnapDistance = settings.UiSnapWindows ? SnapDistance : 0;
             // every settings change comes here (a slider drag sends one per step): a theme is built only for another skin or
             // spacing, and an opacity change alone goes to the windows' backgrounds
             var skin = (MechJebModuleSettings.UiSkinType)settings.UiSkin;
@@ -359,9 +411,10 @@ namespace MuMech.UI
             }
         }
 
-        void DestroyViews()
+        // rebuilding: the open views are built again (a language or layout switch), so an edit in progress waits for its window
+        void DestroyViews(bool rebuilding = false)
         {
-            foreach (KodeView v in views.Values) v.Destroy();
+            foreach (KodeView v in views.Values) v.Destroy(rebuilding);
             views.Clear();
             failedSync.Clear();
         }
