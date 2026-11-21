@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- A build check, not a product: KodeKit's headless models (MechJeb2.UI/KodeKit/Headless) compiled alone at C# 7.3, the
+         language of KodeUI's Unity project, so a newer construct there fails the build. MechJebLibTest references it, so every
+         test build (and CI's) compiles it. The folder's files open their nullable context with `#nullable disable` inside
+         `#if !CSHARP_7_3`, defined here. -->
+    <PropertyGroup>
+        <TargetFramework>net48</TargetFramework>
+        <OutputType>Library</OutputType>
+        <AssemblyName>HeadlessCSharp73</AssemblyName>
+        <RootNamespace>KodeKit.Headless</RootNamespace>
+        <LangVersion>7.3</LangVersion>
+        <Nullable>disable</Nullable>
+        <DefineConstants>$(DefineConstants);CSHARP_7_3</DefineConstants>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <IsPackable>false</IsPackable>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="..\..\MechJeb2.UI\KodeKit\Headless\*.cs" Link="Headless\%(Filename)%(Extension)"/>
+    </ItemGroup>
+
+</Project>
