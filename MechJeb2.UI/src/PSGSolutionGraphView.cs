@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using KodeKit;
+using KodeKit.Headless;
 using KodeUI;
 using MechJebLib.PSG;
 using TMPro;
@@ -20,8 +22,8 @@ namespace MuMech.UI
     /// legend under the plot draws: the Solution guidance flies now (bright, solid), the one the vessel lifted off with (dashed,
     /// hidden while it is the current one) and what the vessel flew (dark). Vertical marks: the current Solution's phase
     /// boundaries, its interpolant nodes' edges, its collocation points (where the optimizer enforces the Qα and Q limits),
-    /// and the vessel's MET. Zoom narrows the visible span, which the scrollbar moves; the corner grip resizes the window
-    /// and the plot.
+    /// and the vessel's MET. Zoom narrows the visible span, which the scrollbar moves; the wheel over the plot zooms about the
+    /// pointer, a drag pans, a double-click goes back to the Zoom setting's span; the corner grip resizes the window and the plot.
     /// </summary>
     [KodeViewFor(typeof(MechJebModulePSGSolutionGraph))]
     public class PSGSolutionGraphView : KodeView
@@ -56,7 +58,7 @@ namespace MuMech.UI
 
         // ---- data sources (no allocation) ----
 
-        sealed class TraceSeries : IGraphSource
+        sealed class TraceSeries : IGraphSource, ISamples
         {
             readonly Func<SolutionTrace> trace;
             readonly Column column;
@@ -74,7 +76,7 @@ namespace MuMech.UI
             public double Y(int i) => trace()[column, i] * factor;
         }
 
-        sealed class FlownSeries : IGraphSource
+        sealed class FlownSeries : IGraphSource, ISamples
         {
             readonly PSGSolutionGraphView v;
             readonly FlownColumn column;
@@ -115,6 +117,8 @@ namespace MuMech.UI
         // ---- the plot ----
 
         LineGraph graph;
+        static readonly ConditionalWeakTable<MechJebModulePSGSolutionGraph, ViewportModel> keptViews =
+            new ConditionalWeakTable<MechJebModulePSGSolutionGraph, ViewportModel>();
         readonly LineSeriesGraphic[] planLines = new LineSeriesGraphic[Infos.Length];
         readonly DashedLineGraphic[] padLines = new DashedLineGraphic[Infos.Length];
         readonly LineSeriesGraphic[] flownLines = new LineSeriesGraphic[Infos.Length];
@@ -163,7 +167,7 @@ namespace MuMech.UI
             bool shownChanged = g.ShowFlown != lastFlown || g.ShowCurrent != lastCurrent || g.ShowPad != lastPad ||
                                 g.SharedScales != lastShared;
             bool force = planChanged || mask != lastMask || g.Zoom != lastZoom || g.ScaleIdx != lastScaleIdx || rightIdx != lastRightIdx ||
-                         shownChanged || g.ShowNodes != lastNodes || g.ShowKnots != lastKnots;
+                         shownChanged || g.ShowNodes != lastNodes || g.ShowKnots != lastKnots || graph.ViewMoved;
             // LineGraph rebuilds one mesh per frame after a Refresh: don't refresh again before it has gone through them all
             bool due = Time.frameCount - lastRefreshFrame >= graph.Series.Count + 2 && Time.unscaledTime - lastRefreshTime >= 0.5f;
             if (!force && !due) return;
@@ -188,17 +192,17 @@ namespace MuMech.UI
 
             span = Math.Max(Math.Max(Math.Max(Plan.Tf, Pad.Tf), Flown.LastMET), 1);
             double visible = span / (1 << g.Zoom);
+            ViewportModel view = graph.View;
+            view.MinSpan = span / (4 << MechJebModulePSGSolutionGraph.MAX_ZOOM);
+            view.SetData(0, span);
+            view.SetDefaultSpan(visible);
             if (g.Zoom != lastZoom)
             {
                 // zoom about the vessel's MET when the data reaches it, about the middle of the view otherwise
-                double middle = now.Met > 0 && now.Met < span ? now.Met : graph.ViewMin + graph.VisibleWidth / 2;
-                graph.ViewMin = middle - visible / 2;
+                double middle = now.Met > 0 && now.Met < span ? now.Met : view.FromFraction(0.5);
+                view.Show(middle - visible / 2, middle + visible / 2, ChangeSource.Program);
                 lastZoom = g.Zoom;
             }
-
-            graph.DataMaxX = span;
-            graph.VisibleWidth = visible;
-            graph.ViewMin = Math.Max(0, Math.Min(graph.ViewMin, span - visible));
 
             graph.Refresh(yMin[g.ScaleIdx], yMax[g.ScaleIdx]);
             if (rightIdx >= 0) graph.RefreshRight(yMin[rightIdx], yMax[rightIdx], Infos[rightIdx].Color);
@@ -207,16 +211,18 @@ namespace MuMech.UI
                 planLines[i].YMin = padLines[i].YMin = flownLines[i].YMin = yMin[i];
                 planLines[i].YMax = padLines[i].YMax = flownLines[i].YMax = yMax[i];
                 // the dashed pad lines aren't LineGraph's series: give them its view and redraw them now
-                padLines[i].XMin = graph.ViewMin;
-                padLines[i].XMax = graph.ViewMin + graph.VisibleWidth;
+                padLines[i].XMin = view.Start;
+                padLines[i].XMax = view.End;
+                // read through a WindowedSource, so the dashed line reaches the plot's edges when zoomed
+                ((WindowedSource)padLines[i].Source).SetWindow(view.Start, view.End);
                 padLines[i].SetVerticesDirty();
             }
 
             // the extra markers aren't LineGraph's: give them its view and redraw them now
             foreach (LineSeriesGraphic m in extraMarkers)
             {
-                m.XMin = graph.ViewMin;
-                m.XMax = graph.ViewMin + graph.VisibleWidth;
+                m.XMin = view.Start;
+                m.XMax = view.End;
                 m.YMin = 0;
                 m.YMax = 1;
                 m.SetVerticesDirty();
@@ -363,6 +369,28 @@ namespace MuMech.UI
             return viewText;
         }
 
+        double shownMagnification = double.NaN;
+        string zoomText = "";
+
+        // the view's magnification: the Zoom setting's power of 2, or what the wheel made it
+        string ZoomText()
+        {
+            double m = graph == null ? 1 << g.Zoom : graph.View.Magnification;
+            if (m.Equals(shownMagnification)) return zoomText;
+            shownMagnification = m;
+            zoomText = Math.Abs(m - Math.Round(m)) < 0.005 ? "×" + Math.Round(m).ToString("F0") : "×" + m.ToString("F1");
+            return zoomText;
+        }
+
+        // - and +: the next power of 2 below or above the magnification shown, about the vessel's MET or the view's middle
+        void ZoomStep(int d)
+        {
+            double log = Math.Log(graph.View.Magnification, 2);
+            int z = d > 0 ? (int)Math.Floor(log + 1e-6) + 1 : (int)Math.Ceiling(log - 1e-6) - 1;
+            g.Zoom = Mathf.Clamp(z, 0, MechJebModulePSGSolutionGraph.MAX_ZOOM);
+            lastZoom = -1;
+        }
+
         // the peaks of the current and pad Solutions: what the limits and the steering reach
         void Summarize()
         {
@@ -412,7 +440,7 @@ namespace MuMech.UI
 
             Layout options = KodeWindow.Row(r);
             KodeWindow.Label(options, "Zoom");
-            Nudge(w, options, "×256", () => "×" + (1 << g.Zoom), () => g.Zoom--, () => g.Zoom++);
+            Nudge(w, options, "×256.0", ZoomText, () => ZoomStep(-1), () => ZoomStep(1));
             w.BoundLabel(options, "MET 9999 to 9999 s", ViewText);
             KodeWindow.FlexibleSpace(options);
             UnityEngine.UI.Toggle hold = w.Toggle(options, "Hold", () => g.Hold, v => g.Hold = v);
@@ -448,7 +476,16 @@ namespace MuMech.UI
             Layout left = plotRow.Add<Layout>("Plot");
             left.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false);
             left.Finish();
-            graph = new LineGraph(w, left, 512, height, builtLabels, r) { Follow = false, LabelFormat = LineGraph.StepLabel };
+            // the view outlives this window, so a rebuild (a new plot height, a language) keeps the zoom
+            if (keptViews.TryGetValue(g, out ViewportModel view)) lastZoom = g.Zoom;
+            else
+            {
+                // a plan has no live end to follow; a reset shows the Zoom setting's span from the start
+                view = new ViewportModel(0, 1, 1) { AutoFollow = false, ResetFollows = false };
+                keptViews.Add(g, view);
+            }
+
+            graph = new LineGraph(w, left, 512, height, builtLabels, r, view) { LabelFormat = LineGraph.StepLabel };
             plotSize = graph.Plot.GetComponent<LayoutElement>();
             plotSize.flexibleWidth = 1;
             labelsSize = graph.Plot.parent.Find("YLabels").GetComponent<LayoutElement>();
@@ -471,7 +508,7 @@ namespace MuMech.UI
                 int k = i;
                 SeriesInfo info = Infos[i];
                 padLines[i] = Graphs.Fill<DashedLineGraphic>(graph.Plot, "Pad" + i);
-                padLines[i].Source = new TraceSeries(() => g.PadPlan, info);
+                padLines[i].Source = new WindowedSource(new TraceSeries(() => g.PadPlan, info));
                 padLines[i].color = PadShade(info.Color);
                 padLines[i].raycastTarget = false;
                 padLines[i].Thickness = PadThickness;
@@ -494,6 +531,67 @@ namespace MuMech.UI
 
             nowLine = Marker("Now", now, NowColor);
             extraMarkers = new[] { nodeLines, knotLines, nowLine };
+            BuildHoverReadout();
+        }
+
+        /// <summary>The plot's hover read-out (null before the plot is built).</summary>
+        public GraphReadout HoverReadout => graph?.Readout;
+
+        // the pointer over the plot: the MET there and, for each displayed quantity, the value of each of its lines shown (the
+        // current Solution, the pad one, what was flown once there is a flown track), in its unit, with the line's colour
+        void BuildHoverReadout()
+        {
+            GraphReadout readout = graph.EnableReadout();
+            readout.Model.SetX(() => "MET", (b, x) => b.Append(x, 1).Append(" s"));
+            for (int i = 0; i < Infos.Length; i++)
+            {
+                int k = i;
+                SeriesInfo info = Infos[i];
+                SplitLabel(info.Label, out string name, out string unit);
+                Action<CharBuffer, double> format = ValueFormat(unit);
+                readout.AddRow(new TraceSeries(() => g.Plan, info), name, format, () => g.ShowCurrent && g.Displayed(k), info.Color);
+                readout.AddRow(new TraceSeries(() => g.PadPlan, info), name + " (pad)", format,
+                    () => g.ShowPad && g.Displayed(k) && !g.PlanIsPad, PadShade(info.Color));
+                if (info.Flown.HasValue)
+                    readout.AddRow(new FlownSeries(this, info.Flown.Value, info.Factor), name + " (flown)", format,
+                        () => g.ShowFlown && g.Displayed(k) && Flown.Count > 0, FlownShade(info.Color));
+            }
+        }
+
+        // "Altitude m" → "Altitude", "m"; "Qα % of limit" → "Qα", "% of limit"
+        internal static void SplitLabel(string label, out string name, out string unit)
+        {
+            int at = label.IndexOf(" %", StringComparison.Ordinal);
+            if (at < 0) at = label.LastIndexOf(' ');
+            if (at < 0)
+            {
+                name = label;
+                unit = "";
+                return;
+            }
+
+            name = label.Substring(0, at);
+            unit = label.Substring(at + 1);
+        }
+
+        // a value as the read-out writes it, in its unit: distances and speeds in SI, a mass in tonnes, angles and percents to a tenth
+        static Action<CharBuffer, double> ValueFormat(string unit)
+        {
+            switch (unit)
+            {
+                case "m":
+                case "m/s":
+                    return (b, v) => b.AppendSI(v, 4).Append(unit);
+                case "kg":
+                    return (b, v) => b.Append(v / 1000, 3).Append(" t");
+                case "°":
+                    return (b, v) => b.Append(v, 1).Append('°');
+                case "":
+                    return (b, v) => b.AppendSI(v, 4);
+                default:
+                    if (unit.StartsWith("%", StringComparison.Ordinal)) return (b, v) => b.Append(v, 1).Append(' ').Append(unit);
+                    return (b, v) => b.AppendSI(v, 4).Append(unit);
+            }
         }
 
         // what each line and mark is, drawn as on the plot; the marks that can be hidden carry their switch
@@ -645,7 +743,8 @@ namespace MuMech.UI
             leftSide.PreferredWidth(0);
             Layout leftPick = KodeWindow.Row(leftSide);
             leftPick.FlexibleLayout(0f, 0f);
-            new ComboBox(w, leftPick, ScalePosition, i => g.ScaleIdx = scaleSeries[i], ScaleNames, false, i => Infos[scaleSeries[i]].Color);
+            new ComboBox(w, leftPick, ScalePosition, i => g.ScaleIdx = scaleSeries[i], ScaleNames, false, i => Infos[scaleSeries[i]].Color,
+                "#MechJeb_NewUI_Label_LeftScale"); //Left scale
             w.Visible(leftPick.gameObject, () => ScaleNames().Length > 0);
 
             KodeWindow.RowOf(w.SwitchRow(axisRow, "#MechJeb_Flightrecord_checkbox32", () => g.SharedScales, v => g.SharedScales = v)) //Shared scales
@@ -659,7 +758,7 @@ namespace MuMech.UI
             Layout rightPick = KodeWindow.Row(rightSide);
             rightPick.FlexibleLayout(0f, 0f);
             new ComboBox(w, rightPick, RightPosition, i => g.RightScaleIdx = i == 0 ? -1 : scaleSeries[i - 1], RightNames, false,
-                i => i == 0 ? Color.clear : Infos[scaleSeries[i - 1]].Color);
+                i => i == 0 ? Color.clear : Infos[scaleSeries[i - 1]].Color, "#MechJeb_NewUI_Label_RightScale"); //Right scale
             w.Visible(rightPick.gameObject, () => ScaleNames().Length > 0);
             w.Behaviour.AddRelocalize(() => scaleNamesMask = -1);
         }

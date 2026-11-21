@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using KodeKit;
+using KodeKit.Headless;
 using KodeUI;
 using MechJebLib.PSG;
 using UnityEngine;
@@ -81,23 +83,25 @@ namespace MuMech.UI
                 KodeWindow.ToneText(fit, Tone.Caution);
             }
 
+            // the table as text or Markdown: its rows top-down as shown, every row, the option
+            // columns as yes or no, the buttons left out, the coast as its own line where it is drawn
+            Layout copy = KodeWindow.Row(r);
+            StageStatsTable.CopyButtons(copy, () => columns);
+            PsgTableRows.TopDown(ed, lines);
+            columns = Columns(ed);
+
             Layout table = KodeWindow.Panel(r);
             Layout head = KodeWindow.Row(table);
-            Header(head, "Stage", NameWidth, "The KSP stage, top-down like the staging list: the first burn is at the bottom. A stage " +
-                "that burns in two parts (boosters with the core, then the core alone) has a row for each part.");
-            Header(head, "ΔV", NumberWidth, "The burn's vacuum Δv, as the stage stats count it.");
-            Header(head, "Time", NumberWidth, "How long the burn lasts at full thrust.");
-            Header(head, "TWR", NumberWidth, "Thrust-to-weight ratio at the start of the burn, at 1 g (9.81 m/s²).");
-            Header(head, "Guided", OptionWidth, "PSG steers the burn. Off (unguided): the burn holds one fixed inertial attitude, " +
-                "which PSG picks, e.g. for a spin-stabilised stage. The coast row has its own: off, the coast holds its attitude too.");
-            Header(head, "Full", OptionWidth, "Full burn: the stage burns until it's empty, a fixed burn time, for solids or engines " +
-                "that can't be shut down. Off: PSG may cut it off early to reach the orbit.");
             // the Spin column is the coast's only: without a coast (the default plan) it would stand empty
             spinColumn = ed.Coast.HasValue;
-            if (spinColumn)
-                Header(head, "Spin", OptionWidth, "On the coast: spin the vessel up while it coasts, at the spin-up rate (ω under Plan " +
-                "options), and wait for the spin before staging, for spin-stabilised upper stages. Only on a guided coast.");
-            Cell(head, "", ActionWidth);
+            columns.Sync();
+            for (int i = 0; i < columns.Columns.Count; i++)
+            {
+                TableColumn c = columns.Columns[i];
+                if (!c.Visible) continue;
+                if (c.Key == (int)Col.Action) Cell(head, "", ActionWidth);
+                else Header(head, c.Header, c.Width, c.Tooltip);
+            }
             KodeWindow.FlexibleSpace(head);
 
             // top-down: the last row in flight order first
@@ -113,6 +117,107 @@ namespace MuMech.UI
                 KodeWindow.Button(KodeWindow.Row(r), "Add coast", () => Edit(e => e.AddCoast()));
 
             BuildPlanOptions(w, r);
+        }
+
+        // the table's columns, in order: their headers, widths and meanings, and the numbers of the stage rows
+        enum Col { Stage, DeltaV, Time, Twr, Guided, Full, Spin, Action }
+
+        TableModel columns;
+
+        // the table's lines top-down as drawn (stage rows and the coast): the model's rows, so the copies write what is drawn
+        readonly List<PsgTableRow> lines = new List<PsgTableRow>();
+
+        TableModel Columns(PlanEditor e)
+        {
+            var t = new TableModel(() => lines.Count, FormatCell) { Label = "PSG Stages" }
+               .WithColumnState(key => key != (int)Col.Spin || spinColumn, null);
+            Add(t, Col.Stage, "Stage", NameWidth, null, "The KSP stage, top-down like the staging list: the first burn is at the bottom. A stage " +
+                "that burns in two parts (boosters with the core, then the core alone) has a row for each part.");
+            Add(t, Col.DeltaV, "ΔV", NumberWidth, " m/s", "The burn's vacuum Δv, as the stage stats count it.");
+            Add(t, Col.Time, "Time", NumberWidth, " s", "How long the burn lasts at full thrust.");
+            Add(t, Col.Twr, "TWR", NumberWidth, null, "Thrust-to-weight ratio at the start of the burn, at 1 g (9.81 m/s²).");
+            Add(t, Col.Guided, "Guided", OptionWidth, null, "PSG steers the burn. Off (unguided): the burn holds one fixed inertial attitude, " +
+                "which PSG picks, e.g. for a spin-stabilised stage. The coast row has its own: off, the coast holds its attitude too.");
+            Add(t, Col.Full, "Full", OptionWidth, null, "Full burn: the stage burns until it's empty, a fixed burn time, for solids or engines " +
+                "that can't be shut down. Off: PSG may cut it off early to reach the orbit.");
+            Add(t, Col.Spin, "Spin", OptionWidth, null, "On the coast: spin the vessel up while it coasts, at the spin-up rate (ω under Plan " +
+                "options), and wait for the spin before staging, for spin-stabilised upper stages. Only on a guided coast.");
+            TableColumn actions = Add(t, Col.Action, "", ActionWidth, null, null);
+            actions.Name = "Actions"; // no header text: its description's label
+            actions.Copied = false;
+            return t;
+        }
+
+        static TableColumn Add(TableModel t, Col key, string header, float width, string unit, string tooltip)
+        {
+            TableColumn c = t.AddColumn((int)key, header, TableWidthRule.Fixed, width, unit);
+            c.Tooltip = tooltip;
+            c.Hideable = false;
+            return c;
+        }
+
+        /// <summary>The table's model (its columns and the stage rows' cells), for a test or the agent bridge.</summary>
+        public TableModel Model => columns;
+
+        // a stage row's cells: the name (a part of a twin stage says which), its vacuum Δv, burn time and TWR at 1 g
+        void FormatCell(int line, int key, CharBuffer into, ref string unit)
+        {
+            PsgTableRow drawn = lines[line];
+            PlanEditor.Row r = ed.Rows[drawn.Row];
+            // the coast's line: its text in the Stage cell, its Guided and Spin
+            if (drawn.Coast)
+            {
+                unit = null;
+                if (!(ed.Coast is { } c)) return;
+                if ((Col)key == Col.Stage) into.Append(PsgTableRows.CoastText(c.Kind, r.KSPStage));
+                else if ((Col)key == Col.Guided) into.Append(ed.CoastGuided ? "yes" : "no");
+                else if ((Col)key == Col.Spin) into.Append(ed.CoastSpinup ? "yes" : "no");
+                return;
+            }
+            // a stage that doesn't burn is drawn as one dim line (StageRow): for the copies, its name says why, and only a skipped
+            // stage's Δv is a number
+            if (r.Kind != PlanEditor.RowKind.BURN)
+            {
+                bool noEngine = r.Kind == PlanEditor.RowKind.NO_ENGINE;
+                if ((Col)key == Col.Stage) into.Append("Stage ").AppendInt(r.KSPStage).Append(noEngine ? " (no engines)" : " (under Min ΔV: skipped)");
+                else if ((Col)key == Col.DeltaV && !noEngine) into.Append(r.Stats.DeltaV, 0);
+                else unit = null;
+                return;
+            }
+            switch ((Col)key)
+            {
+                case Col.Stage:
+                    into.Append("Stage ").AppendInt(r.KSPStage);
+                    if (r.Kind == PlanEditor.RowKind.BURN && Twin(r)) into.Append(" (").Append(Part(r)).Append(')');
+                    break;
+                case Col.DeltaV:
+                    into.Append(r.Stats.DeltaV, 0);
+                    break;
+                case Col.Time:
+                    into.Append(r.Stats.DeltaTime, 0);
+                    break;
+                case Col.Twr:
+                    into.Append(r.Stats.StartTWR(1), 2);
+                    break;
+                // the options as the copies write them (the table draws switches)
+                case Col.Guided:
+                    if (r.Kind == PlanEditor.RowKind.BURN && r.Planned) into.Append(r.Guided ? "yes" : "no");
+                    break;
+                case Col.Full:
+                    if (r.Kind == PlanEditor.RowKind.BURN && r.Planned) into.Append(r.FullBurn ? "yes" : "no");
+                    break;
+            }
+        }
+
+        string Shown(int line, Col column) => columns.Cell(line, (int)column).ToString();
+
+        // a stage row's line in the table
+        int LineOf(PlanEditor.Row row)
+        {
+            int at = ed.Rows.IndexOf(row);
+            for (int i = 0; i < lines.Count; i++)
+                if (!lines[i].Coast && lines[i].Row == at) return i;
+            return -1;
         }
 
         static Layout Tip(Layout row, string key)
@@ -185,10 +290,11 @@ namespace MuMech.UI
                 return;
             }
 
-            UIText name = Cell(line, $"Stage {row.KSPStage}" + (Twin(row) ? $" ({Part(row)})" : ""), NameWidth);
-            Cell(line, $"{row.Stats.DeltaV:F0} m/s", NumberWidth);
-            Cell(line, $"{row.Stats.DeltaTime:F0} s", NumberWidth);
-            Cell(line, $"{row.Stats.StartTWR(1):F2}", NumberWidth);
+            int at = LineOf(row);
+            UIText name = Cell(line, Shown(at, Col.Stage), NameWidth);
+            Cell(line, Shown(at, Col.DeltaV), NumberWidth);
+            Cell(line, Shown(at, Col.Time), NumberWidth);
+            Cell(line, Shown(at, Col.Twr), NumberWidth);
 
             if (!row.Planned)
             {
@@ -200,8 +306,10 @@ namespace MuMech.UI
                 return;
             }
 
-            Option(w, line, () => ed.BurnRows.Count > burn && ed.BurnRows[burn].Guided, v => Edit(e => e.SetGuided(burn, v)));
-            Option(w, line, () => ed.BurnRows.Count > burn && ed.BurnRows[burn].FullBurn, v => Edit(e => e.SetFullBurn(burn, v)));
+            // a twin stage's two rows have one KSP stage: the part tells their options apart ("Guided (stage 3, boosters)")
+            string where = row.Kind == PlanEditor.RowKind.BURN && Twin(row) ? $"stage {row.KSPStage}, {Part(row)}" : $"stage {row.KSPStage}";
+            Option(w, line, Col.Guided, where, () => ed.BurnRows.Count > burn && ed.BurnRows[burn].Guided, v => Edit(e => e.SetGuided(burn, v)));
+            Option(w, line, Col.Full, where, () => ed.BurnRows.Count > burn && ed.BurnRows[burn].FullBurn, v => Edit(e => e.SetFullBurn(burn, v)));
             if (spinColumn) Blank(line, 1);
 
             // the plan's last burn says so in plain text; the others can become the last
@@ -237,10 +345,12 @@ namespace MuMech.UI
             Tooltips.Add(t.gameObject, tooltip);
         }
 
-        // a bare checkbox in an option column: the header names it
-        static UnityEngine.UI.Toggle Option(KodeWindow w, UIObject line, Func<bool> get, Action<bool> set)
+        // a bare checkbox in an option column: the header and the row name it, the column's tooltip describes it (unless the row's own does)
+        UnityEngine.UI.Toggle Option(KodeWindow w, UIObject line, Col col, string where, Func<bool> get, Action<bool> set, bool describe = true)
         {
-            UnityEngine.UI.Toggle t = w.CheckBox(line, "", get, set);
+            TableColumn c = columns?.ColumnOf((int)col);
+            UnityEngine.UI.Toggle t = w.CheckBox(line, "", get, set, name: $"{c?.Header ?? col.ToString()} ({where})");
+            if (describe && c?.Tooltip != null && w.Commits.Find(t) is CommitTarget target) target.Description = c.Tooltip;
             FixWidth(KodeWindow.RowOf(t).transform, line, OptionWidth);
             return t;
         }
@@ -248,13 +358,7 @@ namespace MuMech.UI
         void CoastRow(KodeWindow w, UIObject parent, PlanEditor.CoastSlot c, PlanEditor.Row row)
         {
             Layout line = KodeWindow.Row(parent);
-            string where = c.Kind switch
-            {
-                PlanEditor.CoastKind.BEFORE    => $"Coast, then burn stage {row.KSPStage}",
-                PlanEditor.CoastKind.DURING    => $"Coast during stage {row.KSPStage} (splits its burn)",
-                PlanEditor.CoastKind.AFTER     => $"Coast after stage {row.KSPStage}, before staging",
-                _                              => $"Coast at stage {row.KSPStage} (no engines)"
-            };
+            string where = PsgTableRows.CoastText(c.Kind, row.KSPStage);
             // the description runs over the Stage to TWR cells (the same four cells as a stage row, so the next columns line up),
             // and the coast's Guided sits in the Guided column
             UIText label = Cell(line, "   " + where, NameWidth);
@@ -267,9 +371,9 @@ namespace MuMech.UI
                 return;
             }
 
-            Option(w, line, () => ed.CoastGuided, v => Edit(e => e.SetCoastGuided(v)));
+            Option(w, line, Col.Guided, "coast", () => ed.CoastGuided, v => Edit(e => e.SetCoastGuided(v)));
             Blank(line, 1);
-            UnityEngine.UI.Toggle spin = Option(w, line, () => ed.CoastSpinup, v => Edit(e => e.SetCoastSpinup(v)));
+            UnityEngine.UI.Toggle spin = Option(w, line, Col.Spin, "coast", () => ed.CoastSpinup, v => Edit(e => e.SetCoastSpinup(v)), false);
             Tooltips.Add(KodeWindow.RowOf(spin), $"Spin the vessel up during the coast, in stage {row.KSPStage}: staging waits until it " +
                 "spins at the spin-up rate (ω under Plan options). Turning it on makes the coast guided.");
 
