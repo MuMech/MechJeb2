@@ -348,7 +348,7 @@ namespace MuMech.UI
             if (Plan.Count == 0)
                 statusText = "No PSG solution yet: engage the PSG ascent";
             else
-                statusText = $"Solution {g.Sampled}: MET {Plan.T0:F0} to {Plan.Tf:F0} s, {Plan.PhaseBoundaries.Count - 1} phases" +
+                statusText = $"Solution {g.Sampled}: MET {Plan.T0:F0} to {Plan.Tf:F0} s, {Plan.PhaseCount} phases" +
                              (current ? "" : g.Hold ? " (held, guidance has a newer one)" : " (guidance has none now)");
             return statusText;
         }

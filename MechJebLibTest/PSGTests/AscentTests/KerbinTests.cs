@@ -15,6 +15,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
     [ParallelTestMethods]
     public class KerbinTests
     {
+        // guidance's default pitch start height, which the PSG simulation rises to straight up from the pad before it solves
+        private const double RISE = 100;
+
         private const double MU = 3531600000000;
 
         // the MainSailTinCan stages are the stage stats of the stock MechJebLibTest/Craft/Stock/Mainsail Tin Can.craft
@@ -29,6 +32,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(79699.9986022711, 79699.9986022711, 0, 450, 0, 0, massContinuity: true)
                .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0, massContinuity: true)
                .Initial(new V3(365592.912061998, -475862.737003702, -1017.92554628857), new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06), new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), t0, MU, 600000)
+               .VerticalRise(RISE)
                .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false)
                .Build();
 
@@ -39,8 +43,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             (psg.Objective == Optimizer.ObjectiveType.MIN_THRUST_ACCEL).ShouldBeTrue();
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
-            solution.Vgo(t0).ShouldEqual(2595.8963285782665, 1e-3);
-            solution.Tgo(t0).ShouldEqual(610.08086261522431, 1e-3);
+            solution.Vgo(t0).ShouldEqual(2652.834525208435, 1e-3);
+            solution.Tgo(t0).ShouldEqual(609.0392887818382, 1e-3);
 
             solution.OptimizeKSPStage().ShouldEqual(0);
             solution.TerminalKSPStage().ShouldEqual(0);
@@ -72,6 +76,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(79699.9986022711, 79699.9986022711, 0, 450, 0, 0, massContinuity: true)
                .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0, massContinuity: true)
                .Initial(new V3(365592.912061998, -475862.737003702, -1017.92554628857), new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06), new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), t0, MU, 600000)
+               .VerticalRise(RISE)
                .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false)
                // the final MIN_THRUST_ACCEL stage runs close to the default timeout, which would fall back to the MIN_TIME solution
                .OptimizerTimeout(Timeout.Infinite)

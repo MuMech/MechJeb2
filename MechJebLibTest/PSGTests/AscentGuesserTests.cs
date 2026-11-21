@@ -23,7 +23,7 @@ namespace MechJebLibTest.PSGTests
         private const double EARTH_MU = 3.986004418e+14;
         private const double EARTH_RADIUS = 6.371e+6;
 
-        private static void CheckGuess(Problem problem, PhaseCollection phases)
+        private static void CheckGuess(Problem problem, PhaseCollection phases, Action<Solution>? check = null)
         {
             var stopwatch = Stopwatch.StartNew();
             var guesser = new AscentGuesser(problem, null);
@@ -51,14 +51,44 @@ namespace MechJebLibTest.PSGTests
             Astro.FlightPathAngle(rf, vf).ShouldBeZero(1e-6);
             (rT * vf.sqrMagnitude - 1).ShouldBeZero(1e-6);
             incf.ShouldEqual(Abs(incT), 1e-5);
+
+            check?.Invoke(solution);
         }
 
+        // Guesses from the top of a 100 m vertical rise from the pad, which is where AscentBuilder.Build() starts a problem on
+        // the ground.  The rise ends under 50 m/s of vertical speed, and the guess kicks over at once there, as guidance does:
+        // in an atmosphere its pitchover is under way half a second later, and in vacuum it starts on linear tangent steering.
+        private static void CheckRiseGuess(Problem pad, PhaseCollection phases)
+        {
+            Problem top = VerticalRise.Presolve(pad, phases, 100 / pad.Scale.LengthScale);
+            phases.FixLastShutdownStage();
+
+            Assert.NotNull(top.Rise);
+            Assert.InRange(V3.Dot(top.V0, top.R0.normalized) * top.Scale.VelocityScale, 0, 50);
+
+            CheckGuess(top, phases, solution =>
+            {
+                solution.HasRise.ShouldBeTrue();
+
+                if (AscentProblem.HasAtmosphere(top))
+                {
+                    double t = solution.T0 + 0.5 / top.Scale.TimeScale;
+                    Rad2Deg(V3.Angle(solution.U(t), solution.R(t))).ShouldBeGreaterThan(0.01);
+                }
+                else
+                {
+                    (double pitch, _) = Astro.ECIToPitchHeading(solution.R(solution.T0), solution.U(solution.T0));
+                    Rad2Deg(pitch).ShouldBeLessThan(85);
+                }
+            });
+        }
+
+        // the phases rescaled to the problem, as AscentBuilder.Build() makes them, before the rise and FixLastShutdownStage
         private static PhaseCollection Phases(Problem problem, params Phase[] phases)
         {
             var normalized = new PhaseCollection();
             foreach (Phase phase in phases)
                 normalized.Add(phase.Rescale(problem.Scale));
-            normalized.FixLastShutdownStage();
             return normalized;
         }
 
@@ -74,12 +104,13 @@ namespace MechJebLibTest.PSGTests
             var problem = new Problem(r0, v0, r0.normalized, 157355.487476332, 0, EARTH_MU, EARTH_RADIUS, 0, 0, 0, 0, V3.zero,
                 new Kepler3(rT, 0, incT));
 
-            CheckGuess(problem, Phases(problem,
+            CheckRiseGuess(problem, Phases(problem,
                 Phase.NewStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4),
                 Phase.NewStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)));
         }
 
-        // the Titan II with its first stage cut to 1000 kN can't lift its own weight: the guess fails, and says so with the figure
+        // the Titan II with its first stage cut to 1000 kN can't lift its own weight, so it has no rise (VerticalRise leaves
+        // the problem on the pad): the guess fails, and says so with the figure
         [Fact]
         public void TooHeavyToLiftOffGivesTheThrustToWeight()
         {
@@ -87,13 +118,18 @@ namespace MechJebLibTest.PSGTests
             var v0 = new V3(0, 407.862893197274, 0);
             double rT = EARTH_RADIUS + 185e+3;
 
-            var problem = new Problem(r0, v0, r0.normalized, 157355.487476332, 0, EARTH_MU, EARTH_RADIUS, 0, 0, 0, 0, V3.zero,
+            var pad = new Problem(r0, v0, r0.normalized, 157355.487476332, 0, EARTH_MU, EARTH_RADIUS, 0, 0, 0, 0, V3.zero,
                 new Kepler3(rT, 0, Deg2Rad(28.608)));
+            PhaseCollection phases = Phases(pad,
+                Phase.NewStage(157355.487476332, 40267.56108456338, 1000000, 301.817977905273, 4, 4),
+                Phase.NewStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3));
+
+            Problem problem = VerticalRise.Presolve(pad, phases, 100 / pad.Scale.LengthScale);
+            phases.FixLastShutdownStage();
+            Assert.Null(problem.Rise);
 
             var guesser = new AscentGuesser(problem, null);
-            Exception e = Assert.ThrowsAny<Exception>(() => guesser.InitialGuess(Phases(problem,
-                Phase.NewStage(157355.487476332, 40267.56108456338, 1000000, 301.817977905273, 4, 4),
-                Phase.NewStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3))));
+            Exception e = Assert.ThrowsAny<Exception>(() => guesser.InitialGuess(phases));
 
             double twr = 1000000 / (157355.487476332 * EARTH_MU / r0.sqrMagnitude);
             Assert.Contains($"thrust-to-weight at liftoff is {twr:F2}, under 1", e.Message);
@@ -110,7 +146,7 @@ namespace MechJebLibTest.PSGTests
             var problem = new Problem(r0, v0, r0.normalized, 157355.487476332, 0, EARTH_MU, EARTH_RADIUS, 0, 0, 0, 0, V3.zero,
                 new Kepler3(rT, 0, 0));
 
-            CheckGuess(problem, Phases(problem,
+            CheckRiseGuess(problem, Phases(problem,
                 Phase.NewStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4),
                 Phase.NewStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)));
         }
@@ -133,7 +169,7 @@ namespace MechJebLibTest.PSGTests
             var problem = new Problem(r0, v0, u0, 49119.7842689869, 0, EARTH_MU, EARTH_RADIUS, 7200, 0.5 * 10 * 1.225, 0, 0,
                 7.29211585e-5 * V3.northpole, new Kepler3(smaT, eccT, incT));
 
-            CheckGuess(problem, Phases(problem,
+            CheckRiseGuess(problem, Phases(problem,
                 Phase.NewStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3),
                 Phase.NewStage(2848.62586760223, 1363.71123994759, thrust2, 270.15767003304, 1, 1),
                 Phase.NewCoast(678.290157913434, 678.290157913434, 0, 450, 1, 1),
@@ -154,7 +190,7 @@ namespace MechJebLibTest.PSGTests
             var problem = new Problem(r0, v0, u0, 79699.9986022711, 0, MU, 600000, 6797.80562531277, 0.5 * 19.6 * 1.22497705725583, 0, 0,
                 new V3(0, 0, 0.000291570900559802), new Kepler3(675000, 0, 0));
 
-            CheckGuess(problem, Phases(problem,
+            CheckRiseGuess(problem, Phases(problem,
                 Phase.NewStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, ispCurrent: 285.387620615011)));
         }
     }

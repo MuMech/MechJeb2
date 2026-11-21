@@ -14,6 +14,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
     [ParallelTestMethods]
     public class SolveProgressTests
     {
+        // guidance's default pitch start height, which the PSG simulation rises to straight up from the pad before it solves
+        private const double RISE = 100;
+
         private const double MU = 3531600000000;
         private const double M0 = 79699.9986022711;
 
@@ -26,6 +29,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                     massContinuity: true)
                .Initial(new V3(365592.912061998, -475862.737003702, -1017.92554628857), new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06),
                     new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), 0, MU, 600000)
+               .VerticalRise(RISE)
                .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false)
                .Build();
 

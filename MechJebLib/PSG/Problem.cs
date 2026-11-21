@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
 using MechJebLib.PSG.Terminal;
 
@@ -25,8 +26,19 @@ namespace MechJebLib.PSG
         public readonly double H0;
         public readonly V3 W;
 
+        /// <summary>
+        ///     The vertical rise off the ground presolved ahead of this problem (VerticalRise), normalized, from the MET on the
+        ///     ground to T0, or null.  It is not a phase: each Solution for the problem keeps its own copy of it, and it is never
+        ///     evaluated here.
+        /// </summary>
+        public readonly VecInterpolant? Rise;
+
+        /// <summary>The problem starts on the pad at liftoff, or at the top of the vertical rise off the ground.</summary>
+        public bool PadStart => Rise != null || T0 <= 0;
+
         public Problem(V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody, double h0, double rho0CdAref, double rho0InvQAlphaMax, double rho0InvQMax, V3 w, ITerminal terminal)
         {
+            Rise = null;
             Scale = Scale.Create(mu, r0.magnitude, m0);
             Mu = mu;
             R0 = r0 / Scale.LengthScale;
@@ -43,8 +55,10 @@ namespace MechJebLib.PSG
             W = w * Scale.TimeScale;
         }
 
-        public Problem(Scale scale, V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody, double h0, double rho0CdAref, double rho0InvQAlphaMax, double rho0InvQMax, V3 w, ITerminal terminal)
+        public Problem(Scale scale, V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody, double h0, double rho0CdAref, double rho0InvQAlphaMax, double rho0InvQMax, V3 w, ITerminal terminal,
+            VecInterpolant? rise = null)
         {
+            Rise = rise;
             Scale = scale;
             Mu = mu;
             R0 = r0;
@@ -64,7 +78,7 @@ namespace MechJebLib.PSG
         public Problem WithoutDynamicPressure()
         {
             return new Problem(
-                Scale, R0, V0, U0, M0, T0, Mu, RBody, H0, Rho0CdAref, 0, 0, W, Terminal
+                Scale, R0, V0, U0, M0, T0, Mu, RBody, H0, Rho0CdAref, 0, 0, W, Terminal, Rise
             );
         }
     }

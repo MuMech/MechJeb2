@@ -16,6 +16,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
     [ParallelTestMethods]
     public class BuggyTests
     {
+        // guidance's default pitch start height, which the PSG simulation rises to straight up from the pad before it solves
+        private const double RISE = 100;
+
         // Very short burn time suborbital rocket that had trouble with a high altitude convergence
         // Tested against N=20, eps=0
         [Fact]
@@ -36,6 +39,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(r0, v0, u0, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(attR, attR, attR, 0.498274048151861, 0, 0, 0, true, false, false)
                .AddStage(23796.5132378765, 3243.62653856172, thrust1, 241.889217870454, 4, 4)
                .AddCoast(438.273627540912, 438.273627540912, 0, 450, 3, 3)
@@ -52,11 +56,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-4);
 
-            solution.Tgo(solution.T0, 0).ShouldEqual(118.31907500900883, 1e-2);
-            solution.Tgo(solution.T0, 1).ShouldEqual(208.65944623583906, 1e-1);
-            solution.Tgo(solution.T0, 2).ShouldEqual(5.8270302676667614, 1e-6);
-            solution.Tgo(solution.T0, 3).ShouldEqual(5.8270300015709351, 1e-6);
-            solution.Tgo(solution.T0, 4).ShouldEqual(5.8270300015709351, 1e-6);
+            solution.Tgo(solution.TStart, 0).ShouldEqual(118.31907500900883, 1e-2);
+            solution.Tgo(solution.TStart, 1).ShouldEqual(208.65944623583906, 1e-1);
+            solution.Tgo(solution.TStart, 2).ShouldEqual(5.8270302676667614, 1e-6);
+            solution.Tgo(solution.TStart, 3).ShouldEqual(5.8270300015709351, 1e-6);
+            solution.Tgo(solution.TStart, 4).ShouldEqual(5.8270300015709351, 1e-6);
 
             // the booster before the coast gets the precise shutdown, not the coast
             solution.OptimizeKSPStage().ShouldEqual(4);
@@ -91,6 +95,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(r0, v0, u0, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(6556000, 6557000, 6556000, 0.499303792410538, 0, 0, 0, true, false, false)
                .AddStage(52831.1138786043, 6373.37509359599, thrust1, 287.450291861922, 3, 3, allowShutdown: false)
                .AddStage(2517.01227921406, 738.314292468521, thrust2, 270.157637827755, 1, 1, allowShutdown: false)
@@ -124,9 +129,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(t0).ShouldEqual(v0, 1e-6);
             solution.M(t0).ShouldEqual(52831.1138786043, 1e-6);
             solution.Vgo(t0).ShouldEqual(9419.6763414588168, 1e-9);
-            solution.U(t0).ShouldEqual(new V3(0.75137961801287534, -0.53341140218376049, 0.38845970917867412).normalized, 1e-2);
+            solution.U(solution.T0).ShouldEqual(new V3(0.76647312839776127, -0.51690692721441966, 0.38218532769890096).normalized, 1e-2);
 
-            smaf.ShouldEqual(8404523.5714891925, 1e-2);
+            smaf.ShouldEqual(8299417.2515510637, 1e-2);
             eccf.ShouldEqual(0.21994388566652009, 1e-1);
             incf.ShouldEqual(incT, 1e-6);
             lanf.ShouldEqual(3.4079327119886518, 1e-2);
@@ -155,6 +160,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(r0, v0, u0, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(6571000, 6571000, 6571000, 0.558505360638185, 0, 0, 0.349065850398866, true, false, false)
                .AddStage(731995.326793174 - decmass, 328918.196876464 - decmass, thrust1, 408.091742854086, 4, 4)
                .AddStage(268744.821741949 - decmass, 168530.570801559 - decmass, thrust2, 408.091702159863, 2, 2)
@@ -197,6 +203,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(r0, v0, u0, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(6621000, 6623000, 6621000, 0.558505360638185, 0, 0, 0.349065850398866, false, false, false)
                .AddStage(51814.6957082437, 12381.5182945184, thrust1, 277.252333393375, 2, 2)
                .AddStage(9232.92402212159, 887.216491554419, thrust2, 252.019434034823, 1, 1)
@@ -232,6 +239,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(new V3(-2750001.81262551, -4870536.29021665, 3050610.57762817), new V3(355.169076284135, -200.527924207868, -0.00280072807318912), new V3(-0.431553114381181, -0.764704888551875, 0.478527367115021), 0, 398600435436096, 6371000)
+               .VerticalRise(RISE)
                .SetTarget(6551000, 6551000, 6551000, 0.499303792410538, 0, 0, 0, false, false, false)
                 //.SetTarget(8051000, 8051000, 8051000, 0.499303792410538, 0, 0, false, false)
                .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100105371403, 7, 7)
@@ -247,7 +255,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             solution.Tgo(0, 0).ShouldEqual(150.314019929573, 1e-4);
-            solution.Tgo(0, 1).ShouldEqual(399.27103168733788, 1e-3);
+            solution.Tgo(0, 1).ShouldEqual(403.42808806551551, 1e-3);
             solution.Tgo(0, 2).ShouldBeZero(1e-2);
             solution.Tgo(0, 3).ShouldBeZero(1e-2);
 
@@ -280,6 +288,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 0, 398600435436096, 6371000)
+               .VerticalRise(RISE)
                .SetTarget(PER, 6371000, PER, 0.499303792410538, 0, 0, 0, false, false, false)
                .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100108674295, 7, 7)
                .AddStage(22640.1444759873, 7657.9646078915, thrust2, 427.000108671115, 4, 4)
@@ -307,6 +316,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent2 = Ascent.Builder()
                .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 0, 398600435436096, 6371000)
+               .VerticalRise(RISE)
                .SetTarget(PER, 6371000, PER, 0.499303792410538, 0, 0, 0, false, false, false)
                .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100108674295, 7, 7)
                .AddStage(22640.1444759873, 7657.9646078915, thrust2, 427.000108671115, 4, 4)
@@ -338,6 +348,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(r0, v0, u0, t0, mu, 6371000)
+               .VerticalRise(RISE)
                .SetTarget(6551000, 6551000, 6551000, incT, 0, 0, 0, false, false, false)
                .AerodynamicConstants(0.5, 30, 1.2494765593625, 2000, 0, 7566.61914736748,
                     new V3(0, 0, 7.2921151467069236E-05))
@@ -375,7 +386,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(t0).ShouldEqual(v0, 1e-6);
             solution.M(t0).ShouldEqual(m0, 1e-6);
             solution.Vgo(t0).ShouldEqual(8620.1405495395156, 1e-3);
-            solution.U(t0).ShouldEqual(new V3(-0.57978971705636706, -0.66407516766532904, 0.47206785349321667).normalized, 1e-2);
+            solution.U(solution.T0).ShouldEqual(new V3(-0.51529358006704529, -0.72130368102293241, 0.46350703132698), 1e-2);
 
             smaf.ShouldEqual(6551000.0104806134, 1e-2);
             eccf.ShouldEqual(0, 1e-1);

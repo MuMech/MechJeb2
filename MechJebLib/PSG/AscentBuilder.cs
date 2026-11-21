@@ -43,6 +43,7 @@ namespace MechJebLib.PSG
             private bool      _argpflag         { get; set; }
             private bool      _fixedBurnTime    { get; set; }
             private int       _optimizerTimeout { get; set; } = Optimizer.DEFAULT_TIMEOUT;
+            private double    _riseHeight       { get; set; }
             private Solution? _solution         { get; set; }
 
             private FlightPlan? _flightPlan;
@@ -204,6 +205,9 @@ namespace MechJebLib.PSG
 
                 normalizedPhases.AddRange(_phases.Select(phase => phase.Rescale(problem.Scale)));
 
+                // on the ground the problem starts at the top of the vertical rise, from the first phase's rest
+                problem = PSG.VerticalRise.Presolve(problem, normalizedPhases, _riseHeight / problem.Scale.LengthScale);
+
                 normalizedPhases.FixLastShutdownStage();
 
                 var ascent = new Ascent(problem, normalizedPhases, _flightPlan, _solution, _fixedBurnTime, _optimizerTimeout);
@@ -268,6 +272,21 @@ namespace MechJebLib.PSG
                 Check.True(milliseconds > 0 || milliseconds == Timeout.Infinite, "optimizer timeout must be positive or Timeout.Infinite");
 
                 _optimizerTimeout = milliseconds;
+                return this;
+            }
+
+            /// <summary>
+            ///     On the ground, guidance flies straight up at full throttle for height meters before it pitches over, so the
+            ///     problem is solved from the top of that rise (PSG.VerticalRise), with the rise kept in front of the Solution.
+            ///     Zero, the default, solves from the initial state.
+            /// </summary>
+            public AscentBuilder VerticalRise(double height)
+            {
+                PrintDebug($"[MechJebLib.AscentBuilder] VerticalRise({height})");
+
+                Check.NonNegativeFinite(height, nameof(height));
+
+                _riseHeight = height;
                 return this;
             }
 

@@ -190,7 +190,13 @@ namespace MuMech
                 return;
             }
 
-            if (Countdown.HoldForLiftoff(Status)) return;
+            // the countdown stages at T-0: until then the vessel waits on the pad
+            if (Countdown.Active)
+            {
+                Status.Set(Localizer.Format("#MechJeb_Ascent_status6")); //"Awaiting liftoff"
+                Core.Attitude.SetAxisControl(false, false, false);
+                return;
+            }
 
             Core.Solarpanel.DriveForAscent();
             Core.AntennaControl.DriveForAscent();
