@@ -748,10 +748,15 @@ namespace MuMech
             if (p is null)
                 return false;
 
-            if (!p.IsSepratron() && !IsBurnedOutSrbDecoupledInNextStage(p))
+            if (!IsBurnedOutSrbDecoupledInNextStage(p))
             {
-                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.EngineHasFuel() && !p.IsUnrestartableDeadEngine() &&
-                    !EnginesHaveDropTanks(p))
+                // a sepratron is not an engine that holds the stage, but its part can still be a drop tank feeding engines
+                // that are (a booster tank with a built-in separation motor, e.g. the R-7 blocks B/V/G/D).  Running engines
+                // with drop tanks defer to those tanks (EnginesHaveDropTanks), so skipping the tanks here as well would leave
+                // nothing holding the stage.  A real sepratron's own fuel is never matched below: its engine is not in
+                // activeModuleEngines.
+                if (!p.IsSepratron() && (p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.EngineHasFuel() &&
+                    !p.IsUnrestartableDeadEngine() && !EnginesHaveDropTanks(p))
                 {
                     return true; // TODO: properly check if ModuleEngines is active
                 }
