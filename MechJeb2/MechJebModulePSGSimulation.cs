@@ -30,9 +30,10 @@ namespace MuMech
         STAGE_ENDING,    // the current stage is about to end: the solution is frozen through staging
         AFTER_STAGING,   // a short wait after staging
         AFTER_PHASE,     // the same wait after a phase ended without staging (the start or end of a coast during a stage)
-        ON_PAD,          // either wait before liftoff: the stage not lit yet has no phase in the solution, so its time to go reads 0
+        ON_PAD,          // a wait before liftoff: the stage not lit yet has no phase in the solution, so its time to go reads 0, and the vertical ascent from T-0 until the clamps let go
         VERTICAL_ASCENT, // after liftoff, the vertical ascent to the pitch start height: no re-solve until guidance takes over
         PITCH_PROGRAM,   // the pitch program, pitching over to the guidance pitch of the solution it has: no re-solve until guidance takes over
+        JETTISON,        // a jettison of a cut burn's engines: no re-solve until it is back in the burn
         COAST_PAUSE,     // a long coast above the atmosphere, once a solve started there has converged: resumes 20 s before the burn
         TERMINAL,        // terminal guidance flies the end of the burn on the frozen solution
         UNGUIDED_ONLY,   // only unguided stages are left, which the optimizer can't steer
@@ -512,6 +513,21 @@ namespace MuMech
             }
         }
 
+        // what the optimizer reports while guidance takes no solution (TakesSolution)
+        private OptimizerState PausedState()
+        {
+            switch (Core.PSGAutopilot.State)
+            {
+                case PSGState.VERTICAL_ASCENT: return Vessel.VesselOffGround() ? OptimizerState.VERTICAL_ASCENT : OptimizerState.ON_PAD;
+                case PSGState.PITCH_PROGRAM:   return OptimizerState.PITCH_PROGRAM;
+                case PSGState.JETTISON:        return OptimizerState.JETTISON;
+                case PSGState.TERMINAL:
+                case PSGState.TERMINAL_RCS:    return OptimizerState.TERMINAL;
+                case PSGState.FINISHED:        return OptimizerState.FINISHED;
+                default:                       throw new ArgumentOutOfRangeException();
+            }
+        }
+
         private void HandleDoneTask()
         {
             if (!(_ascent is { IsCompleted: true }))
@@ -653,23 +669,20 @@ namespace MuMech
                     attR = apR;
             }
 
-            if (Vessel.VesselOffGround())
+            // Solves start only while guidance takes their solutions: one started in any other state would be thrown away
+            // (HandleDoneTask).  The vertical ascent and the pitch program fly a fixed program, and the pitch program hands over
+            // to guidance where it meets the solution's pitch, which a re-solve from the climb would move.  Terminal guidance
+            // flies the end of a frozen solution.
+            if (!TakesSolution())
             {
-                // if we have only inertially guided stages we can't run the optimizer
-                if (FlightPlan.AllUnguidedStages())
-                {
-                    // also true once no stage is left at all, as in terminal guidance on the last stage: name that instead
-                    SetState(Core.PSGAutopilot.IsTerminal ? OptimizerState.TERMINAL
-                        : Core.PSGAutopilot.IsFinished ? OptimizerState.FINISHED
-                        : UnguidedBurnLeft() ? OptimizerState.UNGUIDED_ONLY : OptimizerState.NO_PLAN);
-                    return;
-                }
+                SetState(PausedState());
+                return;
             }
 
-            // not in terminal guidance, which flies the end of a frozen solution, and not finished
-            if (Core.PSGAutopilot.IsTerminal || Core.PSGAutopilot.IsFinished)
+            // if we have only inertially guided stages we can't run the optimizer
+            if (Vessel.VesselOffGround() && FlightPlan.AllUnguidedStages())
             {
-                SetState(Core.PSGAutopilot.IsTerminal ? OptimizerState.TERMINAL : OptimizerState.FINISHED);
+                SetState(UnguidedBurnLeft() ? OptimizerState.UNGUIDED_ONLY : OptimizerState.NO_PLAN);
                 return;
             }
 
@@ -692,22 +705,6 @@ namespace MuMech
                     Block(OptimizerPauseTime, OptimizerState.STAGE_ENDING);
                     SetState(Vessel.VesselOffGround() ? OptimizerState.STAGE_ENDING : OptimizerState.ON_PAD, Core.PSGAutopilot.CurrentPhaseTgo);
                     return;
-                }
-            }
-
-            // After liftoff the vertical ascent and the pitch program fly a fixed program, and the pitch program hands over to
-            // guidance where it meets the solution's pitch: a re-solve from the climb would move that pitch.  Without a solution
-            // yet the solves go on, or guidance would never take over.
-            if (Vessel.VesselOffGround() && Core.PSGAutopilot.Solution != null)
-            {
-                switch (Core.PSGAutopilot.State)
-                {
-                    case PSGState.VERTICAL_ASCENT:
-                        SetState(OptimizerState.VERTICAL_ASCENT);
-                        return;
-                    case PSGState.PITCH_PROGRAM:
-                        SetState(OptimizerState.PITCH_PROGRAM);
-                        return;
                 }
             }
 

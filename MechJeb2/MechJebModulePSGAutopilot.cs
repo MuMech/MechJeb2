@@ -71,8 +71,6 @@ namespace MuMech
 
         public bool IsCoasting => _machine.IsCoasting;
 
-        public bool IsTerminal => _machine.IsTerminal;
-
         public bool IsFinished => _machine.IsFinished;
 
         /// <summary>Set when the coast starts, and kept after it: the Solution's burns before the coast are behind the vessel.</summary>
