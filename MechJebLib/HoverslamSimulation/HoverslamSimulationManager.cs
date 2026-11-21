@@ -59,22 +59,26 @@ namespace MechJebLib.HoverslamSimulation
                 if (_height <= 0)
                     throw new InvalidOperationException("HoverslamSimulationBuilder: TargetConditions() must be called before Build()");
 
-                simulation._height = _height;
-                simulation._r0 = _r0;
-                simulation._v0 = _v0;
-                simulation._t0 = _t0;
-                simulation._mu = _mu;
-                simulation._w = _w;
-                simulation._vfm = _vfm;
+                // the inputs arrive (and are logged) in SI units, the simulation runs in normalized ones, as PSG does
+                var problem = new HoverslamProblem(_r0, _v0, _t0, _mu, _w, _height, _vfm, _phases[0].M0);
+                Scale scale = problem.Scale;
+
+                simulation._problem = problem;
+                simulation._burnEndTime = BURN_END_TIME / scale.TimeScale;
+                simulation._burnEndDv = BURN_END_DV / scale.VelocityScale;
 
                 // empty out the destination list first
                 foreach (Phase phase in simulation._phases)
                     phase.Dispose();
                 simulation._phases.Clear();
 
-                // then move all the phases into the destination list
+                // then move all the phases into the destination list, normalizing them on the way
                 foreach (Phase phase in _phases)
+                {
+                    phase.RescaleInPlace(scale);
                     simulation._phases.Add(phase);
+                }
+
                 _phases.Clear();
             }
 

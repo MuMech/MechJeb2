@@ -18,13 +18,12 @@ namespace MechJebLib.HoverslamSimulation
 {
     public partial class HoverslamSimulation : AsyncJob
     {
-        private double _height;
-        private V3 _r0;
-        private V3 _v0;
-        private double _t0;
-        private double _mu;
-        private V3 _w;
-        private double _vfm;
+        // the problem and the phases are normalized (HoverslamProblem), the outputs below are SI
+        private HoverslamProblem _problem;
+
+        // BURN_END_TIME and BURN_END_DV in normalized units
+        private double _burnEndTime;
+        private double _burnEndDv;
 
         private readonly List<Phase> _phases = new List<Phase>();
 
@@ -62,6 +61,8 @@ namespace MechJebLib.HoverslamSimulation
             public double Af;
         }
 
+        // the tolerances are in normalized units: the Atol floors are 1e-6 of the target radius, of the circular speed there
+        // and of the starting mass
         private readonly Tsit5 _solver = new Tsit5
         {
             Rtol = 1e-6,
@@ -111,11 +112,11 @@ namespace MechJebLib.HoverslamSimulation
         // the integrator can only creep up on that point.  The burn's event ends the integration a little earlier, once the error
         // is down to what the thrust removes in BURN_END_TIME: the steps that near the flip are short enough to end inside that
         // window, which they rarely do inside a fixed millimetre per second.  FinishBurn does the rest analytically.  BURN_END_DV
-        // is the window's floor.
+        // is the window's floor.  Both are SI, Reconfigure normalizes them into _burnEndTime and _burnEndDv.
         private const double BURN_END_TIME = 0.02;
         private const double BURN_END_DV = 1e-3;
 
-        private static double BurnEndDv(Phase phase, double m) => Math.Max(BURN_END_DV, BURN_END_TIME * phase.VacThrust / m);
+        private double BurnEndDv(Phase phase, double m) => Math.Max(_burnEndDv, _burnEndTime * phase.VacThrust / m);
 
         private readonly List<Event> _events;
 
@@ -138,7 +139,7 @@ namespace MechJebLib.HoverslamSimulation
 
             // how the error changes without thrust: gravity, less how the target velocity changes as the vessel moves (the
             // ground's rotation, and the final descent's direction turning with the position)
-            V3 drift = -_mu / (r * r) * rhat - V3.Cross(_w, x.V) - _vfm / r * (x.V - V3.Dot(x.V, rhat) * rhat);
+            V3 drift = -rhat / (r * r) - V3.Cross(_problem.W, x.V) - _problem.Vfm / r * (x.V - V3.Dot(x.V, rhat) * rhat);
             double driftAlong = V3.Dot(dv.normalized, drift);
             double rate = phase.VacThrust / x.M - driftAlong; // -d|dv|/dt
 
@@ -161,23 +162,25 @@ namespace MechJebLib.HoverslamSimulation
             double mf = x.M - phase.Mdot * dt;
 
             x.R += (x.V - 0.5 * dv) * dt;
-            x.V = V3.Cross(_w, x.R) + x.R.normalized * _vfm;
+            x.V = V3.Cross(_problem.W, x.R) + x.R.normalized * _problem.Vfm;
             x.DV += phase.VexVacuum * Math.Log(x.M / mf);
             x.M = mf;
             t += dt;
         }
 
         // surface-relative velocity minus the target final velocity, the burn steers retrograde to this
-        private V3 VelocityError(V3 r, V3 v) => v - V3.Cross(_w, r) - r.normalized * _vfm;
+        private V3 VelocityError(V3 r, V3 v) => v - V3.Cross(_problem.W, r) - r.normalized * _problem.Vfm;
 
         private TrajectoryResult PropagateTrajectory(double t)
         {
-            var x = new HoverslamLayout { R = _r0, V = _v0, M = _phases[0].M0, DV = 0 };
+            var x = new HoverslamLayout { R = _problem.R0, V = _problem.V0, M = _phases[0].M0, DV = 0 };
 
             double t0 = 0;
             double tf = t;
 
+            // the coast's times are normalized already, and it has no thrust or mass to rescale
             using var coastPhase = Phase.NewCoast(1.0, 1.0, t0, tf, 0, 0);
+            coastPhase.Normalized = true;
             PropagatePhase(ref x, t0, ref tf, coastPhase);
 
             V3 uBurn = -VelocityError(x.R, x.V).normalized;
@@ -202,36 +205,40 @@ namespace MechJebLib.HoverslamSimulation
         }
 
         // how far above the target radius the burn after ignition at t ends: positive when the ignition is early enough
-        private double Residual(in TrajectoryResult result) => result.X.R.magnitude - _height;
+        private double Residual(in TrajectoryResult result) => result.X.R.magnitude - _problem.Height;
 
         private double AltitudeResidual(double t, object? o) => Residual(PropagateTrajectory(t));
 
         private readonly Func<double, object?, double> _eventFunc;
 
-        // The ignition times to search between, and whether the vessel is still rising to its apoapsis.
+        // The ignition times to search between, and whether the vessel is still rising to its apoapsis.  Normalized, so mu is 1.
         private (double minT, double maxT, bool rising) GenerateBracketGuess()
         {
-            if (Astro.EccFromStateVectors(_mu, _r0, _v0) < 1.0)
+            V3 r0 = _problem.R0;
+            V3 v0 = _problem.V0;
+            double height = _problem.Height;
+
+            if (Astro.EccFromStateVectors(1.0, r0, v0) < 1.0)
             {
-                double tanom = Astro.TrueAnomalyFromStateVectors(_mu, _r0, _v0);
+                double tanom = Astro.TrueAnomalyFromStateVectors(1.0, r0, v0);
                 if (ClampPi(tanom) > 0)
                 {
                     // still rising, advance to the apoapsis
-                    double tApoapsis = Astro.TimeToNextApoapsis(_mu, _r0, _v0);
-                    (V3 rApr, V3 vApr) = Shepperd.Solve(_mu, tApoapsis, _r0, _v0);
-                    return (tApoapsis, tApoapsis + Astro.TimeToNextRadius(_mu, rApr, vApr, _height), true);
+                    double tApoapsis = Astro.TimeToNextApoapsis(1.0, r0, v0);
+                    (V3 rApr, V3 vApr) = Shepperd.Solve(1.0, tApoapsis, r0, v0);
+                    return (tApoapsis, tApoapsis + Astro.TimeToNextRadius(1.0, rApr, vApr, height), true);
                 }
 
                 // falling, back to the apoapsis just passed.  Below the target height, every ignition from now on starts
                 // below it, and the next time of the target radius is the ascending crossing on the far side of the planet.
-                double tLastApoapsis = Astro.TimeToNextApoapsis(_mu, _r0, _v0) - Astro.PeriodFromStateVectors(_mu, _r0, _v0);
-                double tImpact = _r0.magnitude <= _height ? 0 : Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
+                double tLastApoapsis = Astro.TimeToNextApoapsis(1.0, r0, v0) - Astro.PeriodFromStateVectors(1.0, r0, v0);
+                double tImpact = r0.magnitude <= height ? 0 : Astro.TimeToNextRadius(1.0, r0, v0, height);
                 return (tLastApoapsis, tImpact, false);
             }
 
             // heuristically, try to capture a range that includes the ignition point.  I'd rather not
             // use the mainBody SOI radius here, but that would certainly do it.
-            return (Astro.TimeToLastRadius(_mu, _r0, _v0, _r0.magnitude * 2.0), Astro.TimeToNextRadius(_mu, _r0, _v0, _height), false);
+            return (Astro.TimeToLastRadius(1.0, r0, v0, r0.magnitude * 2.0), Astro.TimeToNextRadius(1.0, r0, v0, height), false);
         }
 
         public override void Run(object? o = null)
@@ -295,28 +302,32 @@ namespace MechJebLib.HoverslamSimulation
                 }
             }
 
-            double t1 = BrentRoot.Solve(_eventFunc, minT, maxT, fMin, fMax, null, rtol: 1e-6);
+            // Brent stops within 2 rtol max(|t|, 1), whose floor is one unit of time, several hundred seconds: dividing by the
+            // time scale keeps the floor at the 2e-6 s it was in seconds, for an ignition near now.
+            double t1 = BrentRoot.Solve(_eventFunc, minT, maxT, fMin, fMax, null, rtol: 1e-6 / _problem.Scale.TimeScale);
 
             Report(t1, PropagateTrajectory(t1));
         }
 
+        // the results, back in SI units
         private void Report(double t, in TrajectoryResult result)
         {
-            IgnitionUT = _t0 + t;
+            Scale scale = _problem.Scale;
+
+            IgnitionUT = _problem.T0 + t * scale.TimeScale;
             IgnitionAttitude = result.UBurn;
-            Rf = result.X.R;
-            Vf = result.X.V;
-            Dv = result.X.DV;
-            LandingUT = _t0 + result.Tf;
-            FinalThrustAccel = result.Af;
+            Rf = result.X.R * scale.LengthScale;
+            Vf = result.X.V * scale.VelocityScale;
+            Dv = result.X.DV * scale.VelocityScale;
+            LandingUT = _problem.T0 + result.Tf * scale.TimeScale;
+            FinalThrustAccel = result.Af * scale.AccelScale;
         }
 
         public static int N => HoverslamLayout.HOVERSLAM_LAYOUT_LEN;
 
         public void Rhs(Vec yin, double x, Vec dyout)
         {
-            // TODO: normalization
-            //CheckDebug.True(_phase.Normalized);
+            CheckDebug.True(_phase.Normalized);
 
             var y = HoverslamLayout.CreateFrom(yin);
             var dy = new HoverslamLayout();
@@ -330,7 +341,7 @@ namespace MechJebLib.HoverslamSimulation
             V3 u = -VelocityError(y.R, y.V).normalized;
 
             dy.R = y.V;
-            dy.V = -_mu * y.R / r3 + at * u;
+            dy.V = -y.R / r3 + at * u;
             dy.M = -_phase.Mdot;
             dy.DV = at;
 
