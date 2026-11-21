@@ -15,7 +15,7 @@ namespace KodeKit
 
     /// <summary>
     /// The layout widgets (LAYOUTS.md): switches, segmented choices, steppers, chips, badges, section headers, status
-    /// bars, action bars, uniform grids, the compass, flow wrap, property grids, tabs and master-detail. Like the other
+    /// bars, meters, action bars, uniform grids, the compass, flow wrap, property grids, tabs and master-detail. Like the other
     /// widgets, all of them follow the theme and make no garbage once built.
     /// </summary>
     public partial class KodeWindow
@@ -38,41 +38,14 @@ namespace KodeKit
         }
 
         /// <summary>
-        /// A selectable drawn by hand: its sprite and colour, then a colour tint per state over them. Used where a widget
-        /// switches looks (selected or not): sprite swap would leave the old tint on the renderer.
+        /// A selectable painted from the skin's rules as <paramref name="part"/> (<see cref="Headless.StyleParts"/>): its sprite, fill
+        /// and state tints, and the colour of <paramref name="texts"/> and <paramref name="icons"/> (<see cref="StyledPart"/>). The
+        /// widget sets the part's On flag from its model; the pointer, the selection and <c>interactable</c> set the others.
         /// </summary>
-        static void Paint(Selectable s, Image img, Sprite sprite, Color color, Color normal, Color hover, Color press)
-        {
-            img.sprite = sprite;
-            img.type = sprite != null && sprite.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Simple;
-            img.color = color;
-            s.targetGraphic = img;
-            ColorBlock cb = ColorBlock.defaultColorBlock;
-            cb.normalColor = cb.selectedColor = normal;
-            cb.highlightedColor = hover;
-            cb.pressedColor = press;
-            cb.disabledColor = DisabledTint(normal);
-            // the colours of uGUI's colour-tint transition, without its tween's garbage (FINDINGS rule 52)
-            InstantTint.Use(s, cb);
-        }
-
-        /// <summary>
-        /// The disabled tint of a selectable whose tint at rest is <paramref name="normal"/>: Unity's grey, as see-through
-        /// as <paramref name="normal"/>. A cell drawn clear at rest (a tab, a flat segment) stays clear when disabled
-        /// instead of filling with grey; the window dims it with the rest of its row.
-        /// </summary>
-        internal static Color DisabledTint(Color normal)
-        {
-            Color d = ColorBlock.defaultColorBlock.disabledColor;
-            return Alpha(d, d.a * normal.a);
-        }
+        static StyledPart Part(Selectable s, Image img, string part, TMP_Text[] texts = null, Image[] icons = null) =>
+            StyledPart.Add(s.gameObject, part, img, s, texts, icons);
 
         static Color Alpha(Color c, float a) => new Color(c.r, c.g, c.b, a);
-
-        static readonly Color Clear = new Color(1, 1, 1, 0), HoverWash = new Color(1, 1, 1, 0.1f), PressWash = new Color(1, 1, 1, 0.18f);
-
-        // tints at rest, so hover can brighten to white (a tint above 1 does nothing)
-        static readonly Color Dimmed = new Color(0.8f, 0.8f, 0.8f, 1), Pressed = new Color(0.7f, 0.7f, 0.7f, 1);
 
         // ---- headers and rules ----
 
@@ -120,66 +93,90 @@ namespace KodeKit
         /// <summary>Gives a button a fixed role (primary, danger).</summary>
         public static UIButton Role(UIButton b, ButtonRole role)
         {
-            if (role != ButtonRole.Normal) Styled(b.gameObject, th => PaintRole(th, b, role));
+            if (role != ButtonRole.Normal) RolePart(b, role);
             return b;
         }
 
-        static void PaintRole(Theme th, UIButton b, ButtonRole role)
+        static string RolePartName(ButtonRole role) =>
+            role == ButtonRole.Primary ? Headless.StyleParts.ButtonPrimary : role == ButtonRole.Danger ? Headless.StyleParts.ButtonDanger
+            : role == ButtonRole.Selected ? Headless.StyleParts.ButtonSelected : Headless.StyleParts.ButtonNormal;
+
+        // the skin's button by role, its labels and the icons it has now in the role's text colour
+        static StyledPart RolePart(UIButton b, ButtonRole role)
         {
-            ElementStyle st = th.Role(role);
-            var img = b.GetComponent<Image>();
-            Paint(b.GetComponent<Button>(), img, st.Normal, st.Tint, Color.white, new Color(0.92f, 0.92f, 0.92f), new Color(0.78f, 0.78f, 0.78f));
-            foreach (TMP_Text label in b.GetComponentsInChildren<TMP_Text>(true)) th.ApplyText(label, st.TextColor);
+            var icons = new System.Collections.Generic.List<Image>();
             foreach (Transform c in b.Content.transform)
-                if (c.name == "Icon") c.GetComponent<Image>().color = st.TextColor;
+                if (c.name == "Icon")
+                    icons.Add(c.GetComponent<Image>());
+            return Part(b.GetComponent<Button>(), b.GetComponent<Image>(), RolePartName(role), b.GetComponentsInChildren<TMP_Text>(true), icons.ToArray());
         }
 
         /// <summary>A button whose role follows a state (a state button that turns "selected" while its mode is on).</summary>
         public void BindRole(UIButton b, Func<ButtonRole> role)
         {
             ButtonRole shown = role();
-            Styled(b.gameObject, th => PaintRole(th, b, shown));
+            StyledPart part = RolePart(b, shown);
             syncs.Add(() =>
             {
                 ButtonRole r = role();
                 if (r == shown) return;
                 shown = r;
-                PaintRole(Th, b, r);
+                part.Part = RolePartName(r);
             });
         }
 
         // ---- switch ----
 
-        /// <summary>An on/off switch: a pill track in the accent colour when on, with a knob that moves across.</summary>
-        public Toggle Switch(UIObject parent, Func<bool> get, Action<bool> set)
+        /// <summary>
+        /// An on/off switch: a pill track in the accent colour when on, with a knob that moves across. <paramref name="label"/> names it
+        /// (a '#key' or a text; null: the label right before it in its row, <see cref="LabelBefore"/>).
+        /// </summary>
+        public Toggle Switch(UIObject parent, Func<bool> get, Action<bool> set, string label = null)
         {
+            label = label ?? LabelBefore(parent);
             GameObject go = Child(parent.transform, "Switch", typeof(Image), typeof(Toggle), typeof(LayoutElement));
             var le = go.GetComponent<LayoutElement>();
             var track = go.GetComponent<Image>();
-            var toggle = go.GetComponent<Toggle>();
+            var toggle = NoSelect(go.GetComponent<Toggle>());
             GameObject knobGo = Child(go.transform, "Knob", typeof(Image));
             var knob = knobGo.GetComponent<Image>();
             knob.sprite = Sprites.Circle;
             knob.raycastTarget = false;
             var krt = (RectTransform)knobGo.transform;
             toggle.graphic = null;
-            toggle.SetIsOnWithoutNotify(get());
+
+            Headless.CommitTarget<bool> target = Target("Switch", get, set);
+            target.Control = toggle;
+            // the behaviour: a click (uGUI's toggle) and an agent's flip both set the model, which calls the setter once
+            var model = new Headless.ToggleModel(Headless.ToggleKind.Switch, get, target.Set);
+            target.Model = model;
+            LabelTarget(target, label);
+            toggle.SetIsOnWithoutNotify(model.On);
+            StyledPart trackPart = Part(toggle, track, Headless.StyleParts.Switch);
+            trackPart.Follower(knobGo, Headless.StyleParts.SwitchKnob, knob);
 
             void Look(Theme th)
             {
-                bool on = toggle.isOn;
-                Paint(toggle, track, Sprites.Pill, on ? th.Accent : Alpha(th.Dim, 0.35f), Dimmed, Color.white, Pressed);
-                knob.color = on ? Color.white : Alpha(th.Text, 0.9f);
+                bool on = model.On;
+                trackPart.Set(Headless.StyleFlags.On, on);
                 krt.anchorMin = krt.anchorMax = krt.pivot = new Vector2(on ? 1 : 0, 0.5f);
                 krt.anchoredPosition = new Vector2(on ? -2 : 2, 0);
             }
 
-            set = Edits(set);
+            // what the model holds now: a refused or kept value puts back the toggle uGUI moved
+            void Show()
+            {
+                if (toggle.isOn != model.On) toggle.SetIsOnWithoutNotify(model.On);
+                Look(Th);
+            }
             toggle.onValueChanged.AddListener(v =>
             {
-                set(v);
-                Look(Th);
+                // drawn again after every set: a refused set, or a setter that keeps the old value (the model's Shown doesn't change
+                // then, so no ShownChanged), puts back the control uGUI moved
+                model.Set(v, Pointer);
+                Show();
             });
+            model.Value.ShownChanged += Show;
             Styled(go, th =>
             {
                 float h = Mathf.Round(th.FontSize + 1);
@@ -188,13 +185,7 @@ namespace KodeKit
                 krt.sizeDelta = new Vector2(h - 4, h - 4);
                 Look(th);
             });
-            syncs.Add(() =>
-            {
-                bool v = get();
-                if (toggle.isOn == v) return;
-                toggle.SetIsOnWithoutNotify(v);
-                Look(Th);
-            });
+            syncs.Add(() => model.Sync());
             return toggle;
         }
 
@@ -202,36 +193,39 @@ namespace KodeKit
         /// A switch with three positions: a pill track with a knob at the left, middle or right, and the position's name beside it.
         /// A click on a third of the track moves the knob there. The right position is "on", in the accent colour.
         /// </summary>
-        public Button Switch3(UIObject parent, string[] names, Func<int> get, Action<int> set)
+        /// <param name="label">Its name (a '#key' or a text; null: the label right before it in its row).</param>
+        public Button Switch3(UIObject parent, string[] names, Func<int> get, Action<int> set, string label = null)
         {
+            label = label ?? LabelBefore(parent);
             GameObject go = Child(parent.transform, "Switch3", typeof(Image), typeof(Button), typeof(LayoutElement), typeof(ThirdsClick));
             var le = go.GetComponent<LayoutElement>();
             var track = go.GetComponent<Image>();
-            var button = go.GetComponent<Button>();
+            var button = NoSelect(go.GetComponent<Button>());
             GameObject knobGo = Child(go.transform, "Knob", typeof(Image));
             var knob = knobGo.GetComponent<Image>();
             knob.sprite = Sprites.Circle;
             knob.raycastTarget = false;
             var krt = (RectTransform)knobGo.transform;
-            int shown = get();
+            Headless.CommitTarget<int> target = Target("Switch3", get, set);
+            target.Control = button;
+            // the behaviour: a click on a third and an agent's pick both go through the model (the knob's own third does nothing)
+            var model = new Headless.Switch3Model(names, get, target.Set);
+            target.Model = model;
+            LabelTarget(target, label);
+            StyledPart trackPart = Part(button, track, Headless.StyleParts.Switch);
+            trackPart.Follower(knobGo, Headless.StyleParts.SwitchKnob, knob);
 
             void Look(Theme th)
             {
+                int shown = model.Shown;
                 bool on = shown == 2;
-                Paint(button, track, Sprites.Pill, on ? th.Accent : Alpha(th.Dim, 0.35f), Dimmed, Color.white, Pressed);
-                knob.color = on ? Color.white : Alpha(th.Text, 0.9f);
+                trackPart.Set(Headless.StyleFlags.On, on);
                 krt.anchorMin = krt.anchorMax = krt.pivot = new Vector2(shown * 0.5f, 0.5f);
                 krt.anchoredPosition = new Vector2(shown == 0 ? 2 : on ? -2 : 0, 0);
             }
 
-            set = Edits(set);
-            go.GetComponent<ThirdsClick>().Clicked = i =>
-            {
-                if (i == shown) return;
-                shown = i;
-                set(i);
-                Look(Th);
-            };
+            go.GetComponent<ThirdsClick>().Clicked = i => model.Pick(i, Pointer);
+            model.Value.ShownChanged += () => Look(Th);
             Styled(go, th =>
             {
                 float h = Mathf.Round(th.FontSize + 1);
@@ -240,14 +234,8 @@ namespace KodeKit
                 krt.sizeDelta = new Vector2(h - 4, h - 4);
                 Look(th);
             });
-            syncs.Add(() =>
-            {
-                int v = get();
-                if (v == shown) return;
-                shown = v;
-                Look(Th);
-            });
-            BoundLabel(parent, () => names[shown]);
+            syncs.Add(() => model.Sync());
+            BoundLabel(parent, () => model.ShownName);
             return button;
         }
 
@@ -278,8 +266,24 @@ namespace KodeKit
             Toggle t = Switch(row, get, set);
             UIText label = Label(row, text, true);
             LabelFlips(label, t);
+            Labelled(t, text);
             if (green != null) ToneText(label, () => green() ? Tone.Good : Tone.Normal);
             return t;
+        }
+
+        // the label of the control's commit target, its id from the label, for an observer that names controls, and the label of
+        // the model that draws it (as shown), for its description
+        void Labelled(object control, string label) => LabelTarget(Commits.Find(control), label);
+
+        /// <summary>
+        /// Names <paramref name="control"/> (a KodeKit widget on this window's commit path) for its description and an observer, as a
+        /// labelled row does: its target's label and id, and its model's label. For a widget that has no label of its own (a
+        /// drop-down or a segmented bar after a text). Returns the control.
+        /// </summary>
+        public T Named<T>(T control, string label) where T : class
+        {
+            Labelled(control, label);
+            return control;
         }
 
         static void LabelFlips(UIText label, Toggle t)
@@ -324,14 +328,35 @@ namespace KodeKit
                 content.gameObject.SetActive(o);
                 sectionState[key] = o;
                 Look(Th);
+                ReportFold(header, title, o);
             }
 
             Styled(chevGo, Look);
+            // for a host that folds sections (the agent bridge): view state, no commit
+            Disclosure d = header.gameObject.AddComponent<Disclosure>();
+            d.Title = title;
+            d.Content = content.gameObject;
+            d.Flip = Flip;
             if (!open && !lazy) FoldInFirstSync(content, () => Look(Th));
             label.tmpText.raycastTarget = true;
             label.gameObject.AddComponent<ClickHandler>().Click = Flip;
             chevGo.AddComponent<ClickHandler>().Click = Flip;
             return content;
+        }
+
+        /// <summary>A folding header's handle for a host: its title, whether it is open, and the click that flips it.</summary>
+        public sealed class Disclosure : MonoBehaviour
+        {
+            /// <summary>The header's text or '#key'.</summary>
+            public string Title;
+
+            /// <summary>The panel it shows and hides.</summary>
+            public GameObject Content;
+
+            /// <summary>Folds or unfolds, as a click on the header.</summary>
+            public Action Flip;
+
+            public bool Open => Content != null && Content.activeSelf;
         }
 
         // ---- segmented choices ----
@@ -342,8 +367,15 @@ namespace KodeKit
         /// the window shows, like SmartASS's mode or Waypoint Help's topics), <see cref="ChoiceStyle.Joined"/> for the
         /// rest (modes, settings, values).
         /// </summary>
-        public Layout Segmented(UIObject parent, string[] items, Func<int> get, Action<int> set, ChoiceStyle style = ChoiceStyle.Joined)
+        /// <param name="label">The choice's name (a '#key' or a text; null: the label right before it in its row, <see cref="LabelBefore"/>).</param>
+        public Layout Segmented(UIObject parent, string[] items, Func<int> get, Action<int> set, ChoiceStyle style = ChoiceStyle.Joined, string label = null) =>
+            Segmented(parent, items, get, set, style, out _, label);
+
+        /// <summary>A <see cref="Segmented"/> that also hands out the model it draws (Tabs shows its pages from it).</summary>
+        public Layout Segmented(UIObject parent, string[] items, Func<int> get, Action<int> set, ChoiceStyle style, out Headless.ChoiceModel model,
+            string label = null)
         {
+            string rowLabel = label ?? LabelBefore(parent);
             ChoiceStyle s = style;
             Layout box;
             UIObject cells;
@@ -375,13 +407,30 @@ namespace KodeKit
                 cells = box;
             }
 
-            set = Edits(set);
-            var buttons = new UIButton[items.Length];
+            // the behaviour (what is selected, what a click does) is Headless.ChoiceModel, tested without KSP; this draws it
+            // every pick is a commit on the window's path, with the source the model records
+            Headless.CommitTarget<int> target = Target("Segmented", get, set);
+            target.Control = box;
+            var choice = new Headless.ChoiceModel(items.Length, get, target.Set)
+            {
+                ItemLabels = new string[items.Length], ItemRole = s == ChoiceStyle.Tabs ? Headless.PartRole.Tab : Headless.PartRole.Radio
+            };
+            model = choice;
+            void ItemLabels()
+            {
+                for (int i = 0; i < items.Length; i++) choice.ItemLabels[i] = ShownLabel(items[i]) ?? "";
+            }
+            ItemLabels();
+            target.Model = choice;
+            LabelTarget(target, rowLabel);
+            // the items follow a language switch, like their buttons
+            Behaviour.AddRelocalize(ItemLabels);
+            var parts = new StyledPart[items.Length];
             var bars = new Image[items.Length];
             for (int i = 0; i < items.Length; i++)
             {
                 int k = i;
-                UIButton b = Button(cells, items[i], () => set(k));
+                UIButton b = Button(cells, items[i], () => choice.Select(k, Pointer));
                 if (s == ChoiceStyle.Pills) b.Content.Padding(9, 9, 1, 1);
                 if (s == ChoiceStyle.Tabs)
                 {
@@ -390,50 +439,21 @@ namespace KodeKit
                 }
                 // a choice needs no flash: its new fill already says it happened
                 UnityEngine.Object.Destroy(b.GetComponent<ClickFlash>());
-                buttons[i] = b;
+                string part = s == ChoiceStyle.Joined ? Headless.StyleParts.Segment : s == ChoiceStyle.Tabs ? Headless.StyleParts.Tab : Headless.StyleParts.Pill;
+                parts[i] = Part(b.GetComponent<Button>(), b.GetComponent<Image>(), part, new[] { b.GetComponentInChildren<TMP_Text>() });
+                if (bars[i] != null) parts[i].Follower(bars[i].gameObject, Headless.StyleParts.TabLine, bars[i]);
             }
 
-            int shown = get();
-            void Look(Theme th)
+            // the chosen cell is On: the skin's rules have its look (the selected role, the accent pill, the bold tab and its underline)
+            void Look()
             {
-                for (int i = 0; i < buttons.Length; i++)
-                {
-                    bool on = i == shown;
-                    var btn = buttons[i].GetComponent<Button>();
-                    var img = buttons[i].GetComponent<Image>();
-                    TMP_Text label = buttons[i].GetComponentInChildren<TMP_Text>();
-                    switch (s)
-                    {
-                        case ChoiceStyle.Joined:
-                            ElementStyle sel = th.Role(ButtonRole.Selected);
-                            if (on) Paint(btn, img, sel.Normal, sel.Tint, Color.white, new Color(0.92f, 0.92f, 0.92f), new Color(0.8f, 0.8f, 0.8f));
-                            else Paint(btn, img, null, Color.white, Clear, HoverWash, PressWash);
-                            th.ApplyText(label, on ? sel.TextColor : th.Text);
-                            break;
-                        case ChoiceStyle.Tabs:
-                            Paint(btn, img, null, Color.white, Clear, Clear, Clear);
-                            th.ApplyText(label, on ? th.Text : th.Dim);
-                            label.fontStyle = on ? FontStyles.Bold : FontStyles.Normal;
-                            bars[i].color = th.Accent;
-                            bars[i].gameObject.SetActive(on);
-                            break;
-                        default:
-                            if (on) Paint(btn, img, Sprites.Pill, th.Accent, Color.white, new Color(0.92f, 0.92f, 0.92f), new Color(0.8f, 0.8f, 0.8f));
-                            else Paint(btn, img, Sprites.PillOutline, Alpha(th.Dim, 0.8f), Dimmed, Color.white, Color.white);
-                            th.ApplyText(label, on ? th.AccentText : th.Text);
-                            break;
-                    }
-                }
+                for (int i = 0; i < parts.Length; i++) parts[i].Set(Headless.StyleFlags.On, choice.IsOn(i));
             }
 
-            Styled(box.gameObject, Look);
-            syncs.Add(() =>
-            {
-                int v = get();
-                if (v == shown) return;
-                shown = v;
-                Look(Th);
-            });
+            Look();
+            // a pick (which syncs the model itself) and a change from outside both repaint, at once
+            choice.ShownChanged += Look;
+            syncs.Add(() => choice.Sync());
             return box;
         }
 
@@ -441,47 +461,108 @@ namespace KodeKit
 
         /// <summary>
         /// A value with its nudges as one control: [−][value][+]. − and + call <paramref name="add"/> with ∓step()
-        /// (×10 with Shift held); with <paramref name="repeat"/> they repeat while held. The step is a separate choice, made
-        /// once (a <see cref="Segmented"/> "Step" row).
+        /// (×10 with Right Shift or Left Alt held: Left Shift is KSP's throttle up, AltGr sends Left Ctrl, its throttle down); with <paramref name="repeat"/> they repeat while held. The step is a separate choice, made
+        /// once (a <see cref="Segmented"/> "Step" row). <paramref name="label"/> names it (a '#key' or a text; null: the label right before
+        /// it in its row, <see cref="LabelBefore"/>).
         /// </summary>
         public Layout Stepper(UIObject parent, Func<string> text, Action<string> setText, Action<double> add, Func<double> step, float width,
-            Func<bool> valid = null, bool repeat = false)
+            Func<bool> valid = null, bool repeat = false, string label = null)
         {
+            string rowLabel = label ?? LabelBefore(parent);
             LayoutPanel box = parent.Add<LayoutPanel>("Stepper");
             box.Horizontal().ControlChildSize(true, true).ChildForceExpand(false, true).Spacing(0).Padding(1);
             box.Finish();
 
-            add = Edits(add);
-            double Step() => step() * (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) ? 10 : 1);
-            StepButton(box, "-", () => add(-Step()), repeat);
-            TMP_InputField field = EditFields.Field(this, box, text, setText, width, valid);
-            field.textComponent.alignment = TextAlignmentOptions.Center;
-            StepButton(box, "+", () => add(Step()), repeat);
+            // the behaviour (what a nudge or a key adds) is Headless.StepperModel, tested without KSP; this draws it
+            // one commit target for the nudges and the typing: its value is the text, a nudge's asked value the delta
+            Headless.CommitTarget<string> target = Target("Stepper", text, setText);
+            target.Control = box;
+            var model = new Headless.StepperModel(text, target.Set, (d, source) => target.Apply(d, add, source), step, valid);
+            target.Model = model;
+            LabelTarget(target, rowLabel);
+            StepButton(box, "-", () => model.Press(-1, Modifiers(), Pointer), repeat, target);
+            // its field is a text field written as typed, through the stepper's rules (Allow, the source)
+            Headless.TextFieldModel fieldModel = null;
+            TMP_InputField field = EditFields.Field(this, box, target, width, FieldKind.Centred, (begin, end) => fieldModel =
+                new Headless.TextFieldModel(text, (s, source) => model.Type(s, source), Headless.TextCommit.AsTyped, null, valid, null, null, begin, end));
+            // the field is the stepper's: it has the stepper's name
+            LabelPart(fieldModel, target);
+            // a number centred between - and + (FieldKind.Centred), in the middle of the stepper's box, which is taller than the text
+            EditFields.SetAlignment(field.textComponent, TextAlignmentOptions.Center);
+            EditFields.SetAlignment((TMP_Text)field.placeholder, TextAlignmentOptions.Center);
+            StepButton(box, "+", () => model.Press(1, Modifiers(), Pointer), repeat, target);
+            // while the field has the keyboard (and KodeKit's keyboard lock: these keys don't reach KSP), Up/Down nudge
+            field.gameObject.AddComponent<StepperKeys>().Init(model, field, text);
 
             Image fieldBg = field.GetComponent<Image>();
-            Styled(box.gameObject, th =>
-            {
-                th.Field.ApplyImage(box.BackGround);
-                // the field draws on the stepper's background
-                Paint(field, fieldBg, null, Color.white, Clear, HoverWash, Clear);
-            });
+            Styled(box.gameObject, th => th.Field.ApplyImage(box.BackGround));
+            // the field draws on the stepper's background
+            Part(field, fieldBg, Headless.StyleParts.StepperField);
             return box;
         }
 
+        // the modifiers held; Headless.StepperModel decides which of them make a ×10 step on a button or a key. Either Alt counts,
+        // but Left Alt is the one to name: on Windows, AltGr (the right Alt of AZERTY or QWERTZ layouts) also sends Left Ctrl,
+        // KSP's throttle down, which a pointer over a window leaves live
+        static Headless.StepperModifiers Modifiers()
+        {
+            Headless.StepperModifiers m = Headless.StepperModifiers.None;
+            if (Input.GetKey(KeyCode.LeftShift)) m |= Headless.StepperModifiers.LeftShift;
+            if (Input.GetKey(KeyCode.RightShift)) m |= Headless.StepperModifiers.RightShift;
+            if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt) || Input.GetKey(KeyCode.AltGr)) m |= Headless.StepperModifiers.Alt;
+            return m;
+        }
+
+        /// <summary>
+        /// Up/Down (×10 with either Shift or Alt: the field's keyboard lock keeps Left Shift from KSP's throttle) and PageUp/PageDown
+        /// (×10) on a stepper's focused field, routed by the field's keyboard scope (nothing runs per frame). The field shows the new
+        /// value at once: a focused field isn't refreshed by its sync.
+        /// </summary>
+        sealed class StepperKeys : MonoBehaviour
+        {
+            Headless.StepperModel model;
+            TMP_InputField field;
+            FieldText shown;
+            Func<string> text;
+
+            /// <summary>The model the keys nudge (for tests).</summary>
+            public Headless.StepperModel Model => model;
+
+            public void Init(Headless.StepperModel m, TMP_InputField f, Func<string> t)
+            {
+                model = m;
+                field = f;
+                shown = f.GetComponent<FieldText>();
+                text = t;
+                f.GetComponent<FieldKeyboardLock>().Route(Headless.ScopeKeys.Up | Headless.ScopeKeys.Down | Headless.ScopeKeys.PageUp | Headless.ScopeKeys.PageDown, Key);
+            }
+
+            void Key(Headless.ScopeKeys k)
+            {
+                if (this == null || field == null || !field.isFocused) return;
+                bool handled = k == Headless.ScopeKeys.Up ? model.Key(Headless.StepperKey.Up, Modifiers())
+                    : k == Headless.ScopeKeys.Down ? model.Key(Headless.StepperKey.Down, Modifiers())
+                    : k == Headless.ScopeKeys.PageUp ? model.Key(Headless.StepperKey.PageUp, false)
+                    : k == Headless.ScopeKeys.PageDown && model.Key(Headless.StepperKey.PageDown, false);
+                if (!handled) return;
+                // the nudge set the model: the field shows its text without typing it again (one setter call per key)
+                string s = text();
+                shown.Show(s);
+                field.caretPosition = s.Length;
+            }
+        }
+
         // a flat − or + at least a row high and wide: the 15 px "-" buttons of IMGUI are too small to hit
-        static UIButton StepButton(UIObject parent, string text, Action onClick, bool repeat)
+        static UIButton StepButton(UIObject parent, string text, Action onClick, bool repeat, Headless.CommitTarget target)
         {
             UIButton b = repeat ? RepeatButton(parent, text, onClick) : Button(parent, text, onClick);
+            // a hold is one commit
+            if (repeat) b.GetComponent<RepeatTrigger>().Group = target;
             b.Content.Padding(4, 4, 0, 0);
             var le = b.GetComponent<LayoutElement>();
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
-            Styled(b.gameObject, th =>
-            {
-                Paint(b.GetComponent<Button>(), b.GetComponent<Image>(), null, Color.white, Clear, HoverWash, PressWash);
-                th.ApplyText(label, th.Text);
-                label.fontStyle = FontStyles.Bold;
-                le.minWidth = th.RowHeight;
-            });
+            Styled(b.gameObject, th => le.minWidth = th.RowHeight);
+            Part(b.GetComponent<Button>(), b.GetComponent<Image>(), Headless.StyleParts.StepperButton, new[] { label });
             return b;
         }
 
@@ -493,8 +574,9 @@ namespace KodeKit
         /// </summary>
         public UIButton Chip(UIObject parent, string text, Func<bool> get, Action<bool> set, Color? dot = null)
         {
-            set = Edits(set);
-            UIButton b = Button(parent, text, () => set(!get()));
+            Headless.CommitTarget<bool> target = Target("Chip", get, set, text);
+            UIButton b = Button(parent, text, () => target.Set(!get(), Pointer));
+            target.Control = b;
             b.Content.Padding(dot.HasValue ? 6 : 9, 9, 1, 1);
             b.Content.Spacing(4);
             UnityEngine.Object.Destroy(b.GetComponent<ClickFlash>());
@@ -505,15 +587,12 @@ namespace KodeKit
                 dotImg.name = "Dot";
             }
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
-            var btn = b.GetComponent<Button>();
-            var img = b.GetComponent<Image>();
             bool shown = get();
+            StyledPart part = Part(b.GetComponent<Button>(), b.GetComponent<Image>(), Headless.StyleParts.Chip, new[] { label });
 
             void Look(Theme th)
             {
-                if (shown) Paint(btn, img, Sprites.Pill, Alpha(th.Text, 0.2f), Dimmed, Color.white, Color.white);
-                else Paint(btn, img, Sprites.PillOutline, Alpha(th.Dim, 0.55f), Dimmed, Color.white, Color.white);
-                th.ApplyText(label, shown ? th.Text : th.Dim);
+                part.Set(Headless.StyleFlags.On, shown);
                 if (dotImg == null) return;
                 dotImg.color = Alpha(dot.Value, shown ? 1 : 0.35f);
                 var le = dotImg.GetComponent<LayoutElement>();
@@ -614,6 +693,179 @@ namespace KodeKit
             });
             return p;
         }
+
+        // ---- meter ----
+
+        /// <summary>A meter's Unity side: its model and what it draws, for the agent bridge and tests.</summary>
+        public sealed class MeterHandle : MonoBehaviour
+        {
+            public Headless.GaugeModel Model;
+
+            /// <summary>The label as given (a '#key' or a text).</summary>
+            public string Label;
+
+            /// <summary>The fill: its anchorMax.x is the fraction drawn.</summary>
+            public RectTransform Fill;
+
+            /// <summary>The marks of the low and high bounds (inactive when that bound isn't set).</summary>
+            public RectTransform LowMark, HighMark;
+
+            /// <summary>The value's text (pushed as a char array: read it with GetParsedText).</summary>
+            public TMP_Text Text;
+
+            /// <summary>The meter's sentence in the current language (allocates).</summary>
+            public string Describe() => Model.Describe(MeterWords, ShownLabel(Label));
+        }
+
+        static Headless.GaugeWords meterWords;
+        static string meterWordsLanguage;
+
+        /// <summary>
+        /// The words of the meters' sentences and of their bars, from the localization keys (<c>#MechJeb_NewUI_Meter_*</c>), read again
+        /// after a language switch; a key that is missing keeps its English word.
+        /// </summary>
+        public static Headless.GaugeWords MeterWords
+        {
+            get
+            {
+                string language = KSP.Localization.Localizer.CurrentLanguage;
+                if (meterWords != null && language == meterWordsLanguage) return meterWords;
+                Headless.GaugeWords d = Headless.GaugeModel.DefaultWords;
+                meterWords = new Headless.GaugeWords
+                {
+                    Reading = Tag("Reading", d.Reading), Scale = Tag("Scale", d.Scale), LowBound = Tag("LowBound", d.LowBound),
+                    HighBound = Tag("HighBound", d.HighBound), ZoneRated = Tag("ZoneRated", d.ZoneRated), OffScale = Tag("OffScale", d.OffScale),
+                    NotAvailable = Tag("NotAvailable", d.NotAvailable), Missing = Tag("Missing", d.Missing), Low = Tag("Low", d.Low),
+                    Mid = Tag("Mid", d.Mid), High = Tag("High", d.High), Good = Tag("Good", d.Good), Fair = Tag("Fair", d.Fair), Poor = Tag("Poor", d.Poor)
+                };
+                meterWordsLanguage = language;
+                return meterWords;
+            }
+        }
+
+        // the raw text of a key, its <<1>> placeholders kept for GaugeWords.Fill
+        static string Tag(string name, string fallback) =>
+            KSP.Localization.Localizer.TryGetStringByTag("#MechJeb_NewUI_Meter_" + name, out string s) && !string.IsNullOrEmpty(s) ? s : fallback;
+
+        /// <summary>
+        /// label [bar] value: a value on a scale (<see cref="Headless.GaugeModel"/>, HTML's meter) as a filled bar, with marks at its
+        /// low and high bounds and the value as text. The fill's colour is the rating's (good green, fair yellow, poor red, a plain bar
+        /// the accent), and a fair or poor value also says its zone in words ("low", "high"), so colour is never the only sign. With
+        /// no value or no scale the bar is empty and the text says so. The tooltip is the model's sentence. The model is read every
+        /// frame while the meter is shown (a hidden one is not read), and the bar, marks and text are written only when what they show
+        /// changed: no garbage. The meter owns the model's <see cref="Headless.GaugeModel.Sync"/>: others read it as drawn.
+        /// <paramref name="template"/> is the widest value text expected, which sizes its cell. Several meters one under the other
+        /// line up their bars in a grid: <see cref="PropertyGrid.Meter"/>.
+        /// </summary>
+        public MeterHandle Meter(UIObject parent, string label, Headless.GaugeModel model, string template = "000 % high")
+        {
+            Layout row = parent.Add<Layout>("Meter");
+            row.Horizontal().ControlChildSize(true, true).ChildForceExpand(false, false).Spacing(6).ChildAlignment(TextAnchor.MiddleLeft);
+            row.FlexibleLayout(true, false);
+            row.Finish();
+            return MeterIn(row, label, model, template);
+        }
+
+        // the meter's cells (label, bar, value) in a row of its own or a grid's
+        MeterHandle MeterIn(Layout row, string label, Headless.GaugeModel model, string template)
+        {
+            if (model.Label == null) model.Label = label;
+            Label(row, label);
+
+            UIEmpty bar = row.Add<UIEmpty>("Bar");
+            bar.Finish();
+            LayoutElement barLe = bar.gameObject.GetComponent<LayoutElement>() ?? bar.gameObject.AddComponent<LayoutElement>();
+            barLe.flexibleWidth = 1;
+            barLe.minWidth = 60;
+            Image track = Overlay(bar, "Track", Vector2.zero, Vector2.one, Vector2.zero);
+            track.raycastTarget = true; // the tooltip's target
+            Image fill = Overlay(bar, "Fill", Vector2.zero, new Vector2(0, 1), Vector2.zero);
+            Image lowMark = Overlay(bar, "LowMark", Vector2.zero, new Vector2(0, 1), new Vector2(2, 0));
+            Image highMark = Overlay(bar, "HighMark", Vector2.zero, new Vector2(0, 1), new Vector2(2, 0));
+
+            UIEmpty cell = row.Add<UIEmpty>("MeterValue");
+            UIText t = cell.Add<UIText>();
+            t.Text("").Anchor(AnchorPresets.StretchAll);
+            t.Finish();
+            t.tmpText.enableWordWrapping = false;
+            t.tmpText.alignment = TextAlignmentOptions.Right;
+            t.tmpText.overflowMode = TextOverflowModes.Ellipsis;
+            t.rectTransform.offsetMin = t.rectTransform.offsetMax = Vector2.zero;
+            LayoutElement cellLe = cell.gameObject.GetComponent<LayoutElement>() ?? cell.gameObject.AddComponent<LayoutElement>();
+            cell.Finish();
+            var text = new CharText(t.tmpText);
+
+            MeterHandle h = row.gameObject.AddComponent<MeterHandle>();
+            h.Model = model;
+            h.Label = label;
+            h.Fill = fill.rectTransform;
+            h.LowMark = lowMark.rectTransform;
+            h.HighMark = highMark.rectTransform;
+            h.Text = t.tmpText;
+            Tooltips.Add(track.gameObject, h.Describe);
+
+            Headless.GaugeRating shownRating = model.Rating;
+            bool shownAvailable = model.Available;
+
+            void Look(Theme th)
+            {
+                th.ApplyText(t.tmpText);
+                Vector2 size = TextMeasure.Measure(template, th);
+                cellLe.preferredWidth = size.x + 8;
+                cellLe.preferredHeight = Mathf.Max(size.y, th.LineHeight);
+                barLe.preferredHeight = barLe.minHeight = Mathf.Max(6, Mathf.Round(th.FontSize * 0.6f));
+                track.sprite = fill.sprite = Sprites.Rounded;
+                track.type = fill.type = Image.Type.Sliced;
+                track.color = Alpha(th.Text, 0.12f);
+                Color c = RatingColor(th, shownRating);
+                fill.color = c;
+                lowMark.color = highMark.color = Alpha(th.Text, 0.7f);
+                t.tmpText.color = !shownAvailable ? th.Dim : shownRating == Headless.GaugeRating.Fair || shownRating == Headless.GaugeRating.Poor ? c : th.Text;
+            }
+
+            void Draw()
+            {
+                fill.rectTransform.anchorMax = new Vector2((float)model.Fraction, 1);
+                Mark(lowMark, model.Available && model.Zoned && model.HasLow, model.FractionOf(model.Low));
+                Mark(highMark, model.Available && model.Zoned && model.HasHigh, model.FractionOf(model.High));
+                Headless.GaugeWords words = MeterWords;
+                model.FormatValue(text.Chars);
+                if (!model.Available) text.Append(words.Missing);
+                else if (model.Rating == Headless.GaugeRating.Fair || model.Rating == Headless.GaugeRating.Poor) text.Append(' ').Append(words.Of(model.Zone));
+                text.Commit();
+                if (model.Rating == shownRating && model.Available == shownAvailable) return;
+                shownRating = model.Rating;
+                shownAvailable = model.Available;
+                Look(Th);
+            }
+
+            Styled(row.gameObject, Look);
+            Draw();
+            GameObject go = row.gameObject;
+            syncs.Add(() =>
+            {
+                // hidden (its setting off, a folded section): not read
+                if (!go.activeInHierarchy) return;
+                if (model.Sync()) Draw();
+            });
+            return h;
+        }
+
+        static void Mark(Image mark, bool shown, double at)
+        {
+            if (mark.gameObject.activeSelf != shown) mark.gameObject.SetActive(shown);
+            if (!shown) return;
+            RectTransform rt = mark.rectTransform;
+            var a = new Vector2((float)at, 0);
+            if (rt.anchorMin == a) return;
+            rt.anchorMin = a;
+            rt.anchorMax = new Vector2((float)at, 1);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+        }
+
+        static Color RatingColor(Theme th, Headless.GaugeRating r) =>
+            r == Headless.GaugeRating.Good ? th.Good : r == Headless.GaugeRating.Fair ? th.Warn : r == Headless.GaugeRating.Poor ? th.Bad : th.Accent;
 
         // ---- action bar ----
 
@@ -749,19 +1001,27 @@ namespace KodeKit
             /// limiter that is acting now).
             /// </summary>
             public Layout Switch(string label, Func<bool> get, Action<bool> set, Func<string> text = null, Action<string> setText = null,
-                float width = 60, string unit = null, Func<bool> valid = null, Func<Tone> tone = null)
+                float width = 60, string unit = null, Func<bool> valid = null, Func<Tone> tone = null, FieldKind kind = FieldKind.Number)
             {
                 Layout row = Row();
                 Toggle t = w.Switch(row, get, set);
                 UIText l = Label(row, label);
                 LabelFlips(l, t);
+                w.Labelled(t, label);
                 if (tone != null) w.ToneText(l, tone);
                 if (text == null) return row;
-                TMP_InputField f = EditFields.Field(w, row, text, setText, width, valid);
+                TMP_InputField f = EditFields.Field(w, row, text, setText, width, valid, kind: kind);
+                w.Labelled(f, label);
                 UIText u = Label(row, unit ?? "");
                 Dim(f.gameObject, u.gameObject, () => !get());
                 return row;
             }
+
+            /// <summary>
+            /// label [bar] value: a meter (<see cref="KodeWindow.Meter"/>) in a grid of its own, so the bars of the meters under one
+            /// another start at one column (make the grid with <see cref="FlexibleColumn"/> 1, the bar).
+            /// </summary>
+            public MeterHandle Meter(string label, Headless.GaugeModel model, string template = "000 % high") => w.MeterIn(Row(), label, model, template);
 
             /// <summary>A row of one cell across the grid: a sub-heading, a note, a button.</summary>
             public UIText Note(string text)
@@ -772,13 +1032,30 @@ namespace KodeKit
                 return t;
             }
 
-            /// <summary>label [field] unit, no switch.</summary>
-            public Layout Field(string label, Func<string> text, Action<string> setText, float width = 60, string unit = null, Func<bool> valid = null)
+            /// <summary>label [field] unit, no switch. <paramref name="kind"/>: what the field holds (<see cref="EditFields.Align"/>).</summary>
+            public Layout Field(string label, Func<string> text, Action<string> setText, float width = 60, string unit = null, Func<bool> valid = null,
+                FieldKind kind = FieldKind.Number)
             {
                 Layout row = Row();
                 Empty(row);
                 Label(row, label);
-                EditFields.Field(w, row, text, setText, width, valid);
+                w.Labelled(EditFields.Field(w, row, text, setText, width, valid, kind: kind), label);
+                Label(row, unit ?? "");
+                return row;
+            }
+
+            /// <summary>
+            /// label [read-out] unit: the value as text in the field column, edited in place when clicked
+            /// (<see cref="EditFields.InlineEdit"/>). Its cells are a field row's.
+            /// </summary>
+            public Layout InlineEdit(string label, Func<string> text, Action<string> setText, float width = 60, string unit = null,
+                Func<string, bool> parses = null, Func<bool> enabled = null, Func<Color?> readOutColor = null, Func<string, string> normalise = null,
+                FieldKind kind = FieldKind.Number)
+            {
+                Layout row = Row();
+                Empty(row);
+                Label(row, label);
+                w.Labelled(EditFields.InlineEdit(w, row, text, setText, width, parses, enabled, readOutColor, normalise, kind: kind), label);
                 Label(row, unit ?? "");
                 return row;
             }
@@ -836,31 +1113,50 @@ namespace KodeKit
 
         /// <summary>
         /// One window, several pages: underlined tabs over one panel per page, only the selected one shown. Returns the
-        /// pages. Without get/set the window keeps the selection itself.
+        /// pages. Without get/set the window keeps the selection itself. The tabs are a <see cref="Headless.ChoiceModel"/> (tab
+        /// items); the pages follow its shown entry, so a pick shows its page in the same frame.
         /// </summary>
-        public Layout[] Tabs(UIObject parent, string[] titles, Func<int> get = null, Action<int> set = null)
+        public Layout[] Tabs(UIObject parent, string[] titles, Func<int> get = null, Action<int> set = null, string label = null) =>
+            Tabs(parent, titles, get, set, out _, label);
+
+        /// <summary>A <see cref="Tabs"/> that also hands out its model.</summary>
+        public Layout[] Tabs(UIObject parent, string[] titles, Func<int> get, Action<int> set, out Headless.ChoiceModel model, string label = null)
         {
             int current = 0;
             get ??= () => current;
             set ??= i => current = i;
-            Segmented(parent, titles, get, set, ChoiceStyle.Tabs);
+            Segmented(parent, titles, get, set, ChoiceStyle.Tabs, out Headless.ChoiceModel choice, label);
+            model = choice;
             var pages = new Layout[titles.Length];
-            for (int i = 0; i < titles.Length; i++)
+            for (int i = 0; i < titles.Length; i++) pages[i] = Panel(parent);
+            void Pages()
             {
-                int k = i;
-                pages[i] = Panel(parent);
-                Visible(pages[i].gameObject, () => get() == k);
+                for (int i = 0; i < pages.Length; i++)
+                {
+                    bool on = choice.IsOn(i);
+                    if (pages[i].gameObject.activeSelf != on) pages[i].gameObject.SetActive(on);
+                }
             }
+            Pages();
+            choice.ShownChanged += Pages;
             return pages;
         }
 
         /// <summary>
         /// A list on the left, the selected item's details on the right (the planner's operations). Consecutive items
-        /// with the same group are listed under its header. Returns the details panel.
+        /// with the same group are listed under its header. Returns the details panel. The list is a
+        /// <see cref="Headless.ChoiceModel"/> of options (nothing selected is allowed): a click picks through it, and its shown
+        /// entry marks the row.
         /// </summary>
         public Layout MasterDetail(UIObject parent, float listWidth, float height, int count, Func<int, string> name, Func<int, string> group,
-            Func<int> get, Action<int> set)
+            Func<int> get, Action<int> set) => MasterDetail(parent, listWidth, height, count, name, group, get, set, out _);
+
+        /// <summary>A <see cref="MasterDetail"/> that also hands out its list's model.</summary>
+        public Layout MasterDetail(UIObject parent, float listWidth, float height, int count, Func<int, string> name, Func<int, string> group,
+            Func<int> get, Action<int> set, out Headless.ChoiceModel model)
         {
+            // the list's name: the text before it, else its first group's header, else the window's title
+            string label = LabelBefore(parent) ?? (count > 0 ? group?.Invoke(0) : null) ?? Behaviour.Frame.Label;
             Layout row = Row(parent);
             row.ChildAlignment(TextAnchor.UpperLeft);
             ScrollView sv = ScrollList(row, height, out Layout list);
@@ -868,6 +1164,13 @@ namespace KodeKit
             sle.flexibleWidth = 0;
             sle.minWidth = sle.preferredWidth = listWidth;
 
+            // a selection rather than a setting: a commit, but not an edit for the owner to save
+            Headless.CommitTarget<int> target = Target("MasterDetail", get, set, null, false);
+            target.Control = list;
+            var choice = new Headless.ChoiceModel(count, get, target.Set) { ItemLabels = new string[count], ItemRole = Headless.PartRole.Option };
+            target.Model = choice;
+            LabelTarget(target, label);
+            model = choice;
             var rows = new UIButton[count];
             string lastGroup = null;
             for (int i = 0; i < count; i++)
@@ -880,20 +1183,18 @@ namespace KodeKit
                 }
                 lastGroup = g;
                 int k = i;
-                rows[i] = ListRow(list, name(i), () => set(k));
+                string text = name(i);
+                choice.ItemLabels[i] = Loc(text);
+                rows[i] = ListRow(list, text, () => choice.Select(k, Pointer));
             }
-            int shown = -1;
             void Mark()
             {
-                for (int i = 0; i < rows.Length; i++) SetSelected(rows[i], i == shown);
+                for (int i = 0; i < rows.Length; i++) SetSelected(rows[i], choice.IsOn(i));
             }
-            syncs.Add(() =>
-            {
-                int v = get();
-                if (v == shown) return;
-                shown = v;
-                Mark();
-            });
+            Mark();
+            // a pick (which syncs the model itself) and a change from outside both mark the row, at once
+            choice.ShownChanged += Mark;
+            syncs.Add(() => choice.Sync());
 
             Layout detail = Panel(row);
             detail.FlexibleLayout(true, false);
@@ -904,7 +1205,7 @@ namespace KodeKit
 
         /// <summary>
         /// A flat icon button in the title bar, before the close button (the custom windows' edit and copy). The tooltip
-        /// is a text or a '#key'.
+        /// is a text or a '#key', and names the icon's entry in the title's context menu.
         /// </summary>
         public UIButton TitleIcon(Sprite icon, string tooltip, Action onClick)
         {
@@ -912,6 +1213,8 @@ namespace KodeKit
             FlatIcon(b, false);
             b.transform.SetSiblingIndex(CloseButton.transform.GetSiblingIndex());
             if (!string.IsNullOrEmpty(tooltip)) Tooltips.Add(b.gameObject, tooltip); // a '#key' is localized when shown
+            NameButtonByKey(b, tooltip);
+            AddTitleMenuEntry(b, tooltip);
             return b;
         }
 
@@ -928,21 +1231,13 @@ namespace KodeKit
             {
                 float size = th.FontSize + 3;
                 le.minWidth = le.preferredWidth = le.minHeight = le.preferredHeight = size;
-                Color hover = close ? new Color(0.85f, 0.25f, 0.2f, 0.85f) : Alpha(th.Text, 0.15f);
-                Paint(b.GetComponent<Button>(), b.GetComponent<Image>(), Sprites.Rounded, Color.white,
-                    Clear, hover, hover);
-                if (icon != null)
-                {
-                    icon.color = Alpha(th.Text, 0.85f);
-                    var ile = icon.GetComponent<LayoutElement>();
-                    ile.minWidth = ile.preferredWidth = ile.minHeight = ile.preferredHeight = Mathf.Round(th.FontSize * 0.75f);
-                }
-                else if (text != null)
-                {
-                    th.ApplyText(text, Alpha(th.Text, 0.85f));
-                    text.fontStyle = FontStyles.Bold;
-                }
+                if (icon == null) return;
+                var ile = icon.GetComponent<LayoutElement>();
+                ile.minWidth = ile.preferredWidth = ile.minHeight = ile.preferredHeight = Mathf.Round(th.FontSize * 0.75f);
             });
+            // nothing at rest, a light box under the pointer (red for the close button); the icon or text dimmed, bold
+            Part(b.GetComponent<Button>(), b.GetComponent<Image>(), close ? Headless.StyleParts.TitleClose : Headless.StyleParts.TitleIcon,
+                text != null ? new[] { text } : null, icon != null ? new[] { icon } : null);
         }
     }
 }

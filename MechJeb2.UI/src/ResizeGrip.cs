@@ -1,5 +1,6 @@
 using System;
 using KodeKit;
+using KodeKit.Headless;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,14 +10,17 @@ namespace MuMech.UI
     /// <summary>
     /// The usual resize grip in a window's bottom-right corner. Dragging it reports the size the window's right and bottom edges
     /// would give, in the window's own units, from the drag's start: Resized(width, height). The window applies what it can.
+    /// The drag's maths is <see cref="ResizeModel"/>'s.
     /// </summary>
     sealed class ResizeGrip : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public RectTransform Root;
         public Action<float, float> Resized;
         public Action Done;
-        public bool Dragging { get; private set; }
-        Vector2 offset;
+        public bool Dragging => Model.Dragging;
+
+        /// <summary>The drag: from the press point, the grab offset, the minimum size.</summary>
+        public readonly ResizeModel Model = new ResizeModel();
 
         static Sprite sprite;
 
@@ -53,6 +57,7 @@ namespace MuMech.UI
             img.sprite = Sprite;
             KodeWindow.Styled(go, th => img.color = new Color(th.Text.r, th.Text.g, th.Text.b, 0.45f));
             var g = go.GetComponent<ResizeGrip>();
+            g.Model.Label = w.Behaviour.Frame.Label;
             g.Root = w.Root.rectTransform;
             g.Resized = resized;
             g.Done = done;
@@ -64,7 +69,8 @@ namespace MuMech.UI
         {
             bool ok = RectTransformUtility.ScreenPointToLocalPointInRectangle(Root, screen, cam, out Vector2 local);
             Rect r = Root.rect;
-            p = new Vector2(local.x + Root.pivot.x * r.width, (1 - Root.pivot.y) * r.height - local.y);
+            ResizeModel.FromLocal(local.x, local.y, Root.pivot.x, Root.pivot.y, r.width, r.height, out float x, out float y);
+            p = new Vector2(x, y);
             return ok;
         }
 
@@ -73,21 +79,19 @@ namespace MuMech.UI
         public void OnBeginDrag(PointerEventData e)
         {
             if (!Local(e.pressPosition, e.pressEventCamera, out Vector2 p)) return;
-            offset = new Vector2(Root.rect.width, Root.rect.height) - p;
-            Dragging = true;
-            Resized(Root.rect.width, Root.rect.height);
+            Model.Begin(p.x, p.y, Root.rect.width, Root.rect.height);
+            Resized(Model.Width, Model.Height);
         }
 
         public void OnDrag(PointerEventData e)
         {
-            if (Dragging && Local(e.position, e.pressEventCamera, out Vector2 p)) Resized(p.x + offset.x, p.y + offset.y);
+            if (Dragging && Local(e.position, e.pressEventCamera, out Vector2 p) && Model.DragTo(p.x, p.y))
+                Resized(Model.Width, Model.Height);
         }
 
         public void OnEndDrag(PointerEventData e)
         {
-            if (!Dragging) return;
-            Dragging = false;
-            Done();
+            if (Model.End()) Done();
         }
 
         // hidden mid-drag (the window locked, or closed): the drag gets no end, so end it here
