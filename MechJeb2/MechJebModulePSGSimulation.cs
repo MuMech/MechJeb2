@@ -497,6 +497,21 @@ namespace MuMech
             return true;
         }
 
+        // Guidance is handed a solution only on the pad, in a burn or in the coast.  One that converges once the autopilot has
+        // moved on (the vertical ascent and the pitch program, a jettison, terminal guidance, the end) is late, and is thrown away.
+        private bool TakesSolution()
+        {
+            switch (Core.PSGAutopilot.State)
+            {
+                case PSGState.PRELAUNCH:
+                case PSGState.BURNING:
+                case PSGState.COASTING:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         private void HandleDoneTask()
         {
             if (!(_ascent is { IsCompleted: true }))
@@ -517,6 +532,12 @@ namespace MuMech
 
                 if (psg.Success() && psg.Solution != null)
                 {
+                    if (!TakesSolution())
+                    {
+                        Debug.Log($"[MechJebModulePSGSimulation] threw away a late solution: the autopilot is in {Core.PSGAutopilot.State}");
+                        return;
+                    }
+
                     _solution = psg.Solution;
                     Solution flown = psg.Solution.DeNormalized();
                     CheckReach(flown);
