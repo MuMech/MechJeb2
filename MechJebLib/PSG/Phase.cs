@@ -152,22 +152,28 @@ namespace MechJebLib.PSG
 
         public Phase Rescale(Scale scale)
         {
-            CheckDebug.False(Normalized);
-
             var phase = (Phase)MemberwiseClone();
 
-            phase.VexVacuum = VexVacuum / scale.VelocityScale;
-            phase.VexCurrent = VexCurrent / scale.VelocityScale;
-            phase.Mdot = Mdot / scale.MdotScale;
-            phase.Bt = Bt / scale.TimeScale;
-            phase.MinT = MinT / scale.TimeScale;
-            phase.MaxT = MaxT / scale.TimeScale;
-            phase.M0 = M0 / scale.MassScale;
-            phase.Mf = Mf / scale.MassScale;
-            phase.MinM = MinM / scale.MassScale;
-            phase.Normalized = true;
+            phase.RescaleInPlace(scale);
 
             return phase;
+        }
+
+        // Rescale without the copy, for a caller that owns a pooled phase and can't allocate one
+        public void RescaleInPlace(Scale scale)
+        {
+            CheckDebug.False(Normalized);
+
+            VexVacuum /= scale.VelocityScale;
+            VexCurrent /= scale.VelocityScale;
+            Mdot /= scale.MdotScale;
+            Bt /= scale.TimeScale;
+            MinT /= scale.TimeScale;
+            MaxT /= scale.TimeScale;
+            M0 /= scale.MassScale;
+            Mf /= scale.MassScale;
+            MinM /= scale.MassScale;
+            Normalized = true;
         }
 
         // the inverse of Rescale, back to SI units

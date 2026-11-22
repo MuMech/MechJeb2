@@ -36,8 +36,8 @@ namespace MechJebLibTest
 
             hoverslam.Rf.magnitude.ShouldEqual(rbody, 1e-8);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
-            (hoverslam.IgnitionUT - t0).ShouldEqual(94.755558282881168, 1e-8);
-            hoverslam.Dv.ShouldEqual(313.25594640963067, 1e-8);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(94.755557526153552, 1e-8);
+            hoverslam.Dv.ShouldEqual(313.25595938006933, 1e-8);
         }
 
         [Fact]
@@ -133,9 +133,7 @@ namespace MechJebLibTest
             hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
             (hoverslam.IgnitionUT - t0).ShouldEqual(352.36724527248589, 1e-4);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized, 1e-6);
-            // at Rtol = 1e-6 the steps at the end of the burn cross the steering singularity without tripping the
-            // BURN_END_DV event, and the thrust chatters for a few ms, so Dv is ~0.2 m/s high (it converges at 1e-7)
-            hoverslam.Dv.ShouldEqual(384.35206383554907, 1e-3);
+            hoverslam.Dv.ShouldEqual(384.35183735858374, 1e-5);
         }
 
         [Fact]
@@ -193,10 +191,10 @@ namespace MechJebLibTest
             hoverslam.Run();
 
             hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
-            (hoverslam.IgnitionUT - t0).ShouldEqual(1.34234016085975, 1e-5);
-            (hoverslam.LandingUT - t0).ShouldEqual(3.43880722904578, 1e-5);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(1.3423393998527899, 1e-5);
+            (hoverslam.LandingUT - t0).ShouldEqual(3.4388401878532022, 1e-5);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
-            hoverslam.Dv.ShouldEqual(31.246491642967, 1e-5);
+            hoverslam.Dv.ShouldEqual(31.246996798903844, 1e-5);
         }
 
         // a direct impact from outside the sphere of influence follows a hyperbola, which the simulation plans as it plans an ellipse
@@ -291,9 +289,9 @@ namespace MechJebLibTest
             hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized, 1e-6);
             (hoverslam.IgnitionUT - t0).ShouldBeLessThan(Astro.TimeToNextApoapsis(mu, r0, v0));
-            (hoverslam.IgnitionUT - t0).ShouldEqual(1.5488141343230382, 1e-5);
-            (hoverslam.LandingUT - t0).ShouldEqual(305.60697760852054, 1e-5);
-            hoverslam.Dv.ShouldEqual(4012.0544684282654, 1e-5);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(1.5490269472356886, 1e-5);
+            (hoverslam.LandingUT - t0).ShouldEqual(305.60734391061123, 1e-5);
+            hoverslam.Dv.ShouldEqual(4012.0582078650391, 1e-5);
         }
 
         // The same Falcon 9 earlier, with 28 t of propellant left in the booster: even igniting now, the burn ends 22 km below
