@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using KodeKit;
+using KodeKit.Headless;
+using KSP.Localization;
 using KodeUI;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using StageData = MuMech.MechJebStageStatsHelper.StageData;
@@ -9,32 +10,18 @@ using StageData = MuMech.MechJebStageStatsHelper.StageData;
 namespace MuMech.UI
 {
     /// <summary>
-    /// The "Stage stats (all)" info item (MechJebStageStatsHelper.AllStageStats) as a retained grid: one column per
-    /// StageData built once, a pool of fixed-height cells per column, columns shown by the helper's visibility, rows by
-    /// the stage count. Numbers are formatted into char buffers (no strings); column widths only grow.
-    /// State and actions stay in the helper, shared with the IMGUI item.
+    /// The "Stage stats (all)" info item (MechJebStageStatsHelper.AllStageStats) on a <see cref="KodeKit.Headless.TableModel"/>
+    /// drawn by <see cref="TableGrid"/>: one column per StageData (shown by the helper's visibility, a click on a header hides
+    /// it), one row per stage, the stage that burns now highlighted, units dimmed. Numbers are formatted into the model's cell
+    /// buffers (no strings); column widths only grow. State and actions stay in the helper, shared with the IMGUI item.
     /// </summary>
     public class StageStatsTable
     {
-        class Column
-        {
-            public StageData Id;
-            public Layout Root;
-            public UIButton Header;
-            public TMP_Text HeaderText;
-            public LayoutElement Size;
-            public string HeaderShown;
-            public int MaxChars;
-            public readonly List<UIText> Cells = new List<UIText>();
-            public readonly List<CharText> Chars = new List<CharText>();
-        }
-
         readonly KodeWindow w;
         readonly MechJebStageStatsHelper h;
-        readonly Layout grid;
-        readonly List<Column> columns = new List<Column>();
-        int builtRows = -1;
-        long builtShape = -1;
+        readonly TableModel model;
+        readonly TableGrid grid;
+        double gee;
 
         public StageStatsTable(KodeWindow w, UIObject parent, MechJebStageStatsHelper helper)
         {
@@ -43,13 +30,93 @@ namespace MuMech.UI
 
             Toolbar(parent);
 
-            grid = KodeWindow.Row(parent);
-            // columns at the top: a row's default centres them, so one shorter than the others would sit half a row lower
-            grid.Spacing(0).ChildAlignment(TextAnchor.UpperLeft);
-            foreach (StageData d in MechJebStageStatsHelper.Columns)
-                columns.Add(BuildColumn(d));
+            model = new TableModel(() => h.Stages.Count, Format) { Label = Localizer.Format("#MechJeb_InfoItems_label1"), UnitMarkup = "<alpha=#80>" }
+               .WithHighlight(CurrentRow)
+               .WithColumnState(key => key == (int)StageData.KSPStage || h.IsVisible((StageData)key), key => h.Header((StageData)key))
+               .WithHide((key, source) => h.HideColumn((StageData)key));
+            // by index: a foreach over the IReadOnlyList would box its enumerator
+            IReadOnlyList<StageData> all = MechJebStageStatsHelper.Columns;
+            for (int i = 0; i < all.Count; i++)
+            {
+                TableColumn c = model.AddColumn((int)all[i], h.Header(all[i]));
+                c.Name = all[i].ToString(); // Col_<StageData>, as before
+                c.Hideable = all[i] != StageData.KSPStage;
+            }
+            grid = new TableGrid(parent, model);
+            grid.RowCards(StageCard);
 
             Refresh();
+        }
+
+        // a stage row's hover card: the stage, its engines (by part, counted), its Isp in the atmosphere and in vacuum and its burn
+        // time, both live (the table's own simulation, which the window runs anyway)
+        void StageCard(int row, HoverCard card)
+        {
+            if (!h.HasRow(row)) return;
+            card.Title(Localizer.Format("#MechJeb_NewUI_Card_Stage", h.KspStageOf(row))); //Stage <<1>>
+            card.Text("#MechJeb_NewUI_Card_Engines", true); //Engines
+            card.Text(EngineList(h.EnginesOf(row)));
+            // with RCS shown, the RCS Isp (as the table's Isp column and the burn time)
+            card.Value(h.ShowRcs ? "#MechJeb_NewUI_Card_RcsIsp" : "#MechJeb_NewUI_Card_Isp", ct => //RCS Isp / Isp (atm / vac)
+            {
+                if (!h.HasRow(row)) return;
+                ct.Append(h.AtmoIspOf(row), 1).Append(" s / ").Append(h.VacIspOf(row), 1).Append(" s");
+            });
+            card.Value("#MechJeb_NewUI_Card_BurnTime", ct => //Burn time
+            {
+                if (!h.HasRow(row)) return;
+                double t = h.BurnTimeOf(row);
+                if (h.TimeSeconds) ct.Append(t, 2).Append('s');
+                else ct.AppendDHMS(t, 1);
+            });
+        }
+
+        /// <summary>The stage's engines as "2 × title" lines, in the order of their parts (made when the card opens).</summary>
+        internal static string EngineList(IReadOnlyList<MechJebLib.FuelFlowSimulation.EngineSignature> engines)
+        {
+            if (engines == null || engines.Count == 0) return Localizer.Format("#MechJeb_NewUI_Card_NoEngine"); //none
+            List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch?.ship?.parts : FlightGlobals.ActiveVessel?.parts;
+            var titles = new List<string>();
+            var counts = new List<int>();
+            var seen = new HashSet<uint>();
+            for (int i = 0; i < engines.Count; i++)
+            {
+                // one line per part: a multi-mode engine's modules are one engine
+                if (!seen.Add(engines[i].PartPersistentID)) continue;
+                string title = TitleOf(parts, engines[i].PartPersistentID) ?? "?";
+                int at = titles.IndexOf(title);
+                if (at < 0)
+                {
+                    titles.Add(title);
+                    counts.Add(1);
+                }
+                else counts[at]++;
+            }
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < titles.Count; i++)
+            {
+                if (i > 0) sb.Append('\n');
+                sb.Append(counts[i]).Append(" × ").Append(titles[i]);
+            }
+            return sb.ToString();
+        }
+
+        static string TitleOf(List<Part> parts, uint id)
+        {
+            if (parts == null) return null;
+            for (int i = 0; i < parts.Count; i++)
+                if (parts[i] != null && parts[i].persistentId == id) return parts[i].partInfo?.title;
+            return null;
+        }
+
+        // a cell: the helper's value, formatted as UpdateStageDisplayInfo formats it, and its unit
+        void Format(int row, int key, CharBuffer into, ref string unit)
+        {
+            double v = h.Value((StageData)key, row, gee, out int decimals, out unit);
+            if (decimals >= 0) into.Append(v, decimals);
+            else if (decimals == MechJebStageStatsHelper.SI) into.AppendSI(v);
+            else if (h.TimeSeconds) into.Append(v, 2).Append('s');
+            else into.AppendDHMS(v, 1);
         }
 
         // the on/off options as switches side by side, the display set as one choice
@@ -60,13 +127,35 @@ namespace MuMech.UI
             Switch(switches, "#MechJeb_InfoItems_timeSeconds", () => h.TimeSeconds, h.ToggleTimeSeconds, "#MechJeb_NewUI_StatsSeconds_tooltip"); //"Seconds"
             Switch(switches, "#MechJeb_InfoItems_hideEmpty", () => !h.ShowEmpty, h.ToggleShowEmpty, "#MechJeb_NewUI_StatsHideEmpty_tooltip");   //"Hide 0"
             Switch(switches, "#MechJeb_InfoItems_rcs", () => h.ShowRcs, h.ToggleRcs, "#MechJeb_NewUI_StatsRcs_tooltip");                  //"RCS"
+            CopyButtons(switches, () => model); // the model is made after the toolbar
             w.Segmented(parent, MechJebStageStatsHelper.DisplayStateNames, () => h.DisplayState, i =>
             {
                 // the helper only cycles: step to the chosen set
                 for (int n = 0; n < MechJebStageStatsHelper.DisplayStateNames.Length && h.DisplayState != i; n++) h.CycleDisplayState();
                 Refresh();
-            });
+            }, label: "#MechJeb_NewUI_Label_StatsShown"); //Stats shown
             if (HighLogic.LoadedSceneIsEditor) EditorEnvironment(parent);
+        }
+
+        /// <summary>
+        /// Copy and Copy table as Markdown: every row, the shown columns, as the table shows them, to
+        /// the clipboard; a toast says how many rows. Two buttons rather than a format choice: each is one click, and neither hides a
+        /// state that changes what the other does.
+        /// </summary>
+        internal static void CopyButtons(UIObject parent, System.Func<TableModel> model)
+        {
+            Tooltips.Add(KodeWindow.Button(parent, "#MechJeb_NewUI_CopyRows", () => CopyTable(model(), false)).gameObject, "#MechJeb_NewUI_CopyRows_tooltip"); //Copy
+            Tooltips.Add(KodeWindow.Button(parent, "#MechJeb_NewUI_CopyTableMarkdown", () => CopyTable(model(), true)).gameObject, "#MechJeb_NewUI_CopyMarkdown_tooltip"); //Copy table as Markdown
+        }
+
+        /// <summary>The table's rows (its selected ones when a host or an agent selected some) to the clipboard, as tab-separated text or a Markdown table.</summary>
+        internal static int CopyTable(TableModel model, bool markdown)
+        {
+            var sb = new System.Text.StringBuilder();
+            int rows = markdown ? model.CopyMarkdown(sb) : model.CopyRows(sb);
+            MuUtils.SystemClipboard = sb.ToString();
+            Toasts.Show(Localizer.Format(markdown ? "#MechJeb_NewUI_Toast_RowsCopiedMarkdown" : "#MechJeb_NewUI_Toast_RowsCopied", rows)); //<<1>> rows copied (as Markdown)
+            return rows;
         }
 
         void Switch(UIObject parent, string text, System.Func<bool> get, System.Action toggle, string tooltip) =>
@@ -87,7 +176,7 @@ namespace MuMech.UI
             {
                 h.TwrBody = i;
                 h.ApplyEnvironment();
-            }, () => h.Bodies, false);
+            }, () => h.Bodies, false) { Filter = true }; // typeable once long: a planet pack's bodies
 
             Layout sliders = row.Add<Layout>("Sliders");
             sliders.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false);
@@ -133,115 +222,20 @@ namespace MuMech.UI
             machLabel.transform.parent.GetComponent<LayoutElement>().preferredWidth = 80;
         }
 
-        Column BuildColumn(StageData d)
-        {
-            var c = new Column { Id = d };
-            c.Root = grid.Add<Layout>("Col_" + d);
-            c.Root.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false).Spacing(0);
-            c.Root.Finish();
-            c.Size = c.Root.gameObject.AddComponent<LayoutElement>();
-            c.Header = KodeWindow.HeaderButton(c.Root, h.Header(d), () =>
-            {
-                h.HideColumn(d);
-                Refresh();
-            });
-            c.HeaderText = c.Header.GetComponentInChildren<TMP_Text>();
-            c.HeaderText.alignment = TextAlignmentOptions.Right;
-            c.HeaderText.enableWordWrapping = false; // one line, so the rows of every column line up
-            c.HeaderShown = h.Header(d);
-            return c;
-        }
-
-        void EnsureCells(Column c, int rows)
-        {
-            while (c.Cells.Count < rows)
-            {
-                UIText t = KodeWindow.LiveLabel(c.Root, "0", true);
-                t.tmpText.alignment = TextAlignmentOptions.Right;
-                c.Cells.Add(t);
-                c.Chars.Add(new CharText(t.tmpText));
-            }
-        }
-
-        // what decides which cells exist: visible columns, rows, headers (RCS swaps two of them)
-        long Shape()
-        {
-            long s = h.ShowRcs ? 1 : 0;
-            // by index: a foreach over the IReadOnlyList would box its enumerator at each refresh
-            IReadOnlyList<StageData> all = MechJebStageStatsHelper.Columns;
-            for (int i = 0; i < all.Count; i++)
-                s = s * 2 + (h.IsVisible(all[i]) ? 1 : 0);
-            return s;
-        }
-
         /// <summary>UpdateStageStats plus what AllStageStats draws, at the owning window's refresh rate.</summary>
         public void Refresh()
         {
             h.ApplyEnvironment();
             h.UpdateStagesOnly();
-            List<int> stages = h.Stages;
-            int rows = stages.Count;
-
-            long shape = Shape();
-            if (shape != builtShape || rows != builtRows)
-            {
-                // TMP set up under an inactive parent misses Awake: build the cells once the window is shown
-                if (!grid.gameObject.activeInHierarchy) return;
-                foreach (Column c in columns)
-                {
-                    bool visible = c.Id == StageData.KSPStage || h.IsVisible(c.Id);
-                    // create cells while the column is active: TMP set up under an inactive parent misses Awake
-                    if (visible && !c.Root.gameObject.activeSelf) c.Root.gameObject.SetActive(true);
-                    if (visible) EnsureCells(c, rows);
-                    if (c.Root.gameObject.activeSelf != visible) c.Root.gameObject.SetActive(visible);
-                    string header = h.Header(c.Id);
-                    if (header != c.HeaderShown)
-                    {
-                        c.HeaderShown = header;
-                        c.Header.Text(header);
-                        c.MaxChars = 0; // re-fit to the new header
-                    }
-                    for (int i = 0; i < c.Cells.Count; i++)
-                    {
-                        bool on = i < rows;
-                        // the cell, not its text: the cell holds the row's height in the column
-                        GameObject cell = KodeWindow.CellOf(c.Cells[i]);
-                        if (cell.activeSelf != on) cell.SetActive(on);
-                    }
-                }
-                // only once every column has its cells: a rebuild that threw half way is tried again at the next refresh
-                builtShape = shape;
-                builtRows = rows;
-            }
-
-            // the stage that burns now is highlighted, the units dimmed
-            int current = CurrentRow(stages);
-            Theme th = Theme.Current;
-            double gee = h.GeeASL;
-            foreach (Column c in columns)
-            {
-                if (!c.Root.gameObject.activeSelf) continue;
-                for (int row = 0; row < rows; row++)
-                {
-                    double v = h.Value(c.Id, row, gee, out int decimals, out string unit);
-                    CharText ct = c.Chars[row].Clear();
-                    if (decimals >= 0) ct.Append(v, decimals);
-                    else if (decimals == MechJebStageStatsHelper.SI) ct.AppendSI(v);
-                    else if (h.TimeSeconds) ct.Append(v, 2).Append('s');
-                    else ct.AppendDHMS(v, 1);
-                    int length = ct.Length + (unit?.Length ?? 0);
-                    if (!string.IsNullOrEmpty(unit)) ct.Append("<alpha=#80>").Append(unit);
-                    FitWidth(c, length);
-                    ct.Commit();
-                    Color want = row == current ? th.Accent : th.Text;
-                    if (c.Cells[row].tmpText.color != want) c.Cells[row].tmpText.color = want;
-                }
-            }
+            gee = h.GeeASL;
+            model.Sync();
+            grid.Draw();
         }
 
         /// <summary>The row of the stage that burns now: the highest stage at or below the vessel's current stage (none in the editor).</summary>
-        static int CurrentRow(List<int> stages)
+        int CurrentRow()
         {
+            List<int> stages = h.Stages;
             Vessel v = FlightGlobals.ActiveVessel;
             if (HighLogic.LoadedSceneIsEditor || v == null) return -1;
             int best = -1;
@@ -250,29 +244,15 @@ namespace MuMech.UI
             return best;
         }
 
-        /// <summary>Column width = max(header, widest value so far); only grows, so changing values never re-lay out.</summary>
-        void FitWidth(Column c, int chars)
-        {
-            if (chars <= c.MaxChars) return;
-            c.MaxChars = chars;
-            float value = TextMeasure.Measure(new string('0', chars), Theme.Current).x;
-            float header = TextMeasure.Measure(c.HeaderShown, Theme.Current).x + 12; // + button padding
-            c.Size.preferredWidth = Mathf.Max(value, header);
-        }
-
         // ---- for tests ----
 
-        public int VisibleColumns
-        {
-            get
-            {
-                int n = 0;
-                foreach (Column c in columns)
-                    if (c.Root.gameObject.activeSelf) n++;
-                return n;
-            }
-        }
+        public int VisibleColumns => grid.VisibleColumns;
 
-        public int Rows => builtRows;
+        public int Rows => model.RowCount;
+
+        /// <summary>The table's model (columns, rows, the highlighted stage, the selection).</summary>
+        public TableModel Model => model;
+
+        public TableGrid Grid => grid;
     }
 }

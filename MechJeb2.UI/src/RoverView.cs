@@ -35,7 +35,7 @@ namespace MuMech.UI
 
             KodeWindow.Header(r, "#MechJeb_NewUI_RoverHeading"); //Heading
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.ControlHeading", () => Ap != null && Ap.ControlHeading);
-            // steppers (Shift: ×10)
+            // steppers (Right Shift or Left Alt: ×10)
             RoverUi.StepperRow(w, r, ed, "Editable:RoverController.heading", d => Ap.heading.Val += d);
 
             RoverUi.ValueRow(w, r, ed, "Value:RoverController.headingErr", () => Ap?.headingErr ?? 0, "-180.0 °");
@@ -144,7 +144,7 @@ namespace MuMech.UI
             return KodeWindow.RowOf(t);
         }
 
-        /// <summary>An EditableInfoItem with nudges: label [−][field][+] unit; − and + add ∓1 (×10 with Shift).</summary>
+        /// <summary>An EditableInfoItem with nudges: label [−][field][+] unit; − and + add ∓1 (×10 with Right Shift or Left Alt).</summary>
         public static Layout StepperRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Action<double> add)
         {
             if (!(Find(ed, id) is EditableInfoItem item) || item.Editable == null) return null;

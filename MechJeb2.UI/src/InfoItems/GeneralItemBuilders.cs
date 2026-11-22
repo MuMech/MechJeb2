@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KodeKit;
+using KodeKit.Headless;
 using KodeUI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -41,7 +42,11 @@ namespace MuMech.UI
             ["General:InfoItems.LatLonClipbardCopy"] = (w, p, t, r) =>
             {
                 var items = (MechJebModuleInfoItems)t;
-                KodeWindow.Button(p, "#MechJeb_InfoItems_CopytoClipboard", items.CopyLatLonAltToClipboard, true); //"Copy Lat/Lon/Alt to Clipboard"
+                KodeWindow.Button(p, "#MechJeb_InfoItems_CopytoClipboard", () =>
+                {
+                    items.CopyLatLonAltToClipboard();
+                    Toasts.Show("#MechJeb_NewUI_Toast_LatLonCopied", ToastSeverity.Success);
+                }, true); //"Copy Lat/Lon/Alt to Clipboard"
             },
             ["General:InfoItems.DebugString"] = (w, p, t, r) => PoolsStatusRows(w, p),
 
@@ -82,6 +87,7 @@ namespace MuMech.UI
             ["General:ThrustController.DifferentialThrottleMenu"] = (w, p, t, r) => DifferentialThrottle(w, p, (MechJebModuleThrustController)t),
             ["General:ThrustController.LimitElectricInfoItem"] = (w, p, t, r) => LimitElectric(w, p, (MechJebModuleThrustController)t),
             ["General:ThrustWindow.Autostage"] = (w, p, t, r) => Autostage(w, p, (MechJebModuleThrustWindow)t),
+            ["General:NodeExecutor.ManeuverTimeline"] = (w, p, t, r) => ManeuverTimelinePanel.Build(w, p, (MechJebModuleNodeExecutor)t),
             ["General:WarpController.ControlWarpButton"] = (w, p, t, r) => ControlWarpButton(w, p, (MechJebModuleWarpController)t),
 
             // VesselState
@@ -134,7 +140,8 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, CachedLocalizer.Instance.MechJebAscentLabel44, true); //"Clamp AutoStage Thrust "
-            EditFields.Field(w, row, () => s.ClampAutoStageThrustPct.Text, x => OptionRows.SetClamp(s, x), 50, () => s.ClampAutoStageThrustPct.IsParsed);
+            EditFields.Field(w, row, () => s.ClampAutoStageThrustPct.Text, x => OptionRows.SetClamp(s, x), 50, () => s.ClampAutoStageThrustPct.IsParsed,
+                kind: FieldKind.Number);
             KodeWindow.Label(row, "%");
         }
 

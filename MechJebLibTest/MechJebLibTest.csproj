@@ -22,6 +22,16 @@
 
     <ItemGroup>
         <ProjectReference Include="..\MechJebLib\MechJebLib.csproj"/>
+        <!-- a build check only: the headless folder alone at C# 7.3 (KodeUI's language); nothing of it is referenced -->
+        <ProjectReference Include="..\Tools\HeadlessCSharp73\HeadlessCSharp73.csproj" ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
+    <!-- KodeKit's widget behaviour, which has no Unity type: compiled here on its own, so it is tested without KSP and a Unity
+         type in it fails this build -->
+    <ItemGroup>
+        <Compile Include="..\MechJeb2.UI\KodeKit\Headless\*.cs" Link="KodeKitTests\Headless\%(Filename)%(Extension)"/>
+        <!-- the PSG Stages table's lines as drawn (no Unity, MechJebLib types only) -->
+        <Compile Include="..\MechJeb2.UI\src\PsgTableRows.cs" Link="KodeKitTests\PsgTableRows.cs"/>
     </ItemGroup>
 
     <ItemGroup>

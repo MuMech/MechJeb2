@@ -32,6 +32,12 @@ namespace MuMech.UI
 
         protected abstract float MinWidth { get; }
 
+        /// <summary>
+        /// The window's name in every language for the agent bridge (<see cref="KodeWindow.ModuleName"/>): the module's type name. A view
+        /// whose module type has several windows names each its own way.
+        /// </summary>
+        protected virtual string AgentName => Module.GetType().Name;
+
         /// <summary>Add the window's contents (called once).</summary>
         protected abstract void BuildContents(KodeWindow w);
 
@@ -48,6 +54,7 @@ namespace MuMech.UI
         {
             long start = System.Diagnostics.Stopwatch.GetTimestamp();
             Window = new KodeWindow(canvas, Module.GetName(), MinWidth, Vector2.zero);
+            Window.ModuleName = AgentName;
             Window.OnClose = () => Module.Enabled = false;
             Window.Edited = () => Module.Dirty = true;
             BuildContents(Window);
@@ -62,6 +69,10 @@ namespace MuMech.UI
             Window.Behaviour.SetImguiPosition(new Vector2(v.x, v.y), GuiUtils.Scale);
             Window.Behaviour.Moved = _ => StorePosition();
             Window.Behaviour.BringToFront();
+            // rebuilt while one of its fields was being edited: that field keeps the keyboard and the edit
+            KodeKit.Headless.FocusOutcome focus = Window.RecoverFocus(Module);
+            if (focus != KodeKit.Headless.FocusOutcome.None)
+                Debug.Log($"[MechJeb2.UI] the \"{Module.GetName()}\" window was rebuilt during an edit: {focus}");
         }
 
         public void ApplyScale()
@@ -100,8 +111,13 @@ namespace MuMech.UI
             Module.Dirty = true;
         }
 
-        public void SetVisible(bool visible)
+        /// <summary>
+        /// Shows or hides the window. <paramref name="opened"/>: the player (or the menu, a shortcut, the palette) opened it, rather
+        /// than the UI being shown again (F2, a scene change): it comes above the other windows.
+        /// </summary>
+        public void SetVisible(bool visible, bool opened = false)
         {
+            if (visible && opened) Window.Behaviour.BringToFront();
             if (Window.Root.gameObject.activeSelf == visible) return;
             // shown again: the window may have been moved meanwhile (in IMGUI, or by code), so take the stored position
             if (visible)
@@ -178,11 +194,26 @@ namespace MuMech.UI
             Window.Sync();
         }
 
-        public void Destroy()
+        /// <summary>
+        /// Destroys the window. <paramref name="rebuilding"/>: the host builds this module's window again (a rebuild, a language or
+        /// layout switch), so a field being edited keeps its edit for the rebuilt window; otherwise (closed, a vessel switch, the
+        /// modules recreated) the edit ends with the window, as a focus loss, while its view and module are still there.
+        /// </summary>
+        public void Destroy(bool rebuilding = false)
         {
+            // the undo stack leaves the history now: Object.Destroy is deferred to the end of the frame, and a history undo in
+            // between would write through this view's setters
+            Window?.Undo?.Detach();
+            // a field being edited: its edit waits for the window built again for this module, or ends now
+            if (rebuilding) Window?.RememberFocus(Module);
+            else Window?.EndFocusedEdit();
             // on a scene change the window can already be gone when the host is destroyed: Unity's null check covers that
             if (Window != null && Window.Root != null) Object.Destroy(Window.Root.gameObject);
             Window = null;
+            Destroyed();
         }
+
+        /// <summary>After <see cref="Destroy"/>: a view lets go of what it handed its module.</summary>
+        protected virtual void Destroyed() { }
     }
 }

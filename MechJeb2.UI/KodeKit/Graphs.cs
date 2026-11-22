@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KodeKit.Headless;
 using KodeUI;
 using TMPro;
 using UnityEngine;
@@ -53,7 +54,7 @@ namespace KodeKit
             var le = go.AddComponent<LayoutElement>();
             le.flexibleWidth = 1;
             le.preferredHeight = 14;
-            return go.GetComponent<Scrollbar>();
+            return KodeWindow.NoSelect(go.GetComponent<Scrollbar>());
         }
 
         public static RawImage Background(RectTransform surface, Color bottom, Color top)
@@ -68,6 +69,10 @@ namespace KodeKit
     /// <summary>
     /// MechJebModuleFlightRecorderGraph's drawing, retained: background gradient, one mesh per series,
     /// stage markers, Y scale labels at round values, horizontal scrollbar + follow toggle. Call Refresh() when data changed (10 Hz).
+    /// The X axis is a <see cref="ViewportModel"/> (<see cref="View"/>): the host gives it the data's range and the span its scale
+    /// controls pick; the wheel over the plot zooms about the pointer, a drag pans, a double-click resets, and the scrollbar and
+    /// the follow toggle are views of it. Refresh again when <see cref="ViewMoved"/>. <see cref="EnableRanges"/> adds a range and
+    /// marked points on the same axis (<see cref="RangeModel"/>), drawn over the plot.
     /// </summary>
     public class LineGraph
     {
@@ -83,10 +88,34 @@ namespace KodeKit
         public RectTransform RightLabels => rightLabels?.Column;
         LabelColumn rightLabels;
         public readonly Scrollbar Scroll;
-        public bool Follow = true;
-        public double VisibleWidth = 100;   // data units across the plot
-        public double DataMaxX;             // rightmost data x
-        public double ViewMin;              // left edge of the view
+
+        /// <summary>The X axis's window over the data: what the plot shows, and what the pointer pans and zooms.</summary>
+        public readonly ViewportModel View;
+
+        /// <summary>The plot's pointer input (wheel, drag, double-click) on the view.</summary>
+        public readonly ViewportInput Input;
+
+        /// <summary>The range and points picked on the plot: null until <see cref="EnableRanges"/>.</summary>
+        public RangeModel Ranges { get; private set; }
+
+        /// <summary>The range and points' graphics: null until <see cref="EnableRanges"/>.</summary>
+        public RangeOverlay RangeOverlay { get; private set; }
+
+        public bool Follow
+        {
+            get => View.Follow;
+            set => View.Follow = value;
+        }
+
+        public double VisibleWidth => View.Span;  // data units across the plot
+        public double DataMaxX => View.DataMax;   // rightmost data x
+        public double ViewMin => View.Start;      // left edge of the view
+
+        int refreshedMove = -1;
+
+        /// <summary>A pan, zoom or reset moved the view since the last Refresh: refresh now, the series are drawn with the old
+        /// window. The data growing is not a move: the host's own refresh rate covers it.</summary>
+        public bool ViewMoved => View.MoveVersion != refreshedMove;
 
         /// <summary>
         /// Writes a Y label: the text to fill, the value and the step between labels (0 when the range has no ticks). Null: the
@@ -113,8 +142,14 @@ namespace KodeKit
         /// <param name="scrollbarParent">Where the scrollbar row goes (null: under the plot, indented past the Y labels).
         /// The Flight Recorder passes its window, so the scrollbar spans it as in IMGUI.</param>
         /// <param name="labelCount">The most Y labels shown: how many the height has room for.</param>
-        public LineGraph(KodeWindow w, UIObject parent, float width, float height, int labelCount = 5, UIObject scrollbarParent = null)
+        /// <param name="view">The X axis's viewport, which a host keeps across rebuilds to keep the zoom (null: a new one,
+        /// following the data's end).</param>
+        public LineGraph(KodeWindow w, UIObject parent, float width, float height, int labelCount = 5, UIObject scrollbarParent = null,
+            ViewportModel view = null)
         {
+            View = view ?? new ViewportModel(0, 0, 100) { Follow = true };
+            // its description's label: the window's title unless the host named the graph
+            if (string.IsNullOrEmpty(View.Label)) View.Label = w.Behaviour.Frame.Label;
             area = KodeWindow.Row(parent);
             // Y labels column, fixed width, absolute positions
             RectTransform labels = Graphs.Surface(area, 70, height, "YLabels");
@@ -130,6 +165,9 @@ namespace KodeKit
             outline.raycastTarget = false;
             frame = outline.rectTransform;
 
+            // under the series: takes the pointer for the view (the background and the series don't raycast)
+            Input = ViewportInput.Add(Plot, View);
+
             Stages = Graphs.Fill<LineSeriesGraphic>(Plot, "Stages");
             Stages.VerticalMarkers = true;
             Stages.Thickness = 1;
@@ -141,17 +179,55 @@ namespace KodeKit
             Layout bottom = KodeWindow.Row(scrollbarParent ?? parent);
             if (scrollbarParent == null) KodeWindow.Space(bottom, 74);
             Scroll = Graphs.HorizontalScrollbar(bottom);
-            Scroll.onValueChanged.AddListener(v =>
-            {
-                double range = Math.Max(VisibleWidth, DataMaxX) - VisibleWidth;
-                ViewMin = v * range;
-                Follow = v > 0.999f;
-            });
+            Scroll.onValueChanged.AddListener(v => View.ScrollTo(v, KodeWindow.Pointer));
             // the follow toggle has no text: keep it to its box, so the scrollbar gets all the spare width
-            Toggle follow = w.Toggle(bottom, "", () => Follow, v => Follow = v);
+            Toggle follow = w.Named(w.Toggle(bottom, "", () => View.Follow, SetFollow), "#MechJeb_NewUI_Label_FollowEnd"); //Follow the end
             var followCell = follow.transform.parent.GetComponent<LayoutElement>() ?? follow.transform.parent.gameObject.AddComponent<LayoutElement>();
             followCell.flexibleWidth = 0;
             w.AddSync(Tick);
+        }
+
+        // on, the view goes to the data's end; off, it stays where it is
+        void SetFollow(bool on)
+        {
+            // after the move to the end: without AutoFollow (the PSG window) the move itself would leave Follow off
+            if (on) View.Key(ViewportKey.End, KodeWindow.Pointer);
+            View.Follow = on;
+        }
+
+        /// <summary>
+        /// A range and marked points on the X axis (a host keeps the model across rebuilds as it keeps the view; it must be on this
+        /// graph's <see cref="View"/>; null: a new one). Over the plot, a right drag selects a range (from the body: moves it; from
+        /// an end: moves that end), a left drag on an end or a point moves it (elsewhere it pans), a right click marks a point or
+        /// removes the one under it. Drawn as a shaded band with its two ends and a line per point, kept in place each frame.
+        /// </summary>
+        public RangeModel EnableRanges(RangeModel ranges = null)
+        {
+            if (Ranges != null) return Ranges;
+            if (ranges != null && ranges.View != View) throw new ArgumentException("the range model is on another viewport", nameof(ranges));
+            Ranges = ranges ?? new RangeModel(View);
+            if (string.IsNullOrEmpty(Ranges.Label)) Ranges.Label = View.Label;
+            Input.Ranges = Ranges;
+            RangeOverlay = new RangeOverlay(Plot, Input.transform, Ranges);
+            frame.SetAsLastSibling();
+            return Ranges;
+        }
+
+        /// <summary>The hover read-out: null until <see cref="EnableReadout"/>.</summary>
+        public GraphReadout Readout { get; private set; }
+
+        /// <summary>
+        /// A hover read-out (<see cref="GraphReadout"/>): while the pointer rests or moves over the plot with no button held, a
+        /// cursor line at it and a card beside it with the X there and the value of each series the host adds
+        /// (<see cref="GraphReadout.AddRow"/>), read on this graph's <see cref="View"/>, so zoomed and panned too.
+        /// </summary>
+        public GraphReadout EnableReadout()
+        {
+            if (Readout != null) return Readout;
+            Readout = new GraphReadout(this, new GraphReadoutModel(View));
+            Input.Readout = Readout;
+            frame.SetAsLastSibling();
+            return Readout;
         }
 
         /// <summary>A second column of Y labels on the right of the plot, for another graph's range: see RefreshRight.</summary>
@@ -170,10 +246,11 @@ namespace KodeKit
             rightLabels.Tint(color);
         }
 
+        /// <summary>A series, drawn over the view's window up to the plot's edges (see <see cref="WindowedSource"/>).</summary>
         public LineSeriesGraphic AddSeries(IGraphSource source, Color color)
         {
             var g = Graphs.Fill<LineSeriesGraphic>(Plot, "Series" + Series.Count);
-            g.Source = source;
+            g.Source = source == null ? null : new WindowedSource(source);
             g.color = color;
             g.raycastTarget = false;
             Series.Add(g);
@@ -181,17 +258,26 @@ namespace KodeKit
             return g;
         }
 
-        /// <summary>Update the view window and Y range, redraw the meshes and labels. No allocation in steady state.</summary>
+        /// <summary>Update the view window and Y range, redraw the meshes and labels. No allocation in steady state. After a move of
+        /// the view (<see cref="ViewMoved"/>: a pan, zoom or reset) every mesh is rebuilt in the next frame, so it shows at once;
+        /// otherwise (the data grew) one per frame, as before.</summary>
         public void Refresh(double yMin, double yMax)
         {
-            if (Follow) ViewMin = Math.Max(0, DataMaxX - VisibleWidth);
-            double range = Math.Max(VisibleWidth, DataMaxX) - VisibleWidth;
-            Scroll.SetValueWithoutNotify(range > 0 ? (float)(ViewMin / range) : 1);
-            Scroll.size = (float)Math.Min(1, VisibleWidth / Math.Max(VisibleWidth, DataMaxX));
+            bool moved = ViewMoved;
+            refreshedMove = View.MoveVersion;
+            Scroll.SetValueWithoutNotify((float)View.ScrollValue);
+            float size = (float)View.ScrollSize;
+            if (Scroll.size != size) Scroll.size = size;
 
             foreach (LineSeriesGraphic s in Series) Apply(s, yMin, yMax);
             Apply(Stages, 0, 1);
-            pending = Series.Count + 1;
+            if (moved)
+            {
+                foreach (LineSeriesGraphic s in Series) s.SetVerticesDirty();
+                Stages.SetVerticesDirty();
+                pending = 0;
+            }
+            else pending = Series.Count + 1;
 
             yLabels.Show(yMin, yMax, LabelFormat);
         }
@@ -312,10 +398,11 @@ namespace KodeKit
 
         void Apply(LineSeriesGraphic s, double yMin, double yMax)
         {
-            s.XMin = ViewMin;
-            s.XMax = ViewMin + VisibleWidth;
+            s.XMin = View.Start;
+            s.XMax = View.End;
             s.YMin = yMin;
             s.YMax = yMax;
+            if (s.Source is WindowedSource ws) ws.SetWindow(View.Start, View.End);
         }
 
         // after a Refresh, one series is rebuilt per frame instead of all at once (spreads the mesh cost)
@@ -324,9 +411,398 @@ namespace KodeKit
         /// <summary>Called every frame (registered as a window sync).</summary>
         void Tick()
         {
+            RangeOverlay?.Sync();
             if (pending <= 0) return;
             pending--;
             (pending < Series.Count ? Series[pending] : Stages).SetVerticesDirty();
+        }
+    }
+
+    /// <summary>
+    /// A series as a graphic over a window of X reads it: the points inside the window, with a point on each of the window's
+    /// edges interpolated from the two points around it, so a zoomed line runs to the plot's edges instead of stopping at the
+    /// first and last point inside. The points are taken as the graphics take them: from the first at or after the window's
+    /// start, up to the first after its end. The window is read when the graphic asks for <see cref="Count"/>, at its rebuild,
+    /// so points added since are included. No allocation.
+    /// </summary>
+    public sealed class WindowedSource : IGraphSource
+    {
+        public readonly IGraphSource Inner;
+        double xMin = double.NegativeInfinity, xMax = double.PositiveInfinity;
+        int first, end;              // the inner points shown: first .. end - 1
+        bool leftEdge, rightEdge;    // an interpolated point before first, after end - 1
+        double leftY, rightX, rightY;
+
+        public WindowedSource(IGraphSource inner) => Inner = inner;
+
+        public void SetWindow(double min, double max)
+        {
+            xMin = min;
+            xMax = max;
+        }
+
+        public int Count
+        {
+            get
+            {
+                int n = Inner.Count;
+                first = 0;
+                while (first < n && Inner.X(first) < xMin) first++;
+                end = first;
+                while (end < n && Inner.X(end) <= xMax) end++;
+                leftEdge = first > 0 && first < n;
+                if (leftEdge) leftY = Lerp(first - 1, first, xMin);
+                rightEdge = end < n && end > 0;
+                // a hair inside the end: on it, float rounding can put the point past the plot's edge, where the graphic stops
+                rightX = xMax - (xMax - xMin) * 1e-6;
+                if (rightEdge) rightY = Lerp(end - 1, end, rightX);
+                return end - first + (leftEdge ? 1 : 0) + (rightEdge ? 1 : 0);
+            }
+        }
+
+        double Lerp(int a, int b, double x)
+        {
+            double xa = Inner.X(a), xb = Inner.X(b), ya = Inner.Y(a), yb = Inner.Y(b);
+            if (!(xb > xa)) return yb;
+            return ya + (yb - ya) * (x - xa) / (xb - xa);
+        }
+
+        public double X(int i)
+        {
+            if (leftEdge)
+            {
+                if (i == 0) return xMin;
+                i--;
+            }
+
+            return i < end - first ? Inner.X(first + i) : rightX;
+        }
+
+        public double Y(int i)
+        {
+            if (leftEdge)
+            {
+                if (i == 0) return leftY;
+                i--;
+            }
+
+            return i < end - first ? Inner.Y(first + i) : rightY;
+        }
+    }
+
+    /// <summary>A graphic that draws nothing and takes the pointer: a plot's input area.</summary>
+    public sealed class RaycastArea : Graphic
+    {
+        protected override void OnPopulateMesh(VertexHelper vh) => vh.Clear();
+    }
+
+    /// <summary>
+    /// The pointer on a <see cref="ViewportModel"/>: over its rect, the wheel zooms about the pointer, a drag pans (the data
+    /// value grabbed stays under the pointer), a double-click resets. It takes the drag, so a drag on the plot doesn't move the
+    /// window. Keys are not routed: in flight every key a graph would use is a flight or camera key.
+    /// With a <see cref="RangeModel"/> (<see cref="Ranges"/>): a right drag selects a range, or moves it or one of its ends when
+    /// it starts on them; a left drag that starts on an end or a point moves it, and pans elsewhere; a right click marks a point
+    /// or removes the one under it. While the right button is held on the plot, KSP's camera controls are locked: KSP orbits its
+    /// camera on a right drag even over a window (its hover lock leaves the cameras alone). The lock and a right-button range drag
+    /// end with the button's release, and also in the first frame the button is found up or the game loses focus: a release
+    /// outside the game (Alt-Tab mid-drag) sends uGUI no pointer-up, and the lock would keep the camera and its keys from flight.
+    /// </summary>
+    public sealed class ViewportInput : MonoBehaviour, IScrollHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler,
+        IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
+    {
+        public ViewportModel View;
+
+        /// <summary>The hover read-out the pointer drives (null: none).</summary>
+        public GraphReadout Readout;
+
+        /// <summary>The range and points the pointer picks (null: none, the right button does nothing).</summary>
+        public RangeModel Ranges;
+
+        RectTransform rt;
+        double grabbed;
+        string lockId;
+        bool rightRange; // the range drag in progress is the right button's
+
+        /// <summary>A drag is panning the view.</summary>
+        public bool Dragging { get; private set; }
+
+        /// <summary>A drag is moving or drawing the range, or moving a point.</summary>
+        public bool DraggingRange { get; private set; }
+
+        /// <summary>KSP's camera controls are locked (the right button is held on the plot).</summary>
+        public bool CameraLocked { get; private set; }
+
+        /// <summary>The last wheel delta seen (for tests: what one notch gives on this machine).</summary>
+        public float LastWheel { get; private set; }
+
+        public static ViewportInput Add(RectTransform plot, ViewportModel view)
+        {
+            var area = Graphs.Fill<RaycastArea>(plot, "ViewportInput");
+            area.color = Color.clear;
+            ViewportInput input = area.gameObject.AddComponent<ViewportInput>();
+            input.View = view;
+            input.rt = area.rectTransform;
+            return input;
+        }
+
+        /// <summary>Where a screen point falls across the rect: 0 at its left edge, 1 at its right (not clamped).</summary>
+        public double Fraction(Vector2 screen, Camera eventCam)
+        {
+            if (eventCam == null)
+            {
+                // events without a camera (e.g. sent by code) on a ScreenSpaceCamera canvas: use the canvas camera
+                Canvas root = GetComponentInParent<Canvas>().rootCanvas;
+                if (root.renderMode != RenderMode.ScreenSpaceOverlay) eventCam = root.worldCamera;
+            }
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(rt, screen, eventCam, out Vector2 local);
+            Rect r = rt.rect;
+            return r.width > 0 ? (local.x - r.xMin) / r.width : 0.5;
+        }
+
+        public void OnScroll(PointerEventData e)
+        {
+            LastWheel = e.scrollDelta.y;
+            View.Wheel(e.scrollDelta.y, Math.Max(0, Math.Min(1, Fraction(e.position, e.enterEventCamera))), KodeWindow.Pointer);
+        }
+
+        public void OnPointerDown(PointerEventData e)
+        {
+            if (e.button == PointerEventData.InputButton.Right && Ranges != null) LockCamera(true);
+            Readout?.Press(true);
+        }
+
+        public void OnPointerUp(PointerEventData e)
+        {
+            if (e.button == PointerEventData.InputButton.Right) LockCamera(false);
+            Readout?.Press(false);
+        }
+
+        public void OnPointerEnter(PointerEventData e) => Readout?.Enter(e.position);
+
+        public void OnPointerExit(PointerEventData e) => Readout?.Exit();
+
+        public void OnBeginDrag(PointerEventData e)
+        {
+            // a drag left over from one that never ended must not steer this one
+            DraggingRange = Dragging = rightRange = false;
+            bool right = e.button == PointerEventData.InputButton.Right;
+            if (Ranges != null && (right || e.button == PointerEventData.InputButton.Left) &&
+                Ranges.BeginDrag(Fraction(e.pressPosition, e.pressEventCamera), right, KodeWindow.Pointer))
+            {
+                DraggingRange = true;
+                rightRange = right;
+                Watch();
+                OnDrag(e);
+                return;
+            }
+
+            if (e.button != PointerEventData.InputButton.Left) return;
+            Dragging = true;
+            grabbed = View.FromFraction(Fraction(e.pressPosition, e.pressEventCamera));
+            OnDrag(e);
+        }
+
+        public void OnDrag(PointerEventData e)
+        {
+            if (DraggingRange)
+            {
+                Ranges.DragTo(Fraction(e.position, e.pressEventCamera), KodeWindow.Pointer);
+                return;
+            }
+
+            if (!Dragging) return;
+            View.PanTo(grabbed - Fraction(e.position, e.pressEventCamera) * View.Span, KodeWindow.Pointer);
+        }
+
+        public void OnEndDrag(PointerEventData e)
+        {
+            if (DraggingRange) Ranges.EndDrag();
+            DraggingRange = rightRange = false;
+            Dragging = false;
+            Watch();
+        }
+
+        // the right button found up with the lock held (released outside the game): let the camera go, end the right drag. A small
+        // component of its own, enabled only while the right button holds the lock or a range drag: a graph runs nothing per frame
+        // otherwise (this one's handlers need it enabled)
+        sealed class RightRelease : MonoBehaviour
+        {
+            internal ViewportInput Owner;
+
+            void Update()
+            {
+                if (Owner == null) enabled = false;
+                else if (!Input.GetMouseButton(1)) Owner.ReleaseRight();
+            }
+        }
+
+        RightRelease watch;
+
+        void Watch()
+        {
+            bool on = CameraLocked || rightRange;
+            if (watch == null)
+            {
+                if (!on) return;
+                watch = gameObject.AddComponent<RightRelease>();
+                watch.Owner = this;
+            }
+            if (watch.enabled != on) watch.enabled = on;
+        }
+
+        void OnApplicationFocus(bool focus)
+        {
+            if (!focus) ReleaseRight();
+        }
+
+        void ReleaseRight()
+        {
+            if (rightRange)
+            {
+                Ranges?.EndDrag();
+                DraggingRange = rightRange = false;
+            }
+
+            LockCamera(false);
+            Watch();
+        }
+
+        public void OnPointerClick(PointerEventData e)
+        {
+            // uGUI clicks after a drag that ended on the object it started on: that was a drag, not a click
+            if (e.dragging) return;
+            if (e.button == PointerEventData.InputButton.Left && e.clickCount == 2) View.Reset(KodeWindow.Pointer);
+            else if (e.button == PointerEventData.InputButton.Right && Ranges != null)
+                Ranges.Click(Fraction(e.position, e.pressEventCamera), KodeWindow.Pointer);
+        }
+
+        void LockCamera(bool on)
+        {
+            if (on == CameraLocked) return;
+            lockId = lockId ?? "KodeKit.ViewportInput." + GetInstanceID();
+            if (on) InputLockManager.SetControlLock(ControlTypes.CAMERACONTROLS, lockId);
+            else InputLockManager.RemoveControlLock(lockId);
+            CameraLocked = on;
+            Watch();
+        }
+
+        void OnDisable()
+        {
+            Readout?.Exit();
+            if (DraggingRange) Ranges?.EndDrag();
+            DraggingRange = rightRange = false;
+            Dragging = false;
+            LockCamera(false);
+            Watch();
+        }
+    }
+
+    /// <summary>
+    /// A <see cref="RangeModel"/> drawn on a plot: the range as a shaded band between two edge lines, each point as a line (the
+    /// active one brighter and wider). Placed by anchors from the model's viewport, so a pan or zoom moves them with the data;
+    /// what lies outside the window is hidden. <see cref="Sync"/> runs every frame and does nothing (no allocation) until the
+    /// model, its viewport or the plot's width changed. It also keeps the model's pick distance at <see cref="PickPixels"/>.
+    /// </summary>
+    public sealed class RangeOverlay
+    {
+        public readonly RangeModel Model;
+        public readonly RectTransform Plot;
+        public readonly Image Fill;
+        public readonly RectTransform StartLine, EndLine;
+        readonly List<Image> pointLines = new List<Image>();
+
+        /// <summary>How near an end or a point the pointer grabs it, in the plot's pixels.</summary>
+        public float PickPixels = 6;
+
+        public static Color FillColor = new Color(1f, 1f, 1f, 0.12f);
+        public static Color EdgeColor = new Color(1f, 1f, 1f, 0.85f);
+        public static Color PointColor = new Color(1f, 0.85f, 0.35f, 0.6f);
+        public static Color ActivePointColor = new Color(1f, 0.85f, 0.35f, 1f);
+
+        int shownVersion = -1, shownViewVersion = -1;
+        float shownWidth = -1;
+
+        public RangeOverlay(RectTransform plot, Transform below, RangeModel model)
+        {
+            Plot = plot;
+            Model = model;
+            // the band under the series, just above the input area; the lines over the series
+            Fill = Graphs.Fill<Image>(plot, "RangeFill");
+            Fill.color = FillColor;
+            Fill.raycastTarget = false;
+            Fill.transform.SetSiblingIndex(below.GetSiblingIndex() + 1);
+            StartLine = Line("RangeStart", EdgeColor).rectTransform;
+            EndLine = Line("RangeEnd", EdgeColor).rectTransform;
+            Fill.gameObject.SetActive(false);
+            StartLine.gameObject.SetActive(false);
+            EndLine.gameObject.SetActive(false);
+        }
+
+        Image Line(string name, Color color)
+        {
+            var img = Graphs.Fill<Image>(Plot, name);
+            img.color = color;
+            img.raycastTarget = false;
+            img.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            return img;
+        }
+
+        /// <summary>The line drawn for point <paramref name="i"/> (null past the lines made).</summary>
+        public Image PointLine(int i) => i < pointLines.Count ? pointLines[i] : null;
+
+        /// <summary>Places the graphics, when the model, the viewport or the plot's width changed.</summary>
+        public void Sync()
+        {
+            float width = Plot.rect.width;
+            ViewportModel view = Model.View;
+            if (Model.Version == shownVersion && view.Version == shownViewVersion && width == shownWidth) return;
+            shownVersion = Model.Version;
+            shownViewVersion = view.Version;
+            shownWidth = width;
+            if (width > 0) Model.PickFraction = PickPixels / width;
+
+            bool range = Model.HasRange;
+            double f0 = range ? view.ToFraction(Model.Start) : 0, f1 = range ? view.ToFraction(Model.End) : 0;
+            bool band = range && f1 >= 0 && f0 <= 1;
+            SetActive(Fill.gameObject, band);
+            if (band)
+            {
+                RectTransform r = Fill.rectTransform;
+                r.anchorMin = new Vector2((float)Math.Max(0, f0), 0);
+                r.anchorMax = new Vector2((float)Math.Min(1, f1), 1);
+                r.offsetMin = r.offsetMax = Vector2.zero;
+            }
+
+            Place(StartLine, range, f0, 2);
+            Place(EndLine, range, f1, 2);
+
+            for (int i = 0; i < Model.PointCount || i < pointLines.Count; i++)
+            {
+                // a line is made the first time a point needs it (an allocation per new point, not per frame)
+                if (i >= pointLines.Count) pointLines.Add(Line("Point" + i, PointColor));
+                Image line = pointLines[i];
+                bool shown = i < Model.PointCount, active = i == Model.ActivePoint;
+                Color color = active ? ActivePointColor : PointColor;
+                if (shown && line.color != color) line.color = color;
+                Place(line.rectTransform, shown, shown ? view.ToFraction(Model.Point(i)) : 0, active ? 2 : 1);
+            }
+        }
+
+        static void Place(RectTransform r, bool shown, double f, float thickness)
+        {
+            shown = shown && f >= 0 && f <= 1;
+            SetActive(r.gameObject, shown);
+            if (!shown) return;
+            r.anchorMin = new Vector2((float)f, 0);
+            r.anchorMax = new Vector2((float)f, 1);
+            r.sizeDelta = new Vector2(thickness, 0);
+            r.anchoredPosition = Vector2.zero;
+        }
+
+        static void SetActive(GameObject go, bool on)
+        {
+            if (go.activeSelf != on) go.SetActive(on);
         }
     }
 
@@ -481,7 +957,8 @@ namespace KodeKit
     public class ColorPicker
     {
         readonly Func<Color> get;
-        readonly Action<Color> set;
+        // a colour, not a setting the window's owner saves: commits, but no Edited, as before the commit path
+        readonly Headless.CommitTarget<Color> target;
         readonly Texture2D sv;
         readonly Color32[] svPixels;
         readonly RectTransform svMarker, hueMarker;
@@ -497,7 +974,7 @@ namespace KodeKit
         public ColorPicker(KodeWindow w, UIObject parent, Func<Color> get, Action<Color> set)
         {
             this.get = get;
-            this.set = set;
+            target = w.Target("ColorPicker", get, set, null, false);
             Layout top = KodeWindow.Row(parent);
 
             RectTransform svArea = Graphs.Surface(top, SV, SV, "SV");
@@ -505,7 +982,7 @@ namespace KodeKit
             svPixels = new Color32[SV * SV];
             var svImg = Graphs.Fill<RawImage>(svArea, "SVTexture");
             svImg.texture = OwnedTextures.Own(svImg, sv);
-            svImg.gameObject.AddComponent<PickArea>().Picked = n => { s = n.x; v = n.y; PushHsv(); };
+            Grouped(svImg.gameObject.AddComponent<PickArea>()).Picked = n => { s = n.x; v = n.y; PushHsv(); };
             svMarker = Marker(svArea);
 
             RectTransform hueArea = Graphs.Surface(top, 16, SV, "Hue");
@@ -514,7 +991,7 @@ namespace KodeKit
             hueTex.Apply();
             var hueImg = Graphs.Fill<RawImage>(hueArea, "HueTexture");
             hueImg.texture = OwnedTextures.Own(hueImg, hueTex);
-            hueImg.gameObject.AddComponent<PickArea>().Picked = n => { h = n.y; PushHsv(); };
+            Grouped(hueImg.gameObject.AddComponent<PickArea>()).Picked = n => { h = n.y; PushHsv(); };
             hueMarker = Marker(hueArea);
 
             RectTransform swatchArea = Graphs.Surface(top, 32, SV, "Swatch");
@@ -531,7 +1008,7 @@ namespace KodeKit
                 rgbaTex[c] = new Texture2D(32, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
                 var img = Graphs.Fill<RawImage>(bar, "Gradient");
                 img.texture = OwnedTextures.Own(img, rgbaTex[c]);
-                img.gameObject.AddComponent<PickArea>().Picked = n =>
+                Grouped(img.gameObject.AddComponent<PickArea>()).Picked = n =>
                 {
                     Color col = get();
                     col[ch] = n.x;
@@ -557,9 +1034,18 @@ namespace KodeKit
             return rt;
         }
 
+        // a press and its drag are one commit, closed on the release, or when the picker is hidden in the middle of a drag (the
+        // handle closes its group when disabled)
+        PickArea Grouped(PickArea area)
+        {
+            if (target.Control == null) target.Control = area;
+            area.gameObject.AddComponent<CommitGroupHandle>().Target = target;
+            return area;
+        }
+
         void Push(Color c)
         {
-            set(c);
+            target.Set(c, KodeWindow.Pointer);
             Sync();
         }
 

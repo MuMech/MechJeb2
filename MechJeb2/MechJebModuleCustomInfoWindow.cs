@@ -15,6 +15,9 @@ namespace MuMech
 {
     public class MechJebModuleCustomInfoWindow : DisplayModule
     {
+        /// <summary>The value rows' texts as the new UI's open window draws them (its last refresh); null while no view has drawn it.</summary>
+        internal Func<ValueInfoItem, string> DrawnValue;
+
         [Persistent(pass = (int)Pass.GLOBAL)]
         public string title = Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_title"); //Custom Info Window
 
@@ -204,6 +207,16 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public InfoItem.Category itemCategory = InfoItem.Category.Orbit;
 
+        /// <summary>The editor's "All" category: every registry item, as a tree by category (<see cref="itemCategory"/> is kept for the others).</summary>
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
+        public bool itemCategoryAll;
+
+        /// <summary>The "All" tree's open branches, kept by the editor's view (it is built again when the window or the category changes).</summary>
+        internal object itemTreeState;
+
+        /// <summary>The edited window's checked rows (the editor view's toggle column), kept by the view across its rebuilds.</summary>
+        internal object itemChecks;
+
         // Bump this in order to invalidate all custom windows and force re-creating them for all users.
         private const int CUSTOM_WINDOWS_VERSION = 2;
 
@@ -221,6 +234,9 @@ namespace MuMech
 
         internal static readonly string[] categories = Enum.GetNames(typeof(InfoItem.Category));
         internal int presetIndex;
+
+        /// <summary>What the user typed in the editor's item filter: kept here because the editor's view is built again when the window or the category changes.</summary>
+        internal string itemFilter = "";
 
         internal bool editingBackground;
         internal bool editingText;
@@ -554,10 +570,39 @@ namespace MuMech
 
         // ---- editing actions, for MechJeb2.UI's editor ----
 
-        internal void AddItem(InfoItem item)
+        // AddItem, MoveItem, RemoveItem and RemoveSelectedItem are the only changes to a window's item list: each is one edit (a click,
+        // a drop, a read-out's "Add to a custom window"), which the new UI makes a commit of that list (the editor's
+        // CustomWindowEditorView.ItemsTarget for the edited window, InfoItemMenu's per-window ItemList target for the others); the
+        // editor's Remove and Move of the checked items make one commit of several.
+
+        /// <summary>Adds a copy of registry item <paramref name="item"/> to the edited window at <paramref name="at"/> (-1 or past the end: last).</summary>
+        internal void AddItem(InfoItem item, int at = -1) => AddItem(editedWindow, item, at);
+
+        /// <summary>Adds a copy of registry item <paramref name="item"/> to <paramref name="window"/> at <paramref name="at"/> (-1 or past the end: last).</summary>
+        internal void AddItem(MechJebModuleCustomInfoWindow window, InfoItem item, int at = -1)
+        {
+            if (window == null) return;
+            List<InfoItem> items = window.items;
+            if (at < 0 || at > items.Count) at = items.Count;
+            items.Insert(at, item.ForWindow());
+            // the selection stays on its item
+            if (_selectedItemWindow == window && _selectedItemIndex >= at) _selectedItemIndex++;
+            window.Dirty = true;
+        }
+
+        /// <summary>Moves the edited window's item <paramref name="from"/> to index <paramref name="to"/>; the selection follows its item.</summary>
+        internal void MoveItem(int from, int to)
         {
             if (editedWindow == null) return;
-            editedWindow.items.Add(item.ForWindow());
+            List<InfoItem> items = editedWindow.items;
+            if (from < 0 || from >= items.Count || to < 0 || to >= items.Count || from == to) return;
+            InfoItem item = items[from];
+            items.RemoveAt(from);
+            items.Insert(to, item);
+            int selected = selectedItemIndex;
+            if (selected == from) selectedItemIndex = to;
+            else if (from < selected && selected <= to) selectedItemIndex = selected - 1;
+            else if (to <= selected && selected < from) selectedItemIndex = selected + 1;
             editedWindow.Dirty = true;
         }
 
@@ -582,17 +627,22 @@ namespace MuMech
             editedWindow.Dirty = true;
         }
 
+        /// <summary>Removes the edited window's item <paramref name="index"/>; the selection stays on its item (none if it was that one).</summary>
+        internal void RemoveItem(int index)
+        {
+            if (editedWindow == null || index < 0 || index >= editedWindow.items.Count) return;
+            editedWindow.items.RemoveAt(index);
+            int selected = selectedItemIndex;
+            if (selected == index) selectedItemIndex = -1;
+            else if (selected > index) selectedItemIndex = selected - 1;
+            editedWindow.Dirty = true;
+        }
+
         /// <summary>Move the selected item up (-1) or down (+1) in the edited window.</summary>
         internal void MoveSelectedItem(int direction)
         {
             if (editedWindow == null || selectedItemIndex < 0 || selectedItemIndex >= editedWindow.items.Count) return;
-            int to = selectedItemIndex + direction;
-            if (to < 0 || to >= editedWindow.items.Count) return;
-            InfoItem item = editedWindow.items[selectedItemIndex];
-            editedWindow.items.RemoveAt(selectedItemIndex);
-            editedWindow.items.Insert(to, item);
-            selectedItemIndex = to;
-            editedWindow.Dirty = true;
+            MoveItem(selectedItemIndex, selectedItemIndex + direction);
         }
 
         internal void SetBackgroundColor(Color c)
@@ -610,20 +660,19 @@ namespace MuMech
         }
 
         /// <summary>The registry items of the selected category, sorted as the editor lists them.</summary>
-        internal IEnumerable<InfoItem> ItemsOfCategory()
-        {
-            // the registry only changes in OnLoad, so the sorted list is kept per category
-            if (_categoryItems == null || _categoryItemsFor != itemCategory)
-            {
-                _categoryItems    = registry.Where(it => it.category == itemCategory).OrderBy(it => it.localizedDescription).ToList();
-                _categoryItemsFor = itemCategory;
-            }
+        internal IEnumerable<InfoItem> ItemsOfCategory() => ItemsOfCategory(itemCategory);
 
-            return _categoryItems;
+        /// <summary>The registry items of <paramref name="category"/>, sorted as the editor lists them.</summary>
+        internal IEnumerable<InfoItem> ItemsOfCategory(InfoItem.Category category)
+        {
+            // the registry only changes in OnLoad (which clears this), so the sorted list is kept per category
+            int c = (int)category;
+            if (_categoryItems == null) _categoryItems = new List<InfoItem>[categories.Length];
+            return _categoryItems[c] ??
+                   (_categoryItems[c] = registry.Where(it => it.category == category).OrderBy(it => it.localizedDescription).ToList());
         }
 
-        private List<InfoItem> _categoryItems;
-        private InfoItem.Category _categoryItemsFor;
+        private List<InfoItem>[] _categoryItems;
 
         public override string GetName() => CachedLocalizer.Instance.MechJebWindowEdTitle; //Custom Window Editor
 

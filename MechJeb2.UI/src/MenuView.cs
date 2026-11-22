@@ -58,6 +58,8 @@ namespace MuMech.UI
             unchecked
             {
                 int h = menu.columns;
+                // a shortcut bound, changed or cleared shows in its entry
+                h = h * 31 + KodeKit.Shortcuts.Map.Version;
                 h = h * 31 + (KSP.Localization.Localizer.CurrentLanguage?.GetHashCode() ?? 0);
                 List<DisplayModule> modules = Core.GetDisplayModules(MechJebModuleMenu.DisplayOrder.instance);
                 for (int i = 0; i < modules.Count; i++)
@@ -189,7 +191,7 @@ namespace MuMech.UI
 
             // a group is never split between columns: a column is as tall as its share of the rows, or as the largest group
             int header = KodeWindow.ShowHeaders ? 1 : 0;
-            int rows = 1, largest = 0; // the online manual button
+            int rows = 2, largest = 0; // the command palette and online manual buttons
             foreach (List<DisplayModule> g in groups)
                 if (g.Count > 0)
                 {
@@ -218,12 +220,35 @@ namespace MuMech.UI
                 foreach (DisplayModule module in groups[g])
                 {
                     DisplayModule m = module;
-                    w.CheckBox(column, m.GetName(), () => m.Enabled, v => m.Enabled = v, () => ModuleTone(m)); // checkboxes, as proposal 10A
+                    Toggle box = w.CheckBox(column, m.GetName(), () => m.Enabled, v => m.Enabled = v, () => ModuleTone(m)); // checkboxes, as proposal 10A
+                    ShortcutLabel(w, box, m);
                 }
 
                 inColumn += size;
             }
+            // the command palette: type to find a window, an autopilot or a node command (a shortcut can open it too, none by default)
+            UIButton palette = KodeWindow.Button(column, "#MechJeb_NewUI_PaletteMenu", PaletteCommands.Open); //Command palette…
+            palette.gameObject.name = "PaletteButton";
+            Tooltips.Add(palette.gameObject, "#MechJeb_NewUI_PaletteMenu_tooltip");
             KodeWindow.Button(column, "#MechJeb_OnlineManualbutton", () => Application.OpenURL("https://github.com/MuMech/MechJeb2/wiki")); //"Online Manual"
+        }
+
+        /// <summary>
+        /// The window's keyboard shortcut after its entry, dimmed, when one is bound (Settings > Shortcuts); in the Bad colour when
+        /// KSP now reads one of its keys, with the reason in its tooltip.
+        /// </summary>
+        static void ShortcutLabel(KodeWindow w, Toggle box, DisplayModule m)
+        {
+            KodeKit.Headless.ShortcutBinding b = KodeKit.Shortcuts.Map.Find(WindowShortcuts.IdOf(m));
+            if (b == null) return;
+            UIObject row = box.transform.parent.GetComponent<UIObject>();
+            if (row == null) return;
+            UIText chord = KodeWindow.Label(row, KodeKit.Shortcuts.Show(b.Chord));
+            chord.tmpText.raycastTarget = true;
+            w.ToneText(chord, () => b.Live.Ok ? KodeWindow.Tone.Dim : KodeWindow.Tone.Bad);
+            Tooltips.Add(chord.gameObject, () => b.Live.Ok
+                ? KSP.Localization.Localizer.Format("#MechJeb_NewUI_ShortcutMenuTip")
+                : KSP.Localization.Localizer.Format("#MechJeb_NewUI_ShortcutConflict", KodeKit.Shortcuts.Describe(b.Live, b.Chord)));
         }
 
         // ---- per frame ----

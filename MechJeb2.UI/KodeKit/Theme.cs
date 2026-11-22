@@ -80,6 +80,11 @@ namespace KodeKit
         /// <summary>Hairlines: the tabs' base line, separators.</summary>
         public Color Rule = new Color(1, 1, 1, 0.14f);
 
+        // the skin's rule sheet over this theme's colours and the sprites it names (Styling.SheetOf), made at the first use; a
+        // Compact copy shares them (the same look at another spacing), a new skin made from this theme (Copy) makes its own
+        internal Headless.StyleSheet styles;
+        internal Sprite[] styleSprites;
+
         // the tinted role looks, made once per role and Button (Role is called on every restyle of every role button)
         ElementStyle[] tinted;
         ElementStyle tintedFrom;
@@ -210,6 +215,8 @@ namespace KodeKit
         {
             var t = (Theme)MemberwiseClone();
             t.Name = name;
+            t.styles = null;
+            t.styleSprites = null;
             return t;
         }
 

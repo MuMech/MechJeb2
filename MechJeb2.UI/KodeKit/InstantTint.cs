@@ -13,6 +13,8 @@ namespace KodeKit
     /// renderer, as the transition does at the end of its fade. The states follow Unity's order: disabled, pressed, selected,
     /// highlighted, normal. Pointer and selection events arrive here as they do at the Selectable; a change of
     /// <c>interactable</c> (code or a CanvasGroup) is caught by one shared check a frame over the live tints.
+    /// It paints the plain skin elements (<see cref="ElementStyle.ApplySelectable"/>) of a skin that gives them no state sprites;
+    /// the widgets whose look follows a state paint from their skin's rules instead (<see cref="StyledPart"/>).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class InstantTint : UIBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler,

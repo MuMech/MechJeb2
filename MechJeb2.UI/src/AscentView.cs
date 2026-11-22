@@ -20,7 +20,7 @@ namespace MuMech.UI
 
         /// <summary>label [field] unit. Returns the row (null when not framed).</summary>
         public static Layout SimpleBox(KodeWindow w, UIObject parent, string left, IEditable ed, string unit = null, float width = 100,
-            bool framing = true, Func<Tone> leftTone = null)
+            bool framing = true, Func<Tone> leftTone = null, string history = null)
         {
             Layout row = framing ? KodeWindow.Row(parent) : null;
             UIObject p = framing ? row : parent;
@@ -30,7 +30,7 @@ namespace MuMech.UI
                 if (leftTone != null) w.ToneText(label, leftTone);
             }
 
-            EditUi.Field(w, p, ed, width);
+            EditUi.Field(w, p, ed, width, label: left).History(history);
             if (!string.IsNullOrEmpty(unit)) KodeWindow.Label(p, unit);
             return row;
         }
@@ -42,7 +42,7 @@ namespace MuMech.UI
             Layout row = KodeWindow.Row(parent);
             if (tone != null) w.Toggle(row, key, get, set, tone);
             else w.Toggle(row, key, get, set);
-            EditUi.Field(w, row, ed, width);
+            EditUi.Field(w, row, ed, width, label: key);
             if (!string.IsNullOrEmpty(unit)) KodeWindow.Label(row, unit);
             return row;
         }
@@ -52,7 +52,7 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Button(row, key, action);
-            EditUi.Field(w, row, ed, width);
+            EditUi.Field(w, row, ed, width, label: key);
             if (!string.IsNullOrEmpty(unit)) KodeWindow.Label(row, unit);
             return row;
         }
@@ -187,7 +187,7 @@ namespace MuMech.UI
             Layout type = w.Segmented(r, names, () => (int)Settings.AscentType, i =>
             {
                 if (!menu._autopilot.Enabled) Settings.AscentType = (AscentType)i;
-            });
+            }, label: "#MechJeb_NewUI_Label_AscentType"); //Ascent type
             Tooltips.Add(type.gameObject, () => menu._autopilot.Enabled
                 ? KodeWindow.Loc("#MechJeb_NewUI_AscentTypeLocked") //The ascent type can't change while the ascent autopilot is engaged.
                 : KodeWindow.Loc("#MechJeb_NewUI_AscentTypeTooltip")); //Classic: the Classic Ascent Profile. PSG: Polynomial SQP Guidance (RSS/RO).
@@ -212,8 +212,9 @@ namespace MuMech.UI
             // PSG with an optimized stage: periapsis, apoapsis, attach altitude, argument of periapsis and their warnings
             Layout opt = KodeWindow.Panel(box);
             w.Visible(opt.gameObject, () => optimize);
-            AscentUi.SimpleBox(w, opt, "#MechJeb_Ascent_label1", Psgs.PeriapsisAltitude, "km"); //Target Periapsis
-            AscentUi.SimpleBox(w, opt, "#MechJeb_Ascent_label2", Psgs.ApoapsisAltitude, "km"); //Target Apoapsis:
+            // their recent values with Up and Down (the classic orbit altitude shares the periapsis's: both are the target altitude)
+            AscentUi.SimpleBox(w, opt, "#MechJeb_Ascent_label1", Psgs.PeriapsisAltitude, "km", history: "ascent.altitude"); //Target Periapsis
+            AscentUi.SimpleBox(w, opt, "#MechJeb_Ascent_label2", Psgs.ApoapsisAltitude, "km", history: "ascent.apoapsis"); //Target Apoapsis:
 
             // as the PSG simulation reads them: a negative apoapsis asks for a hyperbola, a lower positive one for a circle. The
             // circle is the default (apoapsis 0), so the note is dim, not a warning
@@ -251,14 +252,14 @@ namespace MuMech.UI
             // Classic
             Layout classic = KodeWindow.Panel(box);
             w.Visible(classic.gameObject, () => !psg);
-            AscentUi.SimpleBox(w, classic, "#MechJeb_Ascent_label5", Settings.DesiredOrbitAltitude, "km"); //Orbit altitude
+            AscentUi.SimpleBox(w, classic, "#MechJeb_Ascent_label5", Settings.DesiredOrbitAltitude, "km", history: "ascent.altitude"); //Orbit altitude
 
             // ShowInclinationGUIElement
             Layout inc = KodeWindow.Row(box);
             KodeWindow.Label(inc, "#MechJeb_Ascent_label6"); //Orbit inc.
             // the edited setting is the PSG one or the classic one
             EditFields.Field(w, inc, () => menu.InclinationSetting.Text, s => menu.InclinationSetting.Text = s, 75,
-                () => menu.InclinationSetting.IsParsed);
+                () => menu.InclinationSetting.IsParsed).History("ascent.inclination");
             KodeWindow.Label(inc, "°");
             UIButton current = KodeWindow.Button(inc, "#MechJeb_Ascent_button13", () => menu.SetInclinationToLatitude(menu.InclinationSetting)); //Current
             Tooltips.Add(current.gameObject, MechJebModuleAscentMenu.InclinationCurrentTooltip);

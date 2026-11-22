@@ -223,7 +223,7 @@ namespace MuMech.UI
             // [<] entry [>] when MechJeb's "no drop-down menus" setting is on, so its own row is shown and hidden here
             Layout combo = KodeWindow.Row(row);
             combo.FlexibleLayout(true, false);
-            new ComboBox(w, combo, () => guidance.currentPortIndex < 0 ? 0 : guidance.currentPortIndex, SelectPort, PortNames);
+            new ComboBox(w, combo, () => guidance.currentPortIndex < 0 ? 0 : guidance.currentPortIndex, SelectPort, PortNames, name: "#MechJeb_Docking_targetPort"); //Target port
             w.Visible(combo.gameObject, ready);
             foreach (UIButton b in combo.GetComponentsInChildren<UIButton>(true)) GuidanceUi.Enable(w, b, canSelect);
         }

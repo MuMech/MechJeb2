@@ -49,38 +49,23 @@ namespace MuMech
             {
                 List<ManeuverParameters>? nodes = MakeNodesImpl(o, universalTime, target);
 
-                // PlaceManeuverNode would throw on these, once the planner had started changing the existing nodes
-                ManeuverParameters? bad = nodes?.Find(n => !n.dV.IsFinite() || !n.UT.IsFinite());
-                if (bad != null)
+                NodesProblem problem = Check(nodes, o, universalTime, out ManeuverParameters? culprit);
+                switch (problem)
                 {
-                    Debug.LogError($"[MechJeb] {GetName()} made a bad node: dV {bad.dV} at UT {bad.UT}");
-                    ErrorMessage = Localizer.Format("#MechJeb_Maneu_errorMessage"); //An error occurred while creating the node.
-                    return null;
+                    case NodesProblem.Bad:
+                        Debug.LogError($"[MechJeb] {GetName()} made a bad node: dV {culprit!.dV} at UT {culprit.UT}");
+                        break;
+                    case NodesProblem.Past:
+                        Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {culprit!.UT}, before the start at {universalTime}");
+                        break;
+                    case NodesProblem.EndedPatch:
+                        Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {culprit!.UT}, after the end of its orbit at {o.EndUT} ({o.patchEndTransition})");
+                        break;
+                    default:
+                        return nodes;
                 }
 
-                // PlaceManeuverNode would move such a node to now, or the orbit after the last node would be the wrong one for it,
-                // and either way the dV was computed for another point of the orbit. A second of round-off is let through.
-                ManeuverParameters? past = nodes?.Find(n => n.UT < universalTime - 1);
-                if (past != null)
-                {
-                    Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {past.UT}, before the start at {universalTime}");
-                    ErrorMessage = Localizer.Format("#MechJeb_Maneu_pastNodeError"); //The burn would be before the start of the orbit it is planned on.
-                    return null;
-                }
-
-                // An orbit that ends in an encounter or an escape is not the one the vessel is on later: PlaceManeuverNode would put
-                // the burn on the next patch, around another body. Only the first burn is on this orbit; the others follow it.
-                ManeuverParameters? first = null;
-                if (nodes != null)
-                    foreach (ManeuverParameters n in nodes)
-                        if (first == null || n.UT < first.UT)
-                            first = n;
-                bool ends = o.patchEndTransition == Orbit.PatchTransitionType.ENCOUNTER || o.patchEndTransition == Orbit.PatchTransitionType.ESCAPE;
-                if (first == null || !ends || first.UT < o.EndUT)
-                    return nodes;
-
-                Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {first.UT}, after the end of its orbit at {o.EndUT} ({o.patchEndTransition})");
-                ErrorMessage = Localizer.Format("#MechJeb_Maneu_endedPatchError"); //The burn would be after this orbit ends at a change of sphere of influence; pick an earlier time, or plan from a node placed after the change.
+                ErrorMessage = ProblemMessage(problem);
                 return null;
             }
             catch (OperationException e)
@@ -144,6 +129,119 @@ namespace MuMech
             List<Operation> res = _operations.ConvertAll(t => (Operation)t.GetConstructor(Type.EmptyTypes)!.Invoke(null));
             res.Sort((x, y) => string.Compare(x.GetName(), y.GetName(), StringComparison.Ordinal));
             return res.ToArray();
+        }
+
+        /// <summary>Why an operation's burns can't be placed (<see cref="Check"/>).</summary>
+        private enum NodesProblem { None, Bad, Past, EndedPatch }
+
+        /// <summary>
+        /// The planner's checks on an operation's burns, made from orbit <paramref name="o"/> at <paramref name="universalTime"/>, shared by
+        /// <see cref="MakeNodes"/> and <see cref="PreviewNodes"/>. It logs nothing; <paramref name="culprit"/> is the burn that fails.
+        /// <list type="bullet">
+        /// <item>Bad: a dV or a time that isn't finite (PlaceManeuverNode would throw on it, once the planner had started changing the
+        /// existing nodes).</item>
+        /// <item>Past: a burn before the start (PlaceManeuverNode would move it to now, or the orbit after the last node would be the
+        /// wrong one for it, and either way the dV was computed for another point of the orbit). A second of round-off is let through.</item>
+        /// <item>EndedPatch: on an orbit that ends in an encounter or an escape, a first burn at or after that end (the vessel isn't on
+        /// this orbit then: PlaceManeuverNode would put the burn on the next patch, around another body). Only the first burn is on this
+        /// orbit; the others follow it.</item>
+        /// </list>
+        /// </summary>
+        private static NodesProblem Check(List<ManeuverParameters>? nodes, Orbit o, double universalTime, out ManeuverParameters? culprit)
+        {
+            culprit = null;
+            if (nodes == null) return NodesProblem.None;
+            foreach (ManeuverParameters n in nodes)
+                if (!n.dV.IsFinite() || !n.UT.IsFinite())
+                {
+                    culprit = n;
+                    return NodesProblem.Bad;
+                }
+
+            foreach (ManeuverParameters n in nodes)
+                if (n.UT < universalTime - 1)
+                {
+                    culprit = n;
+                    return NodesProblem.Past;
+                }
+
+            ManeuverParameters? first = null;
+            foreach (ManeuverParameters n in nodes)
+                if (first == null || n.UT < first.UT)
+                    first = n;
+            bool ends = o.patchEndTransition == Orbit.PatchTransitionType.ENCOUNTER || o.patchEndTransition == Orbit.PatchTransitionType.ESCAPE;
+            if (first == null || !ends || first.UT < o.EndUT) return NodesProblem.None;
+            culprit = first;
+            return NodesProblem.EndedPatch;
+        }
+
+        private static string ProblemMessage(NodesProblem problem)
+        {
+            switch (problem)
+            {
+                case NodesProblem.Past:
+                    return Localizer.Format("#MechJeb_Maneu_pastNodeError"); //The burn would be before the start of the orbit it is planned on.
+                case NodesProblem.EndedPatch:
+                    return Localizer.Format(
+                        "#MechJeb_Maneu_endedPatchError"); //The burn would be after this orbit ends at a change of sphere of influence; pick an earlier time, or plan from a node placed after the change.
+                default:
+                    return Localizer.Format("#MechJeb_Maneu_errorMessage"); //An error occurred while creating the node.
+            }
+        }
+
+        /// <summary>
+        /// Whether the planner may preview this operation while it is hovered in its list (an opt-in, false by default). Only a
+        /// MechJeb operation can opt in (the member is internal, so another mod's operation is out), and only one whose
+        /// <see cref="MakeNodesImpl"/> is cheap and changes nothing but <see cref="ErrorMessage"/>: no node, no log, no setting,
+        /// no module, no long solver run.
+        /// </summary>
+        internal virtual bool Previewable => false;
+
+        /// <summary>
+        /// The operation's burns for a preview, with its current settings: <see cref="MakeNodes"/>'s checks (the same
+        /// <see cref="Check"/>: a bad burn, a burn in the past, a burn after an orbit that ends at a change of sphere of influence), but
+        /// it leaves the message the planner shows (<see cref="GetErrorMessage"/>) as it was, logs nothing and catches every exception
+        /// quietly. It places no node. Null when the operation can't make its burns now; <paramref name="error"/> then holds the message
+        /// MakeNodes would show (null for an exception that has none), and otherwise holds the operation's warning or is empty.
+        /// </summary>
+        internal List<ManeuverParameters>? PreviewNodes(Orbit o, double universalTime, MechJebModuleTargetController target, out string? error)
+        {
+            string? shown = ErrorMessage;
+            error = null;
+            try
+            {
+                ErrorMessage = "";
+                List<ManeuverParameters>? nodes = MakeNodesImpl(o, universalTime, target);
+                if (nodes == null || nodes.Count == 0) return null;
+                NodesProblem problem = Check(nodes, o, universalTime, out _);
+                if (problem != NodesProblem.None)
+                {
+                    error = ProblemMessage(problem);
+                    return null;
+                }
+
+                error = ErrorMessage ?? "";
+                return nodes;
+            }
+            catch (OperationException e)
+            {
+                error = e.Message;
+                return null;
+            }
+            catch (ConvergenceException)
+            {
+                error = Localizer.Format("#MechJeb_Maneu_convergenceError"); //No maneuver meets these targets; try other values.
+                return null;
+            }
+            catch (Exception)
+            {
+                // a preview is a display: the failure shows when the operation is picked and its node created
+                return null;
+            }
+            finally
+            {
+                ErrorMessage = shown;
+            }
         }
 
         public virtual bool Draggable => true;

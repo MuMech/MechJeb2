@@ -11,6 +11,9 @@ namespace MuMech.UI
     /// (selected operation, create/change mode) and the node creation; each Operation's parameter rows are built once into their own
     /// panel by OperationPanels (another mod's operation, which has no builder, gets a note that its settings can't be shown),
     /// and the selected operation's panel is shown.
+    /// With the Settings toggle on (off by default), an operation that opts in (<see cref="Operation.Previewable"/>) previews its burn
+    /// while it is hovered in the list: <see cref="Preview"/> says when, the planner's <see cref="ManeuverPreview"/> draws the ghost
+    /// orbit on the map, and the row's card shows its Δv and time. No node is placed and the selection doesn't change.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleManeuverPlanner))]
     public class ManeuverPlannerView : KodeView
@@ -20,6 +23,12 @@ namespace MuMech.UI
         public ManeuverPlannerView(MechJebModuleManeuverPlanner planner) : base(planner) => this.planner = planner;
 
         protected override float MinWidth => 300;
+
+        /// <summary>When a hovered operation previews its burn (an index into the list's entries); null before the window is built.</summary>
+        public KodeKit.Headless.PreviewModel<int> Preview { get; private set; }
+
+        /// <summary>The operation list (null before the window is built).</summary>
+        public ComboBox OperationList { get; private set; }
 
         MechJebCore Core => planner.Core;
         bool HasVessel => planner.Vessel != null && planner.Vessel.patchedConicSolver != null;
@@ -87,8 +96,14 @@ namespace MuMech.UI
                 if (planner.showCreation != open) planner.showCreation = open;
             });
 
-            BuildExecute(w, r);
+            // the node executor's settings, tagged: an undo or redo of them waits while the executor flies a node
+            using (w.Commits.Tagging(ExecutorTag))
+                BuildExecute(w, r);
+            w.Undo.Guard = t => t.Tag != ExecutorTag || !HasNode || !Core.Node.Enabled;
+            w.UndoButtons();
         }
+
+        const string ExecutorTag = "executor";
 
         // the create buttons' texts by node mode: create, replace the last node, add to it
         static readonly string[] createKeys = { "#MechJeb_Maneu_button1", "#MechJeb_NewUI_NodeReplace", "#MechJeb_NewUI_NodeAdd" };
@@ -115,10 +130,22 @@ namespace MuMech.UI
                 position[order[k]] = k;
             }
             string[] groups = { Localizer.Format(groupKeys[0]), Localizer.Format(groupKeys[1]), Localizer.Format(groupKeys[2]) };
-            var combo = new ComboBox(w, r, () => position[planner.OperationId], k => planner.OperationId = order[k], () => names)
+            // each operation's English name for the filter: its type's, without "Operation" (OperationCourseCorrection: CourseCorrection)
+            var opKeys = new string[order.Length];
+            for (int k = 0; k < order.Length; k++)
             {
-                Group = k => groups[Group(operations[order[k]])]
+                string type = operations[order[k]].GetType().Name;
+                opKeys[k] = type.StartsWith("Operation", System.StringComparison.Ordinal) ? type.Substring("Operation".Length) : type;
+            }
+            var combo = new ComboBox(w, r, () => position[planner.OperationId], k => planner.OperationId = order[k], () => names, name: "#MechJeb_NewUI_Label_Operation") //Operation
+            {
+                Group = k => groups[Group(operations[order[k]])],
+                Filter = true,
+                Keys = () => opKeys
             };
+
+            OperationList = combo;
+            PreviewOnHover(w, combo, operations, order, position);
 
             OperationPanelsFor(w, r);
 
@@ -132,7 +159,7 @@ namespace MuMech.UI
                 Localizer.Format("#MechJeb_NewUI_NodeNew"), Localizer.Format("#MechJeb_NewUI_NodeChangeLast"), Localizer.Format("#MechJeb_NewUI_NodeAddToLast")
             }; //New node, Replace last, Add to last
             Layout mode = KodeWindow.Row(r);
-            w.Segmented(mode, modes, () => (int)planner.Mode, i => planner.Mode = (MechJebModuleManeuverPlanner.NodeMode)i);
+            w.Segmented(mode, modes, () => (int)planner.Mode, i => planner.Mode = (MechJebModuleManeuverPlanner.NodeMode)i, label: "#MechJeb_NewUI_Label_CreateAs"); //Create as
             w.Visible(mode.gameObject, () => planner.PlannerNodeCount() > 0);
             for (int i = 0; i < hintKeys.Length; i++)
             {
@@ -162,6 +189,56 @@ namespace MuMech.UI
             // each button as wide as its longest label, so the window keeps its width when the choice changes
             WidestLabel(w, create, createKeys);
             WidestLabel(w, createExecute, createExecuteKeys);
+        }
+
+        /// <summary>
+        /// The hovered operation's preview: the list reports its hovered entry to a <see cref="KodeKit.Headless.PreviewModel{T}"/>, which
+        /// starts the planner's ghost after its debounce and removes it on a leave, Escape, a pick or the list closing. The list's own
+        /// pick is the only setter; the model takes none.
+        /// </summary>
+        void PreviewOnHover(KodeWindow w, ComboBox combo, Operation[] operations, int[] order, int[] position)
+        {
+            var preview = new KodeKit.Headless.PreviewModel<int>(() => position[planner.OperationId], k => operations[order[k]].Previewable);
+            Preview = preview;
+            combo.EntryHovered += (k, source) => preview.Hover(k, source, UnityEngine.Time.unscaledTime);
+            combo.EntryLeft += preview.Leave;
+            combo.Model.Closed += preview.Revert;
+            combo.Picked += (k, source) => preview.Commit(source);
+            preview.Previewed += k => planner.Preview.Show(operations[order[k]]);
+            preview.Reverted += planner.Preview.Clear;
+            combo.EntryCard = (k, card) => PreviewCard(operations[order[k]], card);
+            w.AddSync(() =>
+            {
+                preview.Enabled = Core.Settings != null && Core.Settings.UiPlannerPreview;
+                preview.Tick(UnityEngine.Time.unscaledTime);
+            });
+        }
+
+        // the hovered operation's card: its Δv and when it burns, live from the preview (a card opened at once, the pointer moving on from
+        // another row's card, fills in once the debounced preview is computed); why there is no burn, in the Δv row; nothing for an
+        // operation without a preview, or with the setting off
+        void PreviewCard(Operation op, HoverCard card)
+        {
+            if (!op.Previewable || Core.Settings == null || !Core.Settings.UiPlannerPreview) return;
+            ManeuverPreview p = planner.Preview;
+            card.Title(op.GetName());
+            card.Text("#MechJeb_NewUI_PreviewSettings", true); //A preview with its current settings: no node is placed.
+            card.Value("#MechJeb_NewUI_PreviewDeltaV", ct => //Δv
+            {
+                if (p.Operation != op) ct.Append("...");
+                else if (!p.Valid) ct.Append(string.IsNullOrEmpty(p.Error) ? "-" : p.Error);
+                else
+                {
+                    ct.Append(p.DeltaV, 1).Append(" m/s");
+                    if (!string.IsNullOrEmpty(p.Error)) ct.Append(" (").Append(p.Error).Append(')');
+                }
+            });
+            card.Value("#MechJeb_NewUI_PreviewBurnIn", ct => //Burn in
+            {
+                if (p.Operation == op && p.Valid) ct.AppendDHMS(System.Math.Max(0, p.BurnUT - Planetarium.GetUniversalTime()), 0);
+                else ct.Append("-");
+            });
+            if (!MapView.MapIsEnabled) card.Text("#MechJeb_NewUI_PreviewOpenMap", true); //Its orbit shows dashed in the map view.
         }
 
         // the button's text gets the width of its longest label, measured again when the theme changes the font or its size

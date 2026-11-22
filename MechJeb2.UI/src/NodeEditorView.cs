@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using KodeKit;
+using KodeKit.Headless;
 using KodeUI;
 using KSP.Localization;
 using UnityEngine;
@@ -92,9 +93,69 @@ namespace MuMech.UI
             return -1;
         }
 
+        /// <summary>
+        /// What an undo of the node editor restores: the edited node's burn and time. The Δv and time fields write texts, and the
+        /// edit is the node: typing is no undo step until the typed value reaches the node (a commit of the field's target, at the
+        /// end of the edit). A node that was executed or deleted, one no longer selected, or a time now in the past, isn't restored:
+        /// undo never re-plans a burn the vessel has made, nor writes a node the fields don't show. The stack restores a state only
+        /// while the node is still as the change left it, so a gizmo drag or a stock node edit since makes the undo stale.
+        /// </summary>
+        sealed class NodeState : IUndoState
+        {
+            readonly NodeEditorView view;
+
+            public NodeState(NodeEditorView view) => this.view = view;
+
+            sealed class Shot
+            {
+                public ManeuverNode Node;
+                public Vector3d DeltaV;
+                public double UT;
+
+                public override bool Equals(object o) => o is Shot s && s.Node == Node && s.DeltaV == DeltaV && s.UT == UT;
+
+                public override int GetHashCode() => UT.GetHashCode();
+            }
+
+            public object Take()
+            {
+                ManeuverNode n = view.ed.node;
+                if (n == null || view.Nodes == null || !view.Nodes.Contains(n)) return null;
+                return new Shot { Node = n, DeltaV = n.DeltaV, UT = n.UT };
+            }
+
+            public bool Restore(object state)
+            {
+                if (!(state is Shot s)) return false;
+                List<ManeuverNode> nodes = view.Nodes;
+                if (nodes == null || !nodes.Contains(s.Node)) return false;
+                // another node selected since: the fields show that node, and an undo or redo mustn't write this one under them
+                if (view.ed.node != s.Node) return false;
+                if (double.IsNaN(s.UT) || double.IsInfinity(s.UT) || s.UT <= Planetarium.GetUniversalTime()) return false;
+                s.Node.UpdateNode(s.DeltaV, s.UT);
+                view.ed.SelectNode(s.Node);
+                // the fields show the restored burn, also when they held a typed value the node never had (SelectNode reloads them
+                // only when the burn differs from what they last loaded)
+                view.ed.prograde = s.DeltaV.z;
+                view.ed.radialPlus = s.DeltaV.x;
+                view.ed.normalPlus = s.DeltaV.y;
+                return true;
+            }
+        }
+
+        NodeState nodeState;
+
+        // an edit of the node: its undo restores the node's burn and time
+        void UndoesTheNode(KodeWindow w, UIObject control)
+        {
+            CommitTarget t = w.Commits.Find(control);
+            if (t != null) t.State = nodeState ??= new NodeState(this);
+        }
+
         protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
+            nodeState = null;
 
             Layout none = KodeWindow.Panel(r);
             KodeWindow.ToneText(KodeWindow.Paragraph(none, "#MechJeb_NodeEd_Label1"), KodeWindow.Tone.Dim); //"No maneuver node: create one in the Maneuver Planner."
@@ -105,7 +166,7 @@ namespace MuMech.UI
             w.Visible(edit.gameObject, () => Count > 0);
 
             Layout selector = KodeWindow.Row(edit);
-            new ComboBox(w, selector, () => NodeIndex, i => ed.SelectNode(Nodes[i]), NodeEntries);
+            new ComboBox(w, selector, () => NodeIndex, i => ed.SelectNode(Nodes[i]), NodeEntries, name: "#MechJeb_NewUI_Label_Node"); //Node
             UIButton merge = KodeWindow.Button(selector, "#MechJeb_NodeEd_button1", () => ed.MergeNext(NodeIndex)); //"Merge next node"
             w.Visible(merge.gameObject, () => Count > 1 && NodeIndex < Count - 1);
             w.Visible(selector.gameObject, () => Count > 1);
@@ -126,23 +187,31 @@ namespace MuMech.UI
             KodeWindow.Header(edit, "#MechJeb_NewUI_Time"); //Time
             Layout shift = KodeWindow.Row(edit);
             KodeWindow.Label(shift, "#MechJeb_NodeEd_Label6", true); //"Shift time"
-            UIButton earlier = KodeWindow.Button(shift, "-o", () => ed.ShiftNodeOrbits(-1));
+            CommitTarget<string> time = null;
+            UIButton earlier = KodeWindow.Button(shift, "-o", () => time.Apply(-1, ed.ShiftNodeOrbits, KodeWindow.Pointer));
             Tooltips.Add(earlier.gameObject, "#MechJeb_NewUI_OrbitEarlier_tooltip"); //Move the node one orbit earlier.
             // the field is the shift; − and + move the node by it
-            w.Stepper(shift, () => ed.timeOffset.Text, s => ed.timeOffset.Text = s, ed.ShiftNode,
-                () => ed.timeOffset, 90);
-            UIButton later = KodeWindow.Button(shift, "+o", () => ed.ShiftNodeOrbits(1));
+            Layout shiftStepper = w.Stepper(shift, () => ed.timeOffset.Text, s => ed.timeOffset.Text = s, ed.ShiftNode,
+                () => ed.timeOffset, 90, label: "#MechJeb_NodeEd_Label6"); //"Shift time"
+            UndoesTheNode(w, shiftStepper);
+            // the orbit shifts and the snap are edits of the node's time too: commits of the shift's target, undone with it
+            time = (CommitTarget<string>)w.Commits.Find(shiftStepper);
+            UIButton later = KodeWindow.Button(shift, "+o", () => time.Apply(1, ed.ShiftNodeOrbits, KodeWindow.Pointer));
             Tooltips.Add(later.gameObject, "#MechJeb_NewUI_OrbitLater_tooltip"); //Move the node one orbit later.
 
             Layout snap = KodeWindow.Row(edit);
-            KodeWindow.Button(snap, "#MechJeb_NodeEd_button3", ed.SnapNode); //"Snap node to"
-            new ComboBox(w, snap, () => (int)ed.snap, i => ed.snap = (MechJebModuleNodeEditor.Snap)i, () => ed.snapStrings);
+            KodeWindow.Button(snap, "#MechJeb_NodeEd_button3", () => time.Apply(0, _ => ed.SnapNode(), KodeWindow.Pointer)); //"Snap node to"
+            new ComboBox(w, snap, () => (int)ed.snap, i => ed.snap = (MechJebModuleNodeEditor.Snap)i, () => ed.snapStrings, name: "#MechJeb_NodeEd_button3"); //"Snap node to"
 
             KodeWindow.Header(edit, "#MechJeb_NewUI_Display"); //Display
             Relativity(w, edit);
 
             KodeWindow.Header(edit, "#MechJeb_NewUI_Execute"); //Execute
             ExecuteRows(w, edit, true);
+
+            // undo and redo of this window's edits, held while the node executor flies a node: it reads the node and the settings
+            w.Undo.Guard = _ => ed.Core.Node == null || !ed.Core.Node.Enabled;
+            w.UndoButtons();
         }
 
         /// <summary>
@@ -159,9 +228,14 @@ namespace MuMech.UI
                 setValue(value() + d);
                 ed.UpdateNodeFromFields();
             }, Step, 70, () => value().IsParsed, true);
+            UndoesTheNode(w, stepper);
+            // the typed value reaches the node when the edit ends: a commit of the stepper's target, so the undo stack sees the node's
+            // state before and after it (the typing itself changed only the field's text, and is no undo step)
+            var target = (CommitTarget<string>)w.Commits.Find(stepper);
             stepper.GetComponentInChildren<TMPro.TMP_InputField>().onEndEdit.AddListener(_ =>
             {
-                if (Count > 0 && ed.node != null && value().IsParsed) ed.UpdateNodeFromFields();
+                if (Count > 0 && ed.node != null && value().IsParsed)
+                    target.Apply(value().Text, typed => ed.UpdateNodeFromFields(), KodeWindow.Source(ChangeSource.Keyboard));
             });
             KodeWindow.Label(row, "m/s");
         }

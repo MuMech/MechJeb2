@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using KodeKit;
+using KodeKit.Headless;
 using KodeUI;
 using KSP.Localization;
 using TMPro;
@@ -56,7 +58,7 @@ namespace MuMech.UI
             {
                 typedScale.Text = s;
                 scaleTyped = true;
-            }, 60, () => scaleTyped ? typedScale.IsParsed : settings.UIScale.IsParsed);
+            }, 60, () => scaleTyped ? typedScale.IsParsed : settings.UIScale.IsParsed, label: "#MechJeb_Settings_label2"); //"UI Scale:"
             scaleField.onEndEdit.AddListener(_ =>
             {
                 if (!scaleTyped) return;
@@ -122,6 +124,26 @@ namespace MuMech.UI
                 Changed();
             });
             Tooltips.Add(refresh.gameObject, "#MechJeb_NewUI_ShowRefreshRate_tooltip");
+            UnityEngine.UI.Toggle snap = w.Toggle(windows, "#MechJeb_NewUI_SnapWindows", () => settings.UiSnapWindows, v => //Snap windows to edges
+            {
+                settings.UiSnapWindows = v;
+                Changed();
+            });
+            Tooltips.Add(snap.gameObject, "#MechJeb_NewUI_SnapWindows_tooltip");
+            // off by default: a hovered planner operation draws its ghost orbit on the map (no node is placed)
+            UnityEngine.UI.Toggle preview = w.Toggle(windows, "#MechJeb_NewUI_PlannerPreview", () => settings.UiPlannerPreview, v => //Preview maneuvers on the map
+            {
+                settings.UiPlannerPreview = v;
+                Changed();
+            });
+            Tooltips.Add(preview.gameObject, "#MechJeb_NewUI_PlannerPreview_tooltip");
+            // off by default: Utilities draws the throttle and the acceleration as meters against their limits (display only)
+            UnityEngine.UI.Toggle meters = w.Toggle(windows, "#MechJeb_NewUI_ShowMeters", () => settings.UiMeters, v => //Show throttle and acceleration meters
+            {
+                settings.UiMeters = v;
+                Changed();
+            });
+            Tooltips.Add(meters.gameObject, "#MechJeb_NewUI_ShowMeters_tooltip");
 
             RoverUi.ToggleRow(w, windows, editor, "Toggle:Settings.HideBrakeOnEject");
 
@@ -152,38 +174,126 @@ namespace MuMech.UI
             RoverUi.ToggleRow(w, flight, editor, "Toggle:Settings.RssMode");
             w.Toggle(flight, "#MechJeb_Settings_checkbox2", () => Core.Warp.activateSASOnWarp, v => Core.Warp.activateSASOnWarp = v); //"Activate SAS on Warp"
 
+            BuildShortcuts(w, r);
+
             BuildRestore(w, r);
         }
 
-        // how long the confirmation waits for its second click
-        const float ConfirmSeconds = 10f;
+        // ---- keyboard shortcuts ----
 
-        float armedUntil = float.NegativeInfinity;
+        // static: a rebuild makes a new view, and the pick and the refusal must survive it (there is one Settings window)
+        static int shortcutPick;     // the window picked in the drop-down (an index in Shortcuts.Actions)
+        static string captureFor;    // the action whose last capture this window started (its refusal shows under it)
+        int builtShortcuts = -1;     // the bindings' and actions' versions the rows were built for
 
-        bool Armed => Time.unscaledTime < armedUntil;
+        static int ShortcutsVersion() => unchecked(Shortcuts.Map.Version * 31 + Shortcuts.Actions.Version);
+
+        protected override void BeforeSync()
+        {
+            // a binding made, refused or cleared, a capture started or ended, KSP's keys or the window list changed: the rows say so
+            if (builtShortcuts >= 0 && ShortcutsVersion() != builtShortcuts) RebuildRequested = true;
+        }
+
+        /// <summary>
+        /// The Shortcuts group: pick a window, press its button and then the chord (the next key, with Shift or Ctrl held, either side;
+        /// Escape or a click cancels), or clear it. A refused chord and a binding that KSP's keys now collide with are said in words
+        /// under the row. Then every binding, one a line. None is bound by default.
+        /// </summary>
+        void BuildShortcuts(KodeWindow w, UIObject r)
+        {
+            builtShortcuts = ShortcutsVersion();
+            UIObject keys = w.Group(r, "#MechJeb_NewUI_Shortcuts"); //Keyboard shortcuts
+            IReadOnlyList<UiAction> actions = Shortcuts.Actions.All;
+            if (actions.Count == 0) return; // no core yet: the group's header only
+            if (shortcutPick >= actions.Count) shortcutPick = 0;
+            string[] labels = new string[actions.Count];
+            for (int i = 0; i < labels.Length; i++) labels[i] = actions[i].Label;
+            UiAction picked = actions[shortcutPick];
+            ShortcutMap map = Shortcuts.Map;
+
+            Layout pick = KodeWindow.Row(keys);
+            // the rules in the tooltips, not a paragraph: the Settings window must still fit a 1080-line screen at scale 1.5
+            UIText pickLabel = KodeWindow.Label(pick, "#MechJeb_NewUI_ShortcutAction"); //Action: (a window, or the command palette)
+            pickLabel.tmpText.raycastTarget = true;
+            Tooltips.Add(pickLabel.gameObject, "#MechJeb_NewUI_ShortcutsHint");
+            new ComboBox(w, pick, () => shortcutPick, i =>
+            {
+                if (i == shortcutPick) return;
+                shortcutPick = i;
+                captureFor = null;
+                map.CancelCapture();
+                RebuildRequested = true;
+            }, () => labels);
+
+            Layout set = KodeWindow.Row(keys);
+            KodeWindow.Label(set, "#MechJeb_NewUI_ShortcutKey"); //Shortcut:
+            ShortcutBinding bound = map.Find(picked.Id);
+            string chordText = map.Capturing == picked.Id ? Localizer.Format("#MechJeb_NewUI_ShortcutPress") //Press a key… (Esc cancels)
+                : bound != null ? Shortcuts.Show(bound.Chord) : Localizer.Format("#MechJeb_NewUI_ShortcutNone"); //None
+            UIButton chord = KodeWindow.Button(set, chordText, () =>
+            {
+                captureFor = picked.Id;
+                map.BeginCapture(picked.Id);
+            }, true);
+            chord.gameObject.name = "ShortcutChord";
+            // its text is the chord bound: named by its label
+            KodeWindow.NameButton(chord, "#MechJeb_NewUI_ShortcutKey");
+            Tooltips.Add(chord.gameObject, () => Localizer.Format("#MechJeb_NewUI_ShortcutKey_tooltip") + "\n" + Localizer.Format("#MechJeb_NewUI_ShortcutsHint"));
+            UIButton clear = KodeWindow.Button(set, "#MechJeb_NewUI_ShortcutClear", () => //Clear
+            {
+                captureFor = null;
+                map.CancelCapture();
+                map.Clear(picked.Id);
+            });
+            clear.gameObject.name = "ShortcutClear";
+            w.Visible(clear.gameObject, () => map.Find(picked.Id) != null);
+
+            // why the last chord was refused, or why the bound one doesn't fire now
+            string why = null;
+            if (captureFor == picked.Id && map.Capturing == null && !map.LastCapture.Ok && !map.LastCaptured.IsEmpty)
+                why = Localizer.Format("#MechJeb_NewUI_ShortcutRefused", Shortcuts.Show(map.LastCaptured), Shortcuts.Describe(map.LastCapture, map.LastCaptured));
+            else if (bound != null && !bound.Live.Ok)
+                why = Localizer.Format("#MechJeb_NewUI_ShortcutConflict", Shortcuts.Describe(bound.Live, bound.Chord));
+            if (why != null)
+            {
+                UIText t = GuidanceUi.Wrapped(keys, why);
+                t.gameObject.name = "ShortcutWhy";
+                KodeWindow.ToneText(t, KodeWindow.Tone.Bad);
+            }
+
+            // every binding, each with its Clear: a binding whose window is gone (a custom window renamed or deleted) can't fire but
+            // still holds its chord, and is cleared here
+            foreach (ShortcutBinding b in map.Bindings)
+            {
+                string id = b.ActionId;
+                Layout row = KodeWindow.Row(keys);
+                UIText l = KodeWindow.Label(row, Localizer.Format("#MechJeb_NewUI_ShortcutLine", Shortcuts.ActionName(id), Shortcuts.Show(b.Chord)), true); //<<1>>: <<2>>
+                l.gameObject.name = "ShortcutLine";
+                if (!b.Live.Ok || map.IsOrphan(b)) KodeWindow.ToneText(l, KodeWindow.Tone.Bad);
+                UIButton x = KodeWindow.Button(row, "#MechJeb_NewUI_ShortcutClear", () => //Clear
+                {
+                    if (captureFor == id) captureFor = null;
+                    map.Clear(id);
+                });
+                x.gameObject.name = "ShortcutLineClear";
+            }
+        }
 
         /// <summary>
         /// "Restore factory default settings" deletes the global settings and this vessel type's, and can't be undone: it is the
-        /// last row, and asks again (in the Danger colour, with Cancel) before it does; the question goes after ConfirmSeconds.
+        /// last row, and asks in a dialog (the confirm button in the Danger colour, Cancel the default) before it does.
         /// </summary>
         void BuildRestore(KodeWindow w, UIObject r)
         {
-            UIButton ask = KodeWindow.Button(r, "#MechJeb_NewUI_RestoreDefaults", () => armedUntil = Time.unscaledTime + ConfirmSeconds, true); //Restore factory default settings…
-            w.Visible(ask.gameObject, () => !Armed);
-
-            Layout confirm = KodeWindow.Panel(r);
-            UIText warning = KodeWindow.Paragraph(confirm, "#MechJeb_NewUI_RestoreWarning"); //This deletes all MechJeb settings, ...
-            KodeWindow.ToneText(warning, KodeWindow.Tone.Warn);
-            Layout buttons = KodeWindow.Row(confirm);
-            UIButton delete = KodeWindow.Button(buttons, "#MechJeb_NewUI_RestoreConfirm", () => //Delete all MechJeb settings
-            {
-                armedUntil = float.NegativeInfinity;
-                settings.RestoreFactoryDefaults();
-            }, true);
-            KodeWindow.Role(delete, ButtonRole.Danger);
-            KodeWindow.Button(buttons, "#MechJeb_NewUI_Cancel", () => armedUntil = float.NegativeInfinity); //Cancel
-            // hidden once its texts are made (TMP sets up under an active parent)
-            w.Visible(confirm.gameObject, () => Armed);
+            UIButton ask = null;
+            ask = KodeWindow.Button(r, "#MechJeb_NewUI_RestoreDefaults", () => //Restore factory default settings…
+                Dialogs.Confirm(ask.gameObject, "#MechJeb_NewUI_RestoreTitle", //Restore factory default settings?
+                    "#MechJeb_NewUI_RestoreWarning", //This deletes all MechJeb settings, ...
+                    "#MechJeb_NewUI_RestoreConfirm", () => //Delete all MechJeb settings
+                    {
+                        settings.RestoreFactoryDefaults();
+                        Toasts.Show("#MechJeb_NewUI_Toast_DefaultsRestored", ToastSeverity.Warning);
+                    }), true);
         }
 
         static string[] Locs(params string[] keys)

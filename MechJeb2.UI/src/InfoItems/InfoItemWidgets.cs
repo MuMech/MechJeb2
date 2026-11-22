@@ -126,7 +126,7 @@ namespace MuMech.UI
             KodeWindow.Rule(parent);
         }
 
-        /// <summary>The option row of a toggle ([switch] label) or a field (label [field] unit).</summary>
+        /// <summary>The option row of a toggle ([switch] label) or an editable value (label [read-out, edited in place] unit).</summary>
         void AddOption(UIObject parent, InfoItem item)
         {
             if (grid == null || gridParent != parent)
@@ -143,8 +143,10 @@ namespace MuMech.UI
                 var e = (EditableInfoItem)item;
                 IEditable ed = e.Editable;
                 if (ed == null) return;
-                Func<bool> valid = ed is EditableDoubleMult m ? (Func<bool>)(() => m.IsParsed) : null;
-                row = grid.Field(item.localizedName, () => ed.Text, s => ed.Text = s, e.width, e.rightLabel, valid);
+                // a custom window is a read-out: its editable values show as text in the window's colour, edited in place when clicked
+                row = EditUi.Inline(grid, item.localizedName, ed, e.rightLabel, e.width, TextColor);
+                // the item's id names its field: a window rebuilt with items added or moved gives an edit in progress back to it
+                if (item.id != null) row.GetComponentInChildren<TMP_InputField>(true).Named("item:" + item.id);
             }
 
             // cells: switch (or an empty cell), label, then a field row's field and unit
@@ -289,7 +291,25 @@ namespace MuMech.UI
                 });
             }
             if (fixedCell && ValueTooltips) Tooltips.Add(value.gameObject, () => value.tmpText.isTextTruncated ? fullText() : null);
+            shownTexts[item] = fullText;
+            // a right-click on the row: its context menu (the row catches the pointer only where a menu exists)
+            if (ValueMenu != null)
+            {
+                Func<ValueInfoItem, Func<string>, List<KodeKit.Headless.MenuEntry>> menu = ValueMenu;
+                KodeWindow.ContextMenu(row.gameObject, () => item.localizedName, () => menu(item, fullText));
+            }
         }
+
+        /// <summary>
+        /// A value row's context menu (a right-click on the row), given the item and its shown text; null: no menu, and the rows
+        /// catch no pointer of their own. Off for a window that lets the pointer through.
+        /// </summary>
+        public Func<ValueInfoItem, Func<string>, List<KodeKit.Headless.MenuEntry>> ValueMenu;
+
+        readonly Dictionary<ValueInfoItem, Func<string>> shownTexts = new Dictionary<ValueInfoItem, Func<string>>();
+
+        /// <summary>The text a value row shows now (its last refresh), or null when the item has no row here.</summary>
+        public string ShownText(ValueInfoItem item) => shownTexts.TryGetValue(item, out Func<string> f) ? f() : null;
 
         /// <summary>
         /// Width of a row in the window (the IMGUI window's width minus its margins): string values longer than the room left
@@ -327,6 +347,25 @@ namespace MuMech.UI
                 Theme th = KodeWindow.ThemeOf(t.gameObject);
                 t.color = button ? th.Button.TextColor : th.Text;
             });
+        }
+
+        /// <summary>
+        /// Writes <paramref name="item"/>'s value into a cleared <see cref="CharText"/> as its window's cell shows it: from its
+        /// numbers without garbage where the cell does that (<see cref="NativeString"/>, a number in a format CharText reproduces),
+        /// else MechJeb's own string. Calling it runs the item's getter: a hover card calls it only for an item that is computed
+        /// anyway (<see cref="InfoItemCard.Computed"/>).
+        /// </summary>
+        public static Action<CharText> ValueWriter(ValueInfoItem item)
+        {
+            Func<CharText, int> native = NativeString(item);
+            if (native != null) return ct => native(ct);
+            Func<double> number = NumberGetter(item);
+            if (number != null && Formattable(item, out _)) return ct => Format(ct, item, number());
+            return ct =>
+            {
+                item.UpdateItem();
+                ct.Append(item.StringValue);
+            };
         }
 
         /// <summary>

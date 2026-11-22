@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using KodeKit;
+using KodeKit.Headless;
 using KodeUI;
 using KSP.Localization;
 using TMPro;
@@ -18,10 +20,13 @@ namespace MuMech.UI
     /// Differences: the Y labels are as many as the plot's height has room for, a grip in the window's corner resizes the plot, and the
     /// graph is clipped to the plot instead of skipping the points outside it. The plot fills the
     /// window's width, a drop-down above it picks the graph of the Y labels, not the column beside it, and another one can
-    /// give a second graph Y labels on the plot's right, in its colour.
+    /// give a second graph Y labels on the plot's right, in its colour. The X axis zooms and pans: the wheel over the plot zooms
+    /// about the pointer, a drag pans, a double-click (or Reset Scale, the scale's - and +, Auto Scale, Downrange/Time, a Mark)
+    /// goes back to the scale the settings give; the scrollbar and the follow toggle show and move the same view. Under the plot,
+    /// a strip of the recording's events on the same view (see FlightRecorderGraphView.Timeline.cs).
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleFlightRecorderGraph))]
-    public class FlightRecorderGraphView : KodeView
+    public partial class FlightRecorderGraphView : KodeView
     {
         readonly MechJebModuleFlightRecorderGraph g;
 
@@ -45,7 +50,8 @@ namespace MuMech.UI
 
         double XOf(int i) => g.downrange ? Rec.History[i].DownRange : Rec.History[i].TimeSinceMark;
 
-        sealed class Series : IGraphSource
+        // a graph's samples, for the plot (IGraphSource) and for the range's and the points' values (ISamples)
+        sealed class Series : IGraphSource, ISamples
         {
             readonly FlightRecorderGraphView v;
             readonly RecordType type;
@@ -91,6 +97,8 @@ namespace MuMech.UI
 
             if (markUT.Equals(seenMarkUT)) return;
             seenMarkUT = markUT;
+            graph.View.Reset(ChangeSource.Program);
+            graph.Ranges?.Reset(ChangeSource.Program);
             stageMarkers.Indices.Clear();
             scannedStages = 0;
         }
@@ -175,13 +183,21 @@ namespace MuMech.UI
         bool shownScaleDownrange;
         string scaleText;
 
+        // the scale drawn: the settings' one, or the zoom's
+        double ShownScaleX => graph != null && graph.View.Zoomed && g.width > 0 ? graph.View.Span / g.width : curScaleX;
+
+        // a zoom goes below 0.1 s/px: two significant figures there, one decimal above
+        internal static int ScaleDecimals(double secondsPerPx) =>
+            secondsPerPx >= 0.1 || !(secondsPerPx > 0) ? 1 : Math.Min(4, (int)Math.Ceiling(-Math.Log10(secondsPerPx)) + 1);
+
         string ScaleText()
         {
-            if (scaleText == null || !curScaleX.Equals(shownScale) || g.downrange != shownScaleDownrange)
+            double scaleX = ShownScaleX;
+            if (scaleText == null || !scaleX.Equals(shownScale) || g.downrange != shownScaleDownrange)
             {
-                shownScale = curScaleX;
+                shownScale = scaleX;
                 shownScaleDownrange = g.downrange;
-                scaleText = g.downrange ? curScaleX.ToSI(2) + "m/px" : GuiUtils.TimeToDHMS(curScaleX, 1) + "/px";
+                scaleText = g.downrange ? scaleX.ToSI(2) + "m/px" : GuiUtils.TimeToDHMS(scaleX, ScaleDecimals(scaleX)) + "/px";
             }
 
             return scaleText;
@@ -220,6 +236,10 @@ namespace MuMech.UI
         // ---- the plot ----
 
         LineGraph graph;
+        static readonly ConditionalWeakTable<MechJebModuleFlightRecorderGraph, ViewportModel> keptViews =
+            new ConditionalWeakTable<MechJebModuleFlightRecorderGraph, ViewportModel>();
+        static readonly ConditionalWeakTable<MechJebModuleFlightRecorderGraph, RangeModel> keptRanges =
+            new ConditionalWeakTable<MechJebModuleFlightRecorderGraph, RangeModel>();
 
         static Texture2D plotBackdrop;
 
@@ -297,16 +317,27 @@ namespace MuMech.UI
 
             curScaleX = g.CurrentScaleX(out float maxX);
             if (float.IsNaN(maxX) || maxX < 0) maxX = 0;
-            graph.VisibleWidth = g.width * curScaleX;
-            graph.DataMaxX = maxX;
+            // the X units changed: the zoom no longer means anything
+            if (g.downrange != lastDownrange)
+            {
+                graph.View.Reset(ChangeSource.Program);
+                graph.Ranges?.Reset(ChangeSource.Program);
+            }
+
+            // a few records across at the most, or 10 m
+            graph.View.MinSpan = g.downrange ? 10 : 4 * Rec.Precision;
+            graph.View.SetDefaultSpan(g.width * curScaleX);
+            graph.View.SetData(0, maxX);
+            graph.Ranges?.ClampToData();
             ScanStages();
+            SyncTimeline(rightIdx);
 
             int mask = DisplayedMask();
             if (g.stages) mask |= 1 << 30;
             if (g.sharedScales) mask |= 1 << 29;
 
             bool force = !curScaleX.Equals(lastScaleX) || g.downrange != lastDownrange || g.scaleIdx != lastScaleIdx || mask != lastMask ||
-                rightIdx != lastRightIdx;
+                rightIdx != lastRightIdx || graph.ViewMoved;
             // LineGraph rebuilds one mesh per frame after a Refresh: don't refresh again before it has gone through them all
             bool due = Time.frameCount - lastRefreshFrame >= graph.Series.Count + 2 && Time.unscaledTime - lastRefreshTime >= 0.2f;
             if (force || due)
@@ -376,9 +407,12 @@ namespace MuMech.UI
             stageMarkers = new StageMarkers(this);
             scannedStages = 0;
             seenMarkUT = Rec.MarkUT;
+            // the kept view is in these units already: no reset for them
+            lastDownrange = g.downrange;
 
             BuildControls(w, r);
             BuildPlot(w, r);
+            BuildReadout(w, r);
             AddGrip(w);
         }
 
@@ -433,11 +467,25 @@ namespace MuMech.UI
 
         void Mark() => Rec.Mark();
 
+        // the scale's buttons pick a scale: the view takes it
         void ScaleBy(int d)
         {
             if (g.downrange) g.downrangeScale += d;
             else g.timeScale += d;
             g.ClampSizes();
+            graph.View.Reset(KodeWindow.Pointer);
+        }
+
+        void SetAutoScale(bool v)
+        {
+            g.autoScale = v;
+            graph.View.Reset(KodeWindow.Pointer);
+        }
+
+        void ResetScale()
+        {
+            g.ResetScale();
+            graph.View.Reset(KodeWindow.Pointer);
         }
 
         void Resize(int dh, int dv)
@@ -470,23 +518,23 @@ namespace MuMech.UI
 
             // the view and where the recording is on the left, the actions on the right
             Layout top = KodeWindow.Row(r);
-            w.Segmented(top, axis, () => g.downrange ? 0 : 1, i => g.downrange = i == 0).FlexibleLayout(0f, 0f);
+            w.Segmented(top, axis, () => g.downrange ? 0 : 1, i => g.downrange = i == 0, label: "#MechJeb_NewUI_Label_XAxis").FlexibleLayout(0f, 0f); //X axis
             w.BoundLabel(top, Localizer.Format("#MechJeb_Flightrecord_Label1", "999d 99h 99m 99s"), TimeText);
             w.BoundLabel(top, Localizer.Format("#MechJeb_Flightrecord_Label2", "-999.9M") + "m", RangeText);
             KodeWindow.FlexibleSpace(top);
-            MiscViewKit.BoundButton(w, top, () => g.paused ? resume : pause, () => g.paused = !g.paused);
+            KodeWindow.NameButton(MiscViewKit.BoundButton(w, top, () => g.paused ? resume : pause, () => g.paused = !g.paused), "#MechJeb_Flightrecord_Button1_2");
             KodeWindow.Button(top, "#MechJeb_Flightrecord_Button3", Mark); //"Mark"
             KodeWindow.Button(top, "#MechJeb_Flightrecord_Button5", () => Rec.DumpCsv()); //CSV
 
             // the scale on its own row: automatic or set, and back to the automatic one
             Layout scaleRow = KodeWindow.Row(r);
-            w.SwitchRow(scaleRow, "#MechJeb_Flightrecord_checkbox1", () => g.autoScale, v => g.autoScale = v).transform.parent //Auto Scale
+            w.SwitchRow(scaleRow, "#MechJeb_Flightrecord_checkbox1", () => g.autoScale, SetAutoScale).transform.parent //Auto Scale
                 .GetComponent<LayoutElement>().flexibleWidth = 0;
             Layout scale = Nudge(w, scaleRow, "999.99Mm/px", ScaleText, () => ScaleBy(-1), () => ScaleBy(1));
             // auto scale picks the scale itself: show it, hide its - and +
             w.Visible(scale.transform.GetChild(0).gameObject, () => !g.autoScale);
             w.Visible(scale.transform.GetChild(scale.transform.childCount - 1).gameObject, () => !g.autoScale);
-            KodeWindow.Button(scaleRow, "#MechJeb_Flightrecord_Button4", g.ResetScale); //"Reset Scale"
+            KodeWindow.Button(scaleRow, "#MechJeb_Flightrecord_Button4", ResetScale); //"Reset Scale"
             KodeWindow.FlexibleSpace(scaleRow);
 
             // the plot's size, the options, how full the recording is
@@ -523,7 +571,8 @@ namespace MuMech.UI
             leftSide.PreferredWidth(0);
             Layout axisPick = KodeWindow.Row(leftSide);
             axisPick.FlexibleLayout(0f, 0f);
-            new ComboBox(w, axisPick, ScalePosition, i => g.scaleIdx = (int)scaleGraphs[i].Type, ScaleNames, false, i => scaleGraphs[i].Color);
+            new ComboBox(w, axisPick, ScalePosition, i => g.scaleIdx = (int)scaleGraphs[i].Type, ScaleNames, false, i => scaleGraphs[i].Color,
+                "#MechJeb_NewUI_Label_LeftScale"); //Left scale
             w.Visible(axisPick.gameObject, () => ScaleNames().Length > 0);
 
             KodeWindow.RowOf(w.SwitchRow(axisRow, "#MechJeb_Flightrecord_checkbox32", () => g.sharedScales, v => g.sharedScales = v)) //Shared scales
@@ -537,7 +586,7 @@ namespace MuMech.UI
             Layout rightPick = KodeWindow.Row(rightSide);
             rightPick.FlexibleLayout(0f, 0f);
             new ComboBox(w, rightPick, RightPosition, i => g.rightScaleIdx = i == 0 ? -1 : (int)scaleGraphs[i - 1].Type, RightNames, false,
-                i => i == 0 ? Color.clear : scaleGraphs[i - 1].Color);
+                i => i == 0 ? Color.clear : scaleGraphs[i - 1].Color, "#MechJeb_NewUI_Label_RightScale"); //Right scale
             w.Visible(rightPick.gameObject, () => ScaleNames().Length > 0);
             w.Behaviour.AddRelocalize(() => scaleNamesMask = -1);
         }
@@ -566,7 +615,11 @@ namespace MuMech.UI
             builtLabels = LabelsFor(g.height);
             // the scrollbar row spans the window, as IMGUI's HorizontalScrollbar does
             // Y labels at the precision of their step, as the PSG Solution window's
-            graph = new LineGraph(w, left, g.width, g.height, builtLabels, r) { LabelFormat = LineGraph.StepLabel };
+            // the view outlives this window, so a rebuild (a new plot height, a language) keeps the zoom
+            ViewportModel view = keptViews.GetValue(g, _ => new ViewportModel(0, 0, 100) { Follow = true });
+            graph = new LineGraph(w, left, g.width, g.height, builtLabels, r, view) { LabelFormat = LineGraph.StepLabel };
+            // the range and points too: on the kept view, so they keep their place in the data
+            graph.EnableRanges(keptRanges.GetValue(g, _ => new RangeModel(view)));
             plotSize = graph.Plot.GetComponent<LayoutElement>();
             labelsSize = graph.Plot.parent.Find("YLabels").GetComponent<LayoutElement>();
 
@@ -583,10 +636,32 @@ namespace MuMech.UI
                 w.Visible(series.gameObject, () => g.displayed[(int)type]);
             }
 
+            BuildHoverReadout();
+
             plotSize.flexibleWidth = 1;
             RectTransform right = graph.AddRightLabels(builtLabels);
             rightLabelsSize = right.GetComponent<LayoutElement>();
             right.gameObject.SetActive(RightShown() >= 0);
+
+            // the events under the plot, on its view
+            BuildTimeline(w, left);
+        }
+
+        /// <summary>The plot's hover read-out (null before the plot is built).</summary>
+        public GraphReadout HoverReadout => graph?.Readout;
+
+        // the pointer over the plot: the time or distance there and each displayed graph's value, in its unit and colour
+        void BuildHoverReadout()
+        {
+            GraphReadout readout = graph.EnableReadout();
+            string timeName = KodeWindow.Loc("#MechJeb_Flightrecord_Button2_2"), rangeName = KodeWindow.Loc("#MechJeb_Flightrecord_Button2_1"); //Time, Downrange
+            readout.Model.SetX(() => g.downrange ? rangeName : timeName, (b, x) => AppendX(b, x));
+            foreach (MechJebModuleFlightRecorderGraph.GraphInfo info in MechJebModuleFlightRecorderGraph.graphInfos)
+            {
+                RecordType type = info.Type;
+                readout.AddRow(new Series(this, type), KodeWindow.Loc(info.ScaleLabel), (b, v) => AppendValue(b, type, v, false),
+                    () => g.displayed[(int)type], info.Color);
+            }
         }
 
         // ---- the drop-down above the plot: the displayed graphs ----

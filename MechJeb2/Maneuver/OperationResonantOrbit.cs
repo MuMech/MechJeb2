@@ -23,6 +23,9 @@ namespace MuMech
 
         internal override TimeSelector Timing => _timeSelector;
 
+        // cheap and side-effect free: the planner may preview it on the map
+        internal override bool Previewable => true;
+
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (ResonanceNumerator.Val <= 0 || ResonanceDenominator.Val <= 0)

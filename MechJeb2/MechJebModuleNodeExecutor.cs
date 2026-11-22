@@ -123,6 +123,14 @@ namespace MuMech
             return PI / rate + rate / acceleration;
         }
 
+        // The maneuver nodes ahead and their burns along time: drawn by the new UI only
+        [GeneralInfoItem("#MechJeb_NewUI_ManeuverTimeline", InfoItem.Category.Misc)] //Maneuver timeline
+        public void ManeuverTimeline() { }
+
+        /// <summary>How long a burn of this Δv takes, and the part of it before the node (half the burn, spool-up included), from the
+        /// vessel's stages as they are now. Like BurnTime, it asks the stage stats for an update.</summary>
+        public double BurnDuration(double dV, out double halfBurnTime) => BurnTime(dV, out halfBurnTime, out double _);
+
         // How long before a node a burn of this size needs the executor to be on it
         public double BurnLeadTime(double dV)
         {

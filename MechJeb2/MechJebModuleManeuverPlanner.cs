@@ -65,6 +65,33 @@ namespace MuMech
         /// <summary>Why the last Add to the last node with the selected operation did nothing, or null.</summary>
         internal string AddError => _addErrorOp == CurrentOperation ? _addError : null;
 
+        private ManeuverPreview _preview;
+
+        /// <summary>The preview of an operation hovered in the new UI's list: a dashed ghost orbit on the map, no node (off by default).</summary>
+        internal ManeuverPreview Preview => _preview ??= new ManeuverPreview(this);
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            base.OnStart(state);
+            if (state == PartModule.StartState.None || state == PartModule.StartState.Editor) return;
+            Core.AddToPostDrawQueue(Preview.Draw);
+            GameEvents.onVesselChange.Add(OnVesselChange);
+            GameEvents.onGameSceneLoadRequested.Add(OnSceneLoadRequested);
+        }
+
+        public override void OnDestroy()
+        {
+            GameEvents.onVesselChange.Remove(OnVesselChange);
+            GameEvents.onGameSceneLoadRequested.Remove(OnSceneLoadRequested);
+            _preview?.Clear();
+            base.OnDestroy();
+        }
+
+        // the ghost belongs to the vessel and the scene it was computed in
+        private void OnVesselChange(Vessel v) => _preview?.Clear();
+
+        private void OnSceneLoadRequested(GameScenes scene) => _preview?.Clear();
+
         private MechJebModuleLandingPredictions _predictor;
 
         // Vessel.patchedConicSolver.maneuverNodes without the aerobrake node, without allocating (a view calls this every frame)

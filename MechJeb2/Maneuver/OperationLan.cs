@@ -24,6 +24,9 @@ namespace MuMech
         /// </summary>
         internal double? LongitudeOverride;
 
+        // cheap and side-effect free: the planner may preview it on the map
+        internal override bool Previewable => true;
+
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (o.inclination < 10)

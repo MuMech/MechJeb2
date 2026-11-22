@@ -126,7 +126,7 @@ namespace MuMech.UI
         void SiteRow(KodeWindow w, UIObject r)
         {
             Layout siteRow = KodeWindow.Row(r);
-            new ComboBox(w, siteRow, () => guidance._landingSiteIdx, i => guidance._landingSiteIdx = i, SiteNames);
+            new ComboBox(w, siteRow, () => guidance._landingSiteIdx, i => guidance._landingSiteIdx = i, SiteNames, name: "#MechJeb_NewUI_Label_LandingSite") { Filter = true }; //Landing site // typeable once long (a pack's sites)
             UIButton set = KodeWindow.Button(siteRow, "#MechJeb_NewUI_SetSite", () => //Set
             {
                 SiteNames();
@@ -220,7 +220,7 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, label);
-            OpUi.AngleRow(w, row, angle, direction, false);
+            OpUi.AngleRow(w, row, angle, direction, false, label);
         }
 
         void Autopilot(KodeWindow w, UIObject p)

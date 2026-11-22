@@ -1,12 +1,17 @@
 using System;
 using System.Collections.Generic;
+using KodeKit.Headless;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace KodeKit
 {
-    /// <summary>Drag a target window by this handle (the title bar). Pointer delta is applied 1:1 in screen space.</summary>
+    /// <summary>
+    /// Drag a target window by this handle (the title bar). The window keeps its place relative to the press point, 1:1 in
+    /// screen space; the window's <see cref="WindowFrameModel"/> clamps and snaps it. Only the left button drags: a right drag over a
+    /// window is KSP's camera (rule 57), and a right click opens a context menu (<see cref="ContextMenuTrigger"/>).
+    /// </summary>
     public class DragHandle : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public WindowBehaviour Target;
@@ -16,15 +21,27 @@ namespace KodeKit
 
         bool Active => Target.Draggable && (Enabled == null || Enabled());
 
-        public void OnBeginDrag(PointerEventData e) => Target.BringToFront();
+        static bool Left(PointerEventData e) => e.button == PointerEventData.InputButton.Left;
+
+        public void OnBeginDrag(PointerEventData e)
+        {
+            if (!Left(e)) return;
+            Target.BringToFront();
+            if (Active) Target.BeginMove(e.pressPosition, e.pressEventCamera);
+        }
 
         public void OnDrag(PointerEventData e)
         {
-            if (Active) Target.MoveByScreenDelta(e.position - e.delta, e.position, e.pressEventCamera);
+            if (!Left(e) || !Active) return;
+            // the handle turned on during the drag: the move starts from this event's previous point
+            if (!Target.Frame.Dragging) Target.BeginMove(e.position - e.delta, e.pressEventCamera);
+            Target.MoveToScreen(e.position, e.pressEventCamera);
         }
 
         public void OnEndDrag(PointerEventData e)
         {
+            if (!Left(e)) return;
+            Target.EndMove();
             if (Active) Target.NotifyMoved();
         }
     }
@@ -53,7 +70,26 @@ namespace KodeKit
         public static bool ManageLocks = true;
 
         /// <summary>Pixels (canvas units) of the window that must stay on screen, like DisplayModule's clamp.</summary>
-        public float MinVisible = 20;
+        public float MinVisible
+        {
+            get => Frame.MinVisible;
+            set => Frame.MinVisible = value;
+        }
+
+        /// <summary>
+        /// Canvas units within which a dragged window's edge snaps to a screen edge or to another window's edge, for every
+        /// window (0: no snapping). The host sets it from its settings.
+        /// </summary>
+        public static float SnapDistance = 8;
+
+        /// <summary>Where the window is and how a drag moves it: the clamp, the scale, the snapping and the saved position.</summary>
+        public WindowFrameModel Frame { get; } = new WindowFrameModel();
+
+        // the shown windows, the ones a drag can snap to
+        static readonly List<WindowBehaviour> shown = new List<WindowBehaviour>();
+
+        /// <summary>The windows enabled now (a host that lists the windows on screen: the agent bridge).</summary>
+        public static IReadOnlyList<WindowBehaviour> Shown => shown;
 
         /// <summary>Called after the user moved the window (end of drag), so the owner can persist it.</summary>
         public Action<WindowBehaviour> Moved;
@@ -82,6 +118,19 @@ namespace KodeKit
 
         public void AddRestyle(Action a) => restyles.Add(a);
 
+        /// <summary>
+        /// A styled part (a rule-table look), repainted with the window's theme in the restyles' order: after the restyle of the widget
+        /// it was put on (its skin look), before the restyles added after it (a tone text over a button's label).
+        /// </summary>
+        public void AddPart(StyledPart p)
+        {
+            restyles.Add(p.Restyle);
+            PartCount++;
+        }
+
+        /// <summary>How many styled parts the window has registered.</summary>
+        public int PartCount { get; private set; }
+
         /// <summary>A theme for this window only (null: Theme.Current), e.g. a custom window's own Compact setting.</summary>
         public Func<Theme> ThemeOverride;
 
@@ -89,11 +138,33 @@ namespace KodeKit
         public Theme Theme => ThemeOverride?.Invoke() ?? Theme.Current;
         public void AddRelocalize(Action a) => relocalizes.Add(a);
 
+        /// <summary>The window this behaviour draws (a host that finds windows by their objects: the agent bridge).</summary>
+        public KodeWindow Window { get; internal set; }
+
+        /// <summary>
+        /// The '#key' each label of the window was set from (<see cref="KodeWindow.SetText"/>): a control built after a label takes
+        /// it as its own label's key (<see cref="KodeWindow.LabelBefore"/>), so its label follows a language switch and finds its tooltip.
+        /// </summary>
+        internal readonly Dictionary<TMPro.TMP_Text, string> TextKeys = new Dictionary<TMPro.TMP_Text, string>();
+
         public int RestyleCount => restyles.Count;
         public int RelocalizeCount => relocalizes.Count;
 
+        /// <summary>
+        /// A window was shown or hidden (its behaviour enabled or disabled: opened, closed, its scene torn down), for an observer of the
+        /// whole UI (the agent bridge's change feed). Only windows of a <see cref="KodeWindow"/>.
+        /// </summary>
+        public static event Action<WindowBehaviour, bool> AnyShown;
+
+        internal void ReportShown()
+        {
+            if (Window != null && isActiveAndEnabled) AnyShown?.Invoke(this, true);
+        }
+
         void OnEnable()
         {
+            shown.Add(this);
+            if (Window != null) AnyShown?.Invoke(this, true);
             Theme.Changed += Restyle;
             GameEvents.onLanguageSwitched.Add(Relocalize);
             // catch up with changes made while hidden
@@ -162,41 +233,117 @@ namespace KodeKit
         /// <summary>
         /// Position in MechJeb's IMGUI units (screen pixels / GuiUtils.Scale), so DisplayModule.WindowVector keeps working.
         /// </summary>
-        public Vector2 GetImguiPosition(float mjScale) => ScreenTopLeft / mjScale;
+        public Vector2 GetImguiPosition(float mjScale)
+        {
+            Vector2 s = ScreenTopLeft;
+            WindowFrameModel.ToImgui(s.x, s.y, mjScale, out float x, out float y);
+            return new Vector2(x, y);
+        }
 
-        public void SetImguiPosition(Vector2 pos, float mjScale) => ScreenTopLeft = pos * mjScale;
+        public void SetImguiPosition(Vector2 pos, float mjScale)
+        {
+            WindowFrameModel.FromImgui(pos.x, pos.y, mjScale, out float x, out float y);
+            ScreenTopLeft = new Vector2(x, y);
+        }
 
+        /// <summary>
+        /// Moves the window by a pointer's move between two screen points: snapped and clamped during a drag
+        /// (<see cref="BeginMove"/>), only clamped otherwise.
+        /// </summary>
         public void MoveByScreenDelta(Vector2 fromScreen, Vector2 toScreen, Camera cam)
         {
             var parent = (RectTransform)Rect.parent;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, fromScreen, cam, out Vector2 a);
             RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, toScreen, cam, out Vector2 b);
-            Rect.localPosition += (Vector3)(b - a);
-            Clamp();
+            LoadFrame();
+            Frame.DragBy(b.x - a.x, b.y - a.y);
+            StoreFrame();
         }
+
+        /// <summary>During a drag (<see cref="BeginMove(Vector2, Camera)"/>), the pointer is at a screen point.</summary>
+        public void MoveToScreen(Vector2 screen, Camera cam)
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)Rect.parent, screen, cam, out Vector2 p);
+            LoadFrame();
+            Frame.DragTo(p.x, p.y);
+            StoreFrame();
+        }
+
+        /// <summary>
+        /// Starts a drag with the button pressed at a screen point: the window keeps its place relative to it, and the windows
+        /// shown on the same canvas are what it snaps to (<see cref="SnapDistance"/>), until <see cref="EndMove"/>.
+        /// </summary>
+        public void BeginMove(Vector2 pressScreen, Camera cam)
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)Rect.parent, pressScreen, cam, out Vector2 p);
+            BeginMove(p.x, p.y);
+        }
+
+        /// <summary>Starts a drag moved by deltas (<see cref="MoveByScreenDelta"/>).</summary>
+        public void BeginMove() => BeginMove(0, 0);
+
+        void BeginMove(float pressX, float pressY)
+        {
+            LoadFrame();
+            Frame.SnapDistance = SnapDistance;
+            Frame.ClearOthers();
+            if (SnapDistance > 0)
+            {
+                Transform parent = Rect.parent;
+                for (int i = 0; i < shown.Count; i++)
+                {
+                    WindowBehaviour w = shown[i];
+                    if (w == this || w.Rect.parent != parent) continue;
+                    Frame.AddOther(w.CanvasBox);
+                }
+            }
+
+            Frame.BeginDrag(pressX, pressY);
+            StoreFrame();
+        }
+
+        public void EndMove() => Frame.EndDrag();
 
         public void NotifyMoved() => Moved?.Invoke(this);
 
         // the parent's and the window's sizes at the last clamp
         Vector2 clampedParent, clampedSize;
 
+        // the model takes the window's place: its top-left corner (pivot 0,1) in the parent's units, its size, its scale
+        void LoadFrame()
+        {
+            Rect p = ((RectTransform)Rect.parent).rect;
+            Vector3 pos = Rect.localPosition;
+            Rect r = Rect.rect;
+            Frame.Load(pos.x, pos.y, r.width, r.height, Scale, new FrameBox(p.xMin, p.yMax, p.xMax, p.yMin));
+            clampedParent = p.size;
+            clampedSize = r.size;
+        }
+
+        // the window's box in its parent's units (y up), read without touching its frame or its clamp state
+        FrameBox CanvasBox
+        {
+            get
+            {
+                Vector3 pos = Rect.localPosition;
+                Vector2 size = Rect.rect.size * Scale;
+                return new FrameBox(pos.x, pos.y, pos.x + size.x, pos.y - size.y);
+            }
+        }
+
+        void StoreFrame()
+        {
+            Vector3 pos = Rect.localPosition;
+            if (pos.x == Frame.X && pos.y == Frame.Y) return;
+            Rect.localPosition = new Vector3(Frame.X, Frame.Y, pos.z);
+        }
+
         /// <summary>Keep at least MinVisible units of the window inside its parent (the canvas).</summary>
         public void Clamp()
         {
-            var parent = (RectTransform)Rect.parent;
-            Rect p = parent.rect;
-            clampedParent = p.size;
-            clampedSize = Rect.rect.size;
-            Vector2 size = clampedSize * Scale;
-            Vector3 pos = Rect.localPosition; // top-left corner (pivot 0,1)
-
-            float minX = p.xMin - size.x + MinVisible;
-            float maxX = p.xMax - MinVisible;
-            float minY = p.yMin + MinVisible;              // top edge can't go below bottom + MinVisible
-            float maxY = p.yMax;                           // title bar never above the top of the screen
-            pos.x = Mathf.Clamp(pos.x, minX, maxX);
-            pos.y = Mathf.Clamp(pos.y, minY, maxY);
-            Rect.localPosition = pos;
+            LoadFrame();
+            Frame.Clamp();
+            StoreFrame();
         }
 
         // ---- z-order ----
@@ -302,6 +449,9 @@ namespace KodeKit
 
         void OnDisable()
         {
+            shown.Remove(this);
+            if (Window != null) AnyShown?.Invoke(this, false);
+            Frame.EndDrag();
             Theme.Changed -= Restyle;
             GameEvents.onLanguageSwitched.Remove(Relocalize);
             Hovered = false;

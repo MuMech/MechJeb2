@@ -103,7 +103,7 @@ namespace MuMech.UI
             Layout orbit = KodeWindow.Row(main);
             GuidanceUi.Enable(w, KodeWindow.Button(orbit, "#MechJeb_RZplan_button2", Plan(guidance.EstablishNewOrbit), true), CanPlan); //"Establish new orbit at"
             EditFields.Field(w, orbit, () => guidance.phasingOrbitAltitude.Text, s => guidance.phasingOrbitAltitude.Text = s, 70,
-                () => guidance.phasingOrbitAltitude.IsParsed);
+                () => guidance.phasingOrbitAltitude.IsParsed, label: "#MechJeb_RZplan_button2"); //"Establish new orbit at"
             KodeWindow.Label(orbit, "km");
 
             UIText unsafeOrbit = GuidanceUi.Warning(w, main, "#MechJeb_RZplan_unsafeOrbit"); //"That altitude meets the atmosphere, the terrain, a moon or the edge of the sphere of influence."

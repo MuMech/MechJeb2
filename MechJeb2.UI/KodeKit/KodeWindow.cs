@@ -91,9 +91,14 @@ namespace KodeKit
     public class RepeatTrigger : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
     {
         public Action Action;
+
+        /// <summary>When set, a hold is one commit on this target (its first action and every repeat).</summary>
+        public Headless.CommitTarget Group;
         const float Interval = 0.2f;
         bool held;
         float next;
+        // the press's source (Pointer, or a host's scope around the press): the repeats keep it, so a hold stays one commit
+        Headless.ChangeSource source;
         Selectable button;
 
         void Awake() => button = GetComponent<Selectable>();
@@ -103,7 +108,10 @@ namespace KodeKit
             // like Unity's Button: the left button only, and nothing while the button is disabled (a right drag turns the camera)
             if (e.button != PointerEventData.InputButton.Left) return;
             if (button != null && !button.IsInteractable()) return;
+            Release();
             held = true;
+            source = KodeWindow.Pointer;
+            Group?.BeginGroup();
             next = Time.unscaledTime + Interval;
             Action?.Invoke();
         }
@@ -111,21 +119,74 @@ namespace KodeKit
         // another button's release (a right click during the hold) leaves the left button's repeat running
         public void OnPointerUp(PointerEventData e)
         {
-            if (e.button == PointerEventData.InputButton.Left) held = false;
+            if (e.button == PointerEventData.InputButton.Left) Release();
         }
-        public void OnPointerExit(PointerEventData e) => held = false;
-        void OnDisable() => held = false;
+        public void OnPointerExit(PointerEventData e) => Release();
+        void OnDisable() => Release();
+
+        void Release()
+        {
+            if (!held) return;
+            held = false;
+            Group?.EndGroup();
+        }
 
         void Update()
         {
             if (!held || Time.unscaledTime < next) return;
             if (button != null && !button.IsInteractable())
             {
-                held = false;
+                Release();
                 return;
             }
             next = Time.unscaledTime + Interval;
-            Action?.Invoke();
+            using (Headless.CommitPath.As(source))
+                Action?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// Makes a press-and-drag on its object one gesture of <see cref="Slider"/> (or one group of <see cref="Target"/>): one commit. It
+    /// begins on the press, taking in the change the press itself made (uGUI's slider moves before this hears the press), and ends on
+    /// the release or when hidden.
+    /// </summary>
+    public class CommitGroupHandle : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+    {
+        /// <summary>The slider's model, whose drag the press begins and the release ends.</summary>
+        public Headless.SliderModel Slider;
+
+        /// <summary>For a control with no model of its own (the colour picker's area): the target whose group the gesture holds.</summary>
+        public Headless.CommitTarget Target;
+        bool held;
+
+        public void OnPointerDown(PointerEventData e)
+        {
+            if (e.button != PointerEventData.InputButton.Left) return;
+            if (Slider != null)
+            {
+                Slider.EndDrag();
+                Slider.BeginDrag();
+                return;
+            }
+            if (Target == null) return;
+            Release();
+            held = true;
+            Target.BeginGroup(true);
+        }
+
+        public void OnPointerUp(PointerEventData e)
+        {
+            if (e.button == PointerEventData.InputButton.Left) Release();
+        }
+
+        void OnDisable() => Release();
+
+        void Release()
+        {
+            Slider?.EndDrag();
+            if (!held) return;
+            held = false;
+            Target?.EndGroup();
         }
     }
 
@@ -142,6 +203,9 @@ namespace KodeKit
 
         static Theme T => Theme.Current ?? SetDefaultTheme();
 
+        /// <summary>The theme now (Theme.Current, KodeKit's default until one is set): the theme of a widget outside a window.</summary>
+        internal static Theme ThemeNow => T;
+
         static Theme SetDefaultTheme()
         {
             Theme.Set(Theme.KodeDefault());
@@ -154,12 +218,142 @@ namespace KodeKit
         /// <summary>Called after the user changes a value through a widget, so the owner can persist it.</summary>
         public Action Edited;
 
-        /// <summary>A widget's setter, which only runs on user input, that also reports the edit.</summary>
-        internal Action<T> Edits<T>(Action<T> set) => v =>
+        /// <summary>
+        /// The path every widget edit of this window takes (<see cref="Headless.CommitPath"/>): the widget's setter, then
+        /// <see cref="Edited"/>, then a commit with its source for the observers (<see cref="AnyCommit"/>, an undo stack, the agent
+        /// bridge). Each widget that takes a setter is one target on it.
+        /// </summary>
+        public Headless.CommitPath Commits { get; }
+
+        // AnyCommit's observers, replaced on each change so one may unsubscribe while being called
+        static Action<KodeWindow, Headless.Commit>[] anyCommit = new Action<KodeWindow, Headless.Commit>[0];
+
+        /// <summary>
+        /// Every commit of every KodeKit window, with its window: one subscription for an observer of the whole UI. An observer
+        /// that throws is logged and the others are still called. It is static: an observer unsubscribes when it goes (in its
+        /// OnDestroy), and copies what it keeps, since a kept commit or window keeps the window's controls alive.
+        /// </summary>
+        public static event Action<KodeWindow, Headless.Commit> AnyCommit
         {
-            set(v);
-            Edited?.Invoke();
-        };
+            add
+            {
+                if (value == null) return;
+                var a = new Action<KodeWindow, Headless.Commit>[anyCommit.Length + 1];
+                Array.Copy(anyCommit, a, anyCommit.Length);
+                a[anyCommit.Length] = value;
+                anyCommit = a;
+            }
+            remove
+            {
+                int i = Array.LastIndexOf(anyCommit, value);
+                if (i < 0) return;
+                var a = new Action<KodeWindow, Headless.Commit>[anyCommit.Length - 1];
+                Array.Copy(anyCommit, a, i);
+                Array.Copy(anyCommit, i + 1, a, i, anyCommit.Length - i - 1);
+                anyCommit = a;
+            }
+        }
+
+        // AnySettled's observers, as AnyCommit's
+        static Action<KodeWindow, Headless.Commit>[] anySettled = new Action<KodeWindow, Headless.Commit>[0];
+
+        /// <summary>
+        /// Every settled commit of every KodeKit window (<see cref="Headless.CommitPath.Settled"/>), with its window: what an observer of
+        /// the whole UI keeps (the agent bridge's change feed). The same rules as <see cref="AnyCommit"/>.
+        /// </summary>
+        public static event Action<KodeWindow, Headless.Commit> AnySettled
+        {
+            add
+            {
+                if (value == null) return;
+                var a = new Action<KodeWindow, Headless.Commit>[anySettled.Length + 1];
+                Array.Copy(anySettled, a, anySettled.Length);
+                a[anySettled.Length] = value;
+                anySettled = a;
+            }
+            remove
+            {
+                int i = Array.LastIndexOf(anySettled, value);
+                if (i < 0) return;
+                var a = new Action<KodeWindow, Headless.Commit>[anySettled.Length - 1];
+                Array.Copy(anySettled, a, i);
+                Array.Copy(anySettled, i + 1, a, i, anySettled.Length - i - 1);
+                anySettled = a;
+            }
+        }
+
+        void ReportAnySettled(Headless.Commit c)
+        {
+            Action<KodeWindow, Headless.Commit>[] called = anySettled;
+            for (int i = 0; i < called.Length; i++)
+            {
+                try
+                {
+                    called[i](this, c);
+                }
+                catch (Exception e)
+                {
+                    ObserverFailed(c, e);
+                }
+            }
+        }
+
+        static int serials;
+
+        /// <summary>This window's number among the windows made since the game started (1 for the first): an agent's name for it.</summary>
+        public int Serial { get; } = ++serials;
+
+        /// <summary>
+        /// The window's name in every language, for the agent bridge (its "module", which a step's "within" matches whole,
+        /// case-insensitive): a display module's type name ("MechJebModuleManeuverPlanner"), or "CustomInfoWindow:" and a custom
+        /// window's saved id. Null: the window has none (it is named by its title or its ref only).
+        /// </summary>
+        public string ModuleName { get; set; }
+
+        void ReportAnyCommit(Headless.Commit c)
+        {
+            Action<KodeWindow, Headless.Commit>[] called = anyCommit;
+            for (int i = 0; i < called.Length; i++)
+            {
+                try
+                {
+                    called[i](this, c);
+                }
+                catch (Exception e)
+                {
+                    ObserverFailed(c, e);
+                }
+            }
+        }
+
+        // an observer of a commit threw: the setter has run and the widget goes on, so the failure is only logged
+        static void ObserverFailed(Headless.Commit c, Exception e)
+        {
+            Debug.LogError($"[KodeKit] an observer of the commit {c} threw (the change was made, the other observers still ran):");
+            Debug.LogException(e);
+        }
+
+        /// <summary>A widget's setter as a target on <see cref="Commits"/>. <paramref name="persist"/>: its edits call <see cref="Edited"/>.</summary>
+        internal Headless.CommitTarget<T> Target<T>(string kind, Func<T> get, Action<T> set, string label = null, bool persist = true) =>
+            Commits.Target(kind, get, set, label, null, persist);
+
+        /// <summary>
+        /// Removes the commit targets whose controls are under <paramref name="root"/> (a row about to be destroyed, a list rebuilt in
+        /// place): the window's path keeps no closure of a destroyed control, and its undo stack drops their entries.
+        /// </summary>
+        public void ForgetTargets(Transform root)
+        {
+            if (root == null) return;
+            IReadOnlyList<Headless.CommitTarget> all = Commits.Targets;
+            for (int i = all.Count - 1; i >= 0; i--)
+                if (all[i].Control is Component c && c != null && c.transform.IsChildOf(root)) Commits.Remove(all[i]);
+        }
+
+        /// <summary>The source a widget's own handler reports: <paramref name="own"/>, or the one a host imposes (<see cref="Headless.CommitPath.As"/>).</summary>
+        internal static Headless.ChangeSource Source(Headless.ChangeSource own) => Headless.CommitPath.Resolve(own);
+
+        /// <summary>A click's source: Pointer, or the one a host imposes.</summary>
+        internal static Headless.ChangeSource Pointer => Headless.CommitPath.Resolve(Headless.ChangeSource.Pointer);
 
         HashSet<Action> failed; // the syncs that threw, so each is logged once
 
@@ -189,13 +383,22 @@ namespace KodeKit
         public KodeWindow(RectTransform canvas, string title, float minWidth, Vector2 pos)
         {
             Root = UIKit.CreateUI<KodeRootWindow>(canvas, title);
+            Commits = new Headless.CommitPath(title, () => Time.frameCount) { Edited = () => Edited?.Invoke(), Describer = describeTarget, ShowLabel = showLabel };
+            Commits.ObserverFailed += ObserverFailed;
             Root.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false);
             Root.PreferredSizeFitter(true, true).Anchor(AnchorPresets.TopLeft).Pivot(PivotPresets.TopLeft);
             Root.Finish();
+            // the undo stack first: an AnyCommit observer that reads the history sees the commit recorded
+            InitUndo(title);
+            Commits.Committed += ReportAnyCommit;
+            Commits.Settled += ReportAnySettled;
             Root.gameObject.AddComponent<LayoutElement>().minWidth = minWidth;
             Root.rectTransform.anchoredPosition = new Vector2(pos.x, -pos.y);
 
             Behaviour = Root.gameObject.AddComponent<WindowBehaviour>();
+            Behaviour.Window = this;
+            Behaviour.Frame.Label = Loc(title);
+            Behaviour.AddRelocalize(Relabel);
             KodeRootWindow root = Root;
             Styled(Root.gameObject, t =>
             {
@@ -217,7 +420,12 @@ namespace KodeKit
             TitleText = titleText;
             Action close = () => (OnClose ?? (() => Root.gameObject.SetActive(false)))();
             CloseButton = IconButton(titleRow, Sprites.Cross, close);
+            NameButton(CloseButton, "Close");
             FlatIcon(CloseButton, true);
+            // a right-click on the title: the title bar's actions in a menu (its icons' and Close)
+            InitTitleMenu(titleRow, close);
+            // made on screen: an observer hears it opened (its OnEnable ran before the window was bound to it)
+            Behaviour.ReportShown();
         }
 
         /// <summary>The title label (a window can show something other than its module's name, e.g. the menu's version).</summary>
@@ -251,9 +459,13 @@ namespace KodeKit
             return b;
         }
 
-        /// <summary>GUILayout.HorizontalSlider: a flexible-width slider bound to a value.</summary>
-        public Slider Slider(UIObject parent, Func<float> get, Action<float> set, float min = 0, float max = 1)
+        /// <summary>
+        /// GUILayout.HorizontalSlider: a flexible-width slider bound to a value. <paramref name="label"/> names it (a '#key' or a text; null:
+        /// the label right before it in its row, <see cref="LabelBefore"/>).
+        /// </summary>
+        public Slider Slider(UIObject parent, Func<float> get, Action<float> set, float min = 0, float max = 1, string label = null)
         {
+            label = label ?? LabelBefore(parent);
             GameObject go = DefaultControls.CreateSlider(new DefaultControls.Resources());
             go.transform.SetParent(parent.transform, false);
             // DefaultControls builds on layer 0, which UIMainCamera culls (FINDINGS rule 9)
@@ -261,12 +473,33 @@ namespace KodeKit
             var le = go.AddComponent<LayoutElement>();
             le.flexibleWidth = 1;
             le.minWidth = 40;
-            var slider = go.GetComponent<Slider>();
+            var slider = NoSelect(go.GetComponent<Slider>());
             slider.minValue = min;
             slider.maxValue = max;
-            slider.SetValueWithoutNotify(get());
-            set = Edits(set);
-            slider.onValueChanged.AddListener(v => set(v));
+            // uGUI's navigation would move a selected slider with the arrow keys, which are KSP's camera keys: the slider's keys are its
+            // model's, for a host that routes them through a keyboard scope
+            slider.navigation = new Navigation { mode = Navigation.Mode.None };
+            Headless.CommitTarget<float> target = Target("Slider", get, set);
+            target.Control = slider;
+            // the behaviour: a drag (one commit, with the click on the track that may start it: uGUI's slider moves before the handle
+            // hears the press) and an agent's moves both go through the model
+            var model = new Headless.SliderModel(get, target.Set, min, max, 0, () => target.BeginGroup(true), target.EndGroup);
+            target.Model = model;
+            LabelTarget(target, label);
+            slider.SetValueWithoutNotify(model.Shown);
+            void Show()
+            {
+                if (!Mathf.Approximately(slider.value, model.Shown)) slider.SetValueWithoutNotify(model.Shown);
+            }
+            slider.onValueChanged.AddListener(v =>
+            {
+                // drawn again after every set: a refused set, or a setter that keeps the old value (the model's Shown doesn't change
+                // then, so no ShownChanged), puts back the control uGUI moved
+                model.Set(v, Pointer);
+                Show();
+            });
+            model.Value.ShownChanged += Show;
+            go.AddComponent<CommitGroupHandle>().Slider = model;
             // thin track with a round handle: DefaultControls' 10 px bar and 20 px square handle are too heavy
             Image[] images = go.GetComponentsInChildren<Image>(true);
             foreach (Image img in images)
@@ -305,11 +538,7 @@ namespace KodeKit
                     else img.color = img.gameObject.name == "Fill" ? th.Good * 0.8f : new Color(1, 1, 1, 0.25f);
                 }
             });
-            syncs.Add(() =>
-            {
-                float v = get();
-                if (!Mathf.Approximately(slider.value, v)) slider.SetValueWithoutNotify(v);
-            });
+            syncs.Add(() => model.Sync());
             return slider;
         }
 
@@ -366,6 +595,7 @@ namespace KodeKit
             br.sizeDelta = new Vector2(10, 0);
             br.anchoredPosition = Vector2.zero;
             sv.VerticalScrollbar = bar;
+            NoSelect(bar.GetComponent<Scrollbar>());
             sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
 
             Image barImage = bar.GetComponent<Image>();
@@ -402,7 +632,11 @@ namespace KodeKit
         public static UIButton ListRow(UIObject parent, string text, Action onClick)
         {
             UIButton b = parent.Add<UIButton>("ListRow");
-            b.Text("").OnClick(() => onClick());
+            b.Text("").OnClick(() =>
+            {
+                ReportPress(b);
+                onClick();
+            });
             b.FlexibleLayout(true, false);
             b.Finish();
             b.Content.Padding(8, 8, 2, 2);
@@ -410,7 +644,8 @@ namespace KodeKit
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             label.alignment = TextAlignmentOptions.Left;
             SetText(label, text);
-            var button = b.GetComponent<Button>();
+            NameButtonByKey(b, text);
+            var button = NoSelect(b.GetComponent<Button>());
             var img = b.GetComponent<Image>();
 
             // separator and selection bar: drawn over the row, outside its layout
@@ -421,18 +656,11 @@ namespace KodeKit
 
             Styled(b.gameObject, th =>
             {
-                img.sprite = null;
-                img.color = Color.white;
-                ColorBlock cb = ColorBlock.defaultColorBlock;
-                cb.normalColor = new Color(1, 1, 1, 0);
-                cb.highlightedColor = new Color(1, 1, 1, 0.12f);
-                cb.pressedColor = new Color(1, 1, 1, 0.2f);
-                cb.selectedColor = cb.normalColor;
-                cb.disabledColor = DisabledTint(cb.normalColor);
-                InstantTint.Use(button, cb); // uGUI's colour tint without its tween's garbage (FINDINGS rule 52)
-                th.ApplyText(label, bar.gameObject.activeSelf ? bar.color : th.Text);
+                th.ApplyText(label);
                 line.color = new Color(1, 1, 1, 0.07f);
             });
+            // a wash under the pointer; the selected row's text in its bar's colour (On)
+            StyledPart.Add(b.gameObject, Headless.StyleParts.ListRow, img, button, new[] { label });
             return b;
         }
 
@@ -442,7 +670,7 @@ namespace KodeKit
             Transform bar = row.transform.Find("SelectBar");
             if (bar == null || bar.gameObject.activeSelf == selected) return;
             bar.gameObject.SetActive(selected);
-            row.GetComponentInChildren<TMP_Text>().color = selected ? bar.GetComponent<Image>().color : ThemeOf(row.gameObject).Text;
+            row.GetComponent<StyledPart>()?.Set(Headless.StyleFlags.On, selected);
         }
 
         /// <summary>A flat clickable column header (stage stats): dim text that brightens on hover, no button frame.</summary>
@@ -454,9 +682,9 @@ namespace KodeKit
             b.Content.ChildAlignment(TextAnchor.MiddleRight);
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             label.alignment = TextAlignmentOptions.Right;
+            b.GetComponent<StyledPart>().Part = Headless.StyleParts.HeaderButton;
             Styled(b.gameObject, th =>
             {
-                th.ApplyText(label, th.Dim);
                 b.transform.Find("Separator").GetComponent<Image>().color = new Color(1, 1, 1, 0.25f);
                 // one line of the main font plus the padding, whatever the text: Δ and Σ come from a fallback font with a
                 // taller line, and headers sit side by side
@@ -520,12 +748,14 @@ namespace KodeKit
         }
 
         // builds now if the panel is on screen, else in the first sync where it is (TMP needs active parents to set up,
-        // FINDINGS rule 4): a lazy panel inside a folded section waits for the section too
+        // FINDINGS rule 4): a lazy panel inside a folded section waits for the section too. Its fields are named in its own scope,
+        // numbered now, so they have the same names in a rebuilt window whichever panel is shown first (focus recovery)
         void BuildWhenShown(Layout panel, Action<Layout> build)
         {
+            string scope = NextPanelScope();
             if (panel.gameObject.activeInHierarchy)
             {
-                build(panel);
+                BuildInScope(scope, build, panel);
                 return;
             }
             bool built = false;
@@ -533,7 +763,7 @@ namespace KodeKit
             {
                 if (built || !panel.gameObject.activeInHierarchy) return;
                 built = true;
-                build(panel);
+                BuildInScope(scope, build, panel);
             });
         }
 
@@ -594,7 +824,10 @@ namespace KodeKit
                 // looked up when shown, so it follows a language switch like the label
                 Tooltips.Add(t.gameObject, () => TooltipFor?.Invoke(textOrKey));
             }
-            t.GetComponentInParent<WindowBehaviour>()?.AddRelocalize(() => t.text = Loc(textOrKey));
+            WindowBehaviour wb = t.GetComponentInParent<WindowBehaviour>();
+            if (wb == null) return;
+            wb.AddRelocalize(() => t.text = Loc(textOrKey));
+            wb.TextKeys[t] = textOrKey;
         }
 
         // ---- layout ----
@@ -750,10 +983,27 @@ namespace KodeKit
             return t;
         }
 
+        /// <summary>
+        /// Keeps uGUI's selection off a widget: a click doesn't select it (uGUI selects on pointer down only when the
+        /// navigation mode isn't None), so a later Enter or Space (uGUI's Submit) doesn't click it again and the arrows
+        /// don't move it. Every KodeKit button, toggle, switch, slider and scrollbar takes this; only text fields take
+        /// uGUI's selection, and KodeKit's keyboard handling goes through its own scopes. A click on one of these still
+        /// takes the selection off a focused field (the input module deselects whatever the press isn't on).
+        /// </summary>
+        public static T NoSelect<T>(T s) where T : Selectable
+        {
+            s.navigation = new Navigation { mode = Navigation.Mode.None };
+            return s;
+        }
+
         public static UIButton Button(UIObject parent, string text, Action onClick, bool flexible = false)
         {
             UIButton b = parent.Add<UIButton>();
-            b.Text("").OnClick(() => onClick());
+            b.Text("").OnClick(() =>
+            {
+                ReportPress(b);
+                onClick();
+            });
             if (flexible) b.FlexibleLayout(true, false);
             b.Finish();
             b.Content.Padding(6, 6, 1, 1);
@@ -763,7 +1013,8 @@ namespace KodeKit
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             label.alignment = TextAlignmentOptions.Center; // like GUILayout.Button
             SetText(label, text);
-            var button = b.GetComponent<Button>();
+            NameButtonByKey(b, text);
+            var button = NoSelect(b.GetComponent<Button>());
             var img = b.GetComponent<Image>();
             ClickFlash.Add(button, img);
             var buttonLe = b.gameObject.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
@@ -774,6 +1025,36 @@ namespace KodeKit
                 buttonLe.minHeight = th.LineHeight;
             });
             return b;
+        }
+
+        /// <summary>
+        /// Names a button for the agent bridge: its id is <paramref name="name"/> (a '#key', or a text that is the same in every
+        /// language) in its window's build scope (<see cref="Headless.CommitPath.NameScope"/>), numbered when the window has another
+        /// button of the name (<see cref="Headless.ControlMatch.ButtonIds"/>). The button factories name a button whose text is a
+        /// '#key' by it; a view names the others (an icon button). Stored once, on the button; read only when the bridge lists the window.
+        /// </summary>
+        public static void NameButton(UIButton b, string name)
+        {
+            if (b == null || string.IsNullOrEmpty(name)) return;
+            ButtonName n = b.GetComponent<ButtonName>() ?? b.gameObject.AddComponent<ButtonName>();
+            n.Name = ScopeOf(b.transform) + name;
+        }
+
+        static void NameButtonByKey(UIButton b, string textOrKey)
+        {
+            if (textOrKey != null && textOrKey.Length > 1 && textOrKey[0] == '#') NameButton(b, textOrKey);
+        }
+
+        // the build scope of the window being built under t (a lazy panel's "p3/"); "" outside a window. Walks up with GetComponent,
+        // which also finds an inactive window's behaviour (GetComponentInParent doesn't)
+        static string ScopeOf(Transform t)
+        {
+            for (; t != null; t = t.parent)
+            {
+                WindowBehaviour wb = t.GetComponent<WindowBehaviour>();
+                if (wb != null) return wb.Window != null ? wb.Window.Commits.NameScope ?? "" : "";
+            }
+            return "";
         }
 
         /// <summary>A button showing only a sprite (e.g. <see cref="Sprites.Arrow"/>), sized like a one-character button.</summary>
@@ -857,19 +1138,53 @@ namespace KodeKit
             SwitchToggle(parent, text, get, set, green);
 
         /// <summary>A checkbox and its label (the menu's window list keeps checkboxes; <see cref="Toggle(UIObject, string, Func{bool}, Action{bool}, Func{bool})"/> is a switch).</summary>
-        public Toggle CheckBox(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green = null)
+        /// <param name="name">Its name when <paramref name="text"/> is empty (a check box in a table's cell; null: the label right before it).</param>
+        public Toggle CheckBox(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green = null, string name = null) =>
+            CheckBox(parent, text, get, set, green, name, false);
+
+        /// <summary>
+        /// A selection check box (a row's in a toggle column: <see cref="SelectionColumn"/>; or a
+        /// list's "all" box): named <paramref name="name"/> (a '#key' or a text), with no label unless <paramref name="text"/> is given,
+        /// in a row that doesn't stretch. Its changes are view state, not a setting: its commits neither save the window's settings nor
+        /// go on its undo stack. No key or modifier is read: a click toggles it.
+        /// </summary>
+        public Toggle SelectBox(UIObject parent, Func<bool> get, Action<bool> set, string name, string text = null) =>
+            CheckBox(parent, text, get, set, null, name, true);
+
+        Toggle CheckBox(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green, string name, bool select)
         {
+            if (string.IsNullOrEmpty(text)) name = name ?? LabelBefore(parent);
             Layout row = Row(parent);
+            if (select) row.FlexibleLayout(false, false);
             UIToggle t = row.Add<UIToggle>();
             t.PreferredSize(16, 16).Finish();
             t.CheckMark.Scale(0.625f);
-            UIText label = Label(row, text, true);
+            // a selection box without a text has no label: a row's own text is its label
+            UIText label = select && string.IsNullOrEmpty(text) ? null : Label(row, text ?? "", !select);
 
-            Toggle toggle = t.GetComponent<Toggle>();
-            label.gameObject.AddComponent<ToggleLabelClick>().Toggle = toggle;
-            toggle.SetIsOnWithoutNotify(get());
-            set = Edits(set);
-            toggle.onValueChanged.AddListener(v => set(v));
+            Toggle toggle = NoSelect(t.GetComponent<Toggle>());
+            // a selection box ticks at once (no fade): a row's state is read at a glance, and a shot shows it
+            if (select) toggle.toggleTransition = UnityEngine.UI.Toggle.ToggleTransition.None;
+            if (label != null) label.gameObject.AddComponent<ToggleLabelClick>().Toggle = toggle;
+            Headless.CommitTarget<bool> target = Target("CheckBox", get, set, null, !select);
+            target.Control = toggle;
+            // the behaviour: a click (uGUI's toggle, or its label) and an agent's flip both set the model, which calls the setter once
+            var model = new Headless.ToggleModel(Headless.ToggleKind.CheckBox, get, target.Set);
+            target.Model = model;
+            LabelTarget(target, string.IsNullOrEmpty(text) ? name : text);
+            toggle.SetIsOnWithoutNotify(model.On);
+            void Show()
+            {
+                if (toggle.isOn != model.On) toggle.SetIsOnWithoutNotify(model.On);
+            }
+            toggle.onValueChanged.AddListener(v =>
+            {
+                // drawn again after every set: a refused set, or a setter that keeps the old value (the model's Shown doesn't change
+                // then, so no ShownChanged), puts back the control uGUI moved
+                model.Set(v, Pointer);
+                Show();
+            });
+            model.Value.ShownChanged += Show;
 
             var box = t.GetComponent<Image>();
             var check = (Image)toggle.graphic;
@@ -880,47 +1195,56 @@ namespace KodeKit
                 t.PreferredSize(th.FontSize + 2, th.FontSize + 2);
             });
 
-            syncs.Add(() =>
-            {
-                bool v = get();
-                if (toggle.isOn != v) toggle.SetIsOnWithoutNotify(v);
-            });
+            syncs.Add(() => model.Sync());
             if (green != null) ToneText(label, () => green() ? Tone.Good : Tone.Normal);
             return toggle;
         }
 
-        /// <summary>[&lt;] label [&gt;]: steps through <paramref name="count"/> entries, wrapping around.</summary>
-        public void ArrowSelector(UIObject parent, Func<int> get, Action<int> set, int count, Func<string> label) =>
-            ArrowSelector(parent, get, set, () => count, label);
+        /// <summary>
+        /// [&lt;] label [&gt;]: steps through <paramref name="count"/> entries, wrapping around. <paramref name="name"/> names the control
+        /// (a '#key' or a text; null: the label right before it, <see cref="LabelBefore"/>); <paramref name="label"/> is the entry shown.
+        /// </summary>
+        public void ArrowSelector(UIObject parent, Func<int> get, Action<int> set, int count, Func<string> label, string name = null) =>
+            ArrowSelector(parent, get, set, () => count, label, name);
 
         /// <summary>ArrowSelector over a list whose length changes (e.g. maneuver nodes).</summary>
-        public void ArrowSelector(UIObject parent, Func<int> get, Action<int> set, Func<int> count, Func<string> label)
+        public void ArrowSelector(UIObject parent, Func<int> get, Action<int> set, Func<int> count, Func<string> label, string name = null)
         {
+            name = name ?? LabelBefore(parent);
             Layout row = Row(parent);
-            set = Edits(set);
+            Headless.CommitTarget<int> target = Target("ArrowSelector", get, set);
+            target.Control = row;
+            // its entry count, for a host's select by "#n"
+            target.Model = new Headless.IndexChoice(count);
+            LabelTarget(target, name);
             Button(row, "<", () =>
             {
                 int n = count();
-                if (n > 0) set((Mathf.Clamp(get(), 0, n - 1) - 1 + n) % n);
+                if (n > 0) target.Set((Mathf.Clamp(get(), 0, n - 1) - 1 + n) % n, Pointer);
             });
             BoundLabel(row, label, true).tmpText.alignment = TextAlignmentOptions.Center;
             Button(row, ">", () =>
             {
                 int n = count();
-                if (n > 0) set((Mathf.Clamp(get(), 0, n - 1) + 1) % n);
+                if (n > 0) target.Set((Mathf.Clamp(get(), 0, n - 1) + 1) % n, Pointer);
             });
         }
 
         /// <summary>GUILayout.SelectionGrid with one row: a button per item, the selected one tinted green (<see cref="Segmented"/> is the joined control).</summary>
         /// <param name="padding">0: normal buttons; else like <see cref="Padded"/>.</param>
-        public void SelectionGrid(UIObject parent, string[] items, Func<int> get, Action<int> set, int padding = 0)
+        /// <param name="label">The choice's name (a '#key' or a text; null: the label right before it in its row).</param>
+        public void SelectionGrid(UIObject parent, string[] items, Func<int> get, Action<int> set, int padding = 0, string label = null)
         {
-            Action<int> edited = Edits(set);
+            label = label ?? LabelBefore(parent);
+            Headless.CommitTarget<int> target = Target("SelectionGrid", get, set);
+            target.Model = new Headless.IndexChoice(() => items.Length);
+            LabelTarget(target, label);
             var images = new Image[items.Length];
             for (int i = 0; i < items.Length; i++)
             {
                 int k = i;
-                UIButton b = Button(parent, items[i], () => edited(k), true);
+                UIButton b = Button(parent, items[i], () => target.Set(k, Pointer), true);
+                if (i == 0) target.Control = b;
                 if (padding > 0) Padded(b, padding);
                 images[i] = b.GetComponent<Image>();
             }

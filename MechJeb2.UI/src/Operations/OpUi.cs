@@ -34,10 +34,13 @@ namespace MuMech.UI
             return g;
         }
 
-        /// <summary>label [field] unit. <paramref name="stacked"/> puts a long label on its own line.</summary>
+        /// <summary>
+        /// label [field] unit. <paramref name="stacked"/> puts a long label on its own line. <paramref name="history"/>: the field's input
+        /// history key (null: none).
+        /// </summary>
         public static void LabeledField(KodeWindow w, UIObject parent, string label, Func<EditableDoubleMult> ed, string unit = null, bool stacked = false,
-            float width = 100, Action edited = null) =>
-            EditUi.Row(w, parent, label, ed, unit, width, stacked, edited);
+            float width = 100, Action edited = null, string history = null) =>
+            EditUi.Row(w, parent, label, ed, unit, width, stacked, edited, history);
 
         /// <summary>[x] label [field] unit</summary>
         public static void ToggledField(KodeWindow w, UIObject parent, string label, Func<bool> get, Action<bool> set, Func<EditableDoubleMult> ed, string unit,
@@ -45,7 +48,7 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             w.Toggle(row, label, get, set);
-            EditUi.Field(w, row, ed, width);
+            EditUi.Field(w, row, ed, width, label: label);
             if (!string.IsNullOrEmpty(unit)) KodeWindow.Label(row, unit);
         }
 
@@ -60,16 +63,17 @@ namespace MuMech.UI
         {
             KodeWindow.Label(parent, "#MechJeb_Maneu_STB"); //Schedule the burn
             Layout row = KodeWindow.Row(parent);
-            new ComboBox(w, row, () => ts._currentTimeRef, i => ts._currentTimeRef = i, () => ts.TimeRefNames);
+            new ComboBox(w, row, () => ts._currentTimeRef, i => ts._currentTimeRef = i, () => ts.TimeRefNames, name: "#MechJeb_Maneu_STB"); //Schedule the burn
 
             Layout lead = Group(row);
             KodeWindow.Label(lead, "#MechJeb_of"); //"of"
-            EditUi.Field(w, lead, () => ts.LeadTime);
+            // the burn's time: its recent values with Up and Down, shared by every operation
+            EditUi.Field(w, lead, () => ts.LeadTime, label: "#MechJeb_NewUI_Label_TimeFromNow").History("planner.leadTime"); //Time from now
             w.Visible(lead.gameObject, () => Is(ts, TimeReference.X_FROM_NOW));
 
             Layout altitude = Group(row);
             KodeWindow.Label(altitude, "#MechJeb_of");
-            EditUi.Field(w, altitude, () => ts.CircularizeAltitude);
+            EditUi.Field(w, altitude, () => ts.CircularizeAltitude, label: "#MechJeb_NewUI_Label_BurnAltitude").History("planner.burnAltitude"); //Burn altitude
             KodeWindow.Label(altitude, "km");
             w.Visible(altitude.gameObject, () => Is(ts, TimeReference.ALTITUDE));
         }
@@ -77,18 +81,25 @@ namespace MuMech.UI
         /// <summary>An EditableAngle: [deg]° [min]' [sec]" [N/S/E/W]</summary>
         static readonly string[] northSouth = { "N", "S" }, eastWest = { "E", "W" };
 
-        public static void AngleRow(KodeWindow w, UIObject parent, Func<EditableAngle> angle, EditableAngle.Direction direction, bool ownRow = true)
+        /// <param name="label">The angle's name (null: the label right before the row, or before the fields in <paramref name="parent"/>); its
+        /// fields are named "name °", "name '", "name \"" and its hemisphere "name N/S" (or E/W).</param>
+        public static void AngleRow(KodeWindow w, UIObject parent, Func<EditableAngle> angle, EditableAngle.Direction direction, bool ownRow = true,
+            string label = null)
         {
+            string name = KodeWindow.ShownLabel(label ?? KodeWindow.LabelBefore(parent));
+            // with no name, the parts' own names (degrees, minutes, ...): never a bare unit
+            string Named(string unit, string key) => name != null ? name + " " + unit : key;
             UIObject row = ownRow ? (UIObject)KodeWindow.Row(parent) : parent;
-            EditUi.Field(w, row, () => angle().Degrees, 30);
+            EditUi.Field(w, row, () => angle().Degrees, 30, label: Named("°", "#MechJeb_NewUI_Label_Degrees"));
             KodeWindow.Label(row, "°");
-            EditUi.Field(w, row, () => angle().Minutes, 30);
+            EditUi.Field(w, row, () => angle().Minutes, 30, label: Named("'", "#MechJeb_NewUI_Label_Minutes"));
             KodeWindow.Label(row, "'");
-            EditUi.Field(w, row, () => angle().Seconds, 30);
+            EditUi.Field(w, row, () => angle().Seconds, 30, label: Named("\"", "#MechJeb_NewUI_Label_Seconds"));
             KodeWindow.Label(row, "\"");
 
             string[] hemispheres = direction == EditableAngle.Direction.NS ? northSouth : eastWest;
-            w.Segmented(row, hemispheres, () => angle().Negative ? 1 : 0, i => angle().Negative = i == 1).FlexibleLayout(0f, 0f);
+            w.Segmented(row, hemispheres, () => angle().Negative ? 1 : 0, i => angle().Negative = i == 1,
+                label: Named(direction == EditableAngle.Direction.NS ? "N/S" : "E/W", "#MechJeb_NewUI_Label_Hemisphere")).FlexibleLayout(0f, 0f);
         }
 
         /// <summary>A wrapping text that changes (warnings, descriptions); re-laid out only when the text changes.</summary>

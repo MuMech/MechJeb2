@@ -61,11 +61,22 @@ namespace MuMech
             {
                 TextConfig = value;
                 // throw away junk characters, keeping e/E so scientific notation like "1e6" parses (it used to become "16")
-                TextConfig = Regex.Replace(TextConfig, @"[^\d+,\-.eE]", "");
+                TextConfig = Regex.Replace(TextConfig, JUNK, "");
                 Parsed = TryParseText(TextConfig, out double parsedValue);
                 if (Parsed) ValConfig = parsedValue;
             }
         }
+
+        private const string JUNK = @"[^\d+,\-.eE]";
+
+        /// <summary>
+        /// Whether <paramref name="text"/> would parse if it were typed (its junk characters thrown away, as <see cref="Text"/> does),
+        /// without changing this value: a field that writes only when its edit ends checks its text with it.
+        /// </summary>
+        public virtual bool Parses(string text) => TryParseText(Normalise(text), out _);
+
+        /// <summary>The text as <see cref="Text"/> would keep it, its junk characters thrown away, without changing this value.</summary>
+        public virtual string Normalise(string text) => Regex.Replace(text ?? "", JUNK, "");
 
         // parses display text into the stored (multiplied) value
         protected virtual bool TryParseText(string text, out double val)
@@ -135,11 +146,15 @@ namespace MuMech
             set
             {
                 TextConfig = value;
-                TextConfig = Regex.Replace(TextConfig, @"[^\d+-.ydhms ,]", ""); //throw away junk characters
+                TextConfig = Regex.Replace(TextConfig, TIME_JUNK, ""); //throw away junk characters
                 Parsed = TryParseText(TextConfig, out double parsedValue);
                 if (Parsed) ValConfig = parsedValue;
             }
         }
+
+        private const string TIME_JUNK = @"[^\d+-.ydhms ,]";
+
+        public override string Normalise(string text) => Regex.Replace(text ?? "", TIME_JUNK, "");
 
         protected override bool TryParseText(string text, out double val) =>
             NumberText.TryParseDouble(text, out val) || GuiUtils.TryParseDHMS(text, out val);
@@ -244,11 +259,19 @@ namespace MuMech
             set
             {
                 TextConfig = value;
-                TextConfig = Regex.Replace(TextConfig, @"[^\d+-]", ""); //throw away junk characters
+                TextConfig = Regex.Replace(TextConfig, INT_JUNK, ""); //throw away junk characters
                 _parsed = int.TryParse(TextConfig, out int parsedValue);
                 if (_parsed) Val = parsedValue;
             }
         }
+
+        private const string INT_JUNK = @"[^\d+-]";
+
+        /// <summary>Whether <paramref name="text"/> would parse if it were typed, without changing this value.</summary>
+        public bool Parses(string text) => int.TryParse(Normalise(text), out _);
+
+        /// <summary>The text as <see cref="Text"/> would keep it, its junk characters thrown away, without changing this value.</summary>
+        public string Normalise(string text) => Regex.Replace(text ?? "", INT_JUNK, "");
 
         public EditableInt(int val)
         {

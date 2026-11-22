@@ -98,7 +98,7 @@ namespace MuMech.UI
             w.Segmented(controller, controllerNames, () => Attitude.ActiveController, i =>
             {
                 if (Attitude.ActiveController != i) Attitude.SetActiveController(i);
-            });
+            }, label: "#MechJeb_NewUI_SectionController"); //Controller
             Layout panels = KodeWindow.Panel(controller);
             ControllerPanels(w, panels);
 
