@@ -4,9 +4,8 @@ KodeKit's basic widgets come from IMGUI: rows, panels, scroll lists, labels, but
 with them and with the widgets and layouts below. Everything is built in code (no asset bundle), follows the theme, and makes
 no garbage per frame once built.
 
-Screenshots come from the gallery test (`MechJeb2_UI/Spike15-Gallery`, run 2026-10-29: KSP 1.12.5, 1920×1080, at MechJeb's
-COMPACT spacing, over the main menu). Each widget is shown in its own window. The widget sections show the Flat skin; the
-Skins and Segmented sections show all four.
+Screenshots are from KSP 1.12.5 at 1920×1080, with Compact spacing, over the main menu. Each widget is shown in its own
+window. The widget sections show the Flat skin; the Skins and Segmented sections show Classic, Flat and Glass.
 
 ## Settings
 
@@ -70,8 +69,8 @@ part.
   rebuild no mesh. Sprites are ids (`Headless.SpriteIds`): `Styling.SpriteOf` maps them to the theme's sprites (a role's
   sprite is `Theme.Role(role).Normal`).
 - **Palettes:** a skin's rules take the theme's colours (`SkinPalette`: text, dim, accent, the buttons by role), read from
-  the live theme by `Styling.PaletteOf`; `SkinPalette.Classic()` and the others are the same values for the tests (Spike 159
-  checks they match). Compact shares its skin's sheet: it is a spacing, not a look.
+  the live theme by `Styling.PaletteOf`; `SkinPalette.Classic()` and the others are the same values for the tests (they must
+  match). Compact shares its skin's sheet: it is a spacing, not a look.
 - **`StyledPart`** draws a part on one graphic: the widget sets On (and Focus for a frame) from its model, the pointer sets
   Hover and Press, uGUI's selection Focus, and the Selectable's `interactable` (CanvasGroups included) Disabled, caught by one
   shared check a frame. Every change is an array index into the table, with no allocation; fill, sprite and text are written
@@ -173,7 +172,7 @@ g.FlexibleColumn = 0;                              // for label | control | unit
 
 A scroll list on the left, the selected item's details on the right. Consecutive items of the same group are listed under
 its header. Meant for the Maneuver Planner's operations, waypoint routes and the Custom Window Editor. The planner uses the
-grouped dropdown for now (proposal 6A).
+grouped dropdown.
 
 ```csharp
 Layout detail = w.MasterDetail(parent, listWidth: 160, height: 150, ops.Length, i => ops[i].GetName(), i => GroupName(i),
@@ -238,7 +237,7 @@ void Format(int row, int key, CharBuffer into, ref string unit)   // the value i
   column that isn't `Hideable` (the stage column) refuses.
 - **Selection** (no modifier key): `model.Selection` toggles rows (kept by row key, `WithRowKeys`: a row that goes leaves it),
   selects a range of rows in the table's order or a cell range (anchor and focus cell). No table draws it (Delta-V Stats has
-  no row check boxes, the user's call): a host or an agent sets it, and the copies honour it.
+  no row check boxes): a host or an agent sets it, and the copies honour it.
 - **Copies:** `model.CopyText(sb, headers)` writes the selected cells as shown, tab and newline separated; `model.CopyRows(sb)`
   the same, or every row when nothing is selected (the Copy button, which copies every row); `model.CopyMarkdown(sb)` those rows as a GitHub Markdown
   table (`Headless.MarkdownTable`: the headers, an alignment row with every column right-aligned `---:`, `|` written `\|`, a
@@ -282,8 +281,8 @@ target.Apply(n, _ => selection.RemoveSelected(module.RemoveItem, source), source
   same item twice keys a row by the item and its place among the equal rows (the window editor's `ItemKey`); `RemoveSelected`
   drops each key as it removes its row, so a check never passes to the other copy.
 - **No key, no modifier:** a click toggles a box (`Toggle`, `Set`); there is no Shift range or Ctrl toggle, since Left Shift and
-  Left Ctrl are KSP's throttle keys, live over a window (Spike 167 holds them over a click: the throttle moves, the selection
-  takes one row). `SelectRange` exists for a host or an agent.
+  Left Ctrl are KSP's throttle keys, live over a window (held over a click, they move the throttle, and the selection
+  still takes one row). `SelectRange` exists for a host or an agent.
 - **A filter** (`ShowOnly(i => shown)`) hides rows without unchecking them; `SelectAll`, `SelectRange` and the actions take only
   shown rows, so a hidden row is never removed or moved unseen (`HiddenCount` counts them).
 - **Actions:** `SelectedIndexes` (list order, not click order); `MoveSelected(±1, move)` moves the checked rows one place as blocks
@@ -338,7 +337,7 @@ w.Segmented(parent, modeKeys, () => (int)ss.mode, i => ss.mode = (Mode)i, Choice
 w.Segmented(parent, labels, get, set);                                                          // Joined, the default
 ```
 
-In the windows (Flat; Spike 9 run modern3):
+In the windows (Flat):
 
 | SmartASS: mode as tabs | Waypoint Help: topics as tabs | Translatron: mode as a joined bar |
 |---|---|---|
@@ -357,7 +356,7 @@ on that event, so a click shows at once; a pick syncs the model itself, so `Sync
 ![](doc/Flat_Buttons_by_role.png)
 
 An on/off switch: a pill track in the accent colour, with a knob that moves. `SwitchRow` puts the switch on the **left**
-of its label (proposal 4A, switch on the left), and a click on the label flips it too.
+of its label, and a click on the label flips it too.
 
 ```csharp
 w.SwitchRow(parent, "#MechJeb_NodeEd_checkbox1", () => core.Node.Autowarp, v => core.Node.Autowarp = v);
@@ -385,7 +384,7 @@ repeat while held. The step is a separate choice, made once (a "Step" segmented 
 axis. The buttons are at least a row high and wide: IMGUI's 15 px buttons are too small to hit.
 
 Left Shift gives no ×10 on − and +: it is KSP's throttle up, and a pointer over a window leaves flight keys live
-(`HoverLock` keeps the keyboard), so holding it for a ×10 would raise the throttle too (Spike 143). In the focused field,
+(`HoverLock` keeps the keyboard), so holding it for a ×10 would raise the throttle too. In the focused field,
 Up/Down are ×10 with either Shift or Alt, since the field's lock keeps the keyboard from KSP; PageUp/PageDown are ×10
 always. Either Alt gives ×10, but the texts name Left Alt: on Windows, AltGr (the right Alt of AZERTY and QWERTZ layouts)
 also sends Left Ctrl, KSP's throttle down, so it lowers the throttle over a window. `Headless.StepperModel` holds that rule (`BigOnButton`, `BigOnKey`, `Press`, `Key` with `StepperModifiers`): the
@@ -407,8 +406,9 @@ Two Unity-free models in `KodeKit/Headless/` for long lists, tested in MechJebLi
   best first. Bonuses for a prefix, a word start (after a space or symbol, or at a lower-to-upper case change as in
   `TimeToApoapsis`) and consecutive letters; a gap costs. Each item has a label (the localized text shown) and a key (its
   English name, from the info item's token), and matches by either. The order is stable: score, then the shorter text, then the
-  item's own position. An empty query lists every item in its own order. `Apply(query)` allocates nothing; `Highlight` gives the
-  matched ranges of a label.
+  item's own position. An empty query lists every item in its own order. `Apply(query)` reuses its lists, but on Mono (KSP's
+  runtime) a ranked query allocates in `List.Sort`, which makes a delegate from the comparer on each call (128 B on CI's
+  Mono): a filter runs on a keystroke, never per frame. `Highlight` gives the matched ranges of a label.
 - **`TypeaheadModel`**: `Type(char, now, count, label, current, key)` returns the index to focus: the first entry starting with
   what was typed, a repeated letter stepping through those with that letter, a pause longer than `Timeout` starting over. The time
   is the caller's. The drop-down draws it (`ComboModel`, below).
@@ -448,7 +448,7 @@ scrollbar, wheel speed, height), whose content has no layout group. It makes `Po
 each by hand at `RowTop(i)` (anchored to the content's top, full width, `HeightOf(i)` high) and calls the host's `bind(row, i)`
 when a scroll brings index `i` into that row (row `i` lives in slot `i % PoolSize`, so no two rendered rows share one).
 
-- Each row is a layout root: its own text change relayouts that row only (rule 1), and nothing in the list relayouts the window.
+- Each row is a layout root: its own text change relayouts that row only, and nothing in the list relayouts the window.
 - The row height is the preferred height of a row bound to index 0, measured once the list has a width (its window's first
   layout, in the build's own frame) and again after a restyle or a width change; the UI scale only scales the canvas. With
   `SetRowHeights((i, width) => h)` each row gets its own height at that width instead.
@@ -513,7 +513,7 @@ Three Unity-free models in `KodeKit/Headless/`, tested in MechJebLibTest, work o
 source (rows made later get one too, `RowCreated`), an accent line in the target's content at the gap, a label of the dragged
 row by the pointer, and auto-scroll while the pointer is over the target's column near or past (40 units) its ends.
 
-- A row is the nearest `IDragHandler` under the pointer (FINDINGS: a drag goes to the nearest handler up from the hit), so a drag
+- A row is the nearest `IDragHandler` under the pointer (a drag goes to the nearest handler up from the hit), so a drag
   from a row moves neither the window nor the list (the source list included: a drag on it no longer scrolls it); the wheel
   and the scrollbar still scroll it. Only the left button drags, and a drag isn't a click (`eligibleForClick` is cleared when
   it starts).
@@ -521,7 +521,7 @@ row by the pointer, and auto-scroll while the pointer is over the target's colum
   pool mid-drag doesn't lose its events. Only the end event drops; a drag uGUI lets go of without one, the game losing the
   focus, or the list changing under the drag (the host calls `Cancel`) ends it without a drop.
 - The pointer is read every frame (uGUI sends `OnDrag` only on movement), so the indicator follows an auto-scroll.
-- No keys: Alt is KSP's `MODIFIER_KEY`, the arrows turn the camera, and a list row has no keyboard lock (rule 54), so keyboard
+- No keys: Alt is KSP's `MODIFIER_KEY`, the arrows turn the camera, and a list row has no keyboard lock, so keyboard
   moves are left to the bridge's calls on the models. Escape is KSP's pause key: a release outside the list cancels.
 - A host applies a drop in one call (its `move`/`insert`), then tells the list: `list.Removed(from, 1); list.Inserted(to, 1)` or
   `list.Inserted(at, 1)`, which keep the view where it was and bind the rows again.
@@ -560,7 +560,7 @@ closed) and its label in the header colour, a leaf lined up with its parent's te
 the rows under it inserted or removed below it, the rows in view stay put); a click on a leaf calls `leafClick`. `Find(query)`
 or the model's `Find` then `Refresh(true)` shows a search from the top; while a search matches nothing the list has no row
 (its `EmptyLabel` shows). The list follows the model's `Version` once a frame, so an agent's `Toggle` shows. No keys fold or
-move rows (Left, Right, Up, Down and `*` are KSP's flight and camera keys; rule 54). Rows are measured at the width their
+move rows (Left, Right, Up, Down and `*` are KSP's flight and camera keys). Rows are measured at the width their
 indent leaves.
 
 KodeUI's `TreeView` (in `MechJeb2.UI/KodeUI/`, a copy of KodeUI's sources) stays unused: it builds a row per item, takes its
@@ -650,7 +650,7 @@ KodeWindow.Button(parent, "#MechJeb_NodeEd_button6", () => core.Node.Abort(), Bu
 
 ### Text colours (tones)
 
-`KodeWindow.Tone` is Normal, Good (green), Warn (yellow), Bad (red), Dim or Caution (orange, MechJeb's `OrangeLabel`); `Theme.ToneColor(tone, normal)` gives its
+`KodeWindow.Tone` is Normal, Good (green), Warn (yellow), Bad (red), Dim or Caution (orange); `Theme.ToneColor(tone, normal)` gives its
 colour in a theme, with the plain text, a button's text or the accent colour for Normal. All in the window's own theme.
 
 ```csharp
@@ -682,7 +682,7 @@ dropped ("Mode:" becomes "MODE"). Headers are hidden when the **Section headers*
 
 The title sits on the left and the close button is an X icon. `w.TitleIcon(sprite, tooltip, onClick)`
 adds a flat icon before it. The custom info windows use `Sprites.Edit` and `Sprites.Copy` instead of their "E" and "C"
-letters (proposal 9A). Each icon with a tooltip is also an entry of the title's context menu (a right-click on the title), named by
+letters. Each icon with a tooltip is also an entry of the title's context menu (a right-click on the title), named by
 its tooltip, with Close last (Context menus, below).
 
 ### Graphs: pan and zoom (`LineGraph.View`)
@@ -818,7 +818,7 @@ a MET) and each shown series' value there, with its name, its unit and a swatch 
 
 `ComboBox.Group = i => groupName` lists consecutive entries of a group under its header. The Maneuver Planner's 18
 operations are sorted into Orbit shape, Target, and Planets and moons. The Node Editor's node and snap selectors, the
-Custom Window Editor's window and preset selectors are dropdowns too (proposal 6A, instead of arrow selectors).
+Custom Window Editor's window and preset selectors are dropdowns too, instead of arrow selectors.
 
 ### Typeable drop-down (ComboModel)
 
@@ -890,7 +890,7 @@ delta), the source (`Pointer`, `Keyboard`, `Agent`, `Program`) and its actor (`C
 ### Names and descriptions (what an agent and the pattern checks read)
 
 Every control a factory builds has a name and, where the UI has a tooltip for it, a description: the agent bridge, the
-pattern checks (`Patterns.Check`, Spike 141) and an accessibility tree read them from the commit target and its model.
+pattern checks (`Patterns.Check`) and an accessibility tree read them from the commit target and its model.
 
 - **The name** is the target's `Label` (a `'#key'` or a text, as the factory got it) and its model's `IDescribeParts.Label`
   (the same label as shown: localized, without a trailing colon). A factory takes it from, in order: its own text (a
@@ -904,8 +904,8 @@ pattern checks (`Patterns.Check`, Spike 141) and an accessibility tree read them
   so are `Segmented`'s items and a stepper's field. A name built from a shown text ("Latitude °") stays in the language the
   window was built in until it is rebuilt.
 - **The id** comes from the label (`Id`: the key or text, or `label/Kind` when taken), after the lazy panel or section it was
-  built in (`CommitPath.NameScope`, "p3/", numbered when the window makes the panel): the planner's 16 operations each name
-  their time selector `p<n>/#MechJeb_Maneu_STB`, the same whichever operation the player opens first. A control with a label
+  built in (`CommitPath.NameScope`, "p3/", numbered when the window makes the panel): each planner operation that has a time
+  selector names it `p<n>/#MechJeb_Maneu_STB`, the same whichever operation the player opens first. A control with a label
   has one, for an observer (the agent bridge). Focus recovery doesn't use it: it names a field by the view's name or its place.
 - **The description** is `CommitTarget.Description`, read when asked (nothing is looked up while a window is built): one a
   view sets (`target.Description = …`, the PSG Stages check boxes take their column's tooltip), else the path's `Describer`,
@@ -982,7 +982,7 @@ an optional hook).
   opted into undo (`w.UndoButtons()`, or a test setting `w.Undo.Recording`) record changes; the bridge doesn't opt any in.
 - **The wire** (protocol `version` 2 in every answer, `GET /` gives it with the launch's `session`): `GET /snapshot`, `/query`, `/changes?since=n`, `POST /act {"steps": [...]}`, `POST /undo`; the token in
   `X-Agent-Token` (`MECHJEB_UI_AGENT_TOKEN` or the file `PluginData/agent-token`); a request with an `Origin` header is
-  refused. MechJeb2_UI's `Tools/mechjeb-ui-mcp/server.py` is the MCP server on it.
+  refused.
 - **Load:** the server reads and waits on 4 threads of its own (not the ThreadPool MechJeb computes on), with 8 more requests
   queued; one past that is answered 503 at once. A body must arrive within 5 s (else 408, nothing run). With no host pumping (the main menu, the space
   centre, a scene loading, the game in the background) a request is answered 503 at once, and those waiting when the scene ended
@@ -1489,15 +1489,15 @@ list previews its effect, without Unity; the host computes and draws the preview
   `Popups.Layers`). Each menu closes once, with its reason (`LastClose`).
 - **The trigger** (`ContextMenuTrigger`, `IPointerClickHandler`): a click of the right button that was no drag (uGUI's `dragging`
   flag, and the release within `EventSystem.pixelDragThreshold` of the press: uGUI sends the click after a drag when the pressed
-  object is also the dragged one, a title bar, or when nothing under it takes drags). A right drag stays KSP's camera (rule 57)
+  object is also the dragged one, a title bar, or when nothing under it takes drags). A right drag stays KSP's camera
   and `DragHandle` ignores every button but the left, so it moves no window either. `KodeWindow.ContextMenu(go, label, entries)`
   puts a trigger on an object and, when it has no graphic, a `RaycastArea` (catches the pointer, draws nothing): add menus only
-  where they are wanted, since every raycast target is tested on each raycast over its canvas (PERFORMANCE.md, Spike 166).
+  where they are wanted, since every raycast target is tested on each raycast over its canvas.
 - **Drawing** (`ContextMenus`): its own overlay canvas (`Overlay.MenuOrder`), a panel in the window's look and theme (a compact
   custom window's too) over a dark opaque backing of the same shape (it sits over a window's values, whatever the windows'
   opacity), at the window's scale (followed while open), its corner at the pointer (`PopupPlacer.Place` with a point anchor, below, flipped
   above or left when there is no room, clamped on screen). Entries are list rows with navigation off, so no entry is ever the
-  EventSystem's selected object (rule 54). The panel has a `WindowBehaviour` for the usual click-through lock while hovered
+  EventSystem's selected object. The panel has a `WindowBehaviour` for the usual click-through lock while hovered
   (`ContextMenus.Hovered` for a host that owns the lock: `KodeHost.MouseOverWindow`), which keeps the keyboard.
 - **Every action has a second path:** the menu gathers what exists elsewhere, so it is never the only way to do something (a Mac
   trackpad's Ctrl+click is no right-click in KSP: Left Ctrl is throttle down).
@@ -1521,7 +1521,7 @@ list previews its effect, without Unity; the host computes and draws the preview
 
 | Window | What differs from IMGUI |
 |---|---|
-| Smart A.S.S. | Target tiles with navball markers, the navball cross for orbital targets, a joined mode bar, an AUTO status bar |
+| Smart A.S.S. | Target tiles with navball markers, the navball cross for orbital targets, the modes as tabs, an AUTO status bar |
 | SmartRcs, Translatron | Target tiles or a mode choice, switches, a speed stepper, PANIC as a destructive button, an AUTO status bar |
 | Maneuver Node Editor | A node dropdown, steppers in a property grid with one step choice, a snap dropdown, Burn / Time / Display / Execute headers |
 | Maneuver Planner | Create / change as one choice, a grouped operation dropdown, an action bar, execute buttons by role, a lead time stepper |
@@ -1560,7 +1560,8 @@ move a window.
 ## Conventions
 
 - **Switch or checkbox.** A switch for a setting on a row of its own (`Switch`, `SwitchRow`, a `PropertyGrid` switch row); a
-  checkbox (`Toggle`) for a choice in a list or a table (the menu, the PSG Stages table, the debug arrows).
+  checkbox (`CheckBox`) for a choice in a list or a table (the menu, the PSG Stages table). `Toggle` is a switch with its
+  label, not a checkbox.
 - **Labels.** No colon after a label: the grid lines up label and field. Sentence case ("Lead time", "Speed"); capitals only
   for mode names, which are capitals everywhere they appear (Smart A.S.S.'s and Translatron's modes, AUTO).
 - **Empty states.** "No X: do Y." in the dim tone ("No target: select a vessel or docking port.").
@@ -1607,8 +1608,9 @@ widget uses it, and PORTING.md says how a view uses the widgets.
   the test lists the ones it accepts.
 - **Unity-side handlers** report `KodeWindow.Pointer` or `KodeWindow.Source(ChangeSource.Keyboard)`, never the literal, so an
   agent's outer `CommitPath.As(ChangeSource.Agent)` wins (`HeadlessConventionsTests.EveryUnitySideHandlerReportsTheSourceAHostImposes`).
-- **No garbage per frame:** what runs each frame (a sync, a refresh, a filter on a keystroke) allocates nothing; formatted
-  text goes into a `CharBuffer` (`TableModel`, `GaugeModel`), lists are reused. Allocating calls (`ControlInfo.Of`,
+- **No garbage per frame:** what runs each frame (a sync, a refresh) or on a keystroke allocates nothing, except
+  the sort of a ranked filter on Mono ("Filter and type-to-jump" above); formatted text goes into a `CharBuffer`
+  (`TableModel`, `GaugeModel`), lists are reused. Allocating calls (`ControlInfo.Of`,
   `Patterns.Check`, the copies) are named as such in their summary and never run per frame.
 
 ### Describing the parts (IDescribeParts, [NotAWidget], Patterns.Check)
@@ -1617,7 +1619,7 @@ widget uses it, and PORTING.md says how a view uses the widgets.
   `PartDescription` per part (role, label, flags such as on, focused, disabled, invalid, expanded, and the keys it handles).
 - Every other class in the folder carries `[NotAWidget("why")]` (a queue, a placer, a maths helper, an event payload).
   `PatternChecksTests` fails on a class with neither, on one with both, and on a mark without a reason.
-- `Patterns.Check(model)` runs ui-sdk's checks on a description (Spike 132's, item 31): every focusable part has a label and
+- `Patterns.Check(model)` runs ui-sdk's checks on a description: every focusable part has a label and
   handles a key, a radio group has exactly one item on, no two items focused, an option list highlights at most one, names are
   unique. `PatternChecksTests` holds a sample of every describing model (`EveryDescribingModelHasASampleHere`) and checks
   them all; add the new model's sample there. The agent bridge's `ControlInfo.Of(target)` reads the same description.
@@ -1645,7 +1647,7 @@ widget uses it, and PORTING.md says how a view uses the widgets.
   press, Escape through the scope, the owner closing, a scene change): "Where a popup goes and what closes it" above.
 - **Overlays** each have a sorting order in `Overlay.cs` ("Overlays" above); a new one takes a free order in that table.
 
-### The agent bridge
+### A model and the agent bridge
 
 `KodeKit/Agent` (`UiAgent`, `AgentServer`, off unless KSP is launched with `-mechjeb-ui-agent <port>`) reads the commit targets and their
 models and acts through the models (`ControlActions.Run` inside `CommitPath.As(ChangeSource.Agent)`): "The agent bridge"
@@ -1660,57 +1662,56 @@ descriptions" above).
   `dotnet test MechJebLibTest/MechJebLibTest.csproj -c Debug --no-build --filter "FullyQualifiedName~KodeKitTests"` after a
   build (the build also runs the C# 7.3 check).
 - **No garbage:** a fact for each per-frame or per-keystroke path wraps it in `AssertionExtensions.ShouldNotAllocate(() => …)`
-  after one warm-up call (`CharBufferTests`, `TableModelTests`, `ComboModelTests`, `FuzzyTests`, `GaugeModelTests`).
+  after one warm-up call (`CharBufferTests`, `TableModelTests`, `ComboModelTests`, `FuzzyTests`, `GaugeModelTests`). Only a
+  path that calls `List.Sort` skips the check on Mono (`AssertionExtensions.OnMono`), with the reason beside it.
+- **Sequences of enums:** compare them with `AssertionExtensions.EqualSequence`: `Assert.Equal` of an enum array against a
+  list fails on CI's Mono.
 - **Pattern checks:** a sample in `PatternChecksTests` (above).
-- **In game:** a spike in MechJeb2_UI (`Spikes/Spike<N>-<Name>/`, through the dispatcher, `-c Debug` with PDBs, on the
-  MJTesting pad): clicks through uGUI's event system, real input (SendInput, PC only) where keys matter, a run on the Mac, looks
-  at UI scale 1 and 1.5 in the Flat and Classic skins and in one other language when it shows text, and a PERFORMANCE.md entry
-  when it touches a per-frame path. The roadmap's per-item checklist (MechJeb2_UI `reports/UI SDK behaviours roadmap.md`) lists
-  these points.
+- **In game:** a test mod on a Debug build with its PDBs: clicks through uGUI's event system, real input where keys matter
+  (Windows), a run on a second OS, looks at UI scale 1 and 1.5 in the Flat and Classic skins and in zh-cn when it shows
+  text, and frame time and garbage against dev when it touches a per-frame path.
 
 ### Index of the models
 
-Item and PR: the ui-sdk behaviours roadmap (MechJeb2_UI) and its private PR. Tests: `MechJebLibTest/KodeKitTests/`.
+Tests: `MechJebLibTest/KodeKitTests/`.
 
-| File | Types | What | Item, PR | Drawn by |
-|---|---|---|---|---|
-| `ChoiceModel.cs` | `ChoiceModel`, `ChangeSource`, `ChoiceKey` | one choice out of several, with the source of each change | 0, #325 | `Segmented`, `Tabs`, `MasterDetail` |
-| `StepperModel.cs` | `StepperModel` | a nudge's step and ×10, Up/Down in the field | 1, #326 (#338) | `Stepper` |
-| `CommitPath.cs` | `CommitPath`, `CommitTarget<T>`, `Commit`, `IUndoState` | every edit through one path with its source | 2, #329 | every value widget |
-| `UndoStack.cs` | `UndoStack`, `UndoHistory` | undo and redo of a window's commits, by actor | 3, #333 | `w.UndoButtons()` |
-| `InputHistory.cs` | `InputHistory`, `InputHistoryBrowser` | recent values of a field, Up/Down | 4, #341 | `EditFields.Field(...).History(key)` |
-| `FocusRecovery.cs` | `FocusRecovery`, `FocusSnapshot` | a field keeps its edit across a rebuild | 5, #340 | `KodeWindow` rebuilds |
-| `TextFieldModel.cs` | `TextFieldModel`, `InlineEditModel` | a field's edit session; a read-out edited in place | 27, #347; 6, #342 | `EditFields.Field`, `EditUi.Inline` |
-| `FuzzyMatcher.cs` | `FuzzyMatcher`, `FuzzyFilter` | type letters to filter and rank | 7, #332 | the editor's filter, `ComboBox`, the palette |
-| `TypeaheadModel.cs` | `TypeaheadModel` | type to jump in a focused list | 7, #332 | lists |
-| `ComboModel.cs` | `ComboModel` | a drop-down you type into | 8, #345 | `ComboBox` |
-| `VirtualListModel.cs` | `VirtualListModel` | only the rows in view are built | 9, #335 | `VirtualList` |
-| `ReorderModel.cs`, `TransferModel.cs`, `AutoScrollModel.cs` | `ReorderModel`, `TransferModel`, `AutoScrollModel` | drag to reorder, move between lists, scroll near the ends | 10, #336 | `ListDrag` |
-| `ToastQueue.cs` | `ToastQueue` | short notices, timed, queued, counted | 11, #328 | `Toasts` |
-| `DialogModel.cs` | `DialogModel`, `DialogQueue` | modal confirmations and prompts | 12, #344 | `Dialogs` |
-| `ViewportModel.cs` | `ViewportModel` | pan and zoom of a graph's axis | 13, #330 | `LineGraph.View` |
-| `RangeModel.cs`, `SampleStats.cs` | `RangeModel`, `SampleStats` | a range and points on a graph, their values | 14, #334 | `LineGraph.EnableRanges` |
-| `TimelineModel.cs` | `TimelineModel` | items on lanes along time | 15, #337 | `Timeline` |
-| `GraphReadoutModel.cs` | `GraphReadoutModel` | a graph's values under the pointer | graph hover | `LineGraph.EnableReadout` |
-| `PreviewModel.cs` | `PreviewModel<T>` | a hovered entry previews its effect | 16, #354 | the planner's ghost orbit |
-| `ShortcutMap.cs`, `ActionRegistry.cs` | `ShortcutMap`, `ActionRegistry`, `UiAction` | opt-in keys for windows and actions | 17, #358 | `Shortcuts` |
-| `PaletteModel.cs` | `PaletteModel`, `PaletteCommand` | type to find and run a window or a command | 18, #359 | `CommandPalette` |
-| `MenuModel.cs` | `MenuModel`, `MenuEntry` | a pointer-only context menu | 19, #355 | `ContextMenus` |
-| `HoverModel.cs` | `HoverModel` | a hover card's open and close delays | 20, #353 | `Tooltips.Add` with a builder |
-| `SelectionSet.cs`, `MarkdownTable.cs` | `SelectionSet`, `MarkdownTable` | several rows checked; a copy as a Markdown table | 21, #356 | `SelectionColumn`, `StageStatsTable.CopyButtons` |
-| `GaugeModel.cs` | `GaugeModel` | a value on a scale with low, high and optimum | 22, #357 | `KodeWindow.Meter` |
-| `PopupPlacer.cs`, `PopupLayers.cs` | `PopupPlacer`, `PopupLayers` | where a popup goes and what closes it | 23, #352 | `Popups`, `ComboBox`, dialogs, toasts |
-| `TreeCollection.cs` | `TreeCollection<T>`, `TreeState`, `TreeReorder<T>` | trees: folds, search, checks | 25, #339 | `TreeList` |
-| `StyleSheet.cs`, `Skins.cs` | `StyleSheet`, `StyleTable`, `Skins` | state looks from per-skin rule tables | 26, #348 | `StyledPart` |
-| `ValueModel.cs`, `ToggleModel.cs`, `SliderModel.cs` | `ValueModel<T>`, `ToggleModel`, `Switch3Model`, `SliderModel` | switch, check box, Switch3, slider | 27, #347 | `Switch`, `CheckBox`, `Switch3`, `Slider` |
-| `WindowFrameModel.cs` | `WindowFrameModel`, `ResizeModel` | move, clamp, snap and resize windows | 28, #331 | `WindowBehaviour`, `ResizeGrip` |
-| `KeyboardScopes.cs` | `KeyboardScopes`, `KeyScope` | who has the keyboard | 29, #343 | `KeyboardScope`, `FieldKeyboardLock` |
-| `TableModel.cs`, `CharBuffer.cs` | `TableModel`, `TableSelection`, `CharBuffer` | a table of live cells, its selection and copies | 30, #349 | `TableGrid` |
-| `PartDescription.cs` | `IDescribeParts`, `PartDescription`, `Patterns`, `NotAWidgetAttribute` | parts and the pattern checks | 31, #327 | (tests, the bridge) |
-| `ControlInfo.cs` | `ControlInfo` | a control as an agent reads it | 32, #350 | the agent bridge |
-| `ControlActions.cs`, `ControlMatch.cs` | `ControlActions`, `ListEdits`, `ControlMatch`, `StableRefs` | an agent's acts, names and stable refs | 32, #351 | the agent bridge |
-
-Integration of the parallel branches and Fable review 2: #346. Hardening and these docs (item 33): #360.
+| File | Types | What | Drawn by |
+|---|---|---|---|
+| `ChoiceModel.cs` | `ChoiceModel`, `ChangeSource`, `ChoiceKey` | one choice out of several, with the source of each change | `Segmented`, `Tabs`, `MasterDetail` |
+| `StepperModel.cs` | `StepperModel` | a nudge's step and ×10, Up/Down in the field | `Stepper` |
+| `CommitPath.cs` | `CommitPath`, `CommitTarget<T>`, `Commit`, `IUndoState` | every edit through one path with its source | every value widget |
+| `UndoStack.cs` | `UndoStack`, `UndoHistory` | undo and redo of a window's commits, by actor | `w.UndoButtons()` |
+| `InputHistory.cs` | `InputHistory`, `InputHistoryBrowser` | recent values of a field, Up/Down | `EditFields.Field(...).History(key)` |
+| `FocusRecovery.cs` | `FocusRecovery`, `FocusSnapshot` | a field keeps its edit across a rebuild | `KodeWindow` rebuilds |
+| `TextFieldModel.cs` | `TextFieldModel`, `InlineEditModel` | a field's edit session; a read-out edited in place | `EditFields.Field`, `EditUi.Inline` |
+| `FuzzyMatcher.cs` | `FuzzyMatcher`, `FuzzyFilter` | type letters to filter and rank | the editor's filter, `ComboBox`, the palette |
+| `TypeaheadModel.cs` | `TypeaheadModel` | type to jump in a focused list | lists |
+| `ComboModel.cs` | `ComboModel` | a drop-down you type into | `ComboBox` |
+| `VirtualListModel.cs` | `VirtualListModel` | only the rows in view are built | `VirtualList` |
+| `ReorderModel.cs`, `TransferModel.cs`, `AutoScrollModel.cs` | `ReorderModel`, `TransferModel`, `AutoScrollModel` | drag to reorder, move between lists, scroll near the ends | `ListDrag` |
+| `ToastQueue.cs` | `ToastQueue` | short notices, timed, queued, counted | `Toasts` |
+| `DialogModel.cs` | `DialogModel`, `DialogQueue` | modal confirmations and prompts | `Dialogs` |
+| `ViewportModel.cs` | `ViewportModel` | pan and zoom of a graph's axis | `LineGraph.View` |
+| `RangeModel.cs`, `SampleStats.cs` | `RangeModel`, `SampleStats` | a range and points on a graph, their values | `LineGraph.EnableRanges` |
+| `TimelineModel.cs` | `TimelineModel` | items on lanes along time | `Timeline` |
+| `GraphReadoutModel.cs` | `GraphReadoutModel` | a graph's values under the pointer | `LineGraph.EnableReadout` |
+| `PreviewModel.cs` | `PreviewModel<T>` | a hovered entry previews its effect | the planner's ghost orbit |
+| `ShortcutMap.cs`, `ActionRegistry.cs` | `ShortcutMap`, `ActionRegistry`, `UiAction` | opt-in keys for windows and actions | `Shortcuts` |
+| `PaletteModel.cs` | `PaletteModel`, `PaletteCommand` | type to find and run a window or a command | `CommandPalette` |
+| `MenuModel.cs` | `MenuModel`, `MenuEntry` | a pointer-only context menu | `ContextMenus` |
+| `HoverModel.cs` | `HoverModel` | a hover card's open and close delays | `Tooltips.Add` with a builder |
+| `SelectionSet.cs`, `MarkdownTable.cs` | `SelectionSet`, `MarkdownTable` | several rows checked; a copy as a Markdown table | `SelectionColumn`, `StageStatsTable.CopyButtons` |
+| `GaugeModel.cs` | `GaugeModel` | a value on a scale with low, high and optimum | `KodeWindow.Meter` |
+| `PopupPlacer.cs`, `PopupLayers.cs` | `PopupPlacer`, `PopupLayers` | where a popup goes and what closes it | `Popups`, `ComboBox`, dialogs, toasts |
+| `TreeCollection.cs` | `TreeCollection<T>`, `TreeState`, `TreeReorder<T>` | trees: folds, search, checks | `TreeList` |
+| `StyleSheet.cs`, `Skins.cs` | `StyleSheet`, `StyleTable`, `Skins` | state looks from per-skin rule tables | `StyledPart` |
+| `ValueModel.cs`, `ToggleModel.cs`, `SliderModel.cs` | `ValueModel<T>`, `ToggleModel`, `Switch3Model`, `SliderModel` | switch, check box, Switch3, slider | `Switch`, `CheckBox`, `Switch3`, `Slider` |
+| `WindowFrameModel.cs` | `WindowFrameModel`, `ResizeModel` | move, clamp, snap and resize windows | `WindowBehaviour`, `ResizeGrip` |
+| `KeyboardScopes.cs` | `KeyboardScopes`, `KeyScope` | who has the keyboard | `KeyboardScope`, `FieldKeyboardLock` |
+| `TableModel.cs`, `CharBuffer.cs` | `TableModel`, `TableSelection`, `CharBuffer` | a table of live cells, its selection and copies | `TableGrid` |
+| `PartDescription.cs` | `IDescribeParts`, `PartDescription`, `Patterns`, `NotAWidgetAttribute` | parts and the pattern checks | (tests, the bridge) |
+| `ControlInfo.cs` | `ControlInfo` | a control as an agent reads it | the agent bridge |
+| `ControlActions.cs`, `ControlMatch.cs` | `ControlActions`, `ListEdits`, `ControlMatch`, `StableRefs` | an agent's acts, names and stable refs | the agent bridge |
 
 ## Rules learned
 
@@ -1724,8 +1725,8 @@ Integration of the parallel branches and Fable review 2: #346. Hardening and the
 - A `LayoutElement` with `flexibleWidth = -1` does not stop a layout group's own flexible width: -1 means "no opinion".
   To pin a grid or a segmented bar to its preferred width, set 0 (`FlexibleLayout(0f, 0f)`).
 - A `ColorBlock` tint above 1 does not brighten anything. Widgets dim their resting tint (0.8) so that hover can go to white.
-- A selectable that switches looks (selected or not) is painted by hand with a colour tint (`Paint`). Swapping sprites
-  would leave the previous tint on the renderer.
+- A selectable that switches looks (selected or not) is a `StyledPart` with its rules in `Headless.Skins`, which writes the
+  sprite, the fill and the tint for the state. Swapping the sprite alone would leave the previous tint on the renderer.
 - `TableLayout` places its rows' cells itself. The rows are `TableRow`s, no-op layout groups, so uGUI's layout passes still
   walk down into the cells, and a change in a cell still walks up to the table.
 - Views read the Section headers setting when they build. A change rebuilds the windows; skins only restyle them.

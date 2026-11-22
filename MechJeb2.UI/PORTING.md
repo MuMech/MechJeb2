@@ -146,7 +146,7 @@ executor flies the node).
 cell or another field, one alone on its row, or a drop-down or segmented bar with no text before it needs a name: pass
 `label:` (`name:` for `ComboBox`, `ArrowSelector` and an empty `CheckBox`), a `'#key'` where one exists, or a new
 `#MechJeb_NewUI_Label_*` key in `en-us.cfg` and `zh-cn.cfg`. The pattern checks fail on a model without a name (in
-MechJebLibTest, and in game over the bridge's controls: MechJeb2_UI's Spike 141). A control's tooltip is
+MechJebLibTest, and in game over the bridge's controls). A control's tooltip is
 its description: put a tooltip on the control or its row (`Tooltips.Add`), or add `key + "_tooltip"` for its label's key.
 
 **The agent bridge sees what a view builds.** `UiAgent` (LAYOUTS.md, "The agent bridge") lists a window's commit targets,
@@ -205,10 +205,20 @@ behaviour on an existing one, goes in a model there first: the rules (C# 7.3, no
 
 ## Building
 
-From the repository root: `dotnet build MechJeb2.UI/MechJeb2.UI.csproj -c Release`. A worktree needs
-`Directory.Build.props.user` (copy it from the main checkout), or `-p:KspDir=` for a build that copies nothing. The tests,
-the headless models' included: `dotnet test MechJebLibTest/MechJebLibTest.csproj` (the build compiles `KodeKit/Headless` at
-C# 7.3 too, `Tools/HeadlessCSharp73`). `KodeUI/` is a copy of the sources of
+From the repository root: `dotnet build MechJeb2.sln -c Debug`. **A build copies into a KSP install** (`KspDir`, which
+defaults to Steam's folder). To copy nothing on Windows, both copy steps must be turned off: `-p:KspDir=` empties the UI
+project's, and `KSPDIR` set to a folder that doesn't exist stops `MechJeb2/copy_build.bat` (an empty one doesn't: it then
+copies to the drive's root). `KspData` still points at the game's DLLs. In PowerShell:
+
+```powershell
+$env:KSPDIR = 'C:\no-ksp-copy'
+dotnet build MechJeb2.sln -c Debug -p:KspDir= -p:KspData='<KSP>\KSP_x64_Data'
+```
+
+On Linux and macOS `MechJeb2/copy_build.sh` always copies, to `KspDir` or Steam's folder. A worktree has no
+`Directory.Build.props.user`: copy it from the main checkout, or pass the properties.
+
+The tests, the headless models' included, copy nothing: `dotnet test MechJebLibTest/MechJebLibTest.csproj` (the build compiles
+`KodeKit/Headless` at C# 7.3 too, `Tools/HeadlessCSharp73`). `KodeUI/` is a copy of the sources of
 https://github.com/sarbian/KodeUI (MIT, see `KodeUI/LICENSE.md`): change KodeUI there and copy it back, without the
 UTF-8 BOMs its files have, which CI rejects.
-Don't set `KSPDIR` (it copies the build into KSP).
