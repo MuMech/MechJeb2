@@ -18,11 +18,8 @@ namespace MuMech
     ///     over the mass (its share of the drag losses); with no plan yet, over Mach 0.5 to 2, where an ascent meets its maximum
     ///     dynamic pressure. In stock aerodynamics each stage of the plan has its own table, without the parts dropped by then.
     ///     <para />
-    ///     What is dropped by the time the launch clamps release (towers, stands) is no part of the estimate. FAR can't leave parts
-    ///     out, so with such parts on the pad the estimate is the rocket's widest part at PAD_CD until FAR_READ_MET.
-    ///     <para />
-    ///     The estimate is worked out while the vessel is on the ground, along the plan from the pad, and stays once it is airborne,
-    ///     apart from that read of FAR: a vessel first seen in flight gets one estimate, along the plan from where it is.
+    ///     The estimate is worked out while the vessel is on the ground, along the plan from the pad, and stays once it is airborne:
+    ///     a vessel first seen in flight gets one estimate, along the plan from where it is.
     ///     <para />
     ///     Aref is the vessel's frontal area (the drag cube faces towards the airflow) or FAR's reference area, and Cd the drag area
     ///     over it.
@@ -42,9 +39,8 @@ namespace MuMech
         // far off the nose, in the pitch plane.
         private const float FLOW_AOA = 2;
 
+        // FAR can't leave out a launch tower: until it has dropped it, under a second after the release, the rocket's widest part at this Cd
         private const double PAD_CD = 0.5;
-
-        // s after liftoff: FAR takes under a second to rebuild the vessel's shape once the pad's parts have left it
         private const double FAR_READ_MET = 5;
 
         // the vessel as it is
@@ -54,11 +50,7 @@ namespace MuMech
         private readonly Dictionary<int, double[]> _stageTables = new Dictionary<int, double[]>();
 
         private int _currentStage;
-
-        // the stage the last clamps release in, or the current one without clamps
-        private int _releaseStage;
-
-        // the estimate is the pad's, and FAR is still to be read
+        private int _releaseStage; // of the launch clamps: what is dropped by then stays on the pad
         private bool _padEstimate;
 
         private double _frontalArea;
@@ -109,9 +101,6 @@ namespace MuMech
             if (!onGround && vessel == _vessel && Source != Model.NONE && !_padEstimate)
                 return CdA > 0;
 
-            if (vessel != _vessel)
-                _padEstimate = false;
-
             // FAR's read is slow (tens of milliseconds), so only a changed vessel is read again
             if (vessel != _vessel || vessel.mainBody != _body || vessel.parts.Count != _partCount ||
                 vessel.currentStage != _currentStage || Source == Model.NONE || (_padEstimate && vessel.missionTime >= FAR_READ_MET))
@@ -142,7 +131,6 @@ namespace MuMech
 
         private bool ReadTable(Vessel vessel)
         {
-            // clamps with staging off count too: the decoupler of the stand on them frees the rocket in their stage
             _releaseStage = _currentStage;
             foreach (Part p in vessel.parts)
                 if (p.IsLaunchClamp())
@@ -150,22 +138,11 @@ namespace MuMech
 
             if (VesselState.IsFARCorrectlyInitialized)
             {
-                // FAR gives the clamps themselves no shape
-                if (vessel.parts.Exists(p => !p.IsLaunchClamp() && Dropped(p, _releaseStage)))
-                {
-                    if (!ReadPadEstimate(vessel))
-                        return false;
-                    _padEstimate = true;
-                }
-                else
-                {
-                    if (_padEstimate && vessel.missionTime < FAR_READ_MET)
-                        return true;
-                    if (!ReadFAR(vessel, Flow(vessel)))
-                        return false;
-                    _padEstimate = false;
-                }
-
+                bool pad = vessel.parts.Exists(p => !p.IsLaunchClamp() && Dropped(p, _releaseStage)) ||
+                    (_padEstimate && vessel == _vessel && vessel.missionTime < FAR_READ_MET);
+                if (pad ? !ReadPadEstimate(vessel) : !ReadFAR(vessel, Flow(vessel)))
+                    return false;
+                _padEstimate = pad;
                 Source = Model.FAR;
                 return true;
             }
@@ -175,26 +152,14 @@ namespace MuMech
             return true;
         }
 
-        // The rocket's widest part at PAD_CD, from the whole faces of the drag cubes: FAR changes AreaOccluded to what it finds exposed.
         private bool ReadPadEstimate(Vessel vessel)
         {
             Vector3 up = vessel.GetTransform().up;
             _frontalArea = 0;
             foreach (Part p in vessel.parts)
-            {
-                DragCubeList cubes = p.DragCubes;
-                if (cubes.None || p.IsLaunchClamp() || Dropped(p, _releaseStage))
-                    continue;
-
-                Vector3 nose = p.partTransform.InverseTransformDirection(up);
-                if (cubes.RotateDragVector)
-                    nose = cubes.DragVectorRotation * nose;
-
-                double area = 0;
-                for (int i = 0; i < 3; i++) // the faces are X+, X-, Y+, Y-, Z+, Z-
-                    area += cubes.WeightedArea[nose[i] >= 0 ? 2 * i : 2 * i + 1] * Abs(nose[i]);
-                _frontalArea = Max(_frontalArea, area);
-            }
+                if (!p.DragCubes.None && !p.IsLaunchClamp() && !Dropped(p, _releaseStage))
+                    _frontalArea = Max(_frontalArea,
+                        p.DragCubes.GetCubeAreaDir(p.partTransform.InverseTransformDirection(up), p.DragCubes.WeightedArea));
 
             for (int m = 0; m < _machs.Length; m++)
                 _cdA[m] = PAD_CD * _frontalArea;
@@ -240,7 +205,7 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
-                // the launch clamps, and what is dropped by their release, stay on the pad
+                // the launch clamps stay on the pad
                 if (p.ShieldedFromAirstream || (p.rb == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts) || p.IsLaunchClamp() ||
                     Dropped(p, Min(stage, _releaseStage)))
                     continue;
