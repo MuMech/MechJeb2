@@ -60,7 +60,10 @@ namespace MuMech
 
             Orbit targetOrbit = target.TargetOrbit;
 
-            double lagTime = !MatchOrbit ? LagTime.Val : 0;
+            // "Match orbit" and "Arrival delay" belong to the two-burn transfer: the one-burn flyby or intercept always aims at the target,
+            // whatever they were left at
+            bool matchOrbit = Capture && MatchOrbit;
+            double lagTime = !matchOrbit && Capture ? LagTime.Val : 0;
 
             bool fixedTime = false;
 
@@ -84,7 +87,7 @@ namespace MuMech
             }
 
             (Vector3d dV1, double ut1, Vector3d dV2, double ut2) =
-                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, lagTime, fixedTime, Coplanar, Capture && !MatchOrbit,
+                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, lagTime, fixedTime, Coplanar, !matchOrbit,
                     Capture);
 
             // the arrival node only where the window offers it (its ViewUpdate clears PlanCapture elsewhere, and kOS has no window)
