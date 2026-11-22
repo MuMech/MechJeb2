@@ -25,7 +25,7 @@ namespace MechJebLibTest.KodeKitTests
             m.Set(true, ChangeSource.Pointer);
             m.Flip(ChangeSource.Agent);
             Assert.False(on);
-            Assert.Equal(new[] { ChangeSource.Pointer, ChangeSource.Agent }, sources);
+            AssertionExtensions.EqualSequence(new[] { ChangeSource.Pointer, ChangeSource.Agent }, sources);
         }
 
         [Fact]

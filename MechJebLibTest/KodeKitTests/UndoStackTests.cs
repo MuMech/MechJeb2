@@ -590,7 +590,7 @@ namespace MechJebLibTest.KodeKitTests
                 if (c.Source == ChangeSource.Undo) inner.Add(w.Undo.Undo());
             };
             Assert.Equal(UndoResult.Done, w.Undo.Undo());
-            Assert.Equal(new[] { UndoResult.Busy }, inner);
+            AssertionExtensions.EqualSequence(new[] { UndoResult.Busy }, inner);
             Assert.Equal(1, b.V);
             Assert.Single(w.Undo.Done);
         }
@@ -648,7 +648,7 @@ namespace MechJebLibTest.KodeKitTests
             w.Undo.Redo();                   // the program
             using (CommitPath.As(ChangeSource.Pointer))
                 w.Undo.Undo();               // the player's click on the icon
-            Assert.Equal(new[] { ChangeActor.Agent, ChangeActor.Program, ChangeActor.User }, undos.ConvertAll(c => c.Actor));
+            AssertionExtensions.EqualSequence(new[] { ChangeActor.Agent, ChangeActor.Program, ChangeActor.User }, undos.ConvertAll(c => c.Actor));
         }
 
         [Fact]

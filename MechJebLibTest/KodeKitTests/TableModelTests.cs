@@ -413,7 +413,7 @@ namespace MechJebLibTest.KodeKitTests
             t.Selection.Changed += () => own++;
             t.Selection.ToggleRow(0, ChangeSource.Keyboard);
             t.Selection.SelectCells(0, 0, 1, 1, ChangeSource.Agent);
-            Assert.Equal(new[] { TableChange.Selection, TableChange.Selection }, changes);
+            AssertionExtensions.EqualSequence(new[] { TableChange.Selection, TableChange.Selection }, changes);
             Assert.Equal(2, own);
             Assert.Equal(ChangeSource.Agent, t.LastSource);
         }

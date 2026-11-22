@@ -76,18 +76,18 @@ namespace MechJebLibTest.KodeKitTests
             field.Scope.Open();
             Frame(ScopeKeys.Up);
             Release(ScopeKeys.Up);
-            Assert.Equal(new[] { ScopeKeys.Up }, field.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Up }, field.Keys);
             // a dialog over the field: its keys are the dialog's (the stepper under it doesn't nudge)
             Owner dialog = new Owner(scopes, ScopeKeys.Enter | ScopeKeys.Escape | ScopeKeys.Tab);
             dialog.Scope.Open();
             Frame(ScopeKeys.Down);
             Release(ScopeKeys.Down);
-            Assert.Equal(new[] { ScopeKeys.Up }, field.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Up }, field.Keys);
             Assert.Empty(dialog.Keys);
             dialog.Scope.Close();
             Frame();
             Frame(ScopeKeys.Down);
-            Assert.Equal(new[] { ScopeKeys.Up, ScopeKeys.Down }, field.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Up, ScopeKeys.Down }, field.Keys);
         }
 
         [Fact]
@@ -99,13 +99,13 @@ namespace MechJebLibTest.KodeKitTests
             Owner dialog = new Owner(scopes, ScopeKeys.Enter | ScopeKeys.Escape | ScopeKeys.Tab);
             dialog.Scope.Open();
             Frame(ScopeKeys.Tab);
-            Assert.Equal(new[] { ScopeKeys.Tab }, dialog.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Tab }, dialog.Keys);
             dialog.Scope.Drop();
             Frame(ScopeKeys.Tab);
             Assert.Empty(field.Keys);
             Release(ScopeKeys.Tab);
             Frame(ScopeKeys.Tab);
-            Assert.Equal(new[] { ScopeKeys.Tab }, field.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Tab }, field.Keys);
         }
 
         [Fact]
@@ -117,8 +117,8 @@ namespace MechJebLibTest.KodeKitTests
             field.Scope.Key += k => second.Add(k);
             field.Scope.Open();
             Frame(ScopeKeys.Up);
-            Assert.Equal(new[] { ScopeKeys.Up }, field.Keys);
-            Assert.Equal(new[] { ScopeKeys.Up }, second);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Up }, field.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Up }, second);
         }
 
         [Fact]
@@ -147,7 +147,7 @@ namespace MechJebLibTest.KodeKitTests
             Frame();
             top.Scope.Open();
             Frame(ScopeKeys.Down);
-            Assert.Equal(new[] { ScopeKeys.Down }, top.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Down }, top.Keys);
             Assert.Empty(below.Keys);
         }
 
@@ -157,7 +157,7 @@ namespace MechJebLibTest.KodeKitTests
             Owner o = new Owner(scopes, ScopeKeys.Up | ScopeKeys.Escape);
             o.Scope.Open();
             Frame(ScopeKeys.Up | ScopeKeys.Down | ScopeKeys.Enter);
-            Assert.Equal(new[] { ScopeKeys.Up }, o.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Up }, o.Keys);
         }
 
         [Fact]
@@ -166,7 +166,7 @@ namespace MechJebLibTest.KodeKitTests
             Owner o = new Owner(scopes, ScopeKeys.Tab | ScopeKeys.Left | ScopeKeys.Right | ScopeKeys.Enter);
             o.Scope.Open();
             Frame(ScopeKeys.Tab | ScopeKeys.Left | ScopeKeys.Right | ScopeKeys.Enter);
-            Assert.Equal(new[] { ScopeKeys.Enter, ScopeKeys.Left, ScopeKeys.Right, ScopeKeys.Tab }, o.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Enter, ScopeKeys.Left, ScopeKeys.Right, ScopeKeys.Tab }, o.Keys);
         }
 
         [Fact]
@@ -182,7 +182,7 @@ namespace MechJebLibTest.KodeKitTests
             Assert.Empty(below.Keys);
             Release(ScopeKeys.Tab);
             Frame(ScopeKeys.Tab);
-            Assert.Equal(new[] { ScopeKeys.Tab }, below.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Tab }, below.Keys);
         }
 
         [Fact]
@@ -254,7 +254,7 @@ namespace MechJebLibTest.KodeKitTests
             Assert.Empty(o.Keys);
             Release(ScopeKeys.Enter);
             Frame(ScopeKeys.Enter);
-            Assert.Equal(new[] { ScopeKeys.Enter }, o.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Enter }, o.Keys);
         }
 
         [Fact]
@@ -508,7 +508,7 @@ namespace MechJebLibTest.KodeKitTests
             Owner second = DropDown();
             second.Scope.Open();
             Frame(ScopeKeys.Down);
-            Assert.Equal(new[] { ScopeKeys.Down }, second.Keys);
+            AssertionExtensions.EqualSequence(new[] { ScopeKeys.Down }, second.Keys);
         }
 
         [Fact]

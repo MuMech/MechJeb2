@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using MechJebLib.Primitives;
 using Xunit.Sdk;
@@ -34,6 +35,17 @@ namespace MechJebLibTest
             }
 
             throw new XunitException($"Expected no allocation, but each of 3 passes allocated (the last {bytes} bytes)");
+        }
+
+        /// <summary>True when the tests run on Mono (CI, and KSP's runtime) rather than .NET Framework.</summary>
+        public static bool OnMono => Type.GetType("Mono.Runtime") != null;
+
+        // Assert.Equal of an enum array against a List of that enum fails on Mono: xunit reads the array's items as Int32
+        // there and finds them unequal to the list's enum values ("[0, 2]" against "[Pointer, Agent]"). Both sides are copied
+        // into a List<T> first, so the same comparison runs on Mono and on .NET Framework.
+        public static void EqualSequence<T>(IEnumerable<T> expected, IEnumerable<T> actual)
+        {
+            Xunit.Assert.Equal(new List<T>(expected), new List<T>(actual));
         }
 
         public static void ShouldEqual(this int actual, int expected)

@@ -323,7 +323,7 @@ namespace MechJebLibTest.KodeKitTests
             q.Show("b", ToastSeverity.Info, 0);
             q.Dismiss(a.Id, ChangeSource.Pointer, 0);
             q.Update(2);
-            Assert.Equal(new[] { ToastEnd.Dismissed, ToastEnd.Expired }, ends);
+            AssertionExtensions.EqualSequence(new[] { ToastEnd.Dismissed, ToastEnd.Expired }, ends);
         }
 
         [Fact]

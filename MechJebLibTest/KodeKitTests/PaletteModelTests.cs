@@ -182,7 +182,7 @@ namespace MechJebLibTest.KodeKitTests
             Assert.Equal(PaletteEnter.Ran, m.Enter(ChangeSource.Keyboard));
             Assert.True(w.DeltaVOpen);
             Assert.False(m.IsOpen);
-            Assert.Equal(new[] { PaletteClose.Ran }, closes);
+            AssertionExtensions.EqualSequence(new[] { PaletteClose.Ran }, closes);
             Assert.Equal("window:DeltaV", m.LastRunId);
             Assert.Equal("Delta-V Stats", m.LastRunLabel);
         }
@@ -206,8 +206,8 @@ namespace MechJebLibTest.KodeKitTests
             PaletteModel m = Opened(w, out _);
             m.SetQuery("delta");
             m.Enter(ChangeSource.Agent);
-            Assert.Equal(new[] { ChangeSource.Agent }, w.Sources);
-            Assert.Equal(new[] { ChangeSource.Agent }, w.Commits);
+            AssertionExtensions.EqualSequence(new[] { ChangeSource.Agent }, w.Sources);
+            AssertionExtensions.EqualSequence(new[] { ChangeSource.Agent }, w.Commits);
             Assert.Equal(ChangeSource.Agent, m.LastSource);
             Assert.Equal(0, CommitPath.OpenScopes);
         }
@@ -239,7 +239,7 @@ namespace MechJebLibTest.KodeKitTests
             Assert.Equal(PaletteEnter.Ran, m.Enter(ChangeSource.Keyboard));
             Assert.True(w.Engaged);
             Assert.Equal(new[] { "engage" }, w.Runs);
-            Assert.Equal(new[] { PaletteClose.Ran }, closes);
+            AssertionExtensions.EqualSequence(new[] { PaletteClose.Ran }, closes);
             Assert.Null(m.Armed);
         }
 
@@ -264,7 +264,7 @@ namespace MechJebLibTest.KodeKitTests
             m.Enter(ChangeSource.Keyboard);
             Assert.True(m.Handle(ScopeKeys.Escape, ChangeSource.Keyboard));
             Assert.False(m.IsOpen);
-            Assert.Equal(new[] { PaletteClose.Escape }, closes);
+            AssertionExtensions.EqualSequence(new[] { PaletteClose.Escape }, closes);
             Assert.False(w.Engaged);
             Assert.Null(m.Armed);
             Assert.Null(m.LastRunId);
@@ -309,7 +309,7 @@ namespace MechJebLibTest.KodeKitTests
                 m.Enter(ChangeSource.Keyboard);
                 m.Close(why);
                 m.Close(why);
-                Assert.Equal(new[] { why }, closes);
+                AssertionExtensions.EqualSequence(new[] { why }, closes);
                 Assert.False(w.Engaged);
                 m.Open(w.Commands());
                 Assert.Null(m.Armed);
@@ -329,7 +329,7 @@ namespace MechJebLibTest.KodeKitTests
             t.Now = PaletteModel.ClickConfirmDelay;
             Assert.Equal(PaletteEnter.Ran, m.Pick(engage, ChangeSource.Pointer));
             Assert.True(w.Engaged);
-            Assert.Equal(new[] { ChangeSource.Pointer }, w.Sources);
+            AssertionExtensions.EqualSequence(new[] { ChangeSource.Pointer }, w.Sources);
         }
 
         [Fact]

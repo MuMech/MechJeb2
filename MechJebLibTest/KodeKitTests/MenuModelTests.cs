@@ -78,7 +78,7 @@ namespace MechJebLibTest.KodeKitTests
             var log = new Log();
             MenuModel m = Opened(log);
             Assert.True(m.Open(_title, new[] { MenuEntry.Item("Close", s => { }) }, 11));
-            Assert.Equal(new[] { MenuClose.Replaced }, log.Closes);
+            AssertionExtensions.EqualSequence(new[] { MenuClose.Replaced }, log.Closes);
             Assert.True(m.IsOpen);
             Assert.Same(_title, m.Owner);
             Assert.Single(m.Entries);
@@ -108,7 +108,7 @@ namespace MechJebLibTest.KodeKitTests
             m.Closed += r => log.Closes.Add(r);
             m.Open(_row, new[] { MenuEntry.Item("More", s => m.Open(_title, new[] { MenuEntry.Item("Close", x => { }) }, 1)) }, 0);
             Assert.True(m.Pick(0, ChangeSource.Pointer));
-            Assert.Equal(new[] { MenuClose.Picked }, log.Closes); // not Replaced: it was closed before the action ran
+            AssertionExtensions.EqualSequence(new[] { MenuClose.Picked }, log.Closes); // not Replaced: it was closed before the action ran
             Assert.True(m.IsOpen);
             Assert.Same(_title, m.Owner);
         }
@@ -159,7 +159,7 @@ namespace MechJebLibTest.KodeKitTests
             var log = new Log();
             MenuModel m = Opened(log);
             Assert.True(m.Press(50, 250));
-            Assert.Equal(new[] { MenuClose.OutsidePress }, log.Closes);
+            AssertionExtensions.EqualSequence(new[] { MenuClose.OutsidePress }, log.Closes);
             Assert.Empty(log.Runs);
         }
 
@@ -192,7 +192,7 @@ namespace MechJebLibTest.KodeKitTests
             Assert.False(m.Tick(11.49));
             Assert.True(m.IsOpen);
             Assert.True(m.Tick(11.5));
-            Assert.Equal(new[] { MenuClose.PointerLeft }, log.Closes);
+            AssertionExtensions.EqualSequence(new[] { MenuClose.PointerLeft }, log.Closes);
         }
 
         [Fact]
@@ -239,7 +239,7 @@ namespace MechJebLibTest.KodeKitTests
             var log = new Log();
             MenuModel m = Opened(log);
             Assert.True(m.KeyDown());
-            Assert.Equal(new[] { MenuClose.KeyPress }, log.Closes);
+            AssertionExtensions.EqualSequence(new[] { MenuClose.KeyPress }, log.Closes);
             Assert.False(m.KeyDown());
         }
 
@@ -252,7 +252,7 @@ namespace MechJebLibTest.KodeKitTests
             m.Close(MenuClose.OwnerClosed);
             Assert.False(m.Press(0, 0));
             Assert.False(m.Tick(1000));
-            Assert.Equal(new[] { MenuClose.KeyPress }, log.Closes);
+            AssertionExtensions.EqualSequence(new[] { MenuClose.KeyPress }, log.Closes);
             Assert.Equal(MenuClose.KeyPress, m.LastClose);
             Assert.Null(m.Owner);
             Assert.Empty(m.Entries);
@@ -278,7 +278,7 @@ namespace MechJebLibTest.KodeKitTests
             layer.Place(m.Box);
             layer.Dismissed += d => m.Close(MenuModel.FromDismiss(d));
             layers.OwnerClosed(_row);
-            Assert.Equal(new[] { MenuClose.OwnerClosed }, log.Closes);
+            AssertionExtensions.EqualSequence(new[] { MenuClose.OwnerClosed }, log.Closes);
         }
 
         [Fact]

@@ -125,8 +125,8 @@ namespace MechJebLibTest.KodeKitTests
         [Fact]
         public void TheStopsAreConfirmTheThirdButtonThenCancel()
         {
-            Assert.Equal(new[] { DialogStop.Confirm, DialogStop.Other, DialogStop.Cancel }, new Asked(other: "Keep").Dialog.Stops);
-            Assert.Equal(new[] { DialogStop.Confirm, DialogStop.Cancel }, new Asked().Dialog.Stops);
+            AssertionExtensions.EqualSequence(new[] { DialogStop.Confirm, DialogStop.Other, DialogStop.Cancel }, new Asked(other: "Keep").Dialog.Stops);
+            AssertionExtensions.EqualSequence(new[] { DialogStop.Confirm, DialogStop.Cancel }, new Asked().Dialog.Stops);
         }
 
         [Fact]
@@ -209,7 +209,7 @@ namespace MechJebLibTest.KodeKitTests
         {
             var a = new Asked();
             a.Dialog.MakePrompt("Orbit info");
-            Assert.Equal(new[] { DialogStop.Input, DialogStop.Confirm, DialogStop.Cancel }, a.Dialog.Stops);
+            AssertionExtensions.EqualSequence(new[] { DialogStop.Input, DialogStop.Confirm, DialogStop.Cancel }, a.Dialog.Stops);
             Assert.Equal(DialogStop.Input, a.Dialog.Focused);
             a.Dialog.Key(ScopeKeys.Tab, true);
             Assert.Equal(DialogStop.Cancel, a.Dialog.Focused);
