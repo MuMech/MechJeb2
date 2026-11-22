@@ -1,6 +1,6 @@
 ---
 name: kodekit
-description: Use when a change adds, changes, reviews, tests or drives any MechJeb UI - a window or DisplayModule, a button, toggle, field, drop-down, read-out, info item, graph, tooltip or status text, a key or shortcut, localized UI text, anything in MechJeb2.UI (KodeKit, KodeView), or the agent bridge. Also when a new module setting or autopilot option needs to be shown to the player, or when about to write OnGUI, GUILayout or GuiUtils drawing code.
+description: Use before planning, writing or reviewing any change the player would see, click or type into in MechJeb - any window, button, toggle, option, field, read-out, key or shortcut, confirmation, status or localized text - even when the request only names a window, an autopilot or a feature and never says UI. Also for anything in MechJeb2.UI (KodeKit, KodeView) and for the agent bridge.
 ---
 
 # KodeKit
