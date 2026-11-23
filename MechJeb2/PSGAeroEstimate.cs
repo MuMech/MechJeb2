@@ -39,6 +39,10 @@ namespace MuMech
         // far off the nose, in the pitch plane.
         private const float FLOW_AOA = 2;
 
+        // FAR can't leave out a launch tower: until it has dropped it, under a second after the release, the rocket's widest part at this Cd
+        private const double PAD_CD = 0.5;
+        private const double FAR_READ_MET = 5;
+
         // the vessel as it is
         private readonly double[] _cdA = new double[_machs.Length];
 
@@ -46,6 +50,8 @@ namespace MuMech
         private readonly Dictionary<int, double[]> _stageTables = new Dictionary<int, double[]>();
 
         private int _currentStage;
+        private int _releaseStage; // of the launch clamps: what is dropped by then stays on the pad
+        private bool _padEstimate;
 
         private double _frontalArea;
 
@@ -92,12 +98,12 @@ namespace MuMech
                 return false;
 
             bool onGround = vessel.situation == Vessel.Situations.PRELAUNCH || vessel.LandedOrSplashed;
-            if (!onGround && vessel == _vessel && Source != Model.NONE)
+            if (!onGround && vessel == _vessel && Source != Model.NONE && !_padEstimate)
                 return CdA > 0;
 
             // FAR's read is slow (tens of milliseconds), so only a changed vessel is read again
             if (vessel != _vessel || vessel.mainBody != _body || vessel.parts.Count != _partCount ||
-                vessel.currentStage != _currentStage || Source == Model.NONE)
+                vessel.currentStage != _currentStage || Source == Model.NONE || (_padEstimate && vessel.missionTime >= FAR_READ_MET))
             {
                 _currentStage = vessel.currentStage;
                 _stageTables.Clear();
@@ -125,10 +131,18 @@ namespace MuMech
 
         private bool ReadTable(Vessel vessel)
         {
+            _releaseStage = _currentStage;
+            foreach (Part p in vessel.parts)
+                if (p.IsLaunchClamp())
+                    _releaseStage = Min(_releaseStage, p.inverseStage);
+
             if (VesselState.IsFARCorrectlyInitialized)
             {
-                if (!ReadFAR(vessel, Flow(vessel)))
+                bool pad = vessel.parts.Exists(p => !p.IsLaunchClamp() && Dropped(p, _releaseStage)) ||
+                    (_padEstimate && vessel == _vessel && vessel.missionTime < FAR_READ_MET);
+                if (pad ? !ReadPadEstimate(vessel) : !ReadFAR(vessel, Flow(vessel)))
                     return false;
+                _padEstimate = pad;
                 Source = Model.FAR;
                 return true;
             }
@@ -136,6 +150,20 @@ namespace MuMech
             ReadStock(vessel, Flow(vessel), _currentStage, _cdA);
             Source = Model.STOCK;
             return true;
+        }
+
+        private bool ReadPadEstimate(Vessel vessel)
+        {
+            Vector3 up = vessel.GetTransform().up;
+            _frontalArea = 0;
+            foreach (Part p in vessel.parts)
+                if (!p.DragCubes.None && !p.IsLaunchClamp() && !Dropped(p, _releaseStage))
+                    _frontalArea = Max(_frontalArea,
+                        p.DragCubes.GetCubeAreaDir(p.partTransform.InverseTransformDirection(up), p.DragCubes.WeightedArea));
+
+            for (int m = 0; m < _machs.Length; m++)
+                _cdA[m] = PAD_CD * _frontalArea;
+            return _frontalArea > 0;
         }
 
         // The table of the stage a plan's phase flies: in stock aerodynamics the vessel without the parts the stages from the
@@ -179,7 +207,7 @@ namespace MuMech
                 Part p = vessel.parts[i];
                 // the launch clamps stay on the pad
                 if (p.ShieldedFromAirstream || (p.rb == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts) || p.IsLaunchClamp() ||
-                    (!current && Dropped(p, stage)))
+                    Dropped(p, Min(stage, _releaseStage)))
                     continue;
 
                 DragCubeList cubes = p.DragCubes;
