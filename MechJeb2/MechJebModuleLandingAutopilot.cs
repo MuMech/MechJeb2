@@ -70,6 +70,9 @@ namespace MuMech
         /// <summary>Heat shield first at no angle of attack: the attitude the landing has always held, and the simulation assumed.</summary>
         public bool EntryAttitudeIsDefault => !EntryPrograde && EntryAoADegrees == 0;
 
+        /// <summary>An entry other than the steep, retrograde one the landing has always flown.</summary>
+        public bool HasEntryProfile => CustomEntryPeriapsis || !EntryAttitudeIsDefault;
+
         /// <summary>The periapsis radius the deorbit burns aim for.</summary>
         public double EntryPeriapsisRadius() => CustomEntryPeriapsis ? MainBody.Radius + EntryPeriapsis.Val : 0.9 * MainBody.Radius;
 
@@ -377,7 +380,8 @@ namespace MuMech
             _predictor.descentSpeedPolicy = DescentSpeedPolicy; // immutable, so the simulation can share it
             _predictor.decelEndAltitudeASL = DecelerationEndAltitude();
             _predictor.parachuteSemiDeployMultiplier = _parachutePlan.Multiplier;
-            _predictor.maxOrbits = 0.5;
+            // a shallow or lifting entry can fly longer than half an orbit, or skip out and come back down
+            _predictor.maxOrbits = HasEntryProfile ? 2 : 0.5;
             _predictor.noSkipToFreefall = false;
             _predictor.deployChutes = DeployChutes;
             _predictor.limitChutesStage = LimitChutesStage;
@@ -589,7 +593,9 @@ namespace MuMech
 
         private void JettisonIfDue()
         {
-            if (!_stageToDrop || Orbit.PeA > 0 || VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude() + 4000)
+            // deorbited: the periapsis under the ground, or near the entry periapsis when it is above it (the burns stop a little short)
+            double deorbitedPeA = CustomEntryPeriapsis ? Math.Max(EntryPeriapsis.Val, 0) + 5000 : 0;
+            if (!_stageToDrop || Orbit.PeA > deorbitedPeA || VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude() + 4000)
                 return;
 
             // still burning towards the target, or not at normal speed yet

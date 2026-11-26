@@ -18,6 +18,9 @@ namespace MuMech
                 if (!Core.Landing.PredictionReady)
                 {
                     Core.Thrust.ThrustOff();
+                    // in the air or under parachutes there is nothing to correct: coast, in the entry attitude, until a landing is predicted
+                    if (VesselState.DragAcceleration > 0.1 || VesselState.ParachuteDeployed)
+                        return new CoastToDeceleration(Core);
                     return this;
                 }
 

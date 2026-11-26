@@ -62,7 +62,8 @@ namespace MuMech
 
                 Status = Localizer.Format("#MechJeb_LandingGuidance_Status1"); //"Coasting toward deceleration burn"
 
-                if (Core.Landing.LandAtTarget)
+                // without a landing prediction there is nothing to correct towards
+                if (Core.Landing.LandAtTarget && Core.Landing.PredictionReady)
                 {
                     double currentError = Vector3d.Distance(Core.Target.GetPositionTargetPosition(), Core.Landing.LandingSite);
                     if (currentError > 1000)
@@ -98,7 +99,8 @@ namespace MuMech
 
                 if (Core.Attitude.AttitudeAngleFromTarget() > 5) { _warpReady = false; } // hopefully
 
-                if (Core.Landing.PredictionReady)
+                // in the air the attitude needs no prediction: a long entry may have none for a while
+                if (VesselState.DragAcceleration >= 0.01 || Core.Landing.PredictionReady)
                 {
                     if (VesselState.DragAcceleration < 0.01)
                     {
