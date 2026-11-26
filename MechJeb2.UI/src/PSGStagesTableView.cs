@@ -230,20 +230,35 @@ namespace MuMech.UI
 
         const string RelightNote = "An engine of the coast stage can't light again after the coast (no restart, or no ignitions left).";
 
+        // a property grid at its own width: its label column doesn't take the row's extra width
+        static KodeWindow.PropertyGrid Block(KodeWindow w, UIObject parent)
+        {
+            KodeWindow.PropertyGrid g = w.Properties(parent);
+            g.FlexibleColumn = -1;
+            g.Table.FlexibleLayout(false, false);
+            return g;
+        }
+
         // the numbers that belong with the table: which burns it keeps, the coast's bounds and ullage, the spin rate
         void BuildPlanOptions(KodeWindow w, UIObject r)
         {
             MechJebCore core = m.Core;
             MechJebModulePSGSimulation psgs = core.PSGSimulation;
             KodeWindow.Header(r, "#MechJeb_NewUI_PlanOptions"); //Plan options
+            // two blocks side by side, each field next to its label: the burns and coasts on the left, ullage and spin on the right
+            Layout blocks = KodeWindow.Row(r);
+            blocks.ChildAlignment(TextAnchor.UpperLeft).Spacing(24);
+            KodeWindow.PropertyGrid left = Block(w, blocks), right = Block(w, blocks);
+            KodeWindow.FlexibleSpace(blocks);
+            Tip(OptionRows.Field(left, "#MechJeb_NewUI_PsgMinDv", psgs.MinDeltaV, "m/s", 50), "#MechJeb_NewUI_PsgMinDv_tooltip"); //Min ΔV
+            w.Attention(Tip(OptionRows.Field(left, "#MechJeb_NewUI_PsgMinCoast", psgs.MinCoast, "s", 50), "#MechJeb_NewUI_PsgCoast_tooltip"), //Min coast
+                () => PsgAttention.CoastTimesInverted(core));
+            w.Attention(Tip(OptionRows.Field(left, "#MechJeb_NewUI_PsgMaxCoast", psgs.MaxCoast, "s", 50), "#MechJeb_NewUI_PsgCoast_tooltip"), //Max coast
+                () => PsgAttention.CoastTimesInverted(core));
+            Tip(OptionRows.Field(right, "#MechJeb_NewUI_PsgUllageLead", core.PSGAutopilot.UllageLeadTime, "s", 50), "#MechJeb_NewUI_PsgUllageLead_tooltip"); //Ullage lead time
+            Tip(OptionRows.Field(right, "ω", core.AscentSettings.SpinupAngularVelocity, "rpm", 50), "#MechJeb_NewUI_PsgSpin_tooltip");
+            // the note under both blocks, across the window
             KodeWindow.PropertyGrid g = w.Properties(r);
-            Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgMinDv", psgs.MinDeltaV, "m/s", 50), "#MechJeb_NewUI_PsgMinDv_tooltip"); //Min ΔV
-            w.Attention(Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgMinCoast", psgs.MinCoast, "s", 50), "#MechJeb_NewUI_PsgCoast_tooltip"), //Min coast
-                () => PsgAttention.CoastTimesInverted(core));
-            w.Attention(Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgMaxCoast", psgs.MaxCoast, "s", 50), "#MechJeb_NewUI_PsgCoast_tooltip"), //Max coast
-                () => PsgAttention.CoastTimesInverted(core));
-            Tip(OptionRows.Field(g, "#MechJeb_NewUI_PsgUllageLead", core.PSGAutopilot.UllageLeadTime, "s", 50), "#MechJeb_NewUI_PsgUllageLead_tooltip"); //Ullage lead time
-            Tip(OptionRows.Field(g, "ω", core.AscentSettings.SpinupAngularVelocity, "rpm", 50), "#MechJeb_NewUI_PsgSpin_tooltip");
             UIText relight = g.Note(RelightNote);
             KodeWindow.ToneText(relight, Tone.Caution);
             KodeWindow.WrapToWidth(relight);
