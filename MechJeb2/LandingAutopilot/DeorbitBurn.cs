@@ -70,28 +70,31 @@ namespace MuMech
                 var currentHorizontalVelocity = Vector3d.Exclude(VesselState.Up, VesselState.OrbitalVelocity); //Find our current horizontal velocity
                 double finalHorizontalSpeed =
                     (currentHorizontalVelocity + horizontalDV).magnitude; //Find the desired horizontal speed after the deorbit burn
-                Vector3d
-                    finalHorizontalVelocity =
-                        finalHorizontalSpeed *
-                        freefallEndHorizontalToTarget; //Combine the desired speed and direction to get the desired velocity after the deorbi burn
 
                 //Compute the angle between the location of the target at the end of freefall and the normal to our orbit:
                 Vector3d currentRadialVector = VesselState.CoM - MainBody.position;
                 double targetAngleToOrbitNormal = Vector3d.Angle(Orbit.OrbitNormal(), freefallEndTargetRadialVector);
                 targetAngleToOrbitNormal = Math.Min(targetAngleToOrbitNormal, 180 - targetAngleToOrbitNormal);
 
-                double planeChangeAngle =
-                    Vector3d.Angle(currentHorizontalVelocity,
-                        freefallEndHorizontalToTarget); //The plane change required to get onto the deorbit trajectory, in degrees
-
-                //If the target is basically almost normal to our orbit, it doesn't matter when we deorbit; might as well do it now
-                //Otherwise, wait until the target is as far ahead as the new orbit carries the vessel: to the ground, or to the periapsis
-                //when that is above it (a shallow entry), within 15 degrees. The steep default entry hits the ground about a quarter of an
-                //orbit after the burn.
+                //How far the new orbit carries the vessel (to the ground, or to the periapsis when that is above it: a shallow entry) and
+                //how far ahead the target is, along the orbit
                 Vector3d freefallEndRadialVector = forwardDeorbitTrajectory.WorldPositionAtUT(VesselState.Time + freefallTime) - MainBody.position;
                 double travel = AngleAlongOrbit(currentRadialVector, freefallEndRadialVector, currentHorizontalVelocity);
                 double ahead = AngleAlongOrbit(currentRadialVector, freefallEndTargetRadialVector, currentHorizontalVelocity);
                 double off = (ahead - travel + 540) % 360 - 180;
+
+                //Within 30 degrees of the antipode the horizontal direction to the target has almost no length and can point sideways:
+                //steering along it changes the plane by tens of degrees. Keep the orbit's plane there; course correction takes the rest.
+                bool nearAntipode = ahead > 150 && ahead < 210;
+                Vector3d heading = nearAntipode ? currentHorizontalVelocity.normalized : freefallEndHorizontalToTarget;
+                Vector3d finalHorizontalVelocity = finalHorizontalSpeed * heading; //The desired velocity after the deorbit burn
+
+                double planeChangeAngle =
+                    Vector3d.Angle(currentHorizontalVelocity, heading); //The plane change required to get onto the deorbit trajectory, in degrees
+
+                //If the target is basically almost normal to our orbit, it doesn't matter when we deorbit; might as well do it now
+                //Otherwise, wait until the target is as far ahead as the new orbit carries the vessel, within 15 degrees. The steep default
+                //entry hits the ground about a quarter of an orbit after the burn.
 
                 if (targetAngleToOrbitNormal < 10 || (Math.Abs(off) < 15 && planeChangeAngle < 90))
                 {
