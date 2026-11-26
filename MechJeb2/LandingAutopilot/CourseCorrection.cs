@@ -64,7 +64,7 @@ namespace MuMech
                 }
 
                 // A vessel that has dropped its engines can't correct anything, and turning towards the burn takes its heat shield off the airflow
-                if (VesselState.LimitedMaxThrustAcceleration <= 0)
+                if (!Core.Landing.CanCorrectCourse)
                 {
                     Core.Thrust.ThrustOff();
                     return new CoastToDeceleration(Core);

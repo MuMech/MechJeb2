@@ -70,6 +70,12 @@ namespace MuMech
         /// <summary>Heat shield first at no angle of attack: the attitude the landing has always held, and the simulation assumed.</summary>
         public bool EntryAttitudeIsDefault => !EntryPrograde && EntryAoADegrees == 0;
 
+        /// <summary>
+        ///     Enough thrust for a course correction, one test for both steps: CoastToDeceleration went to CourseCorrection on any thrust
+        ///     above 0 and CourseCorrection came back on 0 or less, so a pod whose thrust read a hair above 0 switched every frame.
+        /// </summary>
+        public bool CanCorrectCourse => VesselState.LimitedMaxThrustAcceleration > 0.05;
+
         /// <summary>An entry other than the steep, retrograde one the landing has always flown.</summary>
         public bool HasEntryProfile => CustomEntryPeriapsis || !EntryAttitudeIsDefault;
 
