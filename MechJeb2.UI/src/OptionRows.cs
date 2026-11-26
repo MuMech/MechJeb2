@@ -48,22 +48,28 @@ namespace MuMech.UI
                 () => LimiterTones.Throttle(t, l, applies)); //"Limit throttle to"
             minThrottle = MinThrottle(g, t, l, applies, 55); //"Keep limited throttle over"
 
-            // electric: [switch] Electric limit Lo [lo] % Hi [hi] %, the "% Hi [hi] %" in the unit column
+            // electric, on two rows so the unit column stays one unit wide:
+            //   [switch] Electric limit Lo [lo] %
+            //                           Hi [hi] %   ("Hi" right-aligned under "Lo")
             Layout electric = Switch(g, "#MechJeb_Ascent_checkbox20", () => l.ElectricThrottle, v => l.ElectricThrottle = v,
                 tone: LimiterTones.Electric(t, applies));
             TMPro.TMP_InputField lo = EditFields.Field(w, electric, () => l.ElectricThrottleLo.Text, s => l.ElectricThrottleLo.Text = s, 55,
                 () => l.ElectricThrottleLo.IsParsed, label: "#MechJeb_NewUI_Label_ElectricLo"); //Electric limit, low
-            Layout hi = KodeWindow.Row(electric);
-            hi.FlexibleLayout(false, false);
-            KodeWindow.Label(hi, "% Hi");
-            EditUi.Field(w, hi, () => l.ElectricThrottleHi, 40, label: "#MechJeb_NewUI_Label_ElectricHi"); //Electric limit, high
+            UIText loUnit = KodeWindow.Label(electric, "%");
+            Layout hi = g.Row();
+            KodeWindow.Label(hi, "");
+            UIText hiLabel = KodeWindow.Label(hi, "#MechJeb_NewUI_ElectricHiRow"); //Hi
+            hiLabel.tmpText.alignment = TMPro.TextAlignmentOptions.Right;
+            EditUi.Field(w, hi, () => l.ElectricThrottleHi, 55, label: "#MechJeb_NewUI_Label_ElectricHi"); //Electric limit, high
             KodeWindow.Label(hi, "%");
-            g.Dim(lo.gameObject, hi.gameObject, () => !l.ElectricThrottle);
+            g.Dim(lo.gameObject, loUnit.gameObject, () => !l.ElectricThrottle);
+            g.Dim(hi.gameObject, null, () => !l.ElectricThrottle);
 
             if (psg != null)
             {
                 w.Visible(throttle.gameObject, () => !psg());
                 w.Visible(electric.gameObject, () => !psg());
+                w.Visible(hi.gameObject, () => !psg());
             }
 
             if (jets)
