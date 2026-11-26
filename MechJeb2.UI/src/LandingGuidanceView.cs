@@ -192,8 +192,11 @@ namespace MuMech.UI
             w.Visible(target.gameObject, () => HasPositionTarget);
             Layout coords = KodeWindow.Row(target);
             Layout fields = KodeWindow.Panel(coords);
-            AngleFields(w, fields, "Lat", () => Core.Target.targetLatitude, EditableAngle.Direction.NS);
-            AngleFields(w, fields, "Lon", () => Core.Target.targetLongitude, EditableAngle.Direction.EW);
+            // one table for both rows, so their fields, units and hemispheres line up in columns
+            KodeWindow.PropertyGrid angles = w.Properties(fields);
+            angles.FlexibleColumn = -1;
+            AngleFields(w, angles, "Lat", () => Core.Target.targetLatitude, EditableAngle.Direction.NS);
+            AngleFields(w, angles, "Lon", () => Core.Target.targetLongitude, EditableAngle.Direction.EW);
 
             // the four 10 m nudges as one pad, the step in its centre
             KodeWindow.CompassGrid pad = KodeWindow.Compass(coords, 20);
@@ -216,9 +219,9 @@ namespace MuMech.UI
         }
 
         /// <summary>Lat [d] ° [m] ' [s] " [N|S]: the hemisphere is a two-way choice, not a button that flips.</summary>
-        static void AngleFields(KodeWindow w, UIObject parent, string label, Func<EditableAngle> angle, EditableAngle.Direction direction)
+        static void AngleFields(KodeWindow w, KodeWindow.PropertyGrid g, string label, Func<EditableAngle> angle, EditableAngle.Direction direction)
         {
-            Layout row = KodeWindow.Row(parent);
+            Layout row = g.Row();
             KodeWindow.Label(row, label);
             OpUi.AngleRow(w, row, angle, direction, false, label);
         }
