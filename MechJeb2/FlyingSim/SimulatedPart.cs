@@ -310,6 +310,13 @@ namespace MuMech
 
             dest.SetDragWeights();
 
+            // the cube list is pooled: a simulated parachute that opened leaves its canopy's rotation behind, and the next part to
+            // borrow the list would read its cube turned. Take the real part's.
+            if (source.RotateDragVector)
+                dest.SetDragVectorRotation(source.DragVectorRotation);
+            else
+                dest.SetDragVectorRotation(false);
+
             simCurves.CopyTo(dest);
         }
 
