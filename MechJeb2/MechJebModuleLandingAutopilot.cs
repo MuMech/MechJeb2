@@ -9,7 +9,6 @@ using UnityEngine;
 namespace MuMech
 {
     // Landing AP TODO / BUG list
-    // - Add a parameter to define how steep the descent will be ( fraction of Orbit ? )
     // - Fix the auto wrap stop start dance
     // - Replace the openGL code with a LineRenderer
     // -
@@ -39,6 +38,131 @@ namespace MuMech
         // Drop the current stage just above the atmosphere, and aim for what will land, not what is flying now. For a capsule and its service stage.
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public bool JettisonBeforeEntry = false;
+
+        /// <summary>
+        ///     The deorbit burns aim for <see cref="EntryPeriapsis" /> when this is on, and for a periapsis 10 % of the body's radius
+        ///     below the surface (a steep entry) when it is off.
+        /// </summary>
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public bool CustomEntryPeriapsis;
+
+        /// <summary>The periapsis altitude the deorbit burns aim for, in m (shown in km); below zero is under the surface.</summary>
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDoubleMult EntryPeriapsis = new EditableDoubleMult(35000, 1000);
+
+        /// <summary>Through the atmosphere, nose first (a spaceplane) when on, heat shield first (a capsule) when off.</summary>
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public bool EntryPrograde;
+
+        // the angle of attack of each entry attitude, in degrees, nose up: a capsule and a spaceplane want very different ones
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble EntryAoARetrograde = 0;
+
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble EntryAoAPrograde = 40;
+
+        /// <summary>The angle of attack of the entry attitude chosen now, in degrees, nose up.</summary>
+        public EditableDouble EntryAoA => EntryPrograde ? EntryAoAPrograde : EntryAoARetrograde;
+
+        /// <summary>The angle of attack used, in degrees: <see cref="EntryAoA" /> kept within ±90°.</summary>
+        public double EntryAoADegrees => MechJebLib.Utils.Statics.Clamp(EntryAoA.Val, -90, 90);
+
+        /// <summary>Heat shield first at no angle of attack: the attitude the landing has always held, and the simulation assumed.</summary>
+        public bool EntryAttitudeIsDefault => !EntryPrograde && EntryAoADegrees == 0;
+
+        /// <summary>The periapsis radius the deorbit burns aim for.</summary>
+        public double EntryPeriapsisRadius() => CustomEntryPeriapsis ? MainBody.Radius + EntryPeriapsis.Val : 0.9 * MainBody.Radius;
+
+        private float  _entryAngleTime = float.NegativeInfinity;
+        private double _entryAngle     = double.NaN;
+
+        /// <summary>
+        ///     The flight path angle at the top of the atmosphere, relative to the surface, in degrees (below zero: going down). Above
+        ///     the atmosphere it is the angle after a deorbit burn made now to the entry periapsis, or the current orbit's once that
+        ///     reaches the atmosphere. NaN with no atmosphere, inside it, or when the orbit misses it. Worked out at most four times a
+        ///     second, so a read-out can call it every frame.
+        /// </summary>
+        public double EntryAngle()
+        {
+            if (Time.unscaledTime - _entryAngleTime < 0.25f) return _entryAngle;
+            _entryAngleTime = Time.unscaledTime;
+            try
+            {
+                _entryAngle = ComputeEntryAngle();
+            }
+            catch (Exception)
+            {
+                _entryAngle = double.NaN; // a degenerate orbit (escaping, straight down)
+            }
+
+            return _entryAngle;
+        }
+
+        private double ComputeEntryAngle()
+        {
+            if (Vessel == null || !MainBody.atmosphere) return double.NaN;
+
+            double atmosphereRadius = MainBody.Radius + MainBody.RealMaxAtmosphereAltitude();
+            Vector3d r = VesselState.CoM - MainBody.position;
+            double radius = r.magnitude;
+            if (radius <= atmosphereRadius) return double.NaN;
+
+            Vector3d v = VesselState.OrbitalVelocity;
+            if (Orbit.PeR >= atmosphereRadius)
+                v += OrbitalManeuverCalculator.DeltaVToChangePeriapsis(Orbit, VesselState.Time, EntryPeriapsisRadius());
+
+            // the speed and its horizontal part at the top of the atmosphere, from the energy and the angular momentum
+            double mu = MainBody.gravParameter;
+            double speedSqr = v.sqrMagnitude + 2 * mu * (1 / atmosphereRadius - 1 / radius);
+            Vector3d h = Vector3d.Cross(r, v);
+            double horizontal = h.magnitude / atmosphereRadius;
+            if (speedSqr <= horizontal * horizontal) return double.NaN; // the periapsis is above the atmosphere
+            double vertical = -Math.Sqrt(speedSqr - horizontal * horizontal);
+
+            // relative to the surface: the body's rotation along the track is the same at every point of the orbit, ω r cos(inclination)
+            horizontal -= Vector3d.Dot(MainBody.angularVelocity, h.normalized) * atmosphereRadius;
+
+            return Math.Atan2(vertical, Math.Abs(horizontal)) * UtilMath.Rad2Deg;
+        }
+
+        /// <summary>
+        ///     Holds the entry attitude for an airflow <paramref name="airVelocity" /> (the vessel's velocity relative to the air) and
+        ///     a local vertical <paramref name="up" />: nose first or heat shield first, nose up by the angle of attack. Nose first holds
+        ///     the wings level; heat shield first leaves the roll free, as it always has.
+        /// </summary>
+        public void EntryAttitudeTo(Vector3d airVelocity, Vector3d up)
+        {
+            EntryAxes(airVelocity, up, EntryPrograde, EntryAoADegrees, out Vector3d nose, out Vector3d top);
+            if (EntryPrograde)
+                Core.Attitude.AttitudeTo(QuaternionD.LookRotation(nose, top), AttitudeReference.INERTIAL, this);
+            else
+                Core.Attitude.AttitudeTo(nose, AttitudeReference.INERTIAL, this);
+        }
+
+        /// <summary>
+        ///     The nose and the top of a vessel at the entry attitude, in the frame of the airflow: <paramref name="aoaDegrees" /> above
+        ///     the airflow nose first, or above the reverse of it heat shield first, wings level. The reentry simulation uses the same axes.
+        /// </summary>
+        public static void EntryAxes(Vector3d airVelocity, Vector3d up, bool prograde, double aoaDegrees, out Vector3d nose, out Vector3d top)
+        {
+            Vector3d f = airVelocity.normalized;
+            Vector3d u = Vector3d.Exclude(f, up);
+            // falling straight down there is no "up" across the airflow: any direction across it will do
+            u = u.sqrMagnitude > 1e-8 ? u.normalized : Vector3d.Exclude(f, Math.Abs(f.x) < 0.9 ? Vector3d.right : Vector3d.forward).normalized;
+
+            double a = aoaDegrees * UtilMath.Deg2Rad;
+            double cos = Math.Cos(a), sin = Math.Sin(a);
+            if (prograde)
+            {
+                nose = cos * f + sin * u;
+                top  = cos * u - sin * f;
+            }
+            else
+            {
+                nose = -cos * f + sin * u;
+                top  = cos * u + sin * f;
+            }
+        }
 
         /// <summary>The landing's own Auto-warp: its steps and the burns the node executor flies for it use it while it is engaged.</summary>
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]

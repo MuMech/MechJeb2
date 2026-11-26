@@ -38,16 +38,19 @@ namespace MuMech
 
                 //We aim for a trajectory that
                 // a) has the same vertical speed as our current trajectory
-                // b) has a horizontal speed that will give it a periapsis of -10% of the body's radius
+                // b) has a horizontal speed that will give it the entry periapsis (by default -10% of the body's radius)
                 // c) has a heading that points toward where the target will be at the end of free-fall, accounting for planetary rotation
                 Vector3d horizontalDV =
                     OrbitalManeuverCalculator.DeltaVToChangePeriapsis(Orbit, VesselState.Time,
-                        0.9 * MainBody
-                           .Radius); //Imagine we are going to deorbit now. Find the burn that would lower our periapsis to -10% of the planet's radius
+                        Core.Landing.EntryPeriapsisRadius()); //Imagine we are going to deorbit now. Find the burn that would lower our periapsis to the entry periapsis
                 Orbit forwardDeorbitTrajectory = Orbit.PerturbedOrbit(VesselState.Time, horizontalDV); //Compute the orbit that would put us on
+                //Find how long that orbit would take to impact the ground; a periapsis above the ground (a shallow entry) never reaches it,
+                //and the drag brings the vessel down near the periapsis
                 double freefallTime =
-                    forwardDeorbitTrajectory.NextTimeOfRadius(VesselState.Time, MainBody.Radius) -
-                    VesselState.Time; //Find how long that orbit would take to impact the ground
+                    (forwardDeorbitTrajectory.PeR < MainBody.Radius
+                        ? forwardDeorbitTrajectory.NextTimeOfRadius(VesselState.Time, MainBody.Radius)
+                        : forwardDeorbitTrajectory.NextPeriapsisTime(VesselState.Time)) -
+                    VesselState.Time;
                 double planetRotationDuringFreefall =
                     360 * freefallTime / MainBody.rotationPeriod; //Find how many degrees the planet will rotate during that time
                 Vector3d currentTargetRadialVector = MainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) -

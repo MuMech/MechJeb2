@@ -311,9 +311,12 @@ namespace MuMech
             //    print(vesselState.limitedMaxThrustAccel.ToString("F2") + " " + descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity).ToString("F2"));
 
             var simVessel = SimulatedVessel.Borrow(Vessel, simCurves, patch.StartUT, Core.Landing.Enabled && deployChutes ? limitChutesStage : -1, dropStage);
+            // the entry attitude the landing will hold (CoastToDeceleration): only while it is engaged, and not under open parachutes
+            bool entryAttitude = Core.Landing.Enabled && !Core.Landing.EntryAttitudeIsDefault && !VesselState.ParachuteDeployed;
             var sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
                 dropStage >= 0 ? 0 : VesselState.LimitedMaxThrustAcceleration, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
-                Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
+                Time.fixedDeltaTime, maxOrbits, noSkipToFreefall,
+                entryAttitude && Core.Landing.EntryPrograde, entryAttitude ? Core.Landing.EntryAoADegrees : 0);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
             // running only once it is queued: an exception above (a part mid-decouple, a degenerate orbit) used to leave the

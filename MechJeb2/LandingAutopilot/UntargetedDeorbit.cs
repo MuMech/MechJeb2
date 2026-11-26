@@ -12,7 +12,7 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (Orbit.PeA < -0.1 * MainBody.Radius)
+                if (Orbit.PeR < Core.Landing.EntryPeriapsisRadius())
                 {
                     Core.Thrust.ThrustOff();
                     return new FinalDescent(Core);

@@ -63,6 +63,13 @@ namespace MuMech
 
         private QuaternionD _attitude;
 
+        // the landing's entry attitude (MechJebModuleLandingAutopilot.EntryAxes), held until the parachutes open or the
+        // deceleration burn starts; without it the vessel flies retrograde all the way, at _attitude
+        private bool _entryAttitude;
+        private bool _entryPrograde;
+        private double _entryAoA;
+        private bool _entryPhase;
+
         private bool _orbitReenters;
         private readonly ReferenceFrame _referenceFrame = new ReferenceFrame();
 
@@ -121,17 +128,19 @@ namespace MuMech
 
         public static ReentrySimulation Borrow(Orbit initialOrbit, double ut, SimulatedVessel vessel, SimCurves simcurves,
             IDescentSpeedPolicy descentSpeedPolicy, double decelEndAltitudeASL, double maxThrustAccel, double parachuteSemiDeployMultiplier,
-            double probableLandingSiteASL, bool multiplierHasError, double dt, double minDT, double maxOrbits, bool noSKiptoFreefall)
+            double probableLandingSiteASL, bool multiplierHasError, double dt, double minDT, double maxOrbits, bool noSKiptoFreefall,
+            bool entryPrograde = false, double entryAoADegrees = 0)
         {
             ReentrySimulation sim = _pool.Borrow();
             sim.Init(initialOrbit, ut, vessel, simcurves, descentSpeedPolicy, decelEndAltitudeASL, maxThrustAccel,
-                parachuteSemiDeployMultiplier, probableLandingSiteASL, multiplierHasError, dt, minDT, maxOrbits, noSKiptoFreefall);
+                parachuteSemiDeployMultiplier, probableLandingSiteASL, multiplierHasError, dt, minDT, maxOrbits, noSKiptoFreefall,
+                entryPrograde, entryAoADegrees);
             return sim;
         }
 
         private void Init(Orbit initialOrbit, double ut, SimulatedVessel vessel, SimCurves simcurves, IDescentSpeedPolicy descentSpeedPolicy,
             double decelEndAltitudeASL, double maxThrustAccel, double parachuteSemiDeployMultiplier, double probableLandingSiteASL,
-            bool multiplierHasError, double dt, double minDT, double maxOrbits, bool noSKiptoFreefall)
+            bool multiplierHasError, double dt, double minDT, double maxOrbits, bool noSKiptoFreefall, bool entryPrograde, double entryAoADegrees)
         {
             // Store all the input values as they were given
             _inputInitialOrbit = initialOrbit;
@@ -145,8 +154,12 @@ namespace MuMech
             _inputProbableLandingSiteASL = probableLandingSiteASL;
             _inputMultiplierHasError = multiplierHasError;
             _inputDT = dt;
-            // the vessel attitude relative to the surface vel. Fixed for now
+            // the vessel attitude relative to the surface vel, retrograde, when there is no entry attitude or once it ends
             _attitude = Quaternion.Euler(180, 0, 0);
+            _entryAttitude = entryPrograde || entryAoADegrees != 0;
+            _entryPrograde = entryPrograde;
+            _entryAoA = entryAoADegrees;
+            _entryPhase = true;
 
             MinDT = minDT;
             _maxDT = dt;
@@ -473,6 +486,7 @@ namespace MuMech
                     _maxDragGees = Math.Max(_maxDragGees, _lastRecordedDrag.magnitude / 9.81f);
                     bool parachutesDeploying = _vessel.Simulate(altAGL, altASL, _probableLandingSiteASL, pressure, shockTemp, _t,
                         _parachuteSemiDeployMultiplier);
+                    if (parachutesDeploying) _entryPhase = false; // the landing turns retrograde under its parachutes
                     _x += dx;
                     _v += dv;
                     _t += _dt;
@@ -492,6 +506,7 @@ namespace MuMech
             if (surfaceVel.magnitude > maxAllowedSpeed)
             {
                 double dV = Math.Min(surfaceVel.magnitude - maxAllowedSpeed, _dt * _maxThrustAccel);
+                _entryPhase = false; // the deceleration burn: the landing turns retrograde
                 surfaceVel -= dV * surfaceVel.normalized;
                 _deltaVExpended += dV;
                 _v = surfaceVel + Vector3d.Cross(_bodyAngularVelocity, _x);
@@ -548,7 +563,9 @@ namespace MuMech
 
             Vector3d airVel = SurfaceVelocity(pos, vel);
 
-            Vector3d localVel = _attitude * Vector3d.up * airVel.magnitude;
+            Vector3d localVel = EntryFrame(pos, airVel, out QuaternionD entryToWorld)
+                ? QuaternionD.Inverse(entryToWorld) * airVel
+                : _attitude * Vector3d.up * airVel.magnitude;
 
             // TODO : check if it is forward, back, up or down...
             // Lift works with a velocity in SHIP coordinate and return a vector in ship coordinate
@@ -596,6 +613,9 @@ namespace MuMech
 
             Vector3d airVel = SurfaceVelocity(pos, vel);
 
+            if (EntryFrame(pos, airVel, out QuaternionD entryToWorld))
+                return entryToWorld * _vessel.Lift(QuaternionD.Inverse(entryToWorld) * airVel, dynamicPressurekPa, mach);
+
             Vector3d localVel = _attitude * Vector3d.up * airVel.magnitude;
 
             Vector3d localLift = _vessel.Lift(localVel, dynamicPressurekPa, mach);
@@ -603,6 +623,20 @@ namespace MuMech
             QuaternionD vesselToWorld = Quaternion.FromToRotation(localVel, airVel); // QuaternionD.FromToRotation is not working in Unity 4.3
 
             return vesselToWorld * localLift;
+        }
+
+        // the vessel's rotation (its local axes: up the nose, forward the belly) at the entry attitude, while that holds
+        private bool EntryFrame(Vector3d pos, Vector3d airVel, out QuaternionD vesselToWorld)
+        {
+            if (!_entryAttitude || !_entryPhase || airVel.sqrMagnitude < 1e-6)
+            {
+                vesselToWorld = QuaternionD.identity;
+                return false;
+            }
+
+            MechJebModuleLandingAutopilot.EntryAxes(airVel, pos, _entryPrograde, _entryAoA, out Vector3d nose, out Vector3d top);
+            vesselToWorld = QuaternionD.LookRotation(-top, nose);
+            return true;
         }
 
         private double Pressure(Vector3d pos)

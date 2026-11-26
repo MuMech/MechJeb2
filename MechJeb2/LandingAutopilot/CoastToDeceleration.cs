@@ -105,14 +105,24 @@ namespace MuMech
                         double decelerationStartTime = Core.Landing.Prediction.Trajectory.Any()
                             ? Core.Landing.Prediction.Trajectory.First().UT
                             : VesselState.Time;
+                        Vector3d entryPosition = Orbit.WorldPositionAtUT(decelerationStartTime);
                         Vector3d decelerationStartAttitude = -Orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
-                        decelerationStartAttitude += MainBody.getRFrmVel(Orbit.WorldPositionAtUT(decelerationStartTime));
+                        decelerationStartAttitude += MainBody.getRFrmVel(entryPosition);
                         decelerationStartAttitude = decelerationStartAttitude.normalized;
-                        Core.Attitude.AttitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
+                        // turned in vacuum to the attitude it will meet the air with
+                        if (Core.Landing.EntryAttitudeIsDefault)
+                            Core.Attitude.AttitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
+                        else
+                            Core.Landing.EntryAttitudeTo(-decelerationStartAttitude, entryPosition - MainBody.position);
+                    }
+                    else if (Core.Landing.EntryAttitudeIsDefault || VesselState.ParachuteDeployed)
+                    {
+                        Core.Attitude.AttitudeTo(Vector3.back, AttitudeReference.SURFACE_VELOCITY, Core.Landing);
                     }
                     else
                     {
-                        Core.Attitude.AttitudeTo(Vector3.back, AttitudeReference.SURFACE_VELOCITY, Core.Landing);
+                        // the entry attitude until the parachutes open or the deceleration burn starts, as the simulation assumes
+                        Core.Landing.EntryAttitudeTo(VesselState.SurfaceVelocity, VesselState.Up);
                     }
                 }
 
