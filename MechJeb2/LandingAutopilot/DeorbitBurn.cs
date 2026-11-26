@@ -80,31 +80,20 @@ namespace MuMech
                 double targetAngleToOrbitNormal = Vector3d.Angle(Orbit.OrbitNormal(), freefallEndTargetRadialVector);
                 targetAngleToOrbitNormal = Math.Min(targetAngleToOrbitNormal, 180 - targetAngleToOrbitNormal);
 
-                double targetAheadAngle =
-                    Vector3d.Angle(currentRadialVector, freefallEndTargetRadialVector); //How far ahead the target is, in degrees
                 double planeChangeAngle =
                     Vector3d.Angle(currentHorizontalVelocity,
                         freefallEndHorizontalToTarget); //The plane change required to get onto the deorbit trajectory, in degrees
 
                 //If the target is basically almost normal to our orbit, it doesn't matter when we deorbit; might as well do it now
-                //Otherwise, wait until the target is ahead: 60 to 90 degrees for the steep default entry, which hits the ground about a
-                //quarter of an orbit after the burn; with an entry periapsis, as far ahead as the new orbit carries the vessel to the
-                //ground or, above it, to the periapsis
-                bool targetAhead;
-                if (Core.Landing.CustomEntryPeriapsis)
-                {
-                    Vector3d freefallEndRadialVector = forwardDeorbitTrajectory.WorldPositionAtUT(VesselState.Time + freefallTime) - MainBody.position;
-                    double travel = AngleAlongOrbit(currentRadialVector, freefallEndRadialVector, currentHorizontalVelocity);
-                    double ahead = AngleAlongOrbit(currentRadialVector, freefallEndTargetRadialVector, currentHorizontalVelocity);
-                    double off = (ahead - travel + 540) % 360 - 180;
-                    targetAhead = Math.Abs(off) < 15 && planeChangeAngle < 90;
-                }
-                else
-                {
-                    targetAhead = targetAheadAngle < 90 && targetAheadAngle > 60 && planeChangeAngle < 90;
-                }
+                //Otherwise, wait until the target is as far ahead as the new orbit carries the vessel: to the ground, or to the periapsis
+                //when that is above it (a shallow entry), within 15 degrees. The steep default entry hits the ground about a quarter of an
+                //orbit after the burn.
+                Vector3d freefallEndRadialVector = forwardDeorbitTrajectory.WorldPositionAtUT(VesselState.Time + freefallTime) - MainBody.position;
+                double travel = AngleAlongOrbit(currentRadialVector, freefallEndRadialVector, currentHorizontalVelocity);
+                double ahead = AngleAlongOrbit(currentRadialVector, freefallEndTargetRadialVector, currentHorizontalVelocity);
+                double off = (ahead - travel + 540) % 360 - 180;
 
-                if (targetAngleToOrbitNormal < 10 || targetAhead)
+                if (targetAngleToOrbitNormal < 10 || (Math.Abs(off) < 15 && planeChangeAngle < 90))
                 {
                     _deorbitBurnTriggered = true;
                 }
