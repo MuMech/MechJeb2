@@ -130,21 +130,19 @@ namespace MuMech
 
         /// <summary>
         ///     Holds the entry attitude for an airflow <paramref name="airVelocity" /> (the vessel's velocity relative to the air) and
-        ///     a local vertical <paramref name="up" />: nose first or heat shield first, nose up by the angle of attack. Nose first holds
-        ///     the wings level; heat shield first leaves the roll free, as it always has.
+        ///     a local vertical <paramref name="up" />: nose first or heat shield first, nose up by the angle of attack, at the roll of
+        ///     <see cref="EntryAxes" />. The roll is held either way: a drag cube is a box, so even a round pod's lift depends on it, and the
+        ///     reentry simulation assumes this one.
         /// </summary>
         public void EntryAttitudeTo(Vector3d airVelocity, Vector3d up)
         {
             EntryAxes(airVelocity, up, EntryPrograde, EntryAoADegrees, out Vector3d nose, out Vector3d top);
-            if (EntryPrograde)
-                Core.Attitude.AttitudeTo(QuaternionD.LookRotation(nose, top), AttitudeReference.INERTIAL, this);
-            else
-                Core.Attitude.AttitudeTo(nose, AttitudeReference.INERTIAL, this);
+            Core.Attitude.AttitudeTo(QuaternionD.LookRotation(nose, top), AttitudeReference.INERTIAL, this);
         }
 
         /// <summary>
         ///     The nose and the top of a vessel at the entry attitude, in the frame of the airflow: <paramref name="aoaDegrees" /> above
-        ///     the airflow nose first, or above the reverse of it heat shield first, wings level. The reentry simulation uses the same axes.
+        ///     the airflow nose first, or above the reverse of it heat shield first, the top up. The reentry simulation uses the same axes.
         /// </summary>
         public static void EntryAxes(Vector3d airVelocity, Vector3d up, bool prograde, double aoaDegrees, out Vector3d nose, out Vector3d top)
         {
