@@ -93,9 +93,15 @@ namespace MechJebLib.PSG
 
             // Guidance never flies a phase too short to fly, nor the pruned stages after the terminal stage (all of them shorter
             // than SKIP_TIME too).  The terminal stage is always flown, however short: it ends the ascent, and terminal guidance
-            // trims it.
+            // trims it.  A burn the optimizer cuts with propellant left is flown however short, so that guidance cuts and
+            // jettisons it: skipped, it would be flown on the next burn's steering and throttle, and nothing would stage it off
+            // (autostaging won't drop an engine with propellant left).  The exception is the burn before a coast-during, which
+            // the zero coast constraint shrinks with the coast (below): its propellant is the burn after the coast's.
             for (int p = 0; p < phases.Count; p++)
-                phases[p].Skip = p > terminalStageIndex || (p < terminalStageIndex && bt[p] < SKIP_TIME);
+            {
+                bool cutBurn = phases[p].PropellantLeft && !(p + 1 < phases.Count && phases.IsDuringCoast(p + 1));
+                phases[p].Skip = p > terminalStageIndex || (p < terminalStageIndex && bt[p] < SKIP_TIME && !cutBurn);
+            }
 
             // The zero coast constraint shrinks the burn before a coast-during to nothing with the coast (AscentProblem.
             // ZeroCoastConstraint), so both are skipped and guidance flies the stage as the one burn after the coast.  A burn
