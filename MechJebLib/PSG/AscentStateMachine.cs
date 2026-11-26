@@ -453,6 +453,8 @@ namespace MechJebLib.PSG
 
             UpdateJettison();
 
+            PassSkippedCoast();
+
             MaybeRotateLaunchSite();
 
             UpdateState();
@@ -918,6 +920,38 @@ namespace MechJebLib.PSG
                 return false;
 
             return Reached(Solution.StartTime(coast)) || (OnStageOf(p) && NoThrust(_in.ThrustAvailable) && CurrentStageEmpty());
+        }
+
+        // A coast the Solution skips (shorter than SolutionBuilder.SKIP_TIME) is never flown, so nothing would mark it behind the
+        // vessel: HasCoasted would stay false and PSGSimulation would never mark the coast's flight plan stage done (MarkCoastDone
+        // runs on COAST_ENDED).  The next solves would then start at that coast, ahead of the burn the vessel is flying, and once
+        // one gave it SKIP_TIME or more, CurrentPhase(false) would find no burn before it and CoastDue would cut the burning
+        // stage for a coast and a relight.  So once the vessel flies a burn after a skipped coast, the coast counts as flown,
+        // with no length: HasCoasted, and COAST_ENDED, which cancels a solve started with the coast ahead and marks it done.
+        private void PassSkippedCoast()
+        {
+            if (Solution == null || HasCoasted || IsCoasting || Solution.CoastIndex() >= 0)
+                return;
+
+            int skipped = -1;
+            for (int i = 0; i < Solution.Phases.Count; i++)
+                if (Solution.Phases[i].Coast)
+                {
+                    skipped = i;
+                    break;
+                }
+
+            if (skipped < 0 || skipped > Solution.TerminalIndex())
+                return;
+
+            int p = CurrentPhase(false);
+            if (p <= skipped)
+                return;
+
+            HasCoasted = true;
+            CoastStartTime = _in.Time;
+            _cmd.Events |= AscentEvents.COAST_ENDED;
+            Print($"[AscentStateMachine] passed the coast of phase {skipped}, which the Solution skips, at MET {_in.Met:F2} in phase {p}");
         }
 
         private bool CoastOver()
