@@ -49,10 +49,10 @@ namespace MuMech.UI
             minThrottle = MinThrottle(g, t, l, applies, 55); //"Keep limited throttle over"
 
             // electric, on two rows so the unit column stays one unit wide:
-            //   [switch] Electric limit Lo [lo] %
-            //                           Hi [hi] %   ("Hi" right-aligned under "Lo")
-            Layout electric = Switch(g, "#MechJeb_Ascent_checkbox20", () => l.ElectricThrottle, v => l.ElectricThrottle = v,
-                tone: LimiterTones.Electric(t, applies));
+            //   [switch] Electric limit    Lo [lo] %
+            //                              Hi [hi] %   ("Lo" and "Hi" right-aligned, next to their fields)
+            Layout electric = g.Switch("#MechJeb_NewUI_ElectricLimit", () => l.ElectricThrottle, v => l.ElectricThrottle = v,
+                tone: LimiterTones.Electric(t, applies), suffix: "#MechJeb_NewUI_ElectricLoRow"); //Electric limit, Lo
             TMPro.TMP_InputField lo = EditFields.Field(w, electric, () => l.ElectricThrottleLo.Text, s => l.ElectricThrottleLo.Text = s, 55,
                 () => l.ElectricThrottleLo.IsParsed, label: "#MechJeb_NewUI_Label_ElectricLo"); //Electric limit, low
             UIText loUnit = KodeWindow.Label(electric, "%");
