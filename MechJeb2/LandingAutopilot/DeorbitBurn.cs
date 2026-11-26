@@ -87,9 +87,24 @@ namespace MuMech
                         freefallEndHorizontalToTarget); //The plane change required to get onto the deorbit trajectory, in degrees
 
                 //If the target is basically almost normal to our orbit, it doesn't matter when we deorbit; might as well do it now
-                //Otherwise, wait until the target is ahead
-                if (targetAngleToOrbitNormal < 10
-                    || (targetAheadAngle < 90 && targetAheadAngle > 60 && planeChangeAngle < 90))
+                //Otherwise, wait until the target is ahead: 60 to 90 degrees for the steep default entry, which hits the ground about a
+                //quarter of an orbit after the burn; with an entry periapsis, as far ahead as the new orbit carries the vessel to the
+                //ground or, above it, to the periapsis
+                bool targetAhead;
+                if (Core.Landing.CustomEntryPeriapsis)
+                {
+                    Vector3d freefallEndRadialVector = forwardDeorbitTrajectory.WorldPositionAtUT(VesselState.Time + freefallTime) - MainBody.position;
+                    double travel = AngleAlongOrbit(currentRadialVector, freefallEndRadialVector, currentHorizontalVelocity);
+                    double ahead = AngleAlongOrbit(currentRadialVector, freefallEndTargetRadialVector, currentHorizontalVelocity);
+                    double off = (ahead - travel + 540) % 360 - 180;
+                    targetAhead = Math.Abs(off) < 15 && planeChangeAngle < 90;
+                }
+                else
+                {
+                    targetAhead = targetAheadAngle < 90 && targetAheadAngle > 60 && planeChangeAngle < 90;
+                }
+
+                if (targetAngleToOrbitNormal < 10 || targetAhead)
                 {
                     _deorbitBurnTriggered = true;
                 }
@@ -117,6 +132,15 @@ namespace MuMech
                 }
 
                 return this;
+            }
+
+            // the angle from one radial vector to another in the direction of travel, 0 to 360 degrees
+            private static double AngleAlongOrbit(Vector3d from, Vector3d to, Vector3d velocity)
+            {
+                Vector3d normal = Vector3d.Cross(from, velocity).normalized;
+                double angle = Math.Atan2(Vector3d.Dot(Vector3d.Cross(from.normalized, to.normalized), normal), Vector3d.Dot(from.normalized, to.normalized)) *
+                    UtilMath.Rad2Deg;
+                return angle < 0 ? angle + 360 : angle;
             }
         }
     }
