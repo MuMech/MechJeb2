@@ -48,22 +48,7 @@ namespace MuMech.UI
                 () => LimiterTones.Throttle(t, l, applies)); //"Limit throttle to"
             minThrottle = MinThrottle(g, t, l, applies, 55); //"Keep limited throttle over"
 
-            // electric, on two rows so the unit column stays one unit wide:
-            //   [switch] Electric limit    Lo [lo] %
-            //                              Hi [hi] %   ("Lo" and "Hi" right-aligned, next to their fields)
-            Layout electric = g.Switch("#MechJeb_NewUI_ElectricLimit", () => l.ElectricThrottle, v => l.ElectricThrottle = v,
-                tone: LimiterTones.Electric(t, applies), suffix: "#MechJeb_NewUI_ElectricLoRow"); //Electric limit, Lo
-            TMPro.TMP_InputField lo = EditFields.Field(w, electric, () => l.ElectricThrottleLo.Text, s => l.ElectricThrottleLo.Text = s, 55,
-                () => l.ElectricThrottleLo.IsParsed, label: "#MechJeb_NewUI_Label_ElectricLo"); //Electric limit, low
-            UIText loUnit = KodeWindow.Label(electric, "%");
-            Layout hi = g.Row();
-            KodeWindow.Label(hi, "");
-            UIText hiLabel = KodeWindow.Label(hi, "#MechJeb_NewUI_ElectricHiRow"); //Hi
-            hiLabel.tmpText.alignment = TMPro.TextAlignmentOptions.Right;
-            EditUi.Field(w, hi, () => l.ElectricThrottleHi, 55, label: "#MechJeb_NewUI_Label_ElectricHi"); //Electric limit, high
-            KodeWindow.Label(hi, "%");
-            g.Dim(lo.gameObject, loUnit.gameObject, () => !l.ElectricThrottle);
-            g.Dim(hi.gameObject, null, () => !l.ElectricThrottle);
+            Layout electric = ElectricLimit(w, g, t, l, applies, 55, out Layout hi);
 
             if (psg != null)
             {
@@ -84,6 +69,34 @@ namespace MuMech.UI
                     tone: LimiterTones.For(t, LimitMode.AUTO_RCS_ULLAGE, applies)); //"Use RCS to ullage"
             }
             return g;
+        }
+
+        /// <summary>
+        /// The electric limit on two grid rows, so the unit column stays one unit wide; "Lo" and "Hi" are right-aligned in the
+        /// label column, next to their fields:
+        /// <code>
+        /// [switch] Electric limit    Lo [lo] %
+        ///                            Hi [hi] %
+        /// </code>
+        /// Returns the first row; <paramref name="hi"/> is the second. Both dim while the switch is off.
+        /// </summary>
+        public static Layout ElectricLimit(KodeWindow w, KodeWindow.PropertyGrid g, MechJebModuleThrustController t, IThrustLimits l,
+            Func<bool> applies, float width, out Layout hi)
+        {
+            Layout electric = g.Switch("#MechJeb_NewUI_ElectricLimit", () => l.ElectricThrottle, v => l.ElectricThrottle = v,
+                tone: LimiterTones.Electric(t, applies), suffix: "#MechJeb_NewUI_ElectricLoRow"); //Electric limit, Lo
+            TMPro.TMP_InputField lo = EditFields.Field(w, electric, () => l.ElectricThrottleLo.Text, s => l.ElectricThrottleLo.Text = s, width,
+                () => l.ElectricThrottleLo.IsParsed, label: "#MechJeb_NewUI_Label_ElectricLo"); //Electric limit, low
+            UIText loUnit = KodeWindow.Label(electric, "%");
+            hi = g.Row();
+            KodeWindow.Label(hi, "");
+            UIText hiLabel = KodeWindow.Label(hi, "#MechJeb_NewUI_ElectricHiRow"); //Hi
+            hiLabel.tmpText.alignment = TMPro.TextAlignmentOptions.Right;
+            EditUi.Field(w, hi, () => l.ElectricThrottleHi, width, label: "#MechJeb_NewUI_Label_ElectricHi"); //Electric limit, high
+            KodeWindow.Label(hi, "%");
+            g.Dim(lo.gameObject, loUnit.gameObject, () => !l.ElectricThrottle);
+            g.Dim(hi.gameObject, null, () => !l.ElectricThrottle);
+            return electric;
         }
 
         /// <summary>[switch] Keep limited throttle over [min] %, yellow when the setting looks wrong for the fuel model.</summary>

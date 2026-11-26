@@ -65,16 +65,10 @@ namespace MuMech.UI
             w.Toggle(p, "#MechJeb_Ascent_checkbox19", () => t.DifferentialThrottle, LimiterTones.SetDifferential(t),
                 () => LimiterTones.Differential(t)); //"Differential throttle"
 
-        // [x] "Electric limit Lo" [lo] % Hi [hi] %, red/yellow while limiting, green while an electric engine runs
-        static void LimitElectric(KodeWindow w, UIObject p, MechJebModuleThrustController t)
-        {
-            Layout electric = KodeWindow.Row(p);
-            w.Toggle(electric, "#MechJeb_Ascent_checkbox20", () => t.ElectricThrottle, v => t.ElectricThrottle = v, LimiterTones.Electric(t, OptionRows.GeneralLimitsApply(t)));
-            EditUi.Field(w, electric, () => t.ElectricThrottleLo, 30, label: "#MechJeb_NewUI_Label_ElectricLo"); //Electric limit, low
-            KodeWindow.Label(electric, "% Hi");
-            EditUi.Field(w, electric, () => t.ElectricThrottleHi, 30, label: "#MechJeb_NewUI_Label_ElectricHi"); //Electric limit, high
-            KodeWindow.Label(electric, "%");
-        }
+        // the electric limit as in Utilities: two rows of a grid of its own, "Lo" and "Hi" next to their fields,
+        // red/yellow while limiting, green while an electric engine runs
+        static void LimitElectric(KodeWindow w, UIObject p, MechJebModuleThrustController t) =>
+            OptionRows.ElectricLimit(w, w.Properties(p), t, t, OptionRows.GeneralLimitsApply(t), 30, out _);
 
         /// <summary>MechJebModuleThrustWindow.Autostage: the "Autostage" toggle (the window is a user of the staging controller).</summary>
         static void Autostage(KodeWindow w, UIObject p, MechJebModuleThrustWindow window)
