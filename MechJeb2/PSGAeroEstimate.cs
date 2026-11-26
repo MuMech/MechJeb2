@@ -12,7 +12,7 @@ namespace MuMech
     /// <summary>
     ///     The drag area PSG plans the ascent with (Cd × Aref, the only drag figure its model reads), worked out from the vessel.
     ///     <para />
-    ///     A table of Cd·A against Mach for the vessel flying a little off its nose, as an ascent does (FLOW_AOA): stock aerodynamics
+    ///     A table of Cd·A against Mach for the vessel flying nose first, as PSG's model has no lift: stock aerodynamics
     ///     from the parts' drag cubes and drag models as FlightIntegrator applies them, FAR from FARAPI.CalculateVesselAeroForces.
     ///     PSG holds one constant, so the table is averaged along the ascent PSG planned, each point weighted by the dynamic pressure
     ///     over the mass (its share of the drag losses); with no plan yet, over Mach 0.5 to 2, where an ascent meets its maximum
@@ -33,11 +33,6 @@ namespace MuMech
         {
             0.1, 0.3, 0.5, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.2, 1.35, 1.5, 1.75, 2, 2.5, 3, 4, 5, 6, 8, 10, 15, 20, 25
         };
-
-        // A rocket flies a degree or two off its nose through the dense air (1.6 to 2.3° on average, weighted by the dynamic
-        // pressure, in stock ascents of Kerbal X), and a long body picks up drag fast with it: the table is for the airflow this
-        // far off the nose, in the pitch plane.
-        private const float FLOW_AOA = 2;
 
         // FAR can't leave out a launch tower: until it has dropped it, under a second after the release, the rocket's widest part at this Cd
         private const double PAD_CD = 0.5;
@@ -122,13 +117,6 @@ namespace MuMech
             return CdA > 0;
         }
 
-        // the direction of the airflow (the velocity through the air) FLOW_AOA off the nose, in the pitch plane
-        private static Vector3 Flow(Vessel vessel)
-        {
-            Transform reference = vessel.GetTransform();
-            return Quaternion.AngleAxis(FLOW_AOA, reference.right) * reference.up;
-        }
-
         private bool ReadTable(Vessel vessel)
         {
             _releaseStage = _currentStage;
@@ -140,14 +128,14 @@ namespace MuMech
             {
                 bool pad = vessel.parts.Exists(p => !p.IsLaunchClamp() && Dropped(p, _releaseStage)) ||
                     (_padEstimate && vessel == _vessel && vessel.missionTime < FAR_READ_MET);
-                if (pad ? !ReadPadEstimate(vessel) : !ReadFAR(vessel, Flow(vessel)))
+                if (pad ? !ReadPadEstimate(vessel) : !ReadFAR(vessel, vessel.GetTransform().up))
                     return false;
                 _padEstimate = pad;
                 Source = Model.FAR;
                 return true;
             }
 
-            ReadStock(vessel, Flow(vessel), _currentStage, _cdA);
+            ReadStock(vessel, vessel.GetTransform().up, _currentStage, _cdA);
             Source = Model.STOCK;
             return true;
         }
@@ -175,7 +163,7 @@ namespace MuMech
             if (!_stageTables.TryGetValue(stage, out double[] table))
             {
                 table = new double[_machs.Length];
-                ReadStock(vessel, Flow(vessel), stage, table);
+                ReadStock(vessel, vessel.GetTransform().up, stage, table);
                 _stageTables[stage] = table;
             }
 
@@ -229,15 +217,8 @@ namespace MuMech
                         table[m] += data.areaDrag * PhysicsGlobals.DragCubeMultiplier;
                     }
 
-                    // the frontal area nose first: a few degrees off it, the long sides would count
                     if (current)
-                    {
-                        Vector3 nose = p.partTransform.InverseTransformDirection(vessel.GetTransform().up);
-                        if (cubes.RotateDragVector)
-                            nose = cubes.DragVectorRotation * nose;
-                        cubes.AddSurfaceDragDirection(nose, 0, ref data);
                         _frontalArea += data.crossSectionalArea;
-                    }
 
                     continue;
                 }
