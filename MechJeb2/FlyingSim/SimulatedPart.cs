@@ -14,6 +14,11 @@ namespace MuMech
         public bool hasLiftModule;
         private double bodyLiftMultiplier;
 
+        // Stock gives no body lift to a part whose lift is only for when a node is free (a pod's, bodyLiftOnlyUnattachedLift) while
+        // the part on that node lifts (Part.CheckBodyLiftAttachment, FlightIntegrator.UpdateAerodynamics): a pod on its heat shield.
+        // The provider lifts only in the air, so from orbit it is taken as lifting, unless it is in the stage being dropped.
+        private bool liftTakenByProvider;
+
         // A part without drag cubes (struts and fuel lines say DRAG_CUBE { none = True }) gets its drag from its drag model, as
         // FlightIntegrator.CalculateDragValue gives it, and no body lift. SetDrag does nothing for it, so the pooled DragCubeList
         // would give the drag and lift of the part it last held.
@@ -116,6 +121,8 @@ namespace MuMech
             noDrag = rigidbody == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
             hasLiftModule = p.hasLiftModule;
             bodyLiftMultiplier = p.bodyLiftMultiplier * PhysicsGlobals.BodyLiftMultiplier;
+            liftTakenByProvider = p.bodyLiftOnlyUnattachedLiftActual && p.bodyLiftOnlyProvider is PartModule provider && provider.part != null &&
+                !(dropStage >= 0 && provider.part.IsDecoupledInStage(dropStage));
 
             noCubes = p.DragCubes.None;
             dragModel = p.dragModel;
@@ -235,7 +242,7 @@ namespace MuMech
 
         public virtual Vector3d Lift(Vector3d vesselVelocity, double liftFactor)
         {
-            if (shieldedFromAirstream || hasLiftModule || noCubes)
+            if (shieldedFromAirstream || hasLiftModule || noCubes || liftTakenByProvider)
                 return Vector3d.zero;
 
             // direction of the lift in a vessel centric reference
