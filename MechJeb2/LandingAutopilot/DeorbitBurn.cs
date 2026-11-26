@@ -12,6 +12,15 @@ namespace MuMech
         {
             private bool _deorbitBurnTriggered;
 
+            // How far along the ground track the vessel flies in the air past where its vacuum orbit reaches the ground, or its periapsis
+            // above it, in degrees: from a simulation of the orbit a burn made now would give, every GLIDE_INTERVAL seconds. A steep
+            // entry falls a few degrees past; a shallow one glides tens of degrees.
+            private const double GLIDE_INTERVAL = 20;
+            private double _glide;
+            private bool _glideKnown;
+            private double _nextGlideUT = double.NegativeInfinity;
+            private double _glideFromLatitude, _glideFromLongitude;
+
             public DeorbitBurn(MechJebCore core) : base(core)
             {
             }
@@ -81,7 +90,8 @@ namespace MuMech
                 Vector3d freefallEndRadialVector = forwardDeorbitTrajectory.WorldPositionAtUT(VesselState.Time + freefallTime) - MainBody.position;
                 double travel = AngleAlongOrbit(currentRadialVector, freefallEndRadialVector, currentHorizontalVelocity);
                 double ahead = AngleAlongOrbit(currentRadialVector, freefallEndTargetRadialVector, currentHorizontalVelocity);
-                double off = (ahead - travel + 540) % 360 - 180;
+                UpdateGlide(forwardDeorbitTrajectory, freefallTime, currentRadialVector, currentHorizontalVelocity);
+                double off = ((ahead - travel - _glide) % 360 + 540) % 360 - 180;
 
                 //Within 30 degrees of the antipode the horizontal direction to the target has almost no length and can point sideways:
                 //steering along it changes the plane by tens of degrees. Keep the orbit's plane there; course correction takes the rest.
@@ -96,7 +106,8 @@ namespace MuMech
                 //Otherwise, wait until the target is as far ahead as the new orbit carries the vessel, within 15 degrees. The steep default
                 //entry hits the ground about a quarter of an orbit after the burn.
 
-                if (targetAngleToOrbitNormal < 10 || (Math.Abs(off) < 15 && planeChangeAngle < 90))
+                // the window waits for the first estimate of the glide
+                if (targetAngleToOrbitNormal < 10 || (_glideKnown && Math.Abs(off) < 15 && planeChangeAngle < 90))
                 {
                     _deorbitBurnTriggered = true;
                 }
@@ -124,6 +135,37 @@ namespace MuMech
                 }
 
                 return this;
+            }
+
+            // Takes the last glide simulation's result and starts the next one. The glide is the angle along the track from where the
+            // simulated orbit left vacuum flight (the ground or the periapsis, fixed to the surface at that time) to where it landed.
+            private void UpdateGlide(Orbit forwardDeorbitTrajectory, double freefallTime, Vector3d currentRadialVector, Vector3d currentHorizontalVelocity)
+            {
+                MechJebModuleLandingPredictions predictor = Core.Landing.Predictor;
+                ReentrySimulation.Result r = predictor.TakePlannedOrbitResult();
+                if (r != null)
+                {
+                    if (r.Outcome == ReentrySimulation.Outcome.LANDED)
+                    {
+                        Vector3d from = MainBody.GetWorldSurfacePosition(_glideFromLatitude, _glideFromLongitude, 0) - MainBody.position;
+                        Vector3d to = MainBody.GetWorldSurfacePosition(r.EndPosition.Latitude, r.EndPosition.Longitude, 0) - MainBody.position;
+                        Vector3d normal = Vector3d.Cross(currentRadialVector, currentHorizontalVelocity);
+                        _glide = Math.Atan2(Vector3d.Dot(Vector3d.Cross(from.normalized, to.normalized), normal.normalized),
+                            Vector3d.Dot(from.normalized, to.normalized)) * UtilMath.Rad2Deg;
+                    }
+
+                    // a run that doesn't land (no reentry, timed out) leaves the last glide, 0 at first
+                    _glideKnown = true;
+                    r.Release();
+                }
+
+                if (VesselState.Time < _nextGlideUT || !predictor.SimulatePlannedOrbit(forwardDeorbitTrajectory, VesselState.Time))
+                    return;
+
+                _nextGlideUT = VesselState.Time + GLIDE_INTERVAL;
+                Vector3d vacuumEnd = forwardDeorbitTrajectory.WorldPositionAtUT(VesselState.Time + freefallTime);
+                _glideFromLatitude = MainBody.GetLatitude(vacuumEnd);
+                _glideFromLongitude = MainBody.GetLongitude(vacuumEnd) - (MainBody.rotates ? 360 * freefallTime / MainBody.rotationPeriod : 0);
             }
 
             // the angle from one radial vector to another in the direction of travel, 0 to 360 degrees

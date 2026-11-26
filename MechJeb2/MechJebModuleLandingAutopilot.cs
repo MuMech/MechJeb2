@@ -218,6 +218,9 @@ namespace MuMech
         private MechJebModuleLandingPredictions _predictor;
         public ReentrySimulation.Result Prediction => _predictor.Result;
 
+        /// <summary>The landing's predictor, for a simulation of an orbit the vessel isn't on yet (the deorbit burn's glide).</summary>
+        internal MechJebModuleLandingPredictions Predictor => _predictor;
+
         private ReentrySimulation.Result _errorPrediction => _predictor.GetErrorResult();
 
         public bool PredictionReady //We shouldn't do any autopilot stuff until this is true

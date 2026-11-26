@@ -331,6 +331,70 @@ namespace MuMech
             //RunSimulation(sim);
         }
 
+        private readonly object _plannedOrbitLock = new object();
+        private ReentrySimulation.Result _plannedOrbitResult;
+        private bool _plannedOrbitRunning;
+
+        /// <summary>
+        ///     Starts one simulation of <paramref name="orbit" /> from <paramref name="ut" />, an orbit the vessel isn't on yet (the one a
+        ///     deorbit burn made now would give), with the landing's settings, on the thread pool. Does nothing and returns false while one
+        ///     is running. <see cref="TakePlannedOrbitResult" /> gives its result once.
+        /// </summary>
+        public bool SimulatePlannedOrbit(Orbit orbit, double ut)
+        {
+            lock (_plannedOrbitLock)
+            {
+                if (_plannedOrbitRunning) return false;
+                _plannedOrbitRunning = true;
+            }
+
+            double landingASL = result != null && result.Outcome == ReentrySimulation.Outcome.LANDED && result.Body != null ? result.EndASL : 0;
+            var simCurves = ReentrySimulation.SimCurves.Borrow(orbit.referenceBody);
+            var simVessel = SimulatedVessel.Borrow(Vessel, simCurves, ut, Core.Landing.Enabled && deployChutes ? limitChutesStage : -1, dropStage);
+            bool entryAttitude = Core.Landing.Enabled && !Core.Landing.EntryAttitudeIsDefault && !VesselState.ParachuteDeployed;
+            var sim = ReentrySimulation.Borrow(orbit, ut, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
+                dropStage >= 0 ? 0 : VesselState.LimitedMaxThrustAcceleration, parachuteSemiDeployMultiplier, landingASL, false, dt,
+                Time.fixedDeltaTime, maxOrbits, false, entryAttitude && Core.Landing.EntryPrograde, entryAttitude ? Core.Landing.EntryAoADegrees : 0);
+
+            ThreadPool.QueueUserWorkItem(o =>
+            {
+                var s = (ReentrySimulation)o;
+                ReentrySimulation.Result r = null;
+                try
+                {
+                    r = s.RunSimulation();
+                }
+                catch (Exception ex)
+                {
+                    if (NewFailure(ex))
+                        Dispatcher.InvokeAsync(() => Debug.LogException(ex));
+                }
+                finally
+                {
+                    s.Release();
+                }
+
+                lock (_plannedOrbitLock)
+                {
+                    _plannedOrbitResult?.Release();
+                    _plannedOrbitResult = r;
+                    _plannedOrbitRunning = false;
+                }
+            }, sim);
+            return true;
+        }
+
+        /// <summary>The result of the last <see cref="SimulatePlannedOrbit" />, once (null until it is ready); the caller releases it.</summary>
+        public ReentrySimulation.Result TakePlannedOrbitResult()
+        {
+            lock (_plannedOrbitLock)
+            {
+                ReentrySimulation.Result r = _plannedOrbitResult;
+                _plannedOrbitResult = null;
+                return r;
+            }
+        }
+
         private void RunSimulation(object o)
         {
             var sim = (ReentrySimulation)o;
