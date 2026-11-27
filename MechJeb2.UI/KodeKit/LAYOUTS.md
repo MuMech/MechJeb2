@@ -156,6 +156,7 @@ g.Switch("#MechJeb_Ascent_checkbox11", () => t.LimitDynamicPressure, v => t.Limi
     () => t.MaxDynamicPressure.Text, s => t.MaxDynamicPressure.Text = s, 70, "Pa", () => t.MaxDynamicPressure.IsParsed,
     LimiterTones.For(t, LimitMode.DYNAMIC_PRESSURE));  // the label turns green while limiting
 g.Field("Min Coast", () => p.MinCoast.Text, s => p.MinCoast.Text = s, 50, "s");
+g.Switch("Electric limit", get, set, suffix: "Lo");    // a word at the label cell's right end, next to the field
 g.Value("Apoapsis", ApoapsisText);
 g.Note("Stage fairings when:");                    // one cell across the grid
 Layout row = g.Row();                              // any cells, in column order

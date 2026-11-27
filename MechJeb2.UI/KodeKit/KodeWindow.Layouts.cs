@@ -998,14 +998,27 @@ namespace KodeKit
 
             /// <summary>
             /// [switch] label [field] unit; without a field, [switch] label. <paramref name="tone"/> colours the label (a
-            /// limiter that is acting now).
+            /// limiter that is acting now). <paramref name="suffix"/>: a short word at the right end of the label cell, next to
+            /// the field column ("Lo" of a Lo/Hi pair); it flips the switch and takes the tone like the label, and is not part of
+            /// the switch's name.
             /// </summary>
             public Layout Switch(string label, Func<bool> get, Action<bool> set, Func<string> text = null, Action<string> setText = null,
-                float width = 60, string unit = null, Func<bool> valid = null, Func<Tone> tone = null, FieldKind kind = FieldKind.Number)
+                float width = 60, string unit = null, Func<bool> valid = null, Func<Tone> tone = null, FieldKind kind = FieldKind.Number,
+                string suffix = null)
             {
                 Layout row = Row();
                 Toggle t = w.Switch(row, get, set);
-                UIText l = Label(row, label);
+                UIText l;
+                if (suffix == null) l = Label(row, label);
+                else
+                {
+                    // one cell: the label takes the space, the suffix keeps its width at the right
+                    Layout cell = KodeWindow.Row(row);
+                    l = Label(cell, label, true);
+                    UIText s = Label(cell, suffix);
+                    LabelFlips(s, t);
+                    if (tone != null) w.ToneText(s, tone);
+                }
                 LabelFlips(l, t);
                 w.Labelled(t, label);
                 if (tone != null) w.ToneText(l, tone);

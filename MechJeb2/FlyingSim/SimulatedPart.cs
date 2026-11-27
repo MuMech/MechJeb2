@@ -33,17 +33,18 @@ namespace MuMech
         protected QuaternionD vesselToPart;
         private QuaternionD partToVessel;
 
+        // The cube list's own curve containers. Stock DragCubeList.SetPart points the list at the global ones
+        // (PhysicsGlobals.BodyLiftCurve, PhysicsGlobals.SurfaceCurves), and SimCurves.CopyTo writes the simulation's curve copies into
+        // what the list holds: into the globals, KSP's own physics then evaluated the same AnimationCurves on the main thread as the
+        // simulation on its thread, and both read garbage, often 0 (no body lift in half the predictions).
+        private readonly PhysicsGlobals.LiftingSurfaceCurve ownBodyLiftCurve = new PhysicsGlobals.LiftingSurfaceCurve();
+        private readonly PhysicsGlobals.SurfaceCurvesList ownSurfaceCurves = new PhysicsGlobals.SurfaceCurvesList();
+
         private static readonly Pool<SimulatedPart> pool = new Pool<SimulatedPart>(Create, Reset);
 
         public static int PoolSize => pool.Size;
 
-        private static SimulatedPart Create()
-        {
-            var part = new SimulatedPart();
-            part.cubes.BodyLiftCurve = new PhysicsGlobals.LiftingSurfaceCurve();
-            part.cubes.SurfaceCurves = new PhysicsGlobals.SurfaceCurvesList();
-            return part;
-        }
+        private static SimulatedPart Create() => new SimulatedPart();
 
         public virtual void Release()
         {
@@ -292,6 +293,8 @@ namespace MuMech
             dest.ClearCubes();
 
             dest.SetPart(source.Part);
+            dest.BodyLiftCurve = ownBodyLiftCurve; // not stock's global ones, which SetPart just gave it
+            dest.SurfaceCurves = ownSurfaceCurves;
 
             dest.None = source.None;
 
