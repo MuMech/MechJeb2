@@ -150,6 +150,39 @@ namespace MuMech
         ///     The nose and the top of a vessel at the entry attitude, in the frame of the airflow: <paramref name="aoaDegrees" /> above
         ///     the airflow nose first, or above the reverse of it heat shield first, the top up. The reentry simulation uses the same axes.
         /// </summary>
+        /// <summary>
+        ///     The angle of attack, at most <paramref name="aoaDegrees" />, the vessel can hold with <paramref name="pitchTorque" /> (its
+        ///     reaction wheels and RCS, kN m) against the airflow's pitching moment: as the air thickens, a capsule's attitude control
+        ///     loses to the moment and it sinks towards its trim, with less lift than the angle asked for gives (a Mk1 pod at 15 degrees
+        ///     held about 8 at 30 km on 3.2x Kerbin). Lowered by bisection to where the moment equals the torque.
+        /// </summary>
+        public static double HoldableAoA(SimulatedVessel vessel, Vector3d airVelocity, Vector3d up, bool prograde, double aoaDegrees,
+            double dynamicPressurekPa, float mach, double pitchTorque)
+        {
+            if (aoaDegrees == 0 || pitchTorque <= 0 || dynamicPressurekPa <= 0 || airVelocity.sqrMagnitude < 1)
+                return aoaDegrees;
+
+            double Moment(double aoa)
+            {
+                EntryAxes(airVelocity, up, prograde, aoa, out Vector3d nose, out Vector3d top);
+                QuaternionD toWorld = QuaternionD.LookRotation(-top, nose);
+                return Math.Abs(vessel.PitchMoment(QuaternionD.Inverse(toWorld) * airVelocity, dynamicPressurekPa, mach));
+            }
+
+            if (Moment(aoaDegrees) <= pitchTorque) return aoaDegrees;
+            if (Moment(0) > pitchTorque) return 0; // can't even hold the airflow's axis: what it trims at isn't modelled
+
+            double held = 0, over = aoaDegrees;
+            for (int i = 0; i < 6; i++)
+            {
+                double mid = 0.5 * (held + over);
+                if (Moment(mid) <= pitchTorque) held = mid;
+                else over = mid;
+            }
+
+            return held;
+        }
+
         public static void EntryAxes(Vector3d airVelocity, Vector3d up, bool prograde, double aoaDegrees, out Vector3d nose, out Vector3d top)
         {
             Vector3d f = airVelocity.normalized;

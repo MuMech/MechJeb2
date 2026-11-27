@@ -14,6 +14,10 @@ namespace MuMech
         public bool hasLiftModule;
         private double bodyLiftMultiplier;
 
+        // where the part's mass, drag and lift act, in the vessel's frame (FlightIntegrator.ApplyAeroDrag / ApplyAeroLift: a part
+        // without a rigidbody has its forces applied at its parent's centre of mass); for the pitching moment of an entry attitude
+        public Vector3d MassPoint, DragPoint, LiftPoint;
+
         // Stock gives no body lift to a part whose lift is only for when a node is free (a pod's, bodyLiftOnlyUnattachedLift) while
         // the part on that node lifts (Part.CheckBodyLiftAttachment, FlightIntegrator.UpdateAerodynamics): a pod on its heat shield.
         // The provider lifts only in the air, so from orbit it is taken as lifting, unless it is in the stage being dropped.
@@ -117,6 +121,14 @@ namespace MuMech
             Rigidbody rigidbody = p.rb;
 
             totalMass = rigidbody == null ? 0 : rigidbody.mass; // TODO : check if we need to use this or the one without the childMass
+
+            Transform vesselTransform = p.vessel.GetTransform();
+            Part host = p;
+            while (host.rb == null && host.parent != null) host = host.parent;
+            bool atHost = rigidbody == null && host.rb != null && PhysicsGlobals.ApplyDragToNonPhysicsPartsAtParentCoM;
+            MassPoint = vesselTransform.InverseTransformPoint(rigidbody != null ? rigidbody.worldCenterOfMass : p.transform.position);
+            DragPoint = vesselTransform.InverseTransformPoint(atHost ? host.rb.worldCenterOfMass : p.partTransform.TransformPoint(p.CoPOffset));
+            LiftPoint = vesselTransform.InverseTransformPoint(atHost ? host.rb.worldCenterOfMass : p.partTransform.TransformPoint(p.CoLOffset));
             shieldedFromAirstream = p.ShieldedFromAirstream;
 
             noDrag = rigidbody == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;

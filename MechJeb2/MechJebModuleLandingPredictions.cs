@@ -316,7 +316,8 @@ namespace MuMech
             var sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
                 dropStage >= 0 ? 0 : VesselState.LimitedMaxThrustAcceleration, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
                 Time.fixedDeltaTime, maxOrbits, noSkipToFreefall,
-                entryAttitude && Core.Landing.EntryPrograde, entryAttitude ? Core.Landing.EntryAoADegrees : 0);
+                entryAttitude && Core.Landing.EntryPrograde, entryAttitude ? Core.Landing.EntryAoADegrees : 0,
+                VesselState.TorqueAvailable.x);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
             // running only once it is queued: an exception above (a part mid-decouple, a degenerate orbit) used to leave the
@@ -354,7 +355,8 @@ namespace MuMech
             bool entryAttitude = Core.Landing.Enabled && !Core.Landing.EntryAttitudeIsDefault && !VesselState.ParachuteDeployed;
             var sim = ReentrySimulation.Borrow(orbit, ut, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
                 dropStage >= 0 ? 0 : VesselState.LimitedMaxThrustAcceleration, parachuteSemiDeployMultiplier, landingASL, false, dt,
-                Time.fixedDeltaTime, maxOrbits, false, entryAttitude && Core.Landing.EntryPrograde, entryAttitude ? Core.Landing.EntryAoADegrees : 0);
+                Time.fixedDeltaTime, maxOrbits, false, entryAttitude && Core.Landing.EntryPrograde, entryAttitude ? Core.Landing.EntryAoADegrees : 0,
+                VesselState.TorqueAvailable.x);
 
             ThreadPool.QueueUserWorkItem(o =>
             {

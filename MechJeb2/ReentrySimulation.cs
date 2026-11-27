@@ -71,6 +71,11 @@ namespace MuMech
         private double _entryAoA;
         private bool _entryPhase;
 
+        // the vessel's pitch torque (kN m, reaction wheels and RCS) and the angle of attack it can hold at the current step: below
+        // some altitude the airflow's moment beats the torque and the craft sinks towards its trim, with less lift
+        private double _entryPitchTorque;
+        private double _heldAoA;
+
         private bool _orbitReenters;
         private readonly ReferenceFrame _referenceFrame = new ReferenceFrame();
 
@@ -130,18 +135,19 @@ namespace MuMech
         public static ReentrySimulation Borrow(Orbit initialOrbit, double ut, SimulatedVessel vessel, SimCurves simcurves,
             IDescentSpeedPolicy descentSpeedPolicy, double decelEndAltitudeASL, double maxThrustAccel, double parachuteSemiDeployMultiplier,
             double probableLandingSiteASL, bool multiplierHasError, double dt, double minDT, double maxOrbits, bool noSKiptoFreefall,
-            bool entryPrograde = false, double entryAoADegrees = 0)
+            bool entryPrograde = false, double entryAoADegrees = 0, double entryPitchTorque = 0)
         {
             ReentrySimulation sim = _pool.Borrow();
             sim.Init(initialOrbit, ut, vessel, simcurves, descentSpeedPolicy, decelEndAltitudeASL, maxThrustAccel,
                 parachuteSemiDeployMultiplier, probableLandingSiteASL, multiplierHasError, dt, minDT, maxOrbits, noSKiptoFreefall,
-                entryPrograde, entryAoADegrees);
+                entryPrograde, entryAoADegrees, entryPitchTorque);
             return sim;
         }
 
         private void Init(Orbit initialOrbit, double ut, SimulatedVessel vessel, SimCurves simcurves, IDescentSpeedPolicy descentSpeedPolicy,
             double decelEndAltitudeASL, double maxThrustAccel, double parachuteSemiDeployMultiplier, double probableLandingSiteASL,
-            bool multiplierHasError, double dt, double minDT, double maxOrbits, bool noSKiptoFreefall, bool entryPrograde, double entryAoADegrees)
+            bool multiplierHasError, double dt, double minDT, double maxOrbits, bool noSKiptoFreefall, bool entryPrograde, double entryAoADegrees,
+            double entryPitchTorque)
         {
             // Store all the input values as they were given
             _inputInitialOrbit = initialOrbit;
@@ -160,6 +166,8 @@ namespace MuMech
             _entryAttitude = entryPrograde || entryAoADegrees != 0;
             _entryPrograde = entryPrograde;
             _entryAoA = entryAoADegrees;
+            _heldAoA = entryAoADegrees;
+            _entryPitchTorque = entryPitchTorque;
             _entryPhase = true;
 
             MinDT = minDT;
@@ -400,6 +408,9 @@ namespace MuMech
         private void BS34Step()
         {
             bool repeatWithSmallerStep;
+
+            if (_entryAttitude && _entryPhase)
+                _heldAoA = HeldAoA(_x, _v);
 
             //Log(x, v);
             const double TOL = 0.01;
@@ -643,9 +654,22 @@ namespace MuMech
                 return false;
             }
 
-            MechJebModuleLandingAutopilot.EntryAxes(airVel, pos, _entryPrograde, _entryAoA, out Vector3d nose, out Vector3d top);
+            MechJebModuleLandingAutopilot.EntryAxes(airVel, pos, _entryPrograde, _heldAoA, out Vector3d nose, out Vector3d top);
             vesselToWorld = QuaternionD.LookRotation(-top, nose);
             return true;
+        }
+
+        // the angle of attack the vessel can hold here (MechJebModuleLandingAutopilot.HoldableAoA)
+        private double HeldAoA(Vector3d pos, Vector3d vel)
+        {
+            if (!_bodyHasAtmosphere) return _entryAoA;
+            Vector3d airVel = SurfaceVelocity(pos, vel);
+            double altitude = pos.magnitude - _bodyRadius;
+            double airDensity = AirDensity(pos, altitude);
+            double speedOfSound = _mainBody.GetSpeedOfSound(Pressure(pos), airDensity);
+            float mach = Mathf.Min((float)(airVel.magnitude / speedOfSound), 50f);
+            double dynamicPressurekPa = 0.0005 * airDensity * airVel.sqrMagnitude;
+            return MechJebModuleLandingAutopilot.HoldableAoA(_vessel, airVel, pos, _entryPrograde, _entryAoA, dynamicPressurekPa, mach, _entryPitchTorque);
         }
 
         private double Pressure(Vector3d pos)

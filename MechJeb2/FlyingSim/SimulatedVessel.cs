@@ -72,6 +72,35 @@ namespace MuMech
             }
 
             count = parts.Count;
+
+            // the centre of mass of what is simulated (after a dropped stage, what lands), in the vessel's frame
+            centerOfMass = Vector3d.zero;
+            for (int i = 0; i < count; i++)
+                centerOfMass += parts[i].totalMass * parts[i].MassPoint;
+            if (totalMass > 0)
+                centerOfMass /= totalMass;
+        }
+
+        private Vector3d centerOfMass;
+
+        /// <summary>
+        ///     The aerodynamic moment about the vessel's pitch axis (its x, in the vessel's frame), from each part's drag and lift where
+        ///     stock applies them, in kN m, for an airflow <paramref name="localVelocity" /> in the vessel's frame.
+        /// </summary>
+        public double PitchMoment(Vector3d localVelocity, double dynamicPressurekPa, float mach)
+        {
+            double dragFactor = dynamicPressurekPa * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
+            double liftFactor = dynamicPressurekPa * simCurves.LiftMachCurve.Evaluate(mach);
+            Vector3d moment = Vector3d.zero;
+            for (int i = 0; i < count; i++)
+            {
+                SimulatedPart part = parts[i];
+                Vector3d drag = part.Drag(localVelocity, dragFactor, mach); // sets the cubes Lift reads
+                Vector3d lift = part.Lift(localVelocity, liftFactor);
+                moment += Vector3d.Cross(part.DragPoint - centerOfMass, drag) + Vector3d.Cross(part.LiftPoint - centerOfMass, lift);
+            }
+
+            return moment.x;
         }
 
         public Vector3d Drag(Vector3d localVelocity, double dynamicPressurekPa, float mach)
