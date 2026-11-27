@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Smooth.Dispose;
 using Smooth.Pools;
 using UnityEngine;
+using UnityToolbag;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
@@ -305,10 +306,18 @@ namespace MuMech
             }
             finally
             {
-                if (_trajectory != _result.Trajectory)
-                    ListPool<AbsoluteVector>.Instance.Release(_trajectory);
-                _vessel.Release();
-                _simCurves.Release();
+                // The pools are borrowed from on the main thread and aren't thread-safe: a release from this thread at the same time
+                // could hand one simulated part to two simulations, which then give garbage. Give these back there.
+                List<AbsoluteVector> spareTrajectory = _trajectory != _result.Trajectory ? _trajectory : null;
+                SimulatedVessel vessel = _vessel;
+                SimCurves simCurves = _simCurves;
+                Dispatcher.InvokeAsync(() =>
+                {
+                    if (spareTrajectory != null)
+                        ListPool<AbsoluteVector>.Instance.Release(spareTrajectory);
+                    vessel.Release();
+                    simCurves.Release();
+                });
             }
 
             return _result;

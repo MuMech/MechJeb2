@@ -371,15 +371,19 @@ namespace MuMech
                 }
                 finally
                 {
-                    s.Release();
+                    Dispatcher.InvokeAsync(s.Release); // on the main thread, see ReentrySimulation.RunSimulation
                 }
 
+                ReentrySimulation.Result old;
                 lock (_plannedOrbitLock)
                 {
-                    _plannedOrbitResult?.Release();
+                    old = _plannedOrbitResult;
                     _plannedOrbitResult = r;
                     _plannedOrbitRunning = false;
                 }
+
+                if (old != null)
+                    Dispatcher.InvokeAsync(old.Release);
             }, sim);
             return true;
         }
@@ -476,7 +480,8 @@ namespace MuMech
             }
             finally
             {
-                sim.Release();
+                // on the main thread, where the pool is borrowed from (ReentrySimulation.RunSimulation)
+                Dispatcher.InvokeAsync(sim.Release);
             }
         }
 
