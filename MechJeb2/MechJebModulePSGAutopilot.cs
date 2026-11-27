@@ -151,6 +151,7 @@ namespace MuMech
             Core.PSGSimulation.Users.Remove(this);
 
             _machine.Disengage();
+            _rcsForward = false;
 
             Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
         }
@@ -275,6 +276,9 @@ namespace MuMech
         // the transitions' part of the command, then (unless the countdown holds for liftoff) the tick's
         private void Apply(in AscentCommand cmd)
         {
+            // the forward RCS is asked for again each tick it is wanted (ApplyThrottle)
+            _rcsForward = false;
+
             ApplyTransition(cmd);
 
             _ascentSettings.LimitingAoA = false;
@@ -453,10 +457,21 @@ namespace MuMech
 
         private bool LiftedOff() => Vessel.LiftedOff() && !Vessel.Landed;
 
+        // Set by RCSOn for this tick: Drive writes the forward RCS command into the fly-by-wire state.  Writing Vessel.ctrlState
+        // from OnFixedUpdate isn't enough: FlightInputHandler copies the player's input over it in its own FixedUpdate, so
+        // depending on the script order the coast's ullage and the TERMINAL_RCS trim would not fire.
+        private bool _rcsForward;
+
         private void RCSOn()
         {
             Core.Thrust.ThrustOff();
-            Vessel.ctrlState.Z = -1.0F;
+            _rcsForward = true;
+        }
+
+        public override void Drive(FlightCtrlState s)
+        {
+            if (_rcsForward)
+                s.Z = -1.0F;
         }
 
         private void ThrustOff() => Core.Thrust.ThrustOff();
