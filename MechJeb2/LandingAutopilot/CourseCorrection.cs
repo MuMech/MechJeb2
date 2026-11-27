@@ -18,6 +18,9 @@ namespace MuMech
                 if (!Core.Landing.PredictionReady)
                 {
                     Core.Thrust.ThrustOff();
+                    // in the air or under parachutes there is nothing to correct: coast, in the entry attitude, until a landing is predicted
+                    if (VesselState.DragAcceleration > 0.1 || VesselState.ParachuteDeployed)
+                        return new CoastToDeceleration(Core);
                     return this;
                 }
 
@@ -61,7 +64,7 @@ namespace MuMech
                 }
 
                 // A vessel that has dropped its engines can't correct anything, and turning towards the burn takes its heat shield off the airflow
-                if (VesselState.LimitedMaxThrustAcceleration <= 0)
+                if (!Core.Landing.CanCorrectCourse)
                 {
                     Core.Thrust.ThrustOff();
                     return new CoastToDeceleration(Core);

@@ -62,12 +62,13 @@ namespace MuMech
 
                 Status = Localizer.Format("#MechJeb_LandingGuidance_Status1"); //"Coasting toward deceleration burn"
 
-                if (Core.Landing.LandAtTarget)
+                // without a landing prediction there is nothing to correct towards
+                if (Core.Landing.LandAtTarget && Core.Landing.PredictionReady)
                 {
                     double currentError = Vector3d.Distance(Core.Target.GetPositionTargetPosition(), Core.Landing.LandingSite);
                     if (currentError > 1000)
                     {
-                        if (!VesselState.ParachuteDeployed && VesselState.LimitedMaxThrustAcceleration > 0 &&
+                        if (!VesselState.ParachuteDeployed && Core.Landing.CanCorrectCourse &&
                             VesselState.DragAcceleration <=
                             0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
                         {
@@ -98,21 +99,32 @@ namespace MuMech
 
                 if (Core.Attitude.AttitudeAngleFromTarget() > 5) { _warpReady = false; } // hopefully
 
-                if (Core.Landing.PredictionReady)
+                // in the air the attitude needs no prediction: a long entry may have none for a while
+                if (VesselState.DragAcceleration >= 0.01 || Core.Landing.PredictionReady)
                 {
                     if (VesselState.DragAcceleration < 0.01)
                     {
                         double decelerationStartTime = Core.Landing.Prediction.Trajectory.Any()
                             ? Core.Landing.Prediction.Trajectory.First().UT
                             : VesselState.Time;
+                        Vector3d entryPosition = Orbit.WorldPositionAtUT(decelerationStartTime);
                         Vector3d decelerationStartAttitude = -Orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
-                        decelerationStartAttitude += MainBody.getRFrmVel(Orbit.WorldPositionAtUT(decelerationStartTime));
+                        decelerationStartAttitude += MainBody.getRFrmVel(entryPosition);
                         decelerationStartAttitude = decelerationStartAttitude.normalized;
-                        Core.Attitude.AttitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
+                        // turned in vacuum to the attitude it will meet the air with
+                        if (Core.Landing.EntryAttitudeIsDefault)
+                            Core.Attitude.AttitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
+                        else
+                            Core.Landing.EntryAttitudeTo(-decelerationStartAttitude, entryPosition - MainBody.position);
+                    }
+                    else if (Core.Landing.EntryAttitudeIsDefault || VesselState.ParachuteDeployed)
+                    {
+                        Core.Attitude.AttitudeTo(Vector3.back, AttitudeReference.SURFACE_VELOCITY, Core.Landing);
                     }
                     else
                     {
-                        Core.Attitude.AttitudeTo(Vector3.back, AttitudeReference.SURFACE_VELOCITY, Core.Landing);
+                        // the entry attitude until the parachutes open or the deceleration burn starts, as the simulation assumes
+                        Core.Landing.EntryAttitudeTo(VesselState.SurfaceVelocity, VesselState.Up);
                     }
                 }
 

@@ -192,8 +192,11 @@ namespace MuMech.UI
             w.Visible(target.gameObject, () => HasPositionTarget);
             Layout coords = KodeWindow.Row(target);
             Layout fields = KodeWindow.Panel(coords);
-            AngleFields(w, fields, "Lat", () => Core.Target.targetLatitude, EditableAngle.Direction.NS);
-            AngleFields(w, fields, "Lon", () => Core.Target.targetLongitude, EditableAngle.Direction.EW);
+            // one table for both rows, so their fields, units and hemispheres line up in columns
+            KodeWindow.PropertyGrid angles = w.Properties(fields);
+            angles.FlexibleColumn = -1;
+            AngleFields(w, angles, "Lat", () => Core.Target.targetLatitude, EditableAngle.Direction.NS);
+            AngleFields(w, angles, "Lon", () => Core.Target.targetLongitude, EditableAngle.Direction.EW);
 
             // the four 10 m nudges as one pad, the step in its centre
             KodeWindow.CompassGrid pad = KodeWindow.Compass(coords, 20);
@@ -216,9 +219,9 @@ namespace MuMech.UI
         }
 
         /// <summary>Lat [d] ° [m] ' [s] " [N|S]: the hemisphere is a two-way choice, not a button that flips.</summary>
-        static void AngleFields(KodeWindow w, UIObject parent, string label, Func<EditableAngle> angle, EditableAngle.Direction direction)
+        static void AngleFields(KodeWindow w, KodeWindow.PropertyGrid g, string label, Func<EditableAngle> angle, EditableAngle.Direction direction)
         {
-            Layout row = KodeWindow.Row(parent);
+            Layout row = g.Row();
             KodeWindow.Label(row, label);
             OpUi.AngleRow(w, row, angle, direction, false, label);
         }
@@ -251,6 +254,7 @@ namespace MuMech.UI
             {
                 if (Core.Landing != null) Core.Landing.JettisonBeforeEntry = v;
             });
+            if (Core.Landing != null) EntryRows(w, g, Core.Landing);
             g.Switch("#MechJeb_LandingGuidance_checkbox4", () => Core.Landing != null && Core.Landing.RCSAdjustment, v => //Use RCS for small adjustment
             {
                 if (Core.Landing != null) Core.Landing.RCSAdjustment = v;
@@ -267,6 +271,34 @@ namespace MuMech.UI
         }
 
         static Layout StageField(KodeWindow.PropertyGrid g, string key, Func<EditableInt> ed) => EditUi.Grid(g, key, ed, null, 50);
+
+        // the entry profile, on a body with an atmosphere: the deorbit's periapsis, the entry angle it gives, and the attitude
+        // through the air (nose first or heat shield first, at an angle of attack)
+        void EntryRows(KodeWindow w, KodeWindow.PropertyGrid g, MechJebModuleLandingAutopilot l)
+        {
+            Func<bool> atmosphere = () => Core.vessel != null && Core.vessel.mainBody != null && Core.vessel.mainBody.atmosphere;
+
+            Layout pe = OptionRows.Switch(g, "#MechJeb_NewUI_EntryPeriapsis", () => l.CustomEntryPeriapsis, v => l.CustomEntryPeriapsis = v, //Entry periapsis
+                l.EntryPeriapsis, "km", 60);
+            Tooltips.Add(pe.gameObject, "#MechJeb_NewUI_EntryPeriapsis_tooltip");
+            w.Visible(pe.gameObject, atmosphere);
+
+            Layout angle = g.Value("#MechJeb_NewUI_EntryAngle", Memo.Of(() => Math.Round(l.EntryAngle(), 1), //Entry angle
+                a => double.IsNaN(a) ? "-" : a.ToString("F1") + "°"), null, "-00.0°");
+            foreach (UIText t in angle.GetComponentsInChildren<UIText>(true)) KodeWindow.ToneText(t, KodeWindow.Tone.Dim);
+            Tooltips.Add(angle.gameObject, "#MechJeb_NewUI_EntryAngle_tooltip");
+            w.Visible(angle.gameObject, atmosphere);
+
+            Layout noseFirst = g.Switch("#MechJeb_NewUI_EntryNoseFirst", () => l.EntryPrograde, v => l.EntryPrograde = v); //Enter nose first
+            Tooltips.Add(noseFirst.gameObject, "#MechJeb_NewUI_EntryNoseFirst_tooltip");
+            w.Visible(noseFirst.gameObject, atmosphere);
+
+            // each attitude keeps its own angle: the field shows the one of the attitude chosen now
+            Layout aoa = g.Field(KodeWindow.Loc("#MechJeb_NewUI_EntryAoA"), () => l.EntryAoA.Text, s => l.EntryAoA.Text = s, 50, "°", //Angle of attack
+                () => l.EntryAoA.IsParsed);
+            Tooltips.Add(aoa.gameObject, "#MechJeb_NewUI_EntryAoA_tooltip");
+            w.Visible(aoa.gameObject, atmosphere);
+        }
 
     }
 }

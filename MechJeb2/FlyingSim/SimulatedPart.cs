@@ -14,6 +14,15 @@ namespace MuMech
         public bool hasLiftModule;
         private double bodyLiftMultiplier;
 
+        // where the part's mass, drag and lift act, in the vessel's frame (FlightIntegrator.ApplyAeroDrag / ApplyAeroLift: a part
+        // without a rigidbody has its forces applied at its parent's centre of mass); for the pitching moment of an entry attitude
+        public Vector3d MassPoint, DragPoint, LiftPoint;
+
+        // Stock gives no body lift to a part whose lift is only for when a node is free (a pod's, bodyLiftOnlyUnattachedLift) while
+        // the part on that node lifts (Part.CheckBodyLiftAttachment, FlightIntegrator.UpdateAerodynamics): a pod on its heat shield.
+        // The provider lifts only in the air, so from orbit it is taken as lifting, unless it is in the stage being dropped.
+        private bool liftTakenByProvider;
+
         // A part without drag cubes (struts and fuel lines say DRAG_CUBE { none = True }) gets its drag from its drag model, as
         // FlightIntegrator.CalculateDragValue gives it, and no body lift. SetDrag does nothing for it, so the pooled DragCubeList
         // would give the drag and lift of the part it last held.
@@ -112,11 +121,21 @@ namespace MuMech
             Rigidbody rigidbody = p.rb;
 
             totalMass = rigidbody == null ? 0 : rigidbody.mass; // TODO : check if we need to use this or the one without the childMass
+
+            Transform vesselTransform = p.vessel.GetTransform();
+            Part host = p;
+            while (host.rb == null && host.parent != null) host = host.parent;
+            bool atHost = rigidbody == null && host.rb != null && PhysicsGlobals.ApplyDragToNonPhysicsPartsAtParentCoM;
+            MassPoint = vesselTransform.InverseTransformPoint(rigidbody != null ? rigidbody.worldCenterOfMass : p.transform.position);
+            DragPoint = vesselTransform.InverseTransformPoint(atHost ? host.rb.worldCenterOfMass : p.partTransform.TransformPoint(p.CoPOffset));
+            LiftPoint = vesselTransform.InverseTransformPoint(atHost ? host.rb.worldCenterOfMass : p.partTransform.TransformPoint(p.CoLOffset));
             shieldedFromAirstream = p.ShieldedFromAirstream;
 
             noDrag = rigidbody == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
             hasLiftModule = p.hasLiftModule;
             bodyLiftMultiplier = p.bodyLiftMultiplier * PhysicsGlobals.BodyLiftMultiplier;
+            liftTakenByProvider = p.bodyLiftOnlyUnattachedLiftActual && p.bodyLiftOnlyProvider is PartModule provider && provider.part != null &&
+                !(dropStage >= 0 && provider.part.IsDecoupledInStage(dropStage));
 
             noCubes = p.DragCubes.None;
             dragModel = p.dragModel;
@@ -236,7 +255,7 @@ namespace MuMech
 
         public virtual Vector3d Lift(Vector3d vesselVelocity, double liftFactor)
         {
-            if (shieldedFromAirstream || hasLiftModule || noCubes)
+            if (shieldedFromAirstream || hasLiftModule || noCubes || liftTakenByProvider)
                 return Vector3d.zero;
 
             // direction of the lift in a vessel centric reference
@@ -312,6 +331,13 @@ namespace MuMech
             }
 
             dest.SetDragWeights();
+
+            // the cube list is pooled: a simulated parachute that opened leaves its canopy's rotation behind, and the next part to
+            // borrow the list would read its cube turned. Take the real part's.
+            if (source.RotateDragVector)
+                dest.SetDragVectorRotation(source.DragVectorRotation);
+            else
+                dest.SetDragVectorRotation(false);
 
             simCurves.CopyTo(dest);
         }

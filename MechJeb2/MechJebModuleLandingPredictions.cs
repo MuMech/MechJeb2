@@ -311,9 +311,13 @@ namespace MuMech
             //    print(vesselState.limitedMaxThrustAccel.ToString("F2") + " " + descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity).ToString("F2"));
 
             var simVessel = SimulatedVessel.Borrow(Vessel, simCurves, patch.StartUT, Core.Landing.Enabled && deployChutes ? limitChutesStage : -1, dropStage);
+            // the entry attitude the landing will hold (CoastToDeceleration): only while it is engaged, and not under open parachutes
+            bool entryAttitude = Core.Landing.Enabled && !Core.Landing.EntryAttitudeIsDefault && !VesselState.ParachuteDeployed;
             var sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
                 dropStage >= 0 ? 0 : VesselState.LimitedMaxThrustAcceleration, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
-                Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
+                Time.fixedDeltaTime, maxOrbits, noSkipToFreefall,
+                entryAttitude && Core.Landing.EntryPrograde, entryAttitude ? Core.Landing.EntryAoADegrees : 0,
+                VesselState.TorqueAvailable.x);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
             // running only once it is queued: an exception above (a part mid-decouple, a degenerate orbit) used to leave the
@@ -326,6 +330,75 @@ namespace MuMech
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sim);
             //RunSimulation(sim);
+        }
+
+        private readonly object _plannedOrbitLock = new object();
+        private ReentrySimulation.Result _plannedOrbitResult;
+        private bool _plannedOrbitRunning;
+
+        /// <summary>
+        ///     Starts one simulation of <paramref name="orbit" /> from <paramref name="ut" />, an orbit the vessel isn't on yet (the one a
+        ///     deorbit burn made now would give), with the landing's settings, on the thread pool. Does nothing and returns false while one
+        ///     is running. <see cref="TakePlannedOrbitResult" /> gives its result once.
+        /// </summary>
+        public bool SimulatePlannedOrbit(Orbit orbit, double ut)
+        {
+            lock (_plannedOrbitLock)
+            {
+                if (_plannedOrbitRunning) return false;
+                _plannedOrbitRunning = true;
+            }
+
+            double landingASL = result != null && result.Outcome == ReentrySimulation.Outcome.LANDED && result.Body != null ? result.EndASL : 0;
+            var simCurves = ReentrySimulation.SimCurves.Borrow(orbit.referenceBody);
+            var simVessel = SimulatedVessel.Borrow(Vessel, simCurves, ut, Core.Landing.Enabled && deployChutes ? limitChutesStage : -1, dropStage);
+            bool entryAttitude = Core.Landing.Enabled && !Core.Landing.EntryAttitudeIsDefault && !VesselState.ParachuteDeployed;
+            var sim = ReentrySimulation.Borrow(orbit, ut, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
+                dropStage >= 0 ? 0 : VesselState.LimitedMaxThrustAcceleration, parachuteSemiDeployMultiplier, landingASL, false, dt,
+                Time.fixedDeltaTime, maxOrbits, false, entryAttitude && Core.Landing.EntryPrograde, entryAttitude ? Core.Landing.EntryAoADegrees : 0,
+                VesselState.TorqueAvailable.x);
+
+            ThreadPool.QueueUserWorkItem(o =>
+            {
+                var s = (ReentrySimulation)o;
+                ReentrySimulation.Result r = null;
+                try
+                {
+                    r = s.RunSimulation();
+                }
+                catch (Exception ex)
+                {
+                    if (NewFailure(ex))
+                        Dispatcher.InvokeAsync(() => Debug.LogException(ex));
+                }
+                finally
+                {
+                    Dispatcher.InvokeAsync(s.Release); // on the main thread, see ReentrySimulation.RunSimulation
+                }
+
+                ReentrySimulation.Result old;
+                lock (_plannedOrbitLock)
+                {
+                    old = _plannedOrbitResult;
+                    _plannedOrbitResult = r;
+                    _plannedOrbitRunning = false;
+                }
+
+                if (old != null)
+                    Dispatcher.InvokeAsync(old.Release);
+            }, sim);
+            return true;
+        }
+
+        /// <summary>The result of the last <see cref="SimulatePlannedOrbit" />, once (null until it is ready); the caller releases it.</summary>
+        public ReentrySimulation.Result TakePlannedOrbitResult()
+        {
+            lock (_plannedOrbitLock)
+            {
+                ReentrySimulation.Result r = _plannedOrbitResult;
+                _plannedOrbitResult = null;
+                return r;
+            }
         }
 
         private void RunSimulation(object o)
@@ -409,7 +482,8 @@ namespace MuMech
             }
             finally
             {
-                sim.Release();
+                // on the main thread, where the pool is borrowed from (ReentrySimulation.RunSimulation)
+                Dispatcher.InvokeAsync(sim.Release);
             }
         }
 
