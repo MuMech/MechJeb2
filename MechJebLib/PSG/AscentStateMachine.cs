@@ -56,6 +56,9 @@ namespace MechJebLib.PSG
         // leave the attitude alone
         NONE,
 
+        // the attitude controller lets go of the axes (on the pad)
+        OFF,
+
         // straight up, rolled to Heading
         VERTICAL,
 
@@ -153,8 +156,8 @@ namespace MechJebLib.PSG
         // the countdown's prelaunch is done (its result from the last tick that drove it)
         public bool PrelaunchDone;
 
-        // the countdown lets the autopilot throttle up
-        public bool AllowThrottle;
+        // a launch countdown is running (it stages at T-0): on the pad the vessel waits in PRELAUNCH until it ends
+        public bool CountdownActive;
 
         public double PitchStartHeight;
 
@@ -169,8 +172,8 @@ namespace MechJebLib.PSG
     }
 
     /// <summary>
-    ///     What the ascent asks the vessel and the rest of MechJeb to do this tick.  The transitions' part is applied first; the
-    ///     tick's part only when CheckLiftoffHold is clear or the countdown isn't holding for liftoff.
+    ///     What the ascent asks the vessel and the rest of MechJeb to do this tick.  The transitions' part is applied first, then
+    ///     the tick's.
     /// </summary>
     public struct AscentCommand
     {
@@ -181,10 +184,7 @@ namespace MechJebLib.PSG
         // turn the RCS action group on
         public bool RCSGroupOn;
 
-        // set by the state's tick: the countdown's liftoff hold stops everything below
-        public bool CheckLiftoffHold;
-
-        // drive the countdown's prelaunch, which sets the next tick's PrelaunchDone
+        // set by the state's tick: drive the countdown's prelaunch, which sets the next tick's PrelaunchDone
         public bool DrivePrelaunch;
 
         // the solar panels and the antennas for the ascent
@@ -310,8 +310,9 @@ namespace MechJebLib.PSG
 
         /// <summary>
         ///     kOS GUIDANCESTATUS: State in the status names of the guidance controller this autopilot replaced, which launch scripts
-        ///     wait on.  ENABLED until there is a Solution and INITIALIZED while the countdown holds the throttle, then BURNING from
-        ///     the ignition on the pad on, through the vertical ascent and the pitch program.  JETTISON was TERMINAL_STAGING.
+        ///     wait on.  ENABLED until there is a Solution and INITIALIZED while it holds on the pad with one (PRELAUNCH, through
+        ///     the countdown), then BURNING from the ignition on the pad on, through the vertical ascent and the pitch program.
+        ///     JETTISON was TERMINAL_STAGING.
         /// </summary>
         public string GuidanceStatus
         {
@@ -319,13 +320,14 @@ namespace MechJebLib.PSG
             {
                 switch (_state)
                 {
+                    case PSGState.PRELAUNCH:    return Solution == null ? "ENABLED" : "INITIALIZED";
                     case PSGState.BURNING:      return "BURNING";
                     case PSGState.JETTISON:     return "TERMINAL_STAGING";
                     case PSGState.COASTING:     return "COASTING";
                     case PSGState.TERMINAL:     return "TERMINAL";
                     case PSGState.TERMINAL_RCS: return "TERMINAL_RCS";
                     case PSGState.FINISHED:     return "FINISHED";
-                    default:                    return Solution == null ? "ENABLED" : _in.AllowThrottle ? "BURNING" : "INITIALIZED";
+                    default:                    return Solution == null ? "ENABLED" : "BURNING";
                 }
             }
         }
@@ -338,6 +340,15 @@ namespace MechJebLib.PSG
 
         // flying the Solution, after the pitch program
         public bool IsGuided => _state == PSGState.BURNING || _state == PSGState.JETTISON || IsCoasting || IsTerminal;
+
+        /// <summary>
+        ///     Whether SetSolution takes a Solution now: on the pad, in a burn or in the coast.  A Solution that arrives in any other
+        ///     state is late: the vertical ascent and the pitch program fly the pad Solution to guidance (a new one would move the
+        ///     pitch the pitch program hands over at), a jettison drops the burn its Solution cut (one that ends that burn later
+        ///     would take it back to BURNING and throttle the cut engines up again), and terminal guidance flies to the end of the
+        ///     Solution it started with.  PSGSimulation starts no solve in them.
+        /// </summary>
+        public bool TakesSolution => _state == PSGState.PRELAUNCH || _state == PSGState.BURNING || IsCoasting;
 
         /// <summary>Set when the coast starts, and kept after it: the Solution's burns before the coast are behind the vessel.</summary>
         public bool HasCoasted { get; private set; }
@@ -416,22 +427,20 @@ namespace MechJebLib.PSG
         }
 
         /// <summary>
-        ///     Takes a DeNormalized() Solution to fly (guidance flies in SI units and MET seconds).  False if it was ignored: terminal
-        ///     guidance flies to the end of the Solution it started with.
+        ///     Takes a DeNormalized() Solution to fly (guidance flies in SI units and MET seconds).  False if it was ignored, outside
+        ///     PRELAUNCH, BURNING and COASTING (TakesSolution).
         /// </summary>
         public bool SetSolution(Solution solution)
         {
             Check.False(solution.Normalized, "guidance needs a DeNormalized() Solution");
 
+            if (!TakesSolution)
+                return false;
+
             // PSGSimulation cancels the solve in progress when the coast starts and when it ends (CoastStarted, CoastEnded), so a
             // solution that arrives during the coast starts with it, and one that arrives after it has no coast
             CheckDebug.True(!IsCoasting || solution.CoastPhase(0));
             CheckDebug.True(!HasCoasted || IsCoasting || solution.CoastIndex() < 0);
-
-            // terminal guidance flies to the end of the Solution it started with (PSGSimulation drops the solve in progress when
-            // it starts, so this is only a solve that was done before)
-            if (IsTerminal || IsFinished)
-                return false;
 
             Solution = solution;
 
@@ -475,8 +484,12 @@ namespace MechJebLib.PSG
             if (desired == PSGState.FINISHED)
                 return desired;
 
-            if (desired == PSGState.PRELAUNCH && _in.PrelaunchDone)
+            // the vessel waits on the pad until the countdown is over and there is a Solution to fly, and waits again when a
+            // countdown started on the pad drops the Solution (PSGSimulation.FlushSolution)
+            if (desired == PSGState.PRELAUNCH && _in.PrelaunchDone && !LaunchHeld())
                 desired = PSGState.VERTICAL_ASCENT;
+            else if (desired == PSGState.VERTICAL_ASCENT && LaunchHeld())
+                desired = PSGState.PRELAUNCH;
             if (desired == PSGState.VERTICAL_ASCENT && _in.LiftedOff && _in.AltitudeBottom > _in.PitchStartHeight)
                 desired = PSGState.PITCH_PROGRAM;
             // not in the tick the pitch program is entered: its pitch starts at 90° from the time OnEnterPitchProgram records,
@@ -582,8 +595,6 @@ namespace MechJebLib.PSG
         {
             if (_state != PSGState.PRELAUNCH && _state != PSGState.FINISHED)
             {
-                // nothing below while the countdown holds for liftoff
-                _cmd.CheckLiftoffHold = true;
                 _cmd.DriveAscentParts = true;
                 UpdateAutostageLimit();
             }
@@ -602,18 +613,40 @@ namespace MechJebLib.PSG
             }
         }
 
-        // the autopilot keeps PrelaunchDone, which it clears as it engages
+        // the autopilot keeps PrelaunchDone, which it clears as it engages and when the Solution is dropped on the pad
         private void OnEnterPrelaunch() { }
 
-        private void TickPrelaunch() => _cmd.DrivePrelaunch = true;
+        // The countdown's prelaunch runs until it is done, then the vessel waits (LaunchHeld) with the throttle off and the axes
+        // let go, as the prelaunch has them.  Engaged in flight, the prelaunch is skipped and nothing is cut: a throttle cut for
+        // a tick could cost a RealFuels engine its ignition.
+        private void TickPrelaunch()
+        {
+            _cmd.DrivePrelaunch = !_in.PrelaunchDone;
+
+            if (!_in.Grounded)
+                return;
+
+            _cmd.Throttle = AscentThrottle.OFF;
+            _cmd.Attitude = AscentAttitude.OFF;
+        }
+
+        // on the pad, the launch waits for the countdown, which stages at T-0, and for a Solution to fly
+        private bool LaunchHeld() => _in.Grounded && (_in.CountdownActive || Solution == null);
 
         private void OnEnterVerticalAscent() { }
 
         private void TickVerticalAscent()
         {
-            //during the vertical ascent we just thrust straight up at max throttle
             _cmd.Attitude = AscentAttitude.VERTICAL;
             _cmd.Heading = Heading;
+
+            // a solution with the vertical rise in front of it planned the rise at full throttle (VerticalRise)
+            if (Solution is { HasRise: true })
+            {
+                _cmd.Throttle = AscentThrottle.GUIDED;
+                _cmd.ThrottleValue = 1.0;
+                return;
+            }
 
             ThrottleGuided();
         }
@@ -1220,7 +1253,8 @@ namespace MechJebLib.PSG
             if (Solution == null || IsFinished)
                 return;
 
-            // the Solution's clock is MET, which stays at zero until liftoff, so on the ground this flies its first point
+            // the Solution's clock is MET, which stays at zero until liftoff, so on the ground this shows the whole solution
+            // (with its vertical rise, if it has one) and steers by the first point of its first phase
             int p = CurrentPhase(IsCoasting);
 
             // frozen from the engine cut on: the RCS trim runs past the end of the Solution
@@ -1254,7 +1288,7 @@ namespace MechJebLib.PSG
         // stage off a spent engine with no relights, and with it the RCS the insertion stage still needs.
         private void UpdateAutostageLimit()
         {
-            if (Solution == null || !_in.AllowThrottle)
+            if (Solution == null)
                 return;
 
             _cmd.AutostageLimit = AutostageFloor();
@@ -1326,7 +1360,7 @@ namespace MechJebLib.PSG
         // the guided throttle of phase p
         private void ThrottleGuided(int p)
         {
-            if (Solution == null || !_in.AllowThrottle)
+            if (Solution == null)
                 return;
 
             _cmd.Throttle = AscentThrottle.GUIDED;

@@ -24,18 +24,21 @@ namespace MuMech
     /// <summary>What the PSG optimizer is doing, or why it is not solving (MechJebModulePSGSimulation.State).</summary>
     public enum OptimizerState
     {
-        READY,         // between two solves
-        SOLVING,       // a solve is running
-        NO_PLAN,       // no flight plan, or nothing left in it to plan
-        STAGE_ENDING,  // the current stage is about to end: the solution is frozen through staging
-        AFTER_STAGING, // a short wait after staging
-        AFTER_PHASE,   // the same wait after a phase ended without staging (the start or end of a coast during a stage)
-        ON_PAD,        // either wait before liftoff: the stage not lit yet has no phase in the solution, so its time to go reads 0
-        COAST_PAUSE,   // a long coast above the atmosphere, once a solve started there has converged: resumes 20 s before the burn
-        TERMINAL,      // terminal guidance flies the end of the burn on the frozen solution
-        UNGUIDED_ONLY, // only unguided stages are left, which the optimizer can't steer
-        FINISHED,      // guidance is done
-        RETRYING       // the problem could not be built (a setting PSG refuses): tried again every second
+        READY,           // between two solves
+        SOLVING,         // a solve is running
+        NO_PLAN,         // no flight plan, or nothing left in it to plan
+        STAGE_ENDING,    // the current stage is about to end: the solution is frozen through staging
+        AFTER_STAGING,   // a short wait after staging
+        AFTER_PHASE,     // the same wait after a phase ended without staging (the start or end of a coast during a stage)
+        ON_PAD,          // a wait before liftoff: the stage not lit yet has no phase in the solution, so its time to go reads 0, and the vertical ascent from T-0 until the clamps let go
+        VERTICAL_ASCENT, // after liftoff, the vertical ascent to the pitch start height: no re-solve until guidance takes over
+        PITCH_PROGRAM,   // the pitch program, pitching over to the guidance pitch of the solution it has: no re-solve until guidance takes over
+        JETTISON,        // a jettison of a cut burn's engines: no re-solve until it is back in the burn
+        COAST_PAUSE,     // a long coast above the atmosphere, once a solve started there has converged: resumes 20 s before the burn
+        TERMINAL,        // terminal guidance flies the end of the burn on the frozen solution
+        UNGUIDED_ONLY,   // only unguided stages are left, which the optimizer can't steer
+        FINISHED,        // guidance is done
+        RETRYING         // the problem could not be built (a setting PSG refuses): tried again every second
     }
 
     /// <summary>
@@ -495,6 +498,21 @@ namespace MuMech
             return true;
         }
 
+        // what the optimizer reports while guidance takes no solution (AscentStateMachine.TakesSolution)
+        private OptimizerState PausedState()
+        {
+            switch (Core.PSGAutopilot.State)
+            {
+                case PSGState.VERTICAL_ASCENT: return Vessel.VesselOffGround() ? OptimizerState.VERTICAL_ASCENT : OptimizerState.ON_PAD;
+                case PSGState.PITCH_PROGRAM:   return OptimizerState.PITCH_PROGRAM;
+                case PSGState.JETTISON:        return OptimizerState.JETTISON;
+                case PSGState.TERMINAL:
+                case PSGState.TERMINAL_RCS:    return OptimizerState.TERMINAL;
+                case PSGState.FINISHED:        return OptimizerState.FINISHED;
+                default:                       throw new ArgumentOutOfRangeException();
+            }
+        }
+
         private void HandleDoneTask()
         {
             if (!(_ascent is { IsCompleted: true }))
@@ -515,10 +533,17 @@ namespace MuMech
 
                 if (psg.Success() && psg.Solution != null)
                 {
-                    _solution = psg.Solution;
+                    // one that converges once guidance has moved on is late (AscentStateMachine.TakesSolution): it is thrown away,
+                    // and the next solve warm starts from the last one guidance took
                     Solution flown = psg.Solution.DeNormalized();
+                    if (!Core.PSGAutopilot.SetSolution(flown))
+                    {
+                        Debug.Log($"[MechJebModulePSGSimulation] threw away a late solution: the autopilot is in {Core.PSGAutopilot.State}");
+                        return;
+                    }
+
+                    _solution = psg.Solution;
                     CheckReach(flown);
-                    Core.PSGAutopilot.SetSolution(flown);
 
                     // the coast's start and end cancel the job, so a job started in the coast lands in it
                     CheckDebug.True(!_vacuumCoastJob || Core.PSGAutopilot.IsCoasting);
@@ -630,23 +655,18 @@ namespace MuMech
                     attR = apR;
             }
 
-            if (Vessel.VesselOffGround())
+            // solves start only while guidance takes their solutions (AscentStateMachine.TakesSolution): one started in any other
+            // state would be thrown away (HandleDoneTask)
+            if (!Core.PSGAutopilot.TakesSolution)
             {
-                // if we have only inertially guided stages we can't run the optimizer
-                if (FlightPlan.AllUnguidedStages())
-                {
-                    // also true once no stage is left at all, as in terminal guidance on the last stage: name that instead
-                    SetState(Core.PSGAutopilot.IsTerminal ? OptimizerState.TERMINAL
-                        : Core.PSGAutopilot.IsFinished ? OptimizerState.FINISHED
-                        : UnguidedBurnLeft() ? OptimizerState.UNGUIDED_ONLY : OptimizerState.NO_PLAN);
-                    return;
-                }
+                SetState(PausedState());
+                return;
             }
 
-            // not in terminal guidance, which flies the end of a frozen solution, and not finished
-            if (Core.PSGAutopilot.IsTerminal || Core.PSGAutopilot.IsFinished)
+            // if we have only inertially guided stages we can't run the optimizer
+            if (Vessel.VesselOffGround() && FlightPlan.AllUnguidedStages())
             {
-                SetState(Core.PSGAutopilot.IsTerminal ? OptimizerState.TERMINAL : OptimizerState.FINISHED);
+                SetState(UnguidedBurnLeft() ? OptimizerState.UNGUIDED_ONLY : OptimizerState.NO_PLAN);
                 return;
             }
 
@@ -696,6 +716,12 @@ namespace MuMech
                       , MainBody.gravParameter, MainBody.Radius)
                    .SetTarget(peR, apR, attR, Deg2Rad(Inc), Deg2Rad(lan), ArgP, fpa, attachAltFlag, lanflag, ArgPFlag)
                    .FlightPlan(FlightPlan);
+
+                // On the ground guidance flies straight up at full throttle to the pitch start height before the pitch program,
+                // so the solve starts at the top of that rise, which the solution keeps in front of its first phase.  After
+                // liftoff the solves are paused until guidance takes over, past the rise.
+                if (!Vessel.VesselOffGround())
+                    ascentBuilder.VerticalRise(Max(_ascentSettings.PitchStartHeight - VesselState.AltitudeBottom, 0));
 
                 // note that we have to solve the atmospheric solution even when flying in vacuum, or the optimizer may decide to dip back
                 // into the atmosphere again and burn up the rocket.

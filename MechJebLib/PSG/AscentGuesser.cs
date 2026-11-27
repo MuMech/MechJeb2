@@ -19,18 +19,19 @@ namespace MechJebLib.PSG
 {
     /// <summary>
     ///     The initial guess for the optimizer, by single shooting.  The stages are flown in order at full throttle with a
-    ///     single cutoff, which may land in any stage.  On the pad the rocket rises vertically, and in an atmosphere it then
-    ///     kicks over into a gravity turn, until it switches to linear tangent steering u = normalize(A - B (t - ts)) once it
-    ///     is out of the atmosphere.  A small SQP (with finite difference gradients) over the kick, its azimuth, A, B and the
-    ///     cutoff time burns the least propellant into a circular orbit at the target's GuessRadius() and inclination.
+    ///     single cutoff, which may land in any stage.  From the ground, which is the top of the vertical rise (VerticalRise)
+    ///     where guidance pitches over, it kicks over at once into a gravity turn in an atmosphere, until it switches to
+    ///     linear tangent steering u = normalize(A - B (t - ts)) once it is out of the atmosphere, and in vacuum it starts on
+    ///     linear tangent steering.  In flight it starts on linear tangent steering from the current attitude.  A small SQP
+    ///     (with finite difference gradients) over the kick, its azimuth, A, B and the cutoff time burns the least propellant
+    ///     into a circular orbit at the target's GuessRadius() and inclination.
     ///     Coasts are zero length, and unguided stages, shutdown flags and throttling are ignored: all of that is left to
     ///     the optimizer, this only has to produce a roughly feasible path.
     /// </summary>
     public class AscentGuesser
     {
-        private enum Mode { NONE, VERTICAL, PITCHOVER, GRAVITY_TURN, LINEAR_TANGENT }
+        private enum Mode { NONE, PITCHOVER, GRAVITY_TURN, LINEAR_TANGENT }
 
-        private const double V_KICK        = 50;   // vertical speed (m/s) which ends the vertical rise
         private const double T_PITCHOVER   = 5;    // time (s) to ramp the kick in
         private const double T_DECAY       = 5;    // time constant (s) of the decay of the kick into the gravity turn
         private const double KICK0         = 3;    // starting kick (degrees)
@@ -62,12 +63,10 @@ namespace MechJebLib.PSG
         private readonly double _invDensityR0;
         private readonly double _rFloor;
         private readonly double _rSwitch;
-        private readonly double _vKick;
         private readonly double _tPitchover;
         private readonly double _tDecay;
 
         private readonly Event _impactEvent;
-        private readonly Event _kickEvent;
         private readonly Event _switchEvent;
         private readonly Event _energyEvent;
         private readonly List<Event> _events = new List<Event>();
@@ -120,30 +119,21 @@ namespace MechJebLib.PSG
             _flightPlan = flightPlan;
 
             // the same atmosphere as AscentProblem
-            _atmosphere = problem.H0 > 0 && problem.Rho0CdAref > 0;
-            _invDensityR0 = problem.H0 > 0 ? 1.0 / AscentProblem.NormalizedDensity(problem.R0.magnitude, problem.RBody, problem.H0).M : 0;
+            _atmosphere = AscentProblem.HasAtmosphere(problem);
+            _invDensityR0 = AscentProblem.InvDensityR0(problem);
 
             Scale scale = problem.Scale;
             _rFloor = Min(problem.R0.magnitude, problem.RBody) - IMPACT_MARGIN / scale.LengthScale;
             _rSwitch = problem.RBody + problem.H0 * Log(1.0 / RHO_SWITCH);
-            _vKick = V_KICK / scale.VelocityScale;
             _tPitchover = T_PITCHOVER / scale.TimeScale;
             _tDecay = T_DECAY / scale.TimeScale;
 
             _impactEvent = new Event(Impact);
-            _kickEvent = new Event(Kick);
             _switchEvent = new Event(Switch);
             _energyEvent = new Event(OrbitalEnergy);
         }
 
         private double Impact(Vec yin, double t, AbstractIVP i) => InterpolantLayout.CreateFrom(yin).R.magnitude - _rFloor;
-
-        private double Kick(Vec yin, double t, AbstractIVP i)
-        {
-            var y = InterpolantLayout.CreateFrom(yin);
-
-            return V3.Dot(y.V, y.R.normalized) - _vKick;
-        }
 
         private double Switch(Vec yin, double t, AbstractIVP i) => InterpolantLayout.CreateFrom(yin).R.magnitude - _rSwitch;
 
@@ -162,8 +152,6 @@ namespace MechJebLib.PSG
         {
             switch (_mode)
             {
-                case Mode.VERTICAL:
-                    return r;
                 case Mode.PITCHOVER:
                     double theta = _kick * (t - _tk) / _tPitchover;
                     return Cos(theta) * _rk + Sin(theta) * _ek;
@@ -179,8 +167,6 @@ namespace MechJebLib.PSG
         {
             switch (_mode)
             {
-                case Mode.VERTICAL:
-                    return v;
                 case Mode.PITCHOVER:
                     double theta = _kick * (t - _tk) / _tPitchover;
                     return _kick / _tPitchover * (-Sin(theta) * _rk + Cos(theta) * _ek);
@@ -195,22 +181,8 @@ namespace MechJebLib.PSG
             }
         }
 
-        // the optimizer's dynamics (AscentProblem.VDotAtmo and VDotVacuum) at full throttle, with the drag written so that
-        // it is still finite at zero airspeed on the pad
-        private V3 Acceleration(V3 r, V3 v, double m, V3 u)
-        {
-            double rm = r.magnitude;
-            V3 gravity = -r / (rm * rm * rm);
-
-            if (!_atmosphere)
-                return gravity + _phase.VacThrust / m * u;
-
-            double density = AscentProblem.NormalizedDensity(rm, _problem.RBody, _problem.H0).M;
-            V3 vr = SurfaceVelocity(r, v);
-            V3 drag = 0.5 * _problem.Rho0CdAref * density * vr.magnitude * vr;
-            double thrust = _phase.Mdot * (_phase.VexCurrent + (_phase.VexVacuum - _phase.VexCurrent) * (1.0 - density * _invDensityR0));
-            return gravity + thrust / m * u - drag / m;
-        }
+        // the optimizer's dynamics (AscentProblem.VDotAtmo and VDotVacuum) at full throttle
+        private V3 Acceleration(V3 r, V3 v, double m, V3 u) => AscentProblem.FullThrottleAcceleration(_problem, _phase, _invDensityR0, r, v, m, u);
 
         private void Rhs(Vec yin, double t, Vec dyout)
         {
@@ -238,7 +210,8 @@ namespace MechJebLib.PSG
             return Astro.ENUToECI(r, enu).normalized;
         }
 
-        private Mode AfterVertical => _atmosphere ? Mode.PITCHOVER : Mode.LINEAR_TANGENT;
+        // the first mode from the ground, the top of the vertical rise
+        private Mode PadMode => _atmosphere ? Mode.PITCHOVER : Mode.LINEAR_TANGENT;
 
         // the initial pass picks A itself (with B = 0)
         private void EnterMode(Mode mode, ref InterpolantLayout y, double t, bool initialPass)
@@ -250,14 +223,6 @@ namespace MechJebLib.PSG
 
             switch (mode)
             {
-                case Mode.VERTICAL:
-                    if (V3.Dot(y.V, y.R.normalized) >= _vKick)
-                    {
-                        EnterMode(AfterVertical, ref y, t, initialPass);
-                        return;
-                    }
-
-                    break;
                 case Mode.PITCHOVER:
                     _tk = t;
                     _rk = y.R.normalized;
@@ -279,7 +244,8 @@ namespace MechJebLib.PSG
                     _rs = y.R;
                     if (initialPass)
                     {
-                        _a = (previous == Mode.VERTICAL ? FortyFiveDegreesUp(y.R) : u) + _pitchUp * y.R.normalized;
+                        // from the ground U0 is straight up, so the seed is 45 degrees up
+                        _a = (previous == Mode.NONE && _padStart ? FortyFiveDegreesUp(y.R) : u) + _pitchUp * y.R.normalized;
                         _a = _a.normalized;
                         _b = V3.zero;
                     }
@@ -363,7 +329,7 @@ namespace MechJebLib.PSG
                 p0 = 0;
                 _phase = _phases[0];
                 _mode = Mode.NONE;
-                EnterMode(_padStart ? Mode.VERTICAL : Mode.LINEAR_TANGENT, ref y, t, initialPass);
+                EnterMode(_padStart ? PadMode : Mode.LINEAR_TANGENT, ref y, t, initialPass);
             }
 
             for (int p = p0; p < _phases.Count; p++)
@@ -396,8 +362,6 @@ namespace MechJebLib.PSG
 
                     _events.Clear();
                     _events.Add(_impactEvent);
-                    if (_mode == Mode.VERTICAL)
-                        _events.Add(_kickEvent);
                     if (_mode == Mode.GRAVITY_TURN)
                         _events.Add(_switchEvent);
                     if (initialPass)
@@ -443,7 +407,8 @@ namespace MechJebLib.PSG
                         _cachedY = y;
                     }
 
-                    EnterMode(fired == _kickEvent ? AfterVertical : Mode.LINEAR_TANGENT, ref y, t, initialPass);
+                    // the switch out of the gravity turn
+                    EnterMode(Mode.LINEAR_TANGENT, ref y, t, initialPass);
                 }
 
                 if (interpolant != null)
@@ -577,7 +542,7 @@ namespace MechJebLib.PSG
                 double twr = LiftoffTWR();
                 // the guess also runs in flight when there is no solution to start from: then the first phase is the current stage,
                 // at its current mass, and the problem's MET is past zero
-                if (_problem.T0 > 0)
+                if (!_problem.PadStart)
                     throw new Exception(
                         $"No ascent found from here: the rocket falls back even flying almost straight up (thrust-to-weight now {twr:F2})");
                 throw new Exception(twr < 1
@@ -630,7 +595,9 @@ namespace MechJebLib.PSG
 
             _rT = _problem.Terminal.GuessRadius();
             _incT = _problem.Terminal.IncT();
-            _padStart = _problem.T0 <= 0;
+            // from the ground (the top of the vertical rise presolved from it, or the pad itself without one), which kicks
+            // over at once
+            _padStart = _problem.PadStart;
             _kickVariables = _padStart && _atmosphere;
             _tStackEnd = StackEndTime();
 

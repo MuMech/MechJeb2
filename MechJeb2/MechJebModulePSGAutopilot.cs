@@ -71,8 +71,6 @@ namespace MuMech
 
         public bool IsCoasting => _machine.IsCoasting;
 
-        public bool IsTerminal => _machine.IsTerminal;
-
         public bool IsFinished => _machine.IsFinished;
 
         /// <summary>Set when the coast starts, and kept after it: the Solution's burns before the coast are behind the vessel.</summary>
@@ -84,9 +82,6 @@ namespace MuMech
         // what guidance does with RCS (PSGFeedback), said once at each change
         private ScreenMessage _rcsCoastMessage = null!, _rcsTrimMessage = null!, _rcsOffMessage = null!;
 
-        // the countdown holds the throttle
-        private bool _allowThrottle;
-
         // Countdown.DrivePrelaunch is done
         private bool _prelaunchDone;
 
@@ -95,7 +90,9 @@ namespace MuMech
         private Vessel? _partIdsVessel;
         private int _partIdsCount = -1;
 
-        private string? _awaitingComputing, _awaitingProgress, _awaitingProgressFrom;
+        // the status while the first solve runs on the pad (AwaitingComputing), and what it was built from
+        private string? _awaitingStatus, _awaitingFrom;
+        private bool    _awaitingHolding;
         private string? _lockStatus, _lockStatusId;
 
         public override void OnStart(PartModule.StartState state)
@@ -144,6 +141,7 @@ namespace MuMech
             Core.Staging.AutoStageLimitRemove(this);
             Core.Spinup.Users.Remove(this);
             _countdown.Users.Remove(this);
+            _countdown.SetLaunchHold(this, false);
             _ascentSettings.ReleaseOwnValues(this);
 
             _countdown.Abort();
@@ -160,7 +158,6 @@ namespace MuMech
         {
             _machine.ResetGuidance();
             PadSolution = null;
-            _allowThrottle = false;
             _prelaunchDone = false;
         }
 
@@ -200,22 +197,16 @@ namespace MuMech
             Core.PSGSimulation.UpdateLogicalPlan();
         }
 
-        // the optimizer starts late in a countdown (or at once without one), and the throttle waits for the countdown to end
+        // The optimizer starts late in a countdown (or at once without one), and T-0 waits until the autopilot is ready to fly.
+        // The vessel itself waits on the pad in PRELAUNCH (AscentInputs.CountdownActive).
         private void UpdateCountdownGate()
         {
-            if (_countdown.Active)
-            {
-                if (_countdown.TMinus <= Math.Max(_ascentSettings.WarpCountDown, 0))
-                    Core.PSGSimulation.Users.Add(this);
-                else
-                    Core.PSGSimulation.Users.Remove(this);
-                _allowThrottle = false;
-            }
-            else
-            {
+            if (!_countdown.Active || _countdown.TMinus <= Math.Max(_ascentSettings.WarpCountDown, 0))
                 Core.PSGSimulation.Users.Add(this);
-                _allowThrottle = true;
-            }
+            else
+                Core.PSGSimulation.Users.Remove(this);
+
+            _countdown.SetLaunchHold(this, !_prelaunchDone || Solution == null);
         }
 
         /*
@@ -250,7 +241,7 @@ namespace MuMech
                 VacT             = Core.StageStats.VacT,
                 PartIds          = _partIds,
                 PrelaunchDone    = _prelaunchDone,
-                AllowThrottle    = _allowThrottle,
+                CountdownActive  = _countdown.Active,
                 PitchStartHeight = _ascentSettings.PitchStartHeight,
                 PitchRate        = _ascentSettings.PitchRate,
                 UllageLeadTime   = UllageLeadTime,
@@ -272,15 +263,12 @@ namespace MuMech
                 _partIds.Add(part.persistentId);
         }
 
-        // the transitions' part of the command, then (unless the countdown holds for liftoff) the tick's
+        // the transitions' part of the command, then the tick's
         private void Apply(in AscentCommand cmd)
         {
             ApplyTransition(cmd);
 
             _ascentSettings.LimitingAoA = false;
-
-            if (cmd.CheckLiftoffHold && _countdown.HoldForLiftoff(Status))
-                return;
 
             if (cmd.DriveAscentParts)
             {
@@ -363,6 +351,9 @@ namespace MuMech
         {
             switch (cmd.Attitude)
             {
+                case AscentAttitude.OFF:
+                    Core.Attitude.SetAxisControl(false, false, false);
+                    break;
                 case AscentAttitude.VERTICAL:
                     //during the vertical ascent we just thrust straight up at max throttle
                     Core.Attitude.AttitudeToVerticalLaunch(cmd.Heading,
@@ -408,14 +399,23 @@ namespace MuMech
         {
             switch (State)
             {
+                case PSGState.PRELAUNCH:
+                    // the countdown's prelaunch says what it is doing until it is done, and is skipped off the pad
+                    if (!_prelaunchDone || !IsGrounded())
+                        break;
+
+                    // the first solve can take minutes on a slow machine: say so, or the pad looks stuck (the optimizer only
+                    // starts late in a countdown)
+                    if (Solution == null && Core.PSGSimulation.Enabled)
+                        Status.Set(AwaitingComputing(_countdown.Active && _countdown.TMinus <= 0)); //"Awaiting liftoff: computing the ascent…"
+                    else
+                        Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
+                    break;
                 case PSGState.VERTICAL_ASCENT:
+                    // on the pad from T-0 until the clamps let go
                     if (!LiftedOff())
                     {
-                        // the first solve can take minutes on a slow machine: say so, or the pad looks stuck
-                        if (Solution == null)
-                            Status.Set(AwaitingComputing()); //"Awaiting liftoff: computing the ascent…"
-                        else
-                            Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
+                        Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
                         break;
                     }
 
@@ -481,50 +481,52 @@ namespace MuMech
          * Solutions
          */
 
-        // guidance flies in SI units and MET seconds, so this takes a DeNormalized() Solution
-        public void SetSolution(Solution solution)
+        /// <summary>Whether SetSolution takes a Solution now: in PRELAUNCH, BURNING and COASTING (AscentStateMachine.TakesSolution).</summary>
+        public bool TakesSolution => _machine.TakesSolution;
+
+        // guidance flies in SI units and MET seconds, so this takes a DeNormalized() Solution.  False if it was ignored
+        // (TakesSolution).
+        public bool SetSolution(Solution solution)
         {
-            if (_machine.SetSolution(solution) && solution.T0 <= 0)
+            if (!_machine.SetSolution(solution))
+                return false;
+
+            if (solution.FromPad)
                 PadSolution = solution;
+            return true;
         }
 
         /// <summary>
-        ///     Drops a Solution that no longer applies and goes back to waiting for one. Only for use on the ground, the timed launch
-        ///     buttons and kOS suffixes require a landed vessel. Does nothing while disabled, so a countdown started before engaging
-        ///     leaves the throttle alone.
+        ///     Drops a Solution that no longer applies and goes back to waiting for one, in PRELAUNCH with the throttle off, which
+        ///     runs the countdown's prelaunch again. Only for use on the ground, the timed launch buttons and kOS suffixes require a
+        ///     landed vessel. Does nothing while disabled.
         /// </summary>
         public void FlushSolution()
         {
             if (!Enabled)
                 return;
 
-            bool prelaunchDone = _prelaunchDone;
             ResetGuidance();
-            _prelaunchDone = prelaunchDone;
-
-            // engaging without a countdown leaves the throttle up on the pad, and once the autopilot has left prelaunch nothing
-            // else lowers it before T-0
-            ThrustOff();
         }
 
         /*
          * Status and drawing
          */
 
-        // "Awaiting liftoff: computing the ascent, step 2 of 5 (1m 12s)", rebuilt only when the progress text changes
-        private string AwaitingComputing()
+        // "Awaiting liftoff: computing the ascent, step 2 of 5 (1m 12s)", or "Holding launch for guidance: …" once T-0 waits for
+        // it, rebuilt only when the progress text or the hold changes
+        private string AwaitingComputing(bool holding)
         {
             string? progress = Core.PSGSimulation.ProgressShort;
-            if (progress == null)
-                return _awaitingComputing ??= Localizer.Format("#MechJeb_Ascent_status12") + ": computing the ascent…"; //"Awaiting liftoff"
-
-            if (!ReferenceEquals(progress, _awaitingProgressFrom) || _awaitingProgress == null)
+            if (_awaitingStatus == null || !ReferenceEquals(progress, _awaitingFrom) || holding != _awaitingHolding)
             {
-                _awaitingProgressFrom = progress;
-                _awaitingProgress     = Localizer.Format("#MechJeb_Ascent_status12") + ": " + progress;
+                _awaitingFrom    = progress;
+                _awaitingHolding = holding;
+                _awaitingStatus  = (holding ? "Holding launch for guidance" : Localizer.Format("#MechJeb_Ascent_status12")) + //"Awaiting liftoff"
+                    ": " + (progress ?? "computing the ascent…");
             }
 
-            return _awaitingProgress;
+            return _awaitingStatus;
         }
 
         // says why MechJeb can't fly the vessel while another mod has taken its controls; the string is rebuilt only when the lock
@@ -561,11 +563,12 @@ namespace MuMech
             const int SEGMENTS = 50;
 
             _trajectory.Clear();
-            double dt = (Solution.Tf - Solution.T0) / SEGMENTS;
+            // from the ground, with the vertical rise
+            double dt = (Solution.Tf - Solution.TStart) / SEGMENTS;
 
             for (int i = 0; i <= SEGMENTS; i++)
             {
-                double t = Solution.T0 + dt * i;
+                double t = Solution.TStart + dt * i;
 
                 _trajectory.Add(Solution.R(t).V3ToWorldRotated() + MainBody.position);
             }

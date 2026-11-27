@@ -15,6 +15,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
     [ParallelTestMethods]
     public class Titan2Tests
     {
+        // guidance's default pitch start height, which the PSG simulation rises to straight up from the pad before it solves
+        private const double RISE = 100;
+
         // this is a forced periapsis attachment problem, which chooses an ApR such that it winds up burning the whole rocket.
         [Fact]
         public void FlightPathAngle4Elliptical()
@@ -32,6 +35,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, false, false)
                .Build();
 
@@ -49,8 +53,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(0).ShouldEqual(v0, 1e-6);
             solution.M(0).ShouldEqual(153180, 1e-6);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.68052484128120905, 0.6317658413531414, 0.37115746267392064), 1e-2);
-            solution.Vgo(0).ShouldEqual(9369.7098971395462, 1e-3);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.66800916662161625, 0.64863008334323413, 0.36475028209947058), 1e-2);
+            solution.Vgo(0).ShouldEqual(9404.3677823357357, 1e-3);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -88,6 +92,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4, allowShutdown: false)
                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3, allowShutdown: false)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, false, false)
                .Build();
 
@@ -104,8 +109,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.R(0).ShouldEqual(r0, 1e-6);
             solution.V(0).ShouldEqual(v0, 1e-6);
             solution.M(0).ShouldEqual(153180, 1e-6);
-            solution.Tgo(solution.T0, 0).ShouldEqual(156, 1e-6);
-            solution.Tgo(solution.T0, 1).ShouldEqual(180, 1e-6);
+            solution.Tgo(solution.TStart, 0).ShouldEqual(156, 1e-6);
+            solution.Tgo(solution.TStart, 1).ShouldEqual(180, 1e-6);
 
             // all fixed burn time stages with no coast, so no stage needs a precise shutdown
             solution.OptimizeKSPStage().ShouldEqual(-1);
@@ -116,12 +121,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(3, false).ShouldEqual(1);
             solution.IndexForKSPStage(3, true).ShouldEqual(-1);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.68052484128120905, 0.6317658413531414, 0.37115746267392064), 1e-3);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.66883450021136781, 0.64767206625159712, 0.36494014019342491), 1e-3);
             solution.Vgo(0).ShouldEqual(9369.7098971395462, 1e-3);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
-            smaf.ShouldEqual(8614160.805091612, 1e-5);
-            eccf.ShouldEqual(0.23892760440170616, 1e-5);
+            smaf.ShouldEqual(8501798.7938651778, 1e-5);
+            eccf.ShouldEqual(0.22886907123134159, 1e-5);
             incf.ShouldEqual(incT, 1e-5);
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
             argpf.ShouldEqual(1.7643342507444935, 1e-2);
@@ -147,6 +152,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(31980, 31980, 0, 450, 3, 3)
                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3, allowShutdown: false)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, false, false)
                .Build();
 
@@ -165,9 +171,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(3, false).ShouldEqual(2);
             solution.IndexForKSPStage(3, true).ShouldEqual(1);
 
-            solution.Tgo(solution.T0, 0).ShouldEqual(156, 1e-6);
-            solution.Tgo(solution.T0, 1).ShouldEqual(43.991685211719087, 1e-2);
-            solution.Tgo(solution.T0, 2).ShouldEqual(180, 1e-6);
+            solution.Tgo(solution.TStart, 0).ShouldEqual(156, 1e-6);
+            solution.Tgo(solution.TStart, 1).ShouldEqual(41.763222532138712, 1e-2);
+            solution.Tgo(solution.TStart, 2).ShouldEqual(180, 1e-6);
             solution.Vgo(0).ShouldEqual(9369.7101019898018, 1e-3);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -175,8 +181,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
                 Astro.KeplerianFromStateVectors(mu, rf, vf);
 
-            smaf.ShouldEqual(8716713.6265901383, 1e-5);
-            eccf.ShouldEqual(0.24788168100301983, 1e-5);
+            smaf.ShouldEqual(8590793.288745543, 1e-5);
+            eccf.ShouldEqual(0.23685743799833212, 1e-5);
             incf.ShouldEqual(incT, 1e-5);
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
             argpf.ShouldEqual(1.7884827346201035, 1e-2);
@@ -199,6 +205,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, true, false)
                .Build();
 
@@ -216,8 +223,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(0).ShouldEqual(v0, 1e-6);
             solution.M(0).ShouldEqual(153180, 1e-6);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.68052484128120905, 0.6317658413531414, 0.37115746267392064), 1e-2);
-            solution.Vgo(0).ShouldEqual(9369.7098971395462, 1e-3);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.66818571265471838, 0.64862916685663541, 0.36442839805231036), 1e-2);
+            solution.Vgo(0).ShouldEqual(9404.3677303224067, 1e-3);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -253,6 +260,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4, allowShutdown: false)
                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3, allowShutdown: false)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, true, false)
                .Build();
 
@@ -269,10 +277,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.R(0).ShouldEqual(r0, 1e-6);
             solution.V(0).ShouldEqual(v0, 1e-6);
             solution.M(0).ShouldEqual(153180, 1e-6);
-            solution.Tgo(solution.T0, 0).ShouldEqual(156, 1e-6);
-            solution.Tgo(solution.T0, 1).ShouldEqual(180, 1e-6);
+            solution.Tgo(solution.TStart, 0).ShouldEqual(156, 1e-6);
+            solution.Tgo(solution.TStart, 1).ShouldEqual(180, 1e-6);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.68052484128120905, 0.6317658413531414, 0.37115746267392064), 1e-3);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.66889606779756527, 0.6476787226136359, 0.3648154639794256), 1e-3);
             solution.Vgo(0).ShouldEqual(9369.7098971395462, 1e-3);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
@@ -286,8 +294,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(3, false).ShouldEqual(1);
             solution.IndexForKSPStage(3, true).ShouldEqual(-1);
 
-            smaf.ShouldEqual(8614160.805091612, 1e-6);
-            eccf.ShouldEqual(0.23892760440170616, 1e-6);
+            smaf.ShouldEqual(8501798.8036084659, 1e-6);
+            eccf.ShouldEqual(0.22886907212890106, 1e-6);
             incf.ShouldEqual(incT, 1e-6);
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
             argpf.ShouldEqual(1.7643342507444935, 1e-2);
@@ -312,6 +320,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, AttR, incT, Deg2Rad(270), 0, 0, true, false, false)
                .Build();
 
@@ -361,6 +370,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, AttR, incT, Deg2Rad(270), 0, 0, true, true, false)
                .Build();
 
@@ -412,6 +422,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4, allowShutdown: false)
                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3, allowShutdown: false)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, PeR, AttR, incT, Deg2Rad(270), 0, fpaT, true, false, false)
                .Build();
 
@@ -457,6 +468,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4, allowShutdown: false)
                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3, allowShutdown: false)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, PeR, AttR, incT, Deg2Rad(270), 0, fpaT, true, true, false)
                .Build();
 
@@ -502,6 +514,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -519,8 +532,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(0).ShouldEqual(v0, 1e-6);
             solution.M(0).ShouldEqual(157355.487476332, 1e-6);
 
-            solution.Vgo(0).ShouldEqual(9334.0379052112639, 1e-3);
-            solution.U(0).normalized.ShouldEqual(new V3(0.67311315112262493, 0.64198533000545521, 0.36711513431559445), 1e-2);
+            solution.Vgo(0).ShouldEqual(9369.4641184722932, 1e-3);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.66075285413606588, 0.65818147618986356, 0.36083626501721638), 1e-2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -558,6 +571,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -575,8 +589,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(0).ShouldEqual(v0, 1e-6);
             solution.M(0).ShouldEqual(157355.487476332, 1e-6);
 
-            solution.Vgo(0).ShouldEqual(9297.8638266388862, 1e-3);
-            solution.U(0).normalized.ShouldEqual(new V3(0.76488059901505068, 0.63826715097728237, -0.087021337807001872), 1e-2);
+            solution.Vgo(0).ShouldEqual(9332.93928775276, 1e-3);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.75071643895089812, 0.654551834663789, -0.089368473340157739), 1e-2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -612,6 +626,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, true, false)
                .Build();
 
@@ -629,8 +644,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(0).ShouldEqual(v0, 1e-6);
             solution.M(0).ShouldEqual(157355.487476332, 1e-6);
 
-            solution.Vgo(0).ShouldEqual(9334.0379052112639, 1e-3);
-            solution.U(0).normalized.ShouldEqual(new V3(0.67311315112262493, 0.64198533000545521, 0.36711513431559445), 1e-2);
+            solution.Vgo(0).ShouldEqual(9369.4640563002649, 1e-3);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.66094928215047744, 0.65817849624817071, 0.360481779707748), 1e-2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -666,6 +681,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 1.6625138637074874, 0, false, true, true)
                .Build();
 
@@ -683,8 +699,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(0).ShouldEqual(v0, 1e-6);
             solution.M(0).ShouldEqual(157355.487476332, 1e-6);
 
-            solution.Vgo(0).ShouldEqual(9334.0379052112639, 1e-3);
-            solution.U(0).normalized.ShouldEqual(new V3(0.67311315112262493, 0.64198533000545521, 0.36711513431559445), 1e-2);
+            solution.Vgo(0).ShouldEqual(9369.4665174003785, 1e-3);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.66093259680604444, 0.658201314687611, 0.36047070868895725), 1e-2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -722,6 +738,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                 .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
            .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                         .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+                        .VerticalRise(RISE)
                         .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, false, false)
                         .Build();
 
@@ -744,7 +761,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
                     tanof.ShouldEqual(0.0063452857807080321, 0.1);
 
-                    solution.U(0).normalized.ShouldEqual(new V3(0.87754205429590737, 0.029189246151212624, 0.47861041657202014), 1e-2);
+                    solution.U(solution.T0).normalized.ShouldEqual(new V3(0.87754205429590737, 0.029189246151212624, 0.47861041657202014), 1e-2);
 
                     double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
                     double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
@@ -777,6 +794,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -805,11 +823,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(3, false).ShouldEqual(1);
             solution.IndexForKSPStage(3, true).ShouldEqual(-1);
 
-            solution.Vgo(0).ShouldEqual(8518.1366714811684, 1e-3);
+            solution.Vgo(0).ShouldEqual(8549.452067127284, 1e-3);
             solution.DV(0, 0).ShouldEqual(4034.1207426276151, 1e-3);
-            solution.DV(0, 1).ShouldEqual(4483.5493109058016, 1e-3);
+            solution.DV(0, 1).ShouldEqual(4515.3313124354372, 1e-3);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.69734975209707417, 0.6074944955387559, 0.38033374967291772), 1e-2);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.68564570530840407, 0.624540692757553, 0.37395038425178395), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
@@ -825,6 +843,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .OldSolution(psg.Solution ?? throw new Exception("null solution"))
                .Build();
@@ -855,6 +874,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -884,11 +904,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(3, false).ShouldEqual(1);
             solution.IndexForKSPStage(3, true).ShouldEqual(-1);
 
-            solution.Vgo(0).ShouldEqual(8488.0759353442518, 1e-3);
+            solution.Vgo(0).ShouldEqual(8519.5422820333151, 1e-3);
             solution.DV(0, 0).ShouldEqual(4034.1207312126335, 1e-3);
-            solution.DV(0, 1).ShouldEqual(4453.9552041316174, 1e-3);
+            solution.DV(0, 1).ShouldEqual(4485.4215386894521, 1e-3);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.792248028862705, 0.60239243312017887, -0.097295515224028031), 1e-2);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.77857265138749432, 0.61953845104396443, -0.099983669614055012), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
@@ -903,6 +923,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .OldSolution(psg.Solution ?? throw new Exception("null solution"))
                .Build();
@@ -939,6 +960,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                    .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
                    .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                    .Initial(r, v, r.normalized, t0, mu, rbody)
+                   .VerticalRise(RISE)
                    .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false);
 
             Ascent ascent = Builder(r0, v0).Build();
@@ -993,6 +1015,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, allowShutdown: false)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -1026,9 +1049,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.TerminalIndex().ShouldEqual(1);
             solution.CoastIndex().ShouldEqual(-1);
 
-            solution.Vgo(0).ShouldEqual(8562.0125605993326, 1e-3);
+            solution.Vgo(0).ShouldEqual(8592.1679195577981, 1e-3);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.71091349069509358, 0.58674209774568975, 0.38773150436958898), 1e-2);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.69939288441266212, 0.60443937333132947, 0.38144807929751939), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
@@ -1058,6 +1081,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(32758.6353093992, 32758.6353093992, 0, 450, 3, 3)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -1086,13 +1110,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(3, false).ShouldEqual(2);
             solution.IndexForKSPStage(3, true).ShouldEqual(1);
 
-            solution.Vgo(0).ShouldEqual(8474.9669267192712, 1e-3);
+            solution.Vgo(0).ShouldEqual(8512.6306429145188, 1e-3);
 
-            solution.Tgo(solution.T0, 0).ShouldBePositive();
-            solution.Tgo(solution.T0, 1).ShouldEqual(46.192475615255354, 1e-2);
-            solution.Tgo(solution.T0, 2).ShouldBePositive();
+            solution.Tgo(solution.TStart, 0).ShouldBePositive();
+            solution.Tgo(solution.TStart, 1).ShouldEqual(43.697861068036985, 1e-2);
+            solution.Tgo(solution.TStart, 2).ShouldBePositive();
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.67428533585626949, 0.64038742246275127, 0.36775431336792186), 1e-2);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.66402706101968934, 0.6541159160878357, 0.362215999859373), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
@@ -1109,6 +1133,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(32758.6353093992, 32758.6353093992, 0, 450, 3, 3)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .OldSolution(psg.Solution ?? throw new Exception("null solution"))
                .Build();
@@ -1139,6 +1164,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(32758.6353093992, 32758.6353093992, 0, 450, 3, 3)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, allowShutdown: false)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -1147,10 +1173,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
-            solution.Tgo(solution.T0, 0).ShouldBePositive();
-            solution.Tgo(solution.T0, 1).ShouldEqual(15.113269375351896, 1e-2);
-            solution.Tgo(solution.T0, 2).ShouldBePositive();
-            solution.Vgo(0).ShouldEqual(8557.8736963926785, 1e-3);
+            solution.Tgo(solution.TStart, 0).ShouldBePositive();
+            solution.Tgo(solution.TStart, 1).ShouldEqual(15.113269375351896, 1e-2);
+            solution.Tgo(solution.TStart, 2).ShouldBePositive();
+            solution.Vgo(0).ShouldEqual(8588.02885538735, 1e-3);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -1178,7 +1204,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.TerminalIndex().ShouldEqual(2);
             solution.CoastIndex().ShouldEqual(1);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.70743037652982543, 0.59217914188368692, 0.38583173311790908), 1e-2);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.69601469152854378, 0.6096732662115627, 0.37929152065838617), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
@@ -1209,6 +1235,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(32758.6353093992, 6384.144733613521, 0, 450, 3, 3, massContinuity: true)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -1237,14 +1264,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(3, false).ShouldEqual(1);
             solution.IndexForKSPStage(3, true).ShouldEqual(2);
 
-            solution.Tgo(solution.T0, 0).ShouldEqual(148.10238013870301, 1e-2);
-            solution.Tgo(solution.T0, 1).ShouldEqual(153.53757758636579, 1e-2);
-            solution.Tgo(solution.T0, 2).ShouldEqual(449.99973855863101, 1e-2);
-            solution.Tgo(solution.T0, 3).ShouldEqual(9.1537185650994335, 1e-2);
+            solution.Tgo(solution.TStart, 0).ShouldEqual(148.10238013870301, 1e-2);
+            solution.Tgo(solution.TStart, 1).ShouldEqual(153.53757758636579, 1e-2);
+            solution.Tgo(solution.TStart, 2).ShouldEqual(449.99973855863101, 1e-2);
+            solution.Tgo(solution.TStart, 3).ShouldEqual(8.7489488121921113, 1e-2);
 
-            solution.Vgo(0).ShouldEqual(8101.193073142621, 1e-3);
+            solution.Vgo(0).ShouldEqual(8158.509566601695, 1e-3);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.46268355846501641, 0.84975061932167251, 0.25268124126769614), 1e-2);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.4506283008932096, 0.85807077092551975, 0.24626954037676546), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
@@ -1262,6 +1289,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(32758.6353093992, 6384.144733613521, 0, 450, 3, 3, massContinuity: true)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .OldSolution(psg.Solution ?? throw new Exception("null solution"))
                .Build();
@@ -1274,7 +1302,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             psg2.PrimalFeasibility.ShouldBeZero(1e-5);
             psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
 
-            solution2.Vgo(0).ShouldEqual(8101.193073142621, 1e-3);
+            solution2.Vgo(0).ShouldEqual(8158.5092907149847, 1e-3);
         }
 
         // Re-solves from mid-flight after staging, so the new Problem has a different length/time/mass scale than the old
@@ -1297,6 +1325,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(32758.6353093992, 6384.144733613521, 0, 450, 3, 3, massContinuity: true)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -1376,6 +1405,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddCoast(32758.6353093992, 32758.6353093992, 0, 450, 3, 3, massContinuity: true)
                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .Build();
 
@@ -1404,14 +1434,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(3, false).ShouldEqual(1);
             solution.IndexForKSPStage(3, true).ShouldEqual(2);
 
-            solution.Vgo(0).ShouldEqual(9949.1675404048201, 1e-3);
+            solution.Vgo(0).ShouldEqual(10013.332037161936, 1e-3);
 
-            solution.Tgo(solution.T0, 0).ShouldBePositive();
-            solution.Tgo(solution.T0, 1).ShouldEqual(176.13643532153222, 1e-2);
-            solution.Tgo(solution.T0, 2).ShouldEqual(449.99999999922886, 1e-2);
-            solution.Tgo(solution.T0, 3).ShouldEqual(13.03613615732877, 1e-2);
+            solution.Tgo(solution.TStart, 0).ShouldBePositive();
+            solution.Tgo(solution.TStart, 1).ShouldEqual(176.13643532153222, 1e-2);
+            solution.Tgo(solution.TStart, 2).ShouldEqual(449.99999999922886, 1e-2);
+            solution.Tgo(solution.TStart, 3).ShouldEqual(12.597983444291344, 1e-2);
 
-            solution.U(0).normalized.ShouldEqual(new V3(0.38075918032302986, 0.9006976112150552, 0.20920387126252593), 1e-2);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.36938563329430579, 0.9072664476031892, 0.20105185144448243), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);

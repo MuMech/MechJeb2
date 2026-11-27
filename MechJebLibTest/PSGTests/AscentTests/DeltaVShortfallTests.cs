@@ -15,6 +15,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
     [ParallelTestMethods]
     public class DeltaVShortfallTests
     {
+        // guidance's default pitch start height, which the PSG simulation rises to straight up from the pad before it solves
+        private const double RISE = 100;
+
         private const double MU = 3531600000000;
         private const double M0 = 79699.9986022711;
         private const double ISP = 310.000018173591;
@@ -28,6 +31,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(M0, mf, 1500000.09246676, ISP, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0, massContinuity: true)
                .Initial(new V3(365592.912061998, -475862.737003702, -1017.92554628857), new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06),
                     new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), 0, MU, 600000)
+               .VerticalRise(RISE)
                .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false)
                .Build();
 
@@ -58,7 +62,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double shortfall = solution.DeltaVShortfall();
 
             shortfall.ShouldBePositive();
-            shortfall.ShouldEqual(solution.Vgo(solution.T0) - stageDeltaV, 1e-6);
+            shortfall.ShouldEqual(solution.Vgo(solution.TStart) - stageDeltaV, 1e-6);
             (shortfall > 300 && shortfall < 1000).ShouldBeTrue();
         }
     }

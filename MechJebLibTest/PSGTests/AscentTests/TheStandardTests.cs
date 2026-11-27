@@ -15,6 +15,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
     [ParallelTestMethods]
     public class TheStandardTests
     {
+        // guidance's default pitch start height, which the PSG simulation rises to straight up from the pad before it solves
+        private const double RISE = 100;
+
         // Carnasa's TheStandard rocket (ish).
         // This tests optimality of a burn-optimizedBurn-coast-burn with all stages guided with periapsis attachment
         [Fact]
@@ -37,6 +40,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(r0, v0, u0, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, true, false, false)
                .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3)
                .AddStage(2848.62586760223, 1363.71123994759, thrust2, 270.15767003304, 1, 1)
@@ -50,12 +54,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
-            solution.Vgo(t0).ShouldEqual(9669.6899155829542, 1e-3);
+            solution.Vgo(t0).ShouldEqual(9727.1878195249446, 1e-3);
 
-            solution.Tgo(solution.T0, 0).ShouldBePositive();
-            solution.Tgo(solution.T0, 1).ShouldBePositive();
-            solution.Tgo(solution.T0, 2).ShouldEqual(234.78752267826667, 1e-3);
-            solution.Tgo(solution.T0, 3).ShouldBePositive();
+            solution.Tgo(solution.TStart, 0).ShouldBePositive();
+            solution.Tgo(solution.TStart, 1).ShouldBePositive();
+            solution.Tgo(solution.TStart, 2).ShouldEqual(228.22479646960139, 1e-3);
+            solution.Tgo(solution.TStart, 3).ShouldBePositive();
 
             solution.OptimizeKSPStage().ShouldEqual(1);
             solution.TerminalKSPStage().ShouldEqual(0);
@@ -82,8 +86,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
                 dv += solution.DV(t0, p);
             dv.ShouldEqual(solution.Vgo(t0), 1e-9);
 
-            (V3 u, _) = solution.InertialGuidance(0, t0, 0);
-            u.ShouldEqual(solution.U(t0).normalized, 1e-12);
+            // guidance takes over at the top of the rise, on the first phase's steering
+            (V3 u, _) = solution.InertialGuidance(0, solution.T0, 0);
+            u.ShouldEqual(solution.U(solution.T0).normalized, 1e-12);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -93,7 +98,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.R(t0).ShouldEqual(r0, 1e-6);
             solution.V(t0).ShouldEqual(v0, 1e-6);
             solution.M(t0).ShouldEqual(49119.7842689869, 1e-6);
-            solution.U(t0).normalized.ShouldEqual(new V3(0.77936242810570966, -0.56640344307712909, 0.26792040856856347), 1e-1);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.77936242810570966, -0.56640344307712909, 0.26792040856856347), 1e-1);
 
             smaf.ShouldEqual(11463499.98898875, 1e-4);
             eccf.ShouldEqual(0.4280978753095433, 1e-4);
@@ -119,7 +124,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double ApR = 6.371e+6 + 10e+6;
             double incT = Deg2Rad(28.608);
 
-            const double OPTIMUMVGO = 9670.9023790445626;
+            const double OPTIMUMVGO = 9726.0697386041211;
 
             double thrust1 = Astro.ThrustFromMassesIspBurntime(49119.7842689869, 7114.2513992454, 288.000034332275, 170.308460385726);
             double thrust2 = Astro.ThrustFromMassesIspBurntime(2848.62586760223, 1363.71123994759, 270.15767003304, 116.391834883409);
@@ -127,6 +132,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(r0, v0, u0, t0, mu, rbody)
+               .VerticalRise(RISE)
                .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, false, false, false)
                .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3)
                .AddStage(2848.62586760223, 1363.71123994759, thrust2, 270.15767003304, 1, 1)
@@ -139,10 +145,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
-            solution.Tgo(solution.T0, 0).ShouldBePositive();
-            solution.Tgo(solution.T0, 1).ShouldBePositive();
-            solution.Tgo(solution.T0, 2).ShouldEqual(221.93374918746366, 1e-2);
-            solution.Tgo(solution.T0, 3).ShouldBePositive();
+            solution.Tgo(solution.TStart, 0).ShouldBePositive();
+            solution.Tgo(solution.TStart, 1).ShouldBePositive();
+            solution.Tgo(solution.TStart, 2).ShouldEqual(215.2590138476908, 1e-2);
+            solution.Tgo(solution.TStart, 3).ShouldBePositive();
 
             solution.OptimizeKSPStage().ShouldEqual(1);
             solution.TerminalKSPStage().ShouldEqual(0);
@@ -165,7 +171,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(t0).ShouldEqual(v0, 1e-6);
             solution.M(t0).ShouldEqual(49119.7842689869, 1e-6);
             solution.Vgo(t0).ShouldEqual(OPTIMUMVGO, 1e-2);
-            solution.U(t0).normalized.ShouldEqual(new V3(0.77953530499830737, -0.56621745928946121, 0.26781056188467101), 1e-1);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.77953530499830737, -0.56621745928946121, 0.26781056188467101), 1e-1);
 
             smaf.ShouldEqual(11463499.98898875, 1e-4);
             eccf.ShouldEqual(0.4280978753095433, 1e-4);
@@ -206,6 +212,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(r0, v0, u0, t0, mu, rbody)
+               .VerticalRise(RISE)
                .AerodynamicConstants(aref, CD, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
                .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, true, false, false)
                .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3)
@@ -219,10 +226,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
-            solution.Tgo(solution.T0, 0).ShouldBePositive();
-            solution.Tgo(solution.T0, 1).ShouldBePositive();
-            solution.Tgo(solution.T0, 2).ShouldEqual(135.22924418942029, 1e-2);
-            solution.Tgo(solution.T0, 3).ShouldBePositive();
+            solution.Tgo(solution.TStart, 0).ShouldBePositive();
+            solution.Tgo(solution.TStart, 1).ShouldBePositive();
+            solution.Tgo(solution.TStart, 2).ShouldEqual(135.22924418942029, 1e-2);
+            solution.Tgo(solution.TStart, 3).ShouldBePositive();
 
             solution.OptimizeKSPStage().ShouldEqual(1);
             solution.TerminalKSPStage().ShouldEqual(0);
@@ -245,7 +252,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(t0).ShouldEqual(v0, 1e-6);
             solution.M(t0).ShouldEqual(49119.7842689869, 1e-6);
             solution.Vgo(t0).ShouldEqual(10510.620490322281, 1e-3);
-            solution.U(t0).normalized.ShouldEqual(new V3(-0.012214116666567524, -0.87839128647452269, 0.47778610611830125), 1e-2);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.0030145601949507781, -0.87873665051131311, 0.47729740359129269), 1e-2);
 
             smaf.ShouldEqual(11463499.98898875, 1e-4);
             eccf.ShouldEqual(0.4280978753095433, 1e-4);
@@ -284,6 +291,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                .Initial(r0, v0, u0, t0, mu, rbody)
+               .VerticalRise(RISE)
                .AerodynamicConstants(aref, CD, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
                .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, true, false, false)
                .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3)
@@ -298,10 +306,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = (psg.Solution ?? throw new Exception("null solution")).DeNormalized();
 
 
-            solution.Tgo(solution.T0, 0).ShouldBePositive();
-            solution.Tgo(solution.T0, 1).ShouldBePositive();
-            solution.Tgo(solution.T0, 2).ShouldEqual(130.80357401545331, 1e-2);
-            solution.Tgo(solution.T0, 3).ShouldBePositive();
+            solution.Tgo(solution.TStart, 0).ShouldBePositive();
+            solution.Tgo(solution.TStart, 1).ShouldBePositive();
+            solution.Tgo(solution.TStart, 2).ShouldEqual(130.80357401545331, 1e-2);
+            solution.Tgo(solution.TStart, 3).ShouldBePositive();
 
             solution.OptimizeKSPStage().ShouldEqual(0);
             solution.TerminalKSPStage().ShouldEqual(0);
@@ -324,7 +332,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(t0).ShouldEqual(v0, 1e-6);
             solution.M(t0).ShouldEqual(49119.7842689869, 1e-6);
             solution.Vgo(t0).ShouldEqual(10510.620490322281, 1e-3);
-            solution.U(t0).normalized.ShouldEqual(new V3(-0.012214116666567524, -0.87839128647452269, 0.47778610611830125), 1e-2);
+            solution.U(solution.T0).normalized.ShouldEqual(new V3(0.0030549988939650935, -0.8787435243059073, 0.477284491128919), 1e-2);
 
             smaf.ShouldEqual(11463499.98898875, 1e-4);
             eccf.ShouldEqual(0.4280978753095433, 1e-4);

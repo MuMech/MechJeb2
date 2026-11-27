@@ -44,6 +44,12 @@ namespace MuMech
                     return $"Optimizer: paused after staging, {Ceiling(seconds):F0} s";
                 case OptimizerState.ON_PAD:
                     return "Optimizer: paused until liftoff";
+                case OptimizerState.VERTICAL_ASCENT:
+                    return "Optimizer: paused for the vertical ascent, resumes when guidance takes over";
+                case OptimizerState.PITCH_PROGRAM:
+                    return "Optimizer: paused for the pitch program, resumes when guidance takes over";
+                case OptimizerState.JETTISON:
+                    return "Optimizer: paused for the jettison, resumes in the burn";
                 case OptimizerState.AFTER_PHASE:
                     return $"Optimizer: paused while the next phase starts, {Ceiling(seconds):F0} s";
                 case OptimizerState.COAST_PAUSE:
